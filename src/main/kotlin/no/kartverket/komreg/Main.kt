@@ -1,3 +1,5 @@
+package no.kartverket.komreg
+
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
