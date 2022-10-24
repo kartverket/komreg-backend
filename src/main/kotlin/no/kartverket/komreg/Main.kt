@@ -10,7 +10,7 @@ data class CLIOptions(
     val output: String?,
     val threads: Int = 1,
     val debug: Boolean = false,
-    val follow: Boolean = false
+    val follow: Boolean = false,
 )
 
 fun main(args: Array<String>) {
