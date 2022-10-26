@@ -7,10 +7,10 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object UserServiceTest: Spek({
+object UserServiceTest : Spek({
 
     describe("User ID") {
-        val idGeneratorMock = mockk<IdGeneratorI>() {
+        val idGeneratorMock = mockk<IdGeneratorI> {
             every { getId() } returns "1"
         }
         val userservice = UserService(idGeneratorMock)

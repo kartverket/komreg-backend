@@ -1,10 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-plugins {
-    kotlin("jvm") version "1.7.10"
-    application
-}
-
 val kotlinxCliVersion = "0.3.5"
 val mockkVersion = "1.13.2"
 val junitVersion = "5.9.0"
@@ -13,6 +8,13 @@ val hamcrestVersion = "2.2"
 
 group = "no.kartverket.komreg"
 version = "1.0-SNAPSHOT"
+
+plugins {
+    kotlin("jvm") version "1.7.10"
+    id("org.jlleitschuh.gradle.ktlint") version "11.0.0"
+    id("org.jlleitschuh.gradle.ktlint-idea") version "11.0.0"
+    application
+}
 
 repositories {
     mavenCentral()
