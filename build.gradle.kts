@@ -1,6 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val kotlinxCliVersion = "0.3.5"
+val kotlinxCoroutinesVersion = "1.6.4"
 val mockkVersion = "1.13.2"
 val junitVersion = "5.9.0"
 val spekVersion = "2.0.19"
@@ -22,6 +23,10 @@ repositories {
 
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-cli:$kotlinxCliVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk9:$kotlinxCoroutinesVersion")
+
+    implementation("com.oracle.database.jdbc:ojdbc11:21.7.0.0")
+
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
     testImplementation("org.spekframework.spek2:spek-dsl-jvm:$spekVersion")
@@ -36,7 +41,7 @@ tasks.test {
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "11"
 }
 
 application {
