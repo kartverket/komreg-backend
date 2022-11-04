@@ -9,20 +9,21 @@ import oracle.jdbc.OracleConnection
 import oracle.jdbc.pool.OracleDataSource
 
 class MatrikkelenEntitySource(private val dataSource: OracleDataSource) : EntitySource<EntityData> {
-    private val entitySources: List<(OracleConnection) -> EntitySource<EntityData>> = listOf(
-        { MatrikkelenhetEntitySource(it) }
-    )
-
-    override fun download(context: DownloadContext): Flow<Validation<out EntityData>> = flow {
-        emitAll(dataSource
-            .createConnectionBuilder()
-            .buildConnectionPublisherOracle()
-            .asFlow()
-            .flowOn(Dispatchers.IO)
-            .flatMapMerge { connection -> entitySources.asFlow().map { it(connection) } }
-            .flatMapMerge { entitySource -> entitySource.download(context).flowOn(Dispatchers.IO) })
+    private val entitySources: List<(OracleConnection) -> EntitySource<EntityData>> = listOf {
+        MatrikkelenhetEntitySource(it)
     }
 
+    override fun download(context: DownloadContext): Flow<Validation<out EntityData>> = flow {
+        emitAll(
+            dataSource
+                .createConnectionBuilder()
+                .buildConnectionPublisherOracle()
+                .asFlow()
+                .flowOn(Dispatchers.IO)
+                .flatMapMerge { connection -> entitySources.asFlow().map { it(connection) } }
+                .flatMapMerge { entitySource -> entitySource.download(context).flowOn(Dispatchers.IO) }
+        )
+    }
 }
 
 class MatrikkelenEntitySourceFactory : EntitySourceFactory<MatrikkelConfig> {
@@ -37,5 +38,4 @@ class MatrikkelenEntitySourceFactory : EntitySourceFactory<MatrikkelConfig> {
         dataSource.setPassword(config.jdbcPassword)
         return MatrikkelenEntitySource(dataSource)
     }
-
 }

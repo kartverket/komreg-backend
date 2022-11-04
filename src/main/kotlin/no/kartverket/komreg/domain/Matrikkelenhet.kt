@@ -9,6 +9,7 @@ sealed interface Matrikkelenhet : EntityData {
 sealed interface Seksjonert : Matrikkelenhet {
     val seksjoner: Set<Seksjon>
 }
+
 sealed interface KanHaFestegrunn : Matrikkelenhet {
     val festegrunner: Set<Festegrunn>
 }
@@ -18,13 +19,13 @@ data class Grunneiendom(
     override val gardsnummer: Int,
     override val bruksnummer: Int,
     override val festegrunner: Set<Festegrunn>,
-    override val seksjoner: Set<Seksjon>
+    override val seksjoner: Set<Seksjon>,
 ) : KanHaFestegrunn, Seksjonert
 
 data class Festegrunn(
     val grunneiendom: KanHaFestegrunn,
-    val festenummer : Int,
-    override val seksjoner: Set<Seksjon>
+    val festenummer: Int,
+    override val seksjoner: Set<Seksjon>,
 ) : KanHaFestegrunn by grunneiendom, Seksjonert
 
-data class Seksjon(val seksjonert: Seksjonert, val seksjonsnummer : Int) : Seksjonert by seksjonert
+data class Seksjon(val seksjonert: Seksjonert, val seksjonsnummer: Int) : Seksjonert by seksjonert
