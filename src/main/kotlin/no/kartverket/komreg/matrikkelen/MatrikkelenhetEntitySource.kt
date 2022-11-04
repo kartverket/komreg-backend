@@ -22,15 +22,17 @@ class MatrikkelenhetEntitySource(private val connection: OracleConnection) : Ent
         connection
             .prepareStatement("SELECT m.id, m.kommuneid, m.gardsnr, m.bruksnr, m.festenr, m.seksjonsnr FROM matrikkelenhet m")
             .use { st ->
-                emitAll(st.unwrap(OraclePreparedStatement::class.java)
-                    .executeQueryAsyncOracle()
-                    .asFlow()
-                    .flatMapConcat { it.publisherOracle(::matrikkelenhetFromRow).asFlow() })
+                emitAll(
+                    st.unwrap(OraclePreparedStatement::class.java)
+                        .executeQueryAsyncOracle()
+                        .asFlow()
+                        .flatMapConcat { it.publisherOracle(::matrikkelenhetFromRow).asFlow() }
+                )
             }
     }
 
     companion object {
-        private fun matrikkelenhetFromRow(row: OracleRow) : Validation<Matrikkelenhet> {
+        private fun matrikkelenhetFromRow(row: OracleRow): Validation<Matrikkelenhet> {
             val kommuneid = try {
                 Math.toIntExact(row.getOrThrow(2))
             } catch (e: ArithmeticException) {
@@ -49,6 +51,6 @@ class MatrikkelenhetEntitySource(private val connection: OracleConnection) : Ent
     }
 }
 
-inline fun  <reified T> OracleRow.get(col: Int): T? = this.getObject(col, T::class.java)
+inline fun <reified T> OracleRow.get(col: Int): T? = this.getObject(col, T::class.java)
 
-inline fun  <reified T> OracleRow.getOrThrow(col: Int): T = this.getObject(col, T::class.java)
+inline fun <reified T> OracleRow.getOrThrow(col: Int): T = this.getObject(col, T::class.java)
