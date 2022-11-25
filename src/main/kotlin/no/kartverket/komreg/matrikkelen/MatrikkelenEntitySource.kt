@@ -1,6 +1,5 @@
 package no.kartverket.komreg.matrikkelen
 
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.jdk9.asFlow
 import no.kartverket.komreg.domain.EntityData
@@ -13,15 +12,14 @@ class MatrikkelenEntitySource(private val dataSource: OracleDataSource) : Entity
         MatrikkelenhetEntitySource(it)
     }
 
-    override fun download(context: DownloadContext): Flow<Validation<out EntityData>> = flow {
+    override fun download(context: EntitySourceDownloadContext): Flow<Entity<out EntityData>> = flow {
         emitAll(
             dataSource
                 .createConnectionBuilder()
                 .buildConnectionPublisherOracle()
                 .asFlow()
-                .flowOn(Dispatchers.IO)
                 .flatMapMerge { connection -> entitySources.asFlow().map { it(connection) } }
-                .flatMapMerge { entitySource -> entitySource.download(context).flowOn(Dispatchers.IO) }
+                .flatMapMerge { entitySource -> entitySource.download(context) }
         )
     }
 }
