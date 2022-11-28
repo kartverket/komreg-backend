@@ -38,7 +38,7 @@ sealed interface Validation<out A> : LoggingContext<Validation<A>> {
             productMap(productMap(fa, fb, fc) { a, b, c -> { d: D -> f(a,b,c,d) }},fd) { ff, d -> ff(d) }
 
 
-        fun <A> valid(a: A): Validation<A> = Valid(a, persistentListOf())
+        fun <A> valid(a: A): Valid<A> = Valid(a, persistentListOf())
         fun <A> invalid(err: LoggingContext.LogRecord) = Invalid<A>(err.nel(), persistentListOf())
         fun <A> invalid(level: Level, msg: String, throwable: Throwable? = null) = invalid<A>(
             LoggingContext.LogRecord(

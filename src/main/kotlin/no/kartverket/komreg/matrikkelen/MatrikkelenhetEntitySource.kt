@@ -1,8 +1,11 @@
 package no.kartverket.komreg.matrikkelen
 
 import arrow.fx.coroutines.parMapUnordered
+import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.jdk9.asFlow
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
@@ -13,93 +16,171 @@ import no.kartverket.komreg.domain.Matrikkelenhet
 import no.kartverket.komreg.domain.SeksjonData
 import no.kartverket.komreg.experimental.*
 import oracle.jdbc.OracleConnection
-import oracle.jdbc.OraclePreparedStatement
-import oracle.jdbc.OracleRow
-import org.rocksdb.Options
-import org.rocksdb.RocksDB
-import java.io.File
-import java.lang.System.Logger.Level
-import java.util.UUID
+import org.rocksdb.*
+import java.lang.System.Logger.Level.*
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 class MatrikkelenhetEntitySource(private val connection: OracleConnection) : EntitySource<Matrikkelenhet> {
 
-    override fun download(context: EntitySourceDownloadContext): Flow<Entity<Matrikkelenhet>> = flow {
-        val rocksOpts = Options().apply {
-            setCreateIfMissing(true)
-        }
-        val rocksFile = File(context.cacheDir, UUID.randomUUID().toString() + ".db").apply {
-            deleteOnExit()
-        }
 
-        RocksDB.open(rocksOpts, rocksFile.canonicalPath).use { rocks ->
-            connection
-                .prepareStatement("SELECT m.id, m.kommuneid, m.gardsnr, m.bruksnr, m.festenr, m.seksjonsnr FROM matrikkelenhet m")
-                .use { wrappedStatement ->
-                    wrappedStatement.unwrap(OraclePreparedStatement::class.java).let { st ->
-                        st.fetchSize = 10240
-                        st.executeQueryAsyncOracle()
-                            .asFlow()
-                            .flatMapConcat { it.publisherOracle(MatrikkelenhetRow.Companion::from).asFlow() }
-                            .buffer(st.fetchSize * 8)
-                            .collect { row ->
-                                val key = MatrikkelenhetKey(row.kommuenummer, row.gardsnummer, row.bruksnummer)
-                                val keyBytes = ProtoBuf.encodeToByteArray(key)
-                                if (!rocks.keyMayExist(keyBytes, null)) {
-                                    rocks.put(keyBytes, ProtoBuf.encodeToByteArray(listOf(row)))
-                                } else {
-                                    val existingBytes = rocks.get(keyBytes)
-                                    val bytes = if (existingBytes != null) {
-                                        val exisiting: List<MatrikkelenhetRow> =
-                                            ProtoBuf.decodeFromByteArray(existingBytes)
-                                        ProtoBuf.encodeToByteArray(exisiting + row)
-                                    } else {
-                                        ProtoBuf.encodeToByteArray(listOf(row))
-                                    }
-                                    rocks.put(keyBytes, bytes)
-                                }
-                            }
-                    }
-                }
+    @OptIn(FlowPreview::class)
+    override fun download(context: EntitySourceDownloadContext): Flow<Entity<out Matrikkelenhet>> =
+        downloadThenSort(context).buffer(65536).parMapUnordered(concurrency = Runtime.getRuntime().availableProcessors(), transform = ::validateMatrikkelenhetGroup).flowOn(Dispatchers.Default)
 
-            val cacheFlow = flow {
-                rocks.newIterator().use { iter ->
-                    iter.seekToFirst()
-                    while (iter.isValid) {
-                        val key = ProtoBuf.decodeFromByteArray<MatrikkelenhetKey>(iter.key())
-                        val value = ProtoBuf.decodeFromByteArray<List<MatrikkelenhetRow>>(iter.value())
-                        emit (key to value)
-                        iter.next()
+    /**
+     * Flow av alle matrikkelenhetrader fra databasen, sortert ved å putte radene på disk (RocksDB)
+     */
+    private fun downloadThenSort(context: EntitySourceDownloadContext): Flow<List<MatrikkelenhetRow>> = channelFlow {
+        val cache = context.rocksDB
+        val writeOpts = WriteOptions().apply {
+            setSync(false)
+            setDisableWAL(true)
+        }
+        val keySize = Long.SIZE_BYTES * 2 + Int.SIZE_BYTES * 2
+        cache.createColumnFamily(columnFamilyDescriptor).use { cf ->
+            val rowChannel = Channel<MatrikkelenhetRow>(capacity = 65536)
+
+            val jdbcJob = launch(Dispatchers.IO.limitedParallelism(1)) {
+                val query = "" +
+                        "SELECT m.id, m.kommuneid, m.gardsnr, m.bruksnr, m.festenr, m.seksjonsnr " +
+                        "FROM matrikkelenhet m "
+                connection.prepareStatement(query).use { st ->
+                    logger.log(INFO) { "Executing matrikkelenhet download query" }
+                    st.executeQuery().use { rs ->
+                        logger.log(INFO) { "Started receiving matrikkelenheter" }
+                        while (rs.next()) {
+                            rowChannel.send(MatrikkelenhetRow(
+                                rs.getLong(1),
+                                rs.getLong(2),
+                                rs.getInt(3),
+                                rs.getInt(4),
+                                rs.getInt(5),
+                                rs.getInt(6)))
+                        }
+                        logger.log(INFO) { "All matrikkelenheter received" }
                     }
                 }
             }
 
-            val entityFlow = cacheFlow
-                .parMapUnordered { (key, relatedRows) ->
-                    val (
-                        validGrunneiendomRow,
-                        validFestegrunner,
-                        validSeksjoner
-                    ) = groupMatrikkelenhet(relatedRows)
-                    createMatrikkelenhetEntity(validGrunneiendomRow, validFestegrunner, validSeksjoner, key)
+            val cacheWriters =
+                sequence {
+                    repeat(Runtime.getRuntime().availableProcessors() * 8) {
+                        yield(launch(Dispatchers.IO) {
+                            while(true) {
+                                val row = rowChannel
+                                    .receiveCatching()
+                                    .apply { exceptionOrNull()?.let { throw it } }
+                                    .getOrNull()
+                                    ?: break
+
+                                val key = ByteBuffer
+                                    .allocate(keySize)
+                                    .order(ByteOrder.BIG_ENDIAN)
+                                    .apply {
+                                        putLong(row.kommuenummer)
+                                        putInt(row.gardsnummer)
+                                        putInt(row.bruksnummer)
+                                        putLong(row.id)
+                                    }
+                                    .array()
+
+                                cache.put(cf, writeOpts, key, ProtoBuf.encodeToByteArray(row))
+                            }
+                        })
+                    }
+                }.toList()
+
+            jdbcJob.join()
+            rowChannel.close()
+            cacheWriters.joinAll()
+
+            cache.flush(FlushOptions(), cf)
+            cache.compactRange(cf)
+
+            cache.newIterator(cf).use { iter ->
+                iter.seekToFirst()
+                if (iter.isValid) {
+                    val keyBuf = ByteBuffer.allocate(keySize)
+                    val rows = mutableListOf<MatrikkelenhetRow>()
+                    iter.key(keyBuf)
+                    var prevKommuneId = keyBuf.long
+                    var prevGardsnummer = keyBuf.int
+                    var prevBruksnummer = keyBuf.int
+                    do {
+                        keyBuf.rewind()
+                        iter.key(keyBuf)
+                        val kommuneId = keyBuf.long
+                        val gardsnummer = keyBuf.int
+                        val bruksnummer = keyBuf.int
+                        if (prevKommuneId != kommuneId || prevGardsnummer != gardsnummer || prevBruksnummer != bruksnummer) {
+                            send(rows.toImmutableList())
+                            prevKommuneId = kommuneId
+                            prevGardsnummer = gardsnummer
+                            prevBruksnummer = bruksnummer
+                            rows.clear()
+                        }
+                        rows.add(ProtoBuf.decodeFromByteArray(iter.value()))
+                        iter.next()
+                    } while (iter.isValid)
                 }
-
-            emitAll(entityFlow)
+            }
         }
-
-
     }
 
-    private fun groupMatrikkelenhet(relatedRows: List<MatrikkelenhetRow>): Triple<Validation<MatrikkelenhetRow?>, Valid<Set<FestegrunnData.Detached>>, Valid<Set<SeksjonData.Detached>>> {
-        var validGrunneiendomRow: Validation<MatrikkelenhetRow?> = Valid(null)
+    /**
+     * Flow av alle matrikkelenheterader fra databasen, sortert av databasen
+     */
+    private fun downloadGroupedRows(): Flow<List<MatrikkelenhetRow>> = channelFlow {
+        val query = "" +
+                "SELECT m.id, m.kommuneid, m.gardsnr, m.bruksnr, m.festenr, m.seksjonsnr " +
+                "FROM matrikkelenhet m " +
+                "ORDER BY m.kommuneid, m.gardsnr, m.bruksnr, m.id"
+
+        connection.prepareStatement(query).use { st ->
+            logger.log(INFO) { "Executing matrikkelenhet download query" }
+            withContext(Dispatchers.IO.limitedParallelism(1)) { st.executeQuery() }.use { rs ->
+                val rows = mutableListOf<MatrikkelenhetRow>()
+                if (rs.next()) {
+                    logger.log(INFO) { "Started receiving matrikkelenheter" }
+                    var prevKommuneid = rs.getLong(2)
+                    var prevGardsnummer = rs.getInt(3)
+                    var prevBruksnummer = rs.getInt(4)
+                    do {
+                        val matrikkelenhetId = rs.getLong(1)
+                        val kommuneId = rs.getLong(2)
+                        val gardsnummer = rs.getInt(3)
+                        val bruksnummer = rs.getInt(4)
+                        if (prevKommuneid != kommuneId || prevGardsnummer != gardsnummer || prevBruksnummer != bruksnummer) {
+                            send(rows.toImmutableList())
+                            prevKommuneid = kommuneId
+                            prevGardsnummer = gardsnummer
+                            prevBruksnummer = bruksnummer
+                            rows.clear()
+                        }
+                        rows.add(MatrikkelenhetRow(matrikkelenhetId, kommuneId, gardsnummer, bruksnummer, rs.getInt(5), rs.getInt(6)))
+                    } while (rs.next())
+                    logger.log(INFO) { "All matrikkelenheter received" }
+                }
+            }
+        }
+    }
+
+    private fun validateMatrikkelenhetGroup(relatedRows: List<MatrikkelenhetRow>): SourceEntity<Matrikkelenhet> {
+        val missingGrunneiendom: Valid<Pair<Id<Matrikkelenhet>, Matrikkelenhet>> = Validation.valid(
+            GeneratedId<Matrikkelenhet>() to relatedRows
+                .run { first() }
+                .run { Grunneiendom(Math.toIntExact(kommuenummer), gardsnummer, bruksnummer, persistentSetOf(), persistentSetOf()) })
+        var validEmptyGrunneiendom: Valid<Pair<Id<Matrikkelenhet>, Matrikkelenhet>> = missingGrunneiendom
         val festegrunnRows: MutableMap<Int, Validation<MatrikkelenhetRow>> = mutableMapOf()
         val festegrunnSeksjonRows: MutableMap<Int, MutableMap<Int, Validation<MatrikkelenhetRow>>> = mutableMapOf()
         val seksjonRows: MutableMap<Int, Validation<MatrikkelenhetRow>> = mutableMapOf()
         for (row in relatedRows) {
             if (row.festenummer == 0 && row.seksjonsnummer == 0) {
-                validGrunneiendomRow = if (validGrunneiendomRow is Valid && validGrunneiendomRow.value == null) {
-                    Validation.valid(row)
+                if (validEmptyGrunneiendom == missingGrunneiendom) {
+                    validEmptyGrunneiendom = Validation.valid(SourceId<Matrikkelenhet>(row.id) to Grunneiendom(Math.toIntExact(row.kommuenummer), row.gardsnummer, row.bruksnummer, emptySet(), emptySet()))
                 } else {
-                    validGrunneiendomRow.log(Level.ERROR) {
+                    validEmptyGrunneiendom.log(ERROR) {
                         "Det finnes flere id-er for grunneiendom på matrikkelenhet ${row.gardsnummer}/${row.bruksnummer}: ${row.id}"
                     }
                 }
@@ -107,20 +188,20 @@ class MatrikkelenhetEntitySource(private val connection: OracleConnection) : Ent
                 if (row.seksjonsnummer == 0) {
                     festegrunnRows.merge(row.festenummer, Validation.valid(row)) { validation, _ ->
                         val existingId = validation.map { it.id }.orNull()
-                        validation.log(Level.ERROR) { "Det finnes flere festegrunner med festenummer ${row.festenummer} på matrikkelenhet ${row.gardsnummer}/${row.bruksnummer}: $existingId og ${row.id}" }
+                        validation.log(ERROR) { "Det finnes flere festegrunner med festenummer ${row.festenummer} på matrikkelenhet ${row.gardsnummer}/${row.bruksnummer}: $existingId og ${row.id}" }
                     }
                 } else {
                     festegrunnSeksjonRows
                         .computeIfAbsent(row.festenummer) { mutableMapOf() }
                         .merge(row.seksjonsnummer, Validation.valid(row)) { validation, _ ->
                             val existingId = validation.map { it.id }.orNull()
-                            validation.log(Level.ERROR) { "Det finnes flere festegrunner med seksjonsnummer ${row.seksjonsnummer} på festegrunn ${row.gardsnummer}/${row.bruksnummer}/${row.festenummer}: $existingId og ${row.id}" }
+                            validation.log(ERROR) { "Det finnes flere festegrunner med seksjonsnummer ${row.seksjonsnummer} på festegrunn ${row.gardsnummer}/${row.bruksnummer}/${row.festenummer}: $existingId og ${row.id}" }
                         }
                 }
             } else {
                 seksjonRows.merge(row.seksjonsnummer, Validation.valid(row)) { validation, _ ->
                     val existingId = validation.map { it.id }.orNull()
-                    validation.log(Level.ERROR) { "Det finnes flere seksjoner med seksjonsnummer ${row.seksjonsnummer} på matrikkelenhet ${row.gardsnummer}/${row.bruksnummer}: $existingId og ${row.id}" }
+                    validation.log(ERROR) { "Det finnes flere seksjoner med seksjonsnummer ${row.seksjonsnummer} på matrikkelenhet ${row.gardsnummer}/${row.bruksnummer}: $existingId og ${row.id}" }
                 }
             }
         }
@@ -129,7 +210,7 @@ class MatrikkelenhetEntitySource(private val connection: OracleConnection) : Ent
             .map { festenummer ->
                 val validSeksjonRows = festegrunnSeksjonRows[festenummer].orEmpty().values.toValidList()
                 val validFestegrunnRow = festegrunnRows[festenummer] ?: Validation.invalid(
-                    Level.ERROR,
+                    ERROR,
                     "Seksjoner festet på festegrunn som ikke finnes"
                 )
                 validFestegrunnRow.productMap(validSeksjonRows) { festegrunnRow, seksjonsRows ->
@@ -150,82 +231,40 @@ class MatrikkelenhetEntitySource(private val connection: OracleConnection) : Ent
 
         val validSeksjoner = seksjonRows.values.toValidList()
             .map { it.map { row -> SeksjonData.Detached(SourceId(row.id), row.seksjonsnummer) }.toSet() }
-        return Triple(validGrunneiendomRow, validFestegrunner, validSeksjoner)
+
+        val grunneiendomId = validEmptyGrunneiendom.value.first
+
+        return Validation.productMap(validEmptyGrunneiendom, validFestegrunner, validSeksjoner) { (_,grunneiendom), festegrunner, seksjoner ->
+            Grunneiendom(grunneiendom.kommunenr, grunneiendom.gardsnummer, grunneiendom.bruksnummer, festegrunner, seksjoner)
+        }.fold({ warns, errs -> when(grunneiendomId) {
+            is GeneratedId -> VirtualEntity(grunneiendomId, Invalid(errs, warns))
+            is SourceId ->  DatabaseEntity(grunneiendomId, Invalid(errs, warns))
+        } }) { warns, grunneiendom ->
+            when(grunneiendomId) {
+                is GeneratedId -> VirtualEntity(grunneiendomId, Valid(grunneiendom, warns))
+                is SourceId -> DatabaseEntity(grunneiendomId, Valid(grunneiendom, warns))
+            }
+        }
     }
 
-    private fun createMatrikkelenhetEntity(
-        validGrunneiendomRow: Validation<MatrikkelenhetRow?>,
-        validFestegrunner: Valid<Set<FestegrunnData.Detached>>,
-        validSeksjoner: Valid<Set<SeksjonData.Detached>>,
-        key: MatrikkelenhetKey
-    ) = Validation
-        .productMap(
-            validGrunneiendomRow,
-            validFestegrunner,
-            validSeksjoner
-        ) { grunneiendomRow, festegrunnData, seksjonsData ->
-            if (grunneiendomRow != null) {
-                SourceId<Matrikkelenhet>(grunneiendomRow.id) to Grunneiendom(
-                    Math.toIntExact(
-                        grunneiendomRow.kommuenummer
-                    ),
-                    grunneiendomRow.gardsnummer,
-                    grunneiendomRow.bruksnummer,
-                    festegrunnData,
-                    seksjonsData
-                )
-            } else {
-                GeneratedId<Matrikkelenhet>() to Grunneiendom(
-                    Math.toIntExact(key.kommuenummer),
-                    key.gardsnummer,
-                    key.bruksnummer,
-                    festegrunnData,
-                    seksjonsData
-                )
-            }
-        }
-        .fold({ warns, errs ->
-            SourceEntity(
-                GeneratedId<Matrikkelenhet>(),
-                Invalid(errs, warns)
-            )
-        }) { warns, (id, grunneiendom) ->
-            when (id) {
-                is SourceId -> SourceEntity(id, Valid(grunneiendom, warns))
-                is GeneratedId -> SourceEntity(
-                    id,
-                    Valid(grunneiendom, warns)
-                        .log(Level.ERROR) { "Grunneiendom mangler for ${grunneiendom.kommunenr}-${grunneiendom.gardsnummer}/${grunneiendom.bruksnummer}" })
-            }
-        }
-}
-
     @Serializable
-    private data class MatrikkelenhetKey(val kommuenummer: Long,
-                                         val gardsnummer: Int,
-                                         val bruksnummer: Int)
-
-    @Serializable
-    private data class MatrikkelenhetRow(
+    data class MatrikkelenhetRow(
         val id: Long,
         val kommuenummer: Long,
         val gardsnummer: Int,
         val bruksnummer: Int,
         val festenummer: Int,
-        val seksjonsnummer: Int) {
+        val seksjonsnummer: Int)
 
-        companion object {
-            fun from(row: OracleRow) : MatrikkelenhetRow = MatrikkelenhetRow(
-                row.getOrThrow(1),
-                row.getOrThrow(2),
-                row.getOrThrow(3),
-                row.getOrThrow(4),
-                row.getOrThrow(5),
-                row.getOrThrow(6)
-            )
-        }
+    companion object {
+        private val logger = System.getLogger(::MatrikkelenhetEntitySource::class.java.name)
+        private val columnFamilyDescriptor = ColumnFamilyDescriptor(
+            "matrikkelenetRow".toByteArray(),
+            ColumnFamilyOptions().apply {
+                setDisableAutoCompactions(true)
+            }
+        )
     }
+}
 
 
-inline fun <reified T> OracleRow.get(col: Int): T? = this.getObject(col, T::class.java)
-inline fun <reified T> OracleRow.getOrThrow(col: Int): T = this.getObject(col, T::class.java)

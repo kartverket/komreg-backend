@@ -30,10 +30,14 @@ class MatrikkelenEntitySourceFactory : EntitySourceFactory<MatrikkelConfig> {
 
     override fun create(context: EntitySourceContext<MatrikkelConfig>): MatrikkelenEntitySource {
         val config = context.getEntitySourceConfig()
-        val dataSource = OracleDataSource()
-        dataSource.url = config.jdbcUrl
-        dataSource.user = config.jdbcUser
-        dataSource.setPassword(config.jdbcPassword)
+        val dataSource = OracleDataSource().apply {
+            setConnectionProperty("autoCommit","false")
+            setConnectionProperty("defaultRowPrefetch","65536")
+            setConnectionProperty("oracle.jdbc.maxCachedBufferSize","12")
+            url = config.jdbcUrl
+            user = config.jdbcUser
+            setPassword(config.jdbcPassword)
+        }
         return MatrikkelenEntitySource(dataSource)
     }
 }
