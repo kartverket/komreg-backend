@@ -25,7 +25,7 @@ class MatrikkelenhetEntitySource(private val connection: OracleConnection) : Ent
 
 
     @OptIn(FlowPreview::class)
-    override fun download(context: EntitySourceDownloadContext): Flow<Entity<out Matrikkelenhet>> =
+    override fun download(context: EntitySourceDownloadContext): Flow<SourceEntity<Matrikkelenhet>> =
         downloadThenSort(context).buffer(65536).parMapUnordered(concurrency = Runtime.getRuntime().availableProcessors(), transform = ::validateMatrikkelenhetGroup).flowOn(Dispatchers.Default)
 
     /**

@@ -6,15 +6,15 @@ import kotlin.reflect.jvm.javaType
 import kotlin.reflect.typeOf
 
 
-interface Embeddable<A : EntityData> {
-    val id: Id<A>
+interface Embeddable<out A : EntityData> {
+    val id: Id<@UnsafeVariance A>
 }
 
-sealed interface Entity<A : EntityData> : Embeddable<A> {
+sealed interface Entity<out A : EntityData> : Embeddable<A> {
     val data: Validation<A>
 }
 
-sealed interface SourceEntity<A : EntityData> : Entity<A> {
+sealed interface SourceEntity<out A : EntityData> : Entity<A> {
     companion object {
         inline operator fun <reified A : EntityData> invoke(id: SourceId<A>, data: Validation<A>) : DatabaseEntity<A> = DatabaseEntity(id, data)
         inline operator fun <reified A : EntityData> invoke(id: GeneratedId<A>, data: Validation<A>) : VirtualEntity<A> = VirtualEntity(id, data)

@@ -12,7 +12,7 @@ class MatrikkelenEntitySource(private val dataSource: OracleDataSource) : Entity
         MatrikkelenhetEntitySource(it)
     }
 
-    override fun download(context: EntitySourceDownloadContext): Flow<Entity<out EntityData>> = flow {
+    override fun download(context: EntitySourceDownloadContext): Flow<SourceEntity<EntityData>> = flow {
         emitAll(
             dataSource
                 .createConnectionBuilder()
