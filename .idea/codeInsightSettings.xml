@@ -6,6 +6,7 @@
       <name>arrow.core.Valid</name>
       <name>arrow.core.Validated</name>
       <name>arrow.core.ValidatedNel</name>
+      <name>arrow.core.invalid</name>
       <name>arrow.core.invalidNel</name>
       <name>arrow.core.valid</name>
       <name>arrow.core.validNel</name>
