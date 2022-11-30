@@ -5,11 +5,14 @@ import kotlinx.cli.ArgType
 import kotlinx.cli.default
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.take
-import no.kartverket.komreg.experimental.DownloadContext
+import no.kartverket.komreg.experimental.DownloadContextShared
 import no.kartverket.komreg.experimental.EntitySourceContext
+import no.kartverket.komreg.experimental.EntitySourceDownloadContext
 import no.kartverket.komreg.matrikkelen.MatrikkelConfig
 import no.kartverket.komreg.matrikkelen.MatrikkelenEntitySourceFactory
+import org.rocksdb.RocksDB
+import java.util.UUID
+import java.util.concurrent.ForkJoinPool
 
 data class CLIOptions(
     val output: String?,
@@ -20,6 +23,10 @@ data class CLIOptions(
 )
 
 suspend fun main(args: Array<String>) {
+    ForkJoinPool.commonPool().execute {
+        RocksDB.loadLibrary()
+    }
+
     val parser = ArgParser("komreg")
     val output by parser.option(ArgType.String, shortName = "o", description = "Output file")
     val entries by parser.option(ArgType.Int, shortName = "n", description = "Number of entries").default(10)
@@ -42,7 +49,12 @@ suspend fun main(args: Array<String>) {
     }
     val source = factory.create(context)
 
-    val result = source.download(DownloadContext(context)).take(cli.entries).onEach {
-        println(it)
-    }.collect()
+    DownloadContextShared(UUID.randomUUID()).use { downloadContext ->
+        source
+            .download(EntitySourceDownloadContext(context, downloadContext))
+            .onEach { println(it) }
+            .collect()
+    }
+
+
 }

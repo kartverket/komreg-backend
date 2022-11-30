@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="JavaProjectCodeInsightSettings">
+    <excluded-names>
+      <name>arrow.core.Invalid</name>
+      <name>arrow.core.Valid</name>
+      <name>arrow.core.Validated</name>
+      <name>arrow.core.ValidatedNel</name>
+      <name>arrow.core.invalid</name>
+      <name>arrow.core.invalidNel</name>
+      <name>arrow.core.valid</name>
+      <name>arrow.core.validNel</name>
+    </excluded-names>
+  </component>
+</project>
