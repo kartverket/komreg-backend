@@ -1,14 +1,12 @@
 package no.kartverket.komreg.transformation
-
-import no.kartverket.komreg.domain.EntityData
 import no.kartverket.komreg.domain.Grunneiendom
 import no.kartverket.komreg.domain.Matrikkelenhet
 import no.kartverket.komreg.experimental.*
 import java.lang.System.Logger.Level.ERROR
 
-sealed class Transform<T : EntityData>(val entity: Entity<T>) {
-    class Transformed<T : EntityData>(data: Entity<T>, val transformation: TransformFunc<T>) : Transform<T>(data)
-    class NoOp<T : EntityData>(data: Entity<T>) : Transform<T>(data)
+sealed class Transform<T>(val entity: Entity<T>) {
+    class Transformed<T>(data: Entity<T>, val transformation: TransformFunc<T>) : Transform<T>(data)
+    class NoOp<T>(data: Entity<T>) : Transform<T>(data)
     //class Error<out T : EntityData>(data: T, val errors: List<String>) : Transform<T>(data)
 
     fun transform(trans: List<TransformFunc<T>>): Transform<T> = trans.fold(this) { acc, transformFunc ->
@@ -37,11 +35,11 @@ sealed class Transform<T : EntityData>(val entity: Entity<T>) {
     } + ")"
 
     companion object {
-        fun <T : EntityData> noOp(t: Entity<T>): Transform<T> = NoOp(t)
+        fun <T> noOp(t: Entity<T>): Transform<T> = NoOp(t)
     }
 }
 
-interface TransformFunc<T : EntityData> {
+interface TransformFunc<T> {
     val description: String
     fun map(input: Entity<T>): Transform<T>
 }

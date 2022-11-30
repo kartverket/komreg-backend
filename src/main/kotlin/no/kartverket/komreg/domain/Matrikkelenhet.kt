@@ -1,6 +1,6 @@
 package no.kartverket.komreg.domain
 
-import no.kartverket.komreg.experimental.Embeddable
+import no.kartverket.komreg.experimental.Referencable
 import no.kartverket.komreg.experimental.Id
 
 sealed interface Matrikkelenhet : EntityData {
@@ -28,7 +28,7 @@ data class Grunneiendom(
     override val seksjoner by lazy { seksjonsData.map { seksjonsData -> Seksjon(this, seksjonsData) }.toSet() }
 }
 
-interface FestegrunnData : Embeddable<Matrikkelenhet> {
+interface FestegrunnData : Referencable<Matrikkelenhet> {
     val festenummer: Int
     val seksjonsData: Set<SeksjonData.Detached>
     data class Detached(
@@ -38,7 +38,7 @@ interface FestegrunnData : Embeddable<Matrikkelenhet> {
     ) : FestegrunnData
 }
 
-interface SeksjonData : Embeddable<Matrikkelenhet> {
+interface SeksjonData : Referencable<Matrikkelenhet> {
     val seksjonsnummer: Int
 
     data class Detached(
