@@ -3,13 +3,18 @@ package no.kartverket.komreg
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.toList
+import no.kartverket.komreg.domain.EntityData
 import no.kartverket.komreg.experimental.DownloadContextShared
 import no.kartverket.komreg.experimental.EntitySourceContext
 import no.kartverket.komreg.experimental.EntitySourceDownloadContext
 import no.kartverket.komreg.matrikkelen.MatrikkelConfig
 import no.kartverket.komreg.matrikkelen.MatrikkelenEntitySourceFactory
+import no.kartverket.komreg.transformation.AddGardsnummerRule
+import no.kartverket.komreg.transformation.Transform
+import no.kartverket.komreg.transformation.TransformFunc
 import org.rocksdb.RocksDB
 import java.util.UUID
 import java.util.concurrent.ForkJoinPool
@@ -37,6 +42,10 @@ suspend fun main(args: Array<String>) {
     parser.parse(args)
     val cli = CLIOptions(output, threads, entries, debug, follow)
 
+    executeRun()
+}
+
+suspend fun executeRun(): List<Transform<EntityData>> {
     val factory = MatrikkelenEntitySourceFactory()
     val context: EntitySourceContext<MatrikkelConfig> = object : EntitySourceContext<MatrikkelConfig> {
         override fun getEntitySourceConfig(): MatrikkelConfig {
@@ -48,11 +57,19 @@ suspend fun main(args: Array<String>) {
         }
     }
     val source = factory.create(context)
+    val rules: List<TransformFunc<EntityData>> = listOf(
+        AddGardsnummerRule(2..10, 50),
+        AddGardsnummerRule(426..426, 50),
+        AddGardsnummerRule(426 + 50..426 + 50, 30)
+    )
 
-    DownloadContextShared(UUID.randomUUID()).use { downloadContext ->
+    val result = DownloadContextShared(UUID.randomUUID()).use { downloadContext ->
         source
             .download(EntitySourceDownloadContext(context, downloadContext))
+            .map { Transform.noOp(it) }
+            .map { it.transform(rules) }
             .onEach { println(it) }
-            .collect()
+            .toList()
     }
+    return result
 }
