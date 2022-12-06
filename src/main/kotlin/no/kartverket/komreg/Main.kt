@@ -12,7 +12,6 @@ import no.kartverket.komreg.experimental.EntitySourceContext
 import no.kartverket.komreg.experimental.EntitySourceDownloadContext
 import no.kartverket.komreg.matrikkelen.MatrikkelConfig
 import no.kartverket.komreg.matrikkelen.MatrikkelenEntitySourceFactory
-import no.kartverket.komreg.transformation.AddGardsnummerRule
 import no.kartverket.komreg.transformation.Transform
 import no.kartverket.komreg.transformation.TransformFunc
 import org.rocksdb.RocksDB
@@ -45,7 +44,7 @@ suspend fun main(args: Array<String>) {
     executeRun()
 }
 
-suspend fun executeRun(): List<Transform<EntityData>> {
+suspend fun executeRun(rules: List<TransformFunc<EntityData>> = emptyList()): List<Transform<EntityData>> {
     val factory = MatrikkelenEntitySourceFactory()
     val context: EntitySourceContext<MatrikkelConfig> = object : EntitySourceContext<MatrikkelConfig> {
         override fun getEntitySourceConfig(): MatrikkelConfig {
@@ -57,15 +56,10 @@ suspend fun executeRun(): List<Transform<EntityData>> {
         }
     }
     val source = factory.create(context)
-    val rules: List<TransformFunc<EntityData>> = listOf(
-        AddGardsnummerRule(2..10, 50),
-        AddGardsnummerRule(426..426, 50),
-        AddGardsnummerRule(426 + 50..426 + 50, 30)
-    )
-
     val result = DownloadContextShared(UUID.randomUUID()).use { downloadContext ->
         source
             .download(EntitySourceDownloadContext(context, downloadContext))
+            .onEach { println(it) }
             .map { Transform.noOp(it) }
             .map { it.transform(rules) }
             .onEach { println(it) }
