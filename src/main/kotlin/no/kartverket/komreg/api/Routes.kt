@@ -8,11 +8,19 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import io.ktor.server.websocket.WebSocketServerSession
+import io.ktor.server.websocket.webSocket
+import io.ktor.websocket.Frame
+import kotlinx.coroutines.delay
 import no.kartverket.komreg.domain.EntityData
 import no.kartverket.komreg.executeRun
 import no.kartverket.komreg.transformation.AddGardsnummerRule
 import no.kartverket.komreg.transformation.Transform
 import no.kartverket.komreg.transformation.TransformFunc
+
+suspend fun WebSocketServerSession.lol() {
+    send(Frame.Text("Hoi"))
+}
 
 fun Application.configureRouting() {
     routing {
@@ -30,8 +38,21 @@ fun Application.configureRouting() {
                 val rules: List<TransformFunc<EntityData>> = ruleset.gaardsnummer.map {
                     AddGardsnummerRule(it.start..it.end, it.increase)
                 }
-                call.respond(executeRun(rules).toJson())
+                executeRun(rules).toJson()
+                call.respond("Kjøring startet")
             }
+        }
+        webSocket("current") {
+        }
+        webSocket("/hei") {
+            send(Frame.Text("Starter: Hoi"))
+            var currentId = 0
+            while (currentId < 30) {
+                currentId++
+                delay(3000)
+                send(Frame.Text("Løpende endring: Oh Hoi $currentId"))
+            }
+            send(Frame.Text("Slutter"))
         }
     }
 }

@@ -60,6 +60,9 @@ suspend fun executeRun(rules: List<TransformFunc<EntityData>> = emptyList()): Li
         source
             .download(EntitySourceDownloadContext(context, downloadContext))
             .onEach { println(it) }
+            .onEach {
+                // send websocket status om transformasjon
+            }
             .map { Transform.noOp(it) }
             .map { it.transform(rules) }
             .onEach { println(it) }
