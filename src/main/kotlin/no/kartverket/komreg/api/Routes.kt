@@ -8,22 +8,39 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import io.ktor.server.websocket.WebSocketServerSession
+import io.ktor.server.websocket.sendSerialized
 import io.ktor.server.websocket.webSocket
 import io.ktor.websocket.Frame
 import kotlinx.coroutines.delay
+import kotlinx.serialization.Serializable
 import no.kartverket.komreg.domain.EntityData
+import no.kartverket.komreg.domain.Grunneiendom
 import no.kartverket.komreg.executeRun
+import no.kartverket.komreg.experimental.GeneratedId
+import no.kartverket.komreg.experimental.Valid
+import no.kartverket.komreg.experimental.Validation
+import no.kartverket.komreg.experimental.VirtualEntity
 import no.kartverket.komreg.transformation.AddGardsnummerRule
 import no.kartverket.komreg.transformation.Transform
 import no.kartverket.komreg.transformation.TransformFunc
+import java.util.LinkedList
+import java.util.Queue
+import kotlin.random.Random
 
-suspend fun WebSocketServerSession.lol() {
-    send(Frame.Text("Hoi"))
+val randomMessages = listOf("Feil ved transformasjon", "Dette gikk ikke", "Huff da")
+
+@Serializable
+sealed class FrontendMessage {
+    @Serializable
+    data class Error(val errorMsg: String, val data: String, val value: Int) : FrontendMessage()
+
+    @Serializable
+    data class Success(val data: String, val oldValue: Int, val newValue: Int) : FrontendMessage()
 }
 
 fun Application.configureRouting() {
     routing {
+        val messageQueue: Queue<String> = LinkedList(listOf("a", "b", "c"))
         route("/run") {
             get {
                 val rules: List<TransformFunc<EntityData>> = listOf(
@@ -34,6 +51,7 @@ fun Application.configureRouting() {
                 call.respond(executeRun(rules).toJson())
             }
             post {
+                messageQueue.add("Hei")
                 val ruleset = call.receive<Ruleset>()
                 val rules: List<TransformFunc<EntityData>> = ruleset.gaardsnummer.map {
                     AddGardsnummerRule(it.start..it.end, it.increase)
@@ -42,17 +60,36 @@ fun Application.configureRouting() {
                 call.respond("Kjøring startet")
             }
         }
-        webSocket("current") {
-        }
         webSocket("/hei") {
-            send(Frame.Text("Starter: Hoi"))
+            val data = Grunneiendom(10, 10, 10, emptySet(), emptySet())
+            val validated = VirtualEntity(GeneratedId.invoke(), Valid(data) as Validation<Grunneiendom>)
+            val transformed = Transform.Transformed(validated, AddGardsnummerRule(2..10, 50))
+            sendSerialized(
+                listOf(
+                    FrontendMessage.Success(transformed.toString(), Random.nextInt(), Random.nextInt()),
+                    FrontendMessage.Success(transformed.toString(), Random.nextInt(), Random.nextInt()),
+                    FrontendMessage.Success(transformed.toString(), Random.nextInt(), Random.nextInt()),
+                    FrontendMessage.Error(randomMessages.random(), transformed.toString(), Random.nextInt()),
+                    FrontendMessage.Error(randomMessages.random(), transformed.toString(), Random.nextInt())
+                )
+            )
             var currentId = 0
             while (currentId < 30) {
                 currentId++
                 delay(3000)
-                send(Frame.Text("Løpende endring: Oh Hoi $currentId"))
+                if (Random.nextFloat() > 0.5f) {
+                    sendSerialized(FrontendMessage.Success(transformed.toString(), Random.nextInt(), Random.nextInt()))
+                } else {
+                    sendSerialized(
+                        FrontendMessage.Error(
+                            randomMessages.random(),
+                            transformed.toString(),
+                            Random.nextInt()
+                        )
+                    )
+                }
             }
-            send(Frame.Text("Slutter"))
+            send(Frame.Close())
         }
     }
 }
