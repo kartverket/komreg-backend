@@ -38,11 +38,17 @@ sealed class FrontendMessage {
     data class Success(val data: String, val oldValue: Int, val newValue: Int) : FrontendMessage()
 }
 
+data class ExecutionStatus(
+    var status: String,
+    val messageQueue: Queue<String>,
+)
+
 fun Application.configureRouting() {
     routing {
-        val messageQueue: Queue<String> = LinkedList(listOf("a", "b", "c"))
+        val executionStatus: ExecutionStatus = ExecutionStatus("STARTING", LinkedList(listOf("a", "b", "c")))
         route("/run") {
             get {
+                println("Calling get method")
                 val rules: List<TransformFunc<EntityData>> = listOf(
                     AddGardsnummerRule(2..10, 50),
                     AddGardsnummerRule(426..426, 50),
@@ -51,16 +57,17 @@ fun Application.configureRouting() {
                 call.respond(executeRun(rules).toJson())
             }
             post {
-                messageQueue.add("Hei")
                 val ruleset = call.receive<Ruleset>()
                 val rules: List<TransformFunc<EntityData>> = ruleset.gaardsnummer.map {
                     AddGardsnummerRule(it.start..it.end, it.increase)
                 }
-                executeRun(rules).toJson()
+                executeRun(rules, executionStatus).toJson()
                 call.respond("Kjøring startet")
             }
         }
         webSocket("/hei") {
+            // session
+
             val data = Grunneiendom(10, 10, 10, emptySet(), emptySet())
             val validated = VirtualEntity(GeneratedId.invoke(), Valid(data) as Validation<Grunneiendom>)
             val transformed = Transform.Transformed(validated, AddGardsnummerRule(2..10, 50))
@@ -73,20 +80,13 @@ fun Application.configureRouting() {
                     FrontendMessage.Error(randomMessages.random(), transformed.toString(), Random.nextInt())
                 )
             )
-            var currentId = 0
-            while (currentId < 30) {
-                currentId++
-                delay(3000)
-                if (Random.nextFloat() > 0.5f) {
-                    sendSerialized(FrontendMessage.Success(transformed.toString(), Random.nextInt(), Random.nextInt()))
-                } else {
-                    sendSerialized(
-                        FrontendMessage.Error(
-                            randomMessages.random(),
-                            transformed.toString(),
-                            Random.nextInt()
-                        )
-                    )
+            while (executionStatus.status != "DONE") {
+                delay(100)
+                while (!executionStatus.messageQueue.isEmpty()) {
+                    val msg: String? = executionStatus.messageQueue.poll()
+                    if (msg != null) {
+                        sendSerialized(FrontendMessage.Success(msg, 23, 32))
+                    }
                 }
             }
             send(Frame.Close())

@@ -6,6 +6,7 @@ import kotlinx.cli.default
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.toList
+import no.kartverket.komreg.api.ExecutionStatus
 import no.kartverket.komreg.domain.EntityData
 import no.kartverket.komreg.experimental.DownloadContextShared
 import no.kartverket.komreg.experimental.EntitySourceContext
@@ -15,6 +16,7 @@ import no.kartverket.komreg.matrikkelen.MatrikkelenEntitySourceFactory
 import no.kartverket.komreg.transformation.Transform
 import no.kartverket.komreg.transformation.TransformFunc
 import org.rocksdb.RocksDB
+import java.util.LinkedList
 import java.util.UUID
 import java.util.concurrent.ForkJoinPool
 
@@ -44,7 +46,11 @@ suspend fun main(args: Array<String>) {
     executeRun()
 }
 
-suspend fun executeRun(rules: List<TransformFunc<EntityData>> = emptyList()): List<Transform<EntityData>> {
+suspend fun executeRun(
+    rules: List<TransformFunc<EntityData>> = emptyList(),
+    executeStatus: ExecutionStatus = ExecutionStatus("running", LinkedList(emptyList())),
+): List<Transform<EntityData>> {
+    executeStatus.status = "RUNNING"
     val factory = MatrikkelenEntitySourceFactory()
     val context: EntitySourceContext<MatrikkelConfig> = object : EntitySourceContext<MatrikkelConfig> {
         override fun getEntitySourceConfig(): MatrikkelConfig {
@@ -61,6 +67,7 @@ suspend fun executeRun(rules: List<TransformFunc<EntityData>> = emptyList()): Li
             .download(EntitySourceDownloadContext(context, downloadContext))
             .onEach { println(it) }
             .onEach {
+                executeStatus.messageQueue.add(it.toString())
                 // send websocket status om transformasjon
             }
             .map { Transform.noOp(it) }
@@ -68,5 +75,7 @@ suspend fun executeRun(rules: List<TransformFunc<EntityData>> = emptyList()): Li
             .onEach { println(it) }
             .toList()
     }
+    executeStatus.status = "DONE"
+
     return result
 }
