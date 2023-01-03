@@ -1,5 +1,6 @@
 package no.kartverket.komreg.api
 
+import io.ktor.client.HttpClient
 import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
@@ -12,6 +13,7 @@ import kotlinx.serialization.json.Json
 import org.rocksdb.RocksDB
 import java.time.Duration
 import java.util.concurrent.ForkJoinPool
+import io.ktor.client.plugins.websocket.WebSockets as WebSocketClientPlugin
 
 fun main(args: Array<String>) =
     ForkJoinPool.commonPool().execute {
@@ -31,5 +33,8 @@ fun Application.module() {
         masking = false
         contentConverter = KotlinxWebsocketSerializationConverter(Json)
     }
-    configureRouting()
+    val wsclient = HttpClient {
+        install(WebSocketClientPlugin)
+    }
+    configureRouting(wsclient)
 }

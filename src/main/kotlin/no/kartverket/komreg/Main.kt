@@ -3,10 +3,12 @@ package no.kartverket.komreg
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.toList
-import no.kartverket.komreg.api.ExecutionStatus
+import no.kartverket.komreg.api.FrontendMessage
+import no.kartverket.komreg.api.WebsocketBroadcast
 import no.kartverket.komreg.domain.EntityData
 import no.kartverket.komreg.experimental.DownloadContextShared
 import no.kartverket.komreg.experimental.EntitySourceContext
@@ -16,7 +18,6 @@ import no.kartverket.komreg.matrikkelen.MatrikkelenEntitySourceFactory
 import no.kartverket.komreg.transformation.Transform
 import no.kartverket.komreg.transformation.TransformFunc
 import org.rocksdb.RocksDB
-import java.util.LinkedList
 import java.util.UUID
 import java.util.concurrent.ForkJoinPool
 
@@ -42,15 +43,14 @@ suspend fun main(args: Array<String>) {
 
     parser.parse(args)
     val cli = CLIOptions(output, threads, entries, debug, follow)
-
-    executeRun()
 }
 
 suspend fun executeRun(
     rules: List<TransformFunc<EntityData>> = emptyList(),
-    executeStatus: ExecutionStatus = ExecutionStatus("running", LinkedList(emptyList())),
+    websocketBroadcast: WebsocketBroadcast,
 ): List<Transform<EntityData>> {
-    executeStatus.status = "RUNNING"
+    websocketBroadcast.connect()
+
     val factory = MatrikkelenEntitySourceFactory()
     val context: EntitySourceContext<MatrikkelConfig> = object : EntitySourceContext<MatrikkelConfig> {
         override fun getEntitySourceConfig(): MatrikkelConfig {
@@ -67,15 +67,15 @@ suspend fun executeRun(
             .download(EntitySourceDownloadContext(context, downloadContext))
             .onEach { println(it) }
             .onEach {
-                executeStatus.messageQueue.add(it.toString())
-                // send websocket status om transformasjon
+                delay(50)
+                websocketBroadcast.sendSerialized(FrontendMessage.Success(it.toString(), 1, 1))
             }
             .map { Transform.noOp(it) }
             .map { it.transform(rules) }
             .onEach { println(it) }
             .toList()
     }
-    executeStatus.status = "DONE"
+    websocketBroadcast.close()
 
     return result
 }

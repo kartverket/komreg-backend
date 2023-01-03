@@ -1,5 +1,10 @@
 package no.kartverket.komreg.api
 
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
+import io.ktor.client.plugins.websocket.webSocket
+import io.ktor.http.HttpMethod
+import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
 import io.ktor.server.request.receive
@@ -10,9 +15,13 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import io.ktor.server.websocket.sendSerialized
 import io.ktor.server.websocket.webSocket
+import io.ktor.websocket.DefaultWebSocketSession
 import io.ktor.websocket.Frame
-import kotlinx.coroutines.delay
+import io.ktor.websocket.serialization.sendSerializedBase
+import kotlinx.coroutines.channels.ClosedReceiveChannelException
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import no.kartverket.komreg.domain.EntityData
 import no.kartverket.komreg.domain.Grunneiendom
 import no.kartverket.komreg.executeRun
@@ -23,8 +32,9 @@ import no.kartverket.komreg.experimental.VirtualEntity
 import no.kartverket.komreg.transformation.AddGardsnummerRule
 import no.kartverket.komreg.transformation.Transform
 import no.kartverket.komreg.transformation.TransformFunc
-import java.util.LinkedList
-import java.util.Queue
+import java.nio.charset.Charset
+import java.util.Collections
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
 
 val randomMessages = listOf("Feil ved transformasjon", "Dette gikk ikke", "Huff da")
@@ -38,14 +48,11 @@ sealed class FrontendMessage {
     data class Success(val data: String, val oldValue: Int, val newValue: Int) : FrontendMessage()
 }
 
-data class ExecutionStatus(
-    var status: String,
-    val messageQueue: Queue<String>,
-)
+fun Application.configureRouting(wsclient: HttpClient) {
+    val connections = Collections.synchronizedSet<WebsocketBroadcast.WebsocketConnection?>(LinkedHashSet())
+    val websocketBroadcast = WebsocketBroadcast(wsclient, connections)
 
-fun Application.configureRouting() {
     routing {
-        val executionStatus: ExecutionStatus = ExecutionStatus("STARTING", LinkedList(listOf("a", "b", "c")))
         route("/run") {
             get {
                 println("Calling get method")
@@ -54,19 +61,39 @@ fun Application.configureRouting() {
                     AddGardsnummerRule(426..426, 50),
                     AddGardsnummerRule(426 + 50..426 + 50, 30)
                 )
-                call.respond(executeRun(rules).toJson())
+                call.respond(executeRun(rules, websocketBroadcast).toJson())
             }
             post {
                 val ruleset = call.receive<Ruleset>()
                 val rules: List<TransformFunc<EntityData>> = ruleset.gaardsnummer.map {
                     AddGardsnummerRule(it.start..it.end, it.increase)
                 }
-                executeRun(rules, executionStatus).toJson()
-                call.respond("Kjøring startet")
+                call.respond(FrontendMessage.Success("Kjøring startet", 2, 2))
+                launch { executeRun(rules, websocketBroadcast).toJson() }
             }
         }
+        webSocket("/feed") {
+            val thisConnection = WebsocketBroadcast.WebsocketConnection(this)
+            println("Adding $thisConnection")
+            connections += thisConnection
+
+            try {
+                for (frame in incoming) {
+                    println("Incomming")
+                }
+            } catch (e: ClosedReceiveChannelException) {
+                println("Ouch")
+            } catch (e: Exception) {
+                println("Ouch2")
+            } finally {
+                println("Removing $thisConnection")
+                connections -= thisConnection
+            }
+        }
+
         webSocket("/hei") {
-            // session
+            val thisConnection = WebsocketBroadcast.WebsocketConnection(this)
+            println("Adding $thisConnection")
 
             val data = Grunneiendom(10, 10, 10, emptySet(), emptySet())
             val validated = VirtualEntity(GeneratedId.invoke(), Valid(data) as Validation<Grunneiendom>)
@@ -80,17 +107,56 @@ fun Application.configureRouting() {
                     FrontendMessage.Error(randomMessages.random(), transformed.toString(), Random.nextInt())
                 )
             )
-            while (executionStatus.status != "DONE") {
-                delay(100)
-                while (!executionStatus.messageQueue.isEmpty()) {
-                    val msg: String? = executionStatus.messageQueue.poll()
-                    if (msg != null) {
-                        sendSerialized(FrontendMessage.Success(msg, 23, 32))
-                    }
-                }
-            }
             send(Frame.Close())
+            println("Removing $thisConnection")
+            connections -= thisConnection
         }
+    }
+}
+
+data class WebsocketBroadcast(
+    val httpClient: HttpClient,
+    val clients: MutableSet<WebsocketConnection>,
+) {
+
+    class WebsocketConnection(val session: DefaultWebSocketSession) {
+        val id = lastId.getAndIncrement()
+
+        companion object {
+            val lastId = AtomicInteger(0)
+        }
+    }
+
+    val converter = KotlinxWebsocketSerializationConverter(Json)
+    var connection: DefaultClientWebSocketSession? = null
+
+    suspend fun connect() {
+        httpClient.webSocket(method = HttpMethod.Get, host = "localhost", port = 8080, path = "/feed") {
+            connection = this
+        }
+    }
+
+    suspend fun sendText(msg: String) {
+        clients.forEach {
+            it.session.send(Frame.Text(msg))
+        }
+    }
+
+    suspend inline fun <reified T> sendSerialized(data: T) {
+        clients.forEach {
+            it.session.sendSerializedBase(
+                data,
+                converter,
+                Charset.defaultCharset()
+            )
+        }
+    }
+
+    suspend fun close() {
+        clients.forEach {
+            it.session.send(Frame.Close())
+        }
+        connection?.send(Frame.Close())
     }
 }
 
