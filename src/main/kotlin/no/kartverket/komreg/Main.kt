@@ -49,8 +49,6 @@ suspend fun executeRun(
     rules: List<TransformFunc<EntityData>> = emptyList(),
     websocketBroadcast: WebsocketBroadcast,
 ): List<Transform<EntityData>> {
-    websocketBroadcast.connect()
-
     val factory = MatrikkelenEntitySourceFactory()
     val context: EntitySourceContext<MatrikkelConfig> = object : EntitySourceContext<MatrikkelConfig> {
         override fun getEntitySourceConfig(): MatrikkelConfig {
@@ -61,6 +59,8 @@ suspend fun executeRun(
             )
         }
     }
+
+    websocketBroadcast.connect()
     val source = factory.create(context)
     val result = DownloadContextShared(UUID.randomUUID()).use { downloadContext ->
         source

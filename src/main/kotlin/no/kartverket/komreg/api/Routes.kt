@@ -79,12 +79,12 @@ fun Application.configureRouting(wsclient: HttpClient) {
 
             try {
                 for (frame in incoming) {
-                    println("Incomming")
+                    println("Received packet")
                 }
             } catch (e: ClosedReceiveChannelException) {
-                println("Ouch")
+                println(e)
             } catch (e: Exception) {
-                println("Ouch2")
+                println(e)
             } finally {
                 println("Removing $thisConnection")
                 connections -= thisConnection
