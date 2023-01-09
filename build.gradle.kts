@@ -6,6 +6,8 @@ val mockkVersion = "1.13.2"
 val junitVersion = "5.9.0"
 val spekVersion = "2.0.19"
 val hamcrestVersion = "2.2"
+val ktorVersion = "2.2.1"
+val logbackVersion = "1.4.5"
 
 group = "no.kartverket.komreg"
 version = "1.0-SNAPSHOT"
@@ -41,8 +43,21 @@ dependencies {
     implementation("io.arrow-kt:arrow-fx-coroutines")
     implementation("io.arrow-kt:arrow-fx-stm")
 
+    implementation("io.ktor:ktor-server-core:$ktorVersion")
+    implementation("io.ktor:ktor-server-netty:$ktorVersion")
+    implementation("io.ktor:ktor-server-cors:$ktorVersion")
+    implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
+    implementation("io.ktor:ktor-server-websockets:$ktorVersion")
+    implementation("io.ktor:ktor-client-websockets:$ktorVersion")
+    implementation("io.ktor:ktor-client-cio:$ktorVersion")
+
+    implementation("ch.qos.logback:logback-classic:$logbackVersion")
+
     implementation("com.oracle.database.jdbc:ojdbc11:21.7.0.0")
     implementation("org.rocksdb:rocksdbjni:7.7.3")
+    implementation("io.ktor:ktor-server-core-jvm:2.1.3")
+    implementation("io.ktor:ktor-server-websockets-jvm:2.1.3")
 
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
@@ -62,5 +77,5 @@ tasks.withType<KotlinCompile> {
 }
 
 application {
-    mainClass.set("MainKt")
+    mainClass.set("ApplicationKt")
 }

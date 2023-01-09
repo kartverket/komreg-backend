@@ -1,0 +1,22 @@
+POST http://localhost:8080/run HTTP/1.1
+Content-Type: application/json
+
+{
+  "gaardsnummer": [
+    {
+      "start": 2,
+      "end": 10,
+      "increase": 50
+    },
+    {
+      "start": 426,
+      "end": 426,
+      "increase": 50
+    },
+    {
+      "start": 476,
+      "end": 477,
+      "increase": 30
+    }
+  ]
+}
