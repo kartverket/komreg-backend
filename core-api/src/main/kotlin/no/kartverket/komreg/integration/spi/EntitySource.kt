@@ -5,5 +5,4 @@ import no.kartverket.komreg.core.Product
 
 interface EntitySource<out A : Product<*>> {
     val entityFlow: Flow<SourceEntityContext<A>>
-
 }

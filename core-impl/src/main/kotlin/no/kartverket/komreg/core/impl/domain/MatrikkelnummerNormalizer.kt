@@ -16,17 +16,17 @@ class MatrikkelnummerNormalizer : Normalizer<Matrikkelnummer> {
     override fun normalize(a: Matrikkelnummer?): And<*, *> =
         if (a != null) {
             a.fylkesnummer.product and
-                    a.kommunenummer.lopenummer and
-                    a.gardsnummer and
-                    a.bruksnummer and
-                    a.festenummer and
-                    a.seksjonsnummer
+                a.kommunenummer.lopenummer and
+                a.gardsnummer and
+                a.bruksnummer and
+                a.festenummer and
+                a.seksjonsnummer
         } else {
             (null as Fylkesnummer?).product and
-                    null as Kommunenummer.Lopenummer? and
-                    null as Matrikkelnummer.Gardsnummer? and
-                    null as Matrikkelnummer.Bruksnummer? and
-                    null as Matrikkelnummer.Festenummer? and
-                    null as Matrikkelnummer.Seksjonsnummer?
+                null as Kommunenummer.Lopenummer? and
+                null as Matrikkelnummer.Gardsnummer? and
+                null as Matrikkelnummer.Bruksnummer? and
+                null as Matrikkelnummer.Festenummer? and
+                null as Matrikkelnummer.Seksjonsnummer?
         }
 }

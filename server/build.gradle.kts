@@ -39,7 +39,6 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.4.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
 
-
     implementation("io.arrow-kt:arrow-fx-coroutines")
     implementation("io.arrow-kt:arrow-fx-stm")
 

@@ -9,7 +9,7 @@ interface DataError {
 
     data class PlainText(
         override val severity: Severity.Fatal,
-        override val message: String
+        override val message: String,
     ) : DataError {
         constructor(message: String) : this(Severity.Fatal.FATAL, message)
 

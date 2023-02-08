@@ -9,7 +9,7 @@ import kotlin.reflect.KClass
 
 class EntityContext<out A> private constructor(
     private val sourceContext: SourceEntityContext<Product<*>>,
-    private val data: KrData<A>
+    private val data: KrData<A>,
 ) : SourceEntityContext<Product<*>> by sourceContext {
 
     fun <B> map(f: (A) -> B) = EntityContext(sourceContext, data.map(f))
@@ -46,7 +46,6 @@ class EntityContext<out A> private constructor(
             return EntityContext(this, data)
         }
     }
-
 }
 
 interface SourceEntityContext<out A : Product<*>> {
@@ -60,5 +59,3 @@ interface SourceEntityContext<out A : Product<*>> {
         operator fun <A : Product<*>> invoke(entityId: Any, sourceEntity: KrData<A>) = Simple(entityId, sourceEntity)
     }
 }
-
-
