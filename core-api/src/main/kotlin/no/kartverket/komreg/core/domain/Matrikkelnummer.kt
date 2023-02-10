@@ -1,7 +1,9 @@
 package no.kartverket.komreg.core.domain
 
+import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.data.RawData
 
+@Serializable
 data class Matrikkelnummer(
     val kommunenummer: Kommunenummer,
     val gardsnummer: Gardsnummer,
@@ -9,9 +11,16 @@ data class Matrikkelnummer(
     val festenummer: Festenummer?,
     val seksjonsnummer: Seksjonsnummer?,
 ) {
+    @Serializable
     data class Gardsnummer(val value: Int)
+
+    @Serializable
     data class Bruksnummer(val value: Short)
+
+    @Serializable
     data class Festenummer(val value: Short)
+
+    @Serializable
     data class Seksjonsnummer(val value: Short)
 
     companion object {

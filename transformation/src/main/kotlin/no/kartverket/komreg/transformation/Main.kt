@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.toList
+import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.KrAppBootContext
 import no.kartverket.komreg.core.data.RawData
 import no.kartverket.komreg.core.data.Transformation
@@ -65,6 +66,7 @@ interface TransformationAction<T> {
     fun transform(transform: Transformation<T>): Transformation<T>
 }
 
+@Serializable
 data class TransformGardsnummer(val number: Int, val newNumber: Int) : TransformationAction<Matrikkelnummer> {
     override fun transform(transform: Transformation<Matrikkelnummer>): Transformation<Matrikkelnummer> {
         return when (transform) {

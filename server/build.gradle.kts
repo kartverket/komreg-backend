@@ -5,6 +5,8 @@ val kotlinxCoroutinesVersion = "1.6.4"
 val mockkVersion = "1.13.2"
 val junitVersion = "5.9.0"
 val spekVersion = "2.0.19"
+val ktorVersion = "2.2.1"
+val logbackVersion = "1.4.5"
 val hamcrestVersion = "2.2"
 
 group = "no.kartverket.komreg"
@@ -28,6 +30,7 @@ dependencies {
 
     runtimeOnly(project(":core-impl"))
     runtimeOnly(project(":integration-matrikkel"))
+    implementation(project(":transformation"))
 
     implementation("org.jetbrains.kotlin:kotlin-reflect")
 
@@ -44,6 +47,17 @@ dependencies {
 
     implementation("com.oracle.database.jdbc:ojdbc11:21.7.0.0")
     implementation("org.rocksdb:rocksdbjni:7.7.3")
+
+    implementation("io.ktor:ktor-server-core:$ktorVersion")
+    implementation("io.ktor:ktor-server-netty:$ktorVersion")
+    implementation("io.ktor:ktor-server-cors:$ktorVersion")
+    implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
+    implementation("io.ktor:ktor-server-websockets:$ktorVersion")
+    implementation("io.ktor:ktor-client-websockets:$ktorVersion")
+    implementation("io.ktor:ktor-client-cio:$ktorVersion")
+
+    implementation("ch.qos.logback:logback-classic:$logbackVersion")
 
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
