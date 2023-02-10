@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.KrAppBootContext
 import no.kartverket.komreg.core.data.RawData
 import no.kartverket.komreg.core.data.Transformation
-import no.kartverket.komreg.core.data.TransformedData
+import no.kartverket.komreg.core.data.Transformed
 import no.kartverket.komreg.core.data.Validated
 import no.kartverket.komreg.core.domain.Matrikkelnummer
 
@@ -44,7 +44,7 @@ suspend fun executeSimpleRun(
     rawValidationRules: ValidateRaw<Matrikkelnummer>,
     transformationRules: TransformationRules<Matrikkelnummer>,
     transformationExecution: TransformationExecution<Matrikkelnummer>,
-): List<TransformedData<Matrikkelnummer>> {
+): List<Transformed<Matrikkelnummer>> {
     val bootContext = object : KrAppBootContext {
         override val config by lazy {
             ConfigFactory.load("reference-dev.conf")
@@ -85,11 +85,11 @@ data class TransformGardsnummer(val number: Int, val newNumber: Int) : Transform
 }
 
 class TransformationExecution<T : Any> {
-    fun transformData(transformation: Transformation<T>): TransformedData<T> {
+    fun transformData(transformation: Transformation<T>): Transformed<T> {
         return when (transformation) {
-            is Transformation.Invalid -> TransformedData.Invalid(transformation.data)
-            is Transformation.NoOp -> TransformedData.Valid(transformation.data)
-            is Transformation.Transform -> TransformedData.Valid(
+            is Transformation.Invalid -> Transformed.Invalid(transformation.data)
+            is Transformation.NoOp -> Transformed.Data(transformation.data)
+            is Transformation.Transform -> Transformed.Data(
                 transformation.transformations.fold(transformation.data) { acc, function ->
                     println("Running transformation")
                     function(acc)

@@ -18,7 +18,7 @@ sealed class Transformation<out T>(val _data: T) {
     data class Invalid<T>(val data: T) : Transformation<T>(data)
 }
 
-sealed class TransformedData<out T> {
-    data class Valid<T>(val data: T) : TransformedData<T>()
-    data class Invalid<T>(val data: T) : TransformedData<T>()
+sealed class Transformed<out T> {
+    data class Data<T>(val data: T) : Transformed<T>()
+    data class Invalid<T>(val data: T) : Transformed<T>()
 }
