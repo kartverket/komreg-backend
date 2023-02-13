@@ -36,6 +36,10 @@ subprojects {
     }
 }
 
+dependencies {
+    implementation(project(":server"))
+}
+
 application {
     mainClass.set("no.kartverket.komreg.ApplicationKt")
 }
