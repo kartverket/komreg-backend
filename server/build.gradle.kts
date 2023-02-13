@@ -15,9 +15,6 @@ version = "1.0-SNAPSHOT"
 plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
-
-    id("org.jlleitschuh.gradle.ktlint") version "11.0.0"
-    id("org.jlleitschuh.gradle.ktlint-idea") version "11.0.0"
     application
 }
 
