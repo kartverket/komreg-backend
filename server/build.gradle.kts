@@ -27,9 +27,6 @@ repositories {
 
 dependencies {
     implementation(project(":core-api"))
-
-    runtimeOnly(project(":core-impl"))
-    runtimeOnly(project(":integration-matrikkel"))
     implementation(project(":transformation"))
 
     implementation("org.jetbrains.kotlin:kotlin-reflect")
