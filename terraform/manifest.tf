@@ -1,4 +1,4 @@
-resource "kubernetes_manifest" "komreg_parameter_application" {
+resource "kubernetes_manifest" "komreg-backend_application" {
   manifest = {
     apiVersion = "skiperator.kartverket.no/v1alpha1"
     kind       = "Application"
@@ -48,7 +48,7 @@ resource "kubernetes_manifest" "komreg_parameter_application" {
         outbound = {
           rules = [
             {
-              application = "komreg-parameter-backend"
+              application = "komreg-backend"
               namespace   = "komreg"
             }
           ]

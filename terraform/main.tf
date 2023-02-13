@@ -20,5 +20,5 @@ provider "google" {
 locals {
   environment = var.deploy_env
   namespace   = "komreg"
-  app_name    = "komreg-parameter-backend"
+  app_name    = "komreg-backend"
 }

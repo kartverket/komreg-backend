@@ -5,7 +5,7 @@ on:
         value: ${{ jobs.docker.outputs.image_url }}
 
 env:
-  image_name: komreg-frontend
+  image_name: komreg-backend
   registry: ghcr.io
 
 jobs:
