@@ -17,17 +17,6 @@ resource "kubernetes_manifest" "komreg-backend_application" {
         max                  = 4
         min                  = 2
       }
-      gcp = {
-        auth = {
-          serviceAccount = google_service_account.komreg_backend_runtime_sa.email
-        }
-      }
-      env = [
-        {
-          name  = "GOOGLE_CLOUD_PROJECT"
-          value = var.project_id
-        },
-      ]
       liveness = {
         path = "/actuator/health"
         port = 8080

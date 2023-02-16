@@ -21,11 +21,3 @@ variable "container_registry" {
 variable "deploy_env" {
   type = string
 }
-
-variable "secret_ids" {
-  type = set(string)
-  default = [
-    "dummy_db_username",
-    "dummy_db_password"
-  ]
-}
