@@ -76,5 +76,4 @@ jobs:
       auth_project_number: 172982192640
       service_account: komreg-deploy@komreg-dev-8b16.iam.gserviceaccount.com
       project_id: kubernetes-dev-94b9
-      destroy: false
       deploy_on: ${{ github.ref }}
