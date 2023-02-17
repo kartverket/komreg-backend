@@ -49,9 +49,9 @@ suspend fun executeSimpleRun(
             ConfigFactory.load("reference-dev.conf")
         }
     }
-    // val entitySources = EntitySourceManager(bootContext)
-    // val result = entitySources.buildMatrikkelnummerFlow()
-    return mockDatabase.asFlow()
+    val entitySources = EntitySourceManager(bootContext)
+    val data = entitySources.buildMatrikkelnummerFlow()
+    val result = data
         .map { rawValidationRules.rawToValidated(it) }
         .onEach { println(it) }
         .map { transformationRules.validToTransformation(it) }
@@ -59,6 +59,10 @@ suspend fun executeSimpleRun(
         .map { transformationExecution.transformData(it) }
         .onEach { println(it) }
         .toList()
+
+    entitySources.buildEntityFlow().onEach { println(it) }.toList()
+
+    return result
 }
 
 interface TransformationAction<T> {

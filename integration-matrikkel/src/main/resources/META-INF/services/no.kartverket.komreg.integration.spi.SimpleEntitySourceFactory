@@ -1,1 +1,2 @@
-no.kartverket.matrikkel.komreg.MatrikkelEntitySourceFactory
+no.kartverket.matrikkel.komreg.MatrikkelnrEntitySourceFactory
+no.kartverket.matrikkel.komreg.KommuneEntitySourceFactory
