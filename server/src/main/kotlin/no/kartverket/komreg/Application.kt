@@ -25,8 +25,8 @@ fun Application.module() {
     install(MicrometerMetrics)
     install(CORS) {
         allowMethod(HttpMethod.Options)
-        allowHost("localhost:3000")
-        allowHost("komreg.dev.skip.statkart.no")
+        allowHost("http://localhost:3000")
+        allowHost("https://komreg.dev.skip.statkart.no")
         allowHeader(HttpHeaders.ContentType)
     }
     routes()
