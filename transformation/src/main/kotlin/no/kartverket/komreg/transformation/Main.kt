@@ -1,6 +1,7 @@
 package no.kartverket.komreg.transformation
 
 import com.typesafe.config.ConfigFactory
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.toList
@@ -50,8 +51,8 @@ suspend fun executeSimpleRun(
         }
     }
     val entitySources = EntitySourceManager(bootContext)
-    val data = entitySources.buildMatrikkelnummerFlow()
-    val result = data
+    // val data = entitySources.buildMatrikkelnummerFlow()
+    val result = mockDatabase.asFlow()
         .map { rawValidationRules.rawToValidated(it) }
         .onEach { println(it) }
         .map { transformationRules.validToTransformation(it) }
