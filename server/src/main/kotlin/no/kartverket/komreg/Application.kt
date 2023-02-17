@@ -26,7 +26,7 @@ fun Application.module() {
     install(CORS) {
         allowMethod(HttpMethod.Options)
         allowHost("localhost:3000")
-        allowHost("statkart.no", schemes = listOf("http", "https"), subDomains = listOf("*"))
+        allowHost("komreg.dev.skip.statkart.no", schemes = listOf("http", "https"))
         allowHeader(HttpHeaders.ContentType)
     }
     routes()
