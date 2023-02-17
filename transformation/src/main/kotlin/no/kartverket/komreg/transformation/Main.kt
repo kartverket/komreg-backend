@@ -1,7 +1,6 @@
 package no.kartverket.komreg.transformation
 
 import com.typesafe.config.ConfigFactory
-import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.toList
@@ -16,13 +15,13 @@ import no.kartverket.komreg.core.domain.Matrikkelnummer
 suspend fun main() {
     val validationRules = ValidateRaw(
         rules = listOf(
-            ::validMatrikkelNummer
-        )
+            ::validMatrikkelNummer,
+        ),
     )
     val transformationRules = TransformationRules(
         transformations = listOf(
-            TransformGardsnummer(1, 10)
-        )
+            TransformGardsnummer(1, 10),
+        ),
     )
     val transformationExecution = TransformationExecution<Matrikkelnummer>()
 
@@ -37,7 +36,7 @@ val mockDatabase = listOf(
     Matrikkelnummer(1, 5, 1, 1, 1),
     Matrikkelnummer(1, 6, 1, 1, 1),
     Matrikkelnummer(1, 6, 2, 1, 1),
-    Matrikkelnummer(1, 6, 3, 1, 1)
+    Matrikkelnummer(1, 6, 3, 1, 1),
 )
 
 suspend fun executeSimpleRun(
@@ -75,7 +74,7 @@ data class TransformGardsnummer(val number: Int, val newNumber: Int) : Transform
                 if (transform._data.gardsnummer.value == number) {
                     Transformation.Transform(
                         transform._data,
-                        listOf { it.copy(gardsnummer = Matrikkelnummer.Gardsnummer(newNumber)) }
+                        listOf { it.copy(gardsnummer = Matrikkelnummer.Gardsnummer(newNumber)) },
                     )
                 } else {
                     Transformation.NoOp(transform._data)
@@ -93,7 +92,7 @@ class TransformationExecution<T : Any> {
                 transformation.transformations.fold(transformation.data) { acc, function ->
                     println("Running transformation")
                     function(acc)
-                }
+                },
             )
         }
     }

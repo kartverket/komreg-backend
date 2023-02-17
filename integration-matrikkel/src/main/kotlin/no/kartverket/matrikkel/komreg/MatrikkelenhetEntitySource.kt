@@ -32,12 +32,12 @@ class MatrikkelenhetEntitySource(
                             .use { rs ->
                                 while (rs.next()) {
                                     try {
-                                        val matrikkelnummer = Matrikkelnummer(
+                                        val matrikkelnummer: RawData<Matrikkelnummer> = Matrikkelnummer(
                                             rs.getLong(2),
                                             rs.getLong(3),
                                             rs.getLong(4),
                                             rs.getLong(5),
-                                            rs.getLong(6)
+                                            rs.getLong(6),
                                         )
                                         emit(matrikkelnummer)
                                     } catch (ex: Exception) {
@@ -50,13 +50,13 @@ class MatrikkelenhetEntitySource(
         }
 }
 
-class MatrikkelEntitySourceFactory : SimpleEntitySourceFactory<RawData<Matrikkelnummer>> {
+class MatrikkelnrEntitySourceFactory : SimpleEntitySourceFactory<RawData<Matrikkelnummer>> {
     override fun KrAppBootContext.create(): SimpleEntitySource<RawData<Matrikkelnummer>> {
         val matrikkelConfig = config.getConfig("integration.matrikkel")
         return MatrikkelenhetEntitySource(
             matrikkelConfig.getString("jdbcUrl"),
             matrikkelConfig.getString("user"),
-            matrikkelConfig.getString("password")
+            matrikkelConfig.getString("password"),
         )
     }
 }

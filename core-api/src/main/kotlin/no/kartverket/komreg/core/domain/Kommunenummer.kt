@@ -10,7 +10,7 @@ data class Kommunenummer(val fylkesnummer: Fylkesnummer, val lopenummer: Lopenum
     companion object {
         operator fun invoke(value: Long): Kommunenummer = Kommunenummer(
             Fylkesnummer(value / 100L),
-            Lopenummer((value % 100L).toByte())
+            Lopenummer((value % 100L).toByte()),
         )
     }
 }
