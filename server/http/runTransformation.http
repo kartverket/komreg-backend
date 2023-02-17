@@ -7,3 +7,6 @@ Content-Type: application/json
     "to": 30
   }
 ]
+
+###
+GET http://localhost:8080/actuator/health

@@ -15,9 +15,6 @@ version = "1.0-SNAPSHOT"
 plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
-
-    id("org.jlleitschuh.gradle.ktlint") version "11.0.0"
-    id("org.jlleitschuh.gradle.ktlint-idea") version "11.0.0"
     application
 }
 
@@ -27,9 +24,6 @@ repositories {
 
 dependencies {
     implementation(project(":core-api"))
-
-    runtimeOnly(project(":core-impl"))
-    runtimeOnly(project(":integration-matrikkel"))
     implementation(project(":transformation"))
 
     implementation("org.jetbrains.kotlin:kotlin-reflect")
@@ -51,6 +45,7 @@ dependencies {
     implementation("io.ktor:ktor-server-core:$ktorVersion")
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
+    implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("io.ktor:ktor-server-websockets:$ktorVersion")
@@ -58,6 +53,7 @@ dependencies {
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
 
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
+    implementation("io.ktor:ktor-server-cors-jvm:2.2.1")
 
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
