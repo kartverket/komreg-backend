@@ -16,13 +16,13 @@ import no.kartverket.komreg.core.domain.Matrikkelnummer
 suspend fun main() {
     val validationRules = ValidateRaw(
         rules = listOf(
-            ::validMatrikkelNummer
-        )
+            ::validMatrikkelNummer,
+        ),
     )
     val transformationRules = TransformationRules(
         transformations = listOf(
-            TransformGardsnummer(1, 10)
-        )
+            TransformGardsnummer(1, 10),
+        ),
     )
     val transformationExecution = TransformationExecution<Matrikkelnummer>()
 
@@ -37,7 +37,7 @@ val mockDatabase = listOf(
     Matrikkelnummer(1, 5, 1, 1, 1),
     Matrikkelnummer(1, 6, 1, 1, 1),
     Matrikkelnummer(1, 6, 2, 1, 1),
-    Matrikkelnummer(1, 6, 3, 1, 1)
+    Matrikkelnummer(1, 6, 3, 1, 1),
 )
 
 suspend fun executeSimpleRun(
@@ -50,9 +50,9 @@ suspend fun executeSimpleRun(
             ConfigFactory.load("reference-dev.conf")
         }
     }
-    // val entitySources = EntitySourceManager(bootContext)
-    // val result = entitySources.buildMatrikkelnummerFlow()
-    return mockDatabase.asFlow()
+    val entitySources = EntitySourceManager(bootContext)
+    // val data = entitySources.buildMatrikkelnummerFlow()
+    val result = mockDatabase.asFlow()
         .map { rawValidationRules.rawToValidated(it) }
         .onEach { println(it) }
         .map { transformationRules.validToTransformation(it) }
@@ -60,6 +60,10 @@ suspend fun executeSimpleRun(
         .map { transformationExecution.transformData(it) }
         .onEach { println(it) }
         .toList()
+
+    entitySources.buildEntityFlow().onEach { println(it) }.toList()
+
+    return result
 }
 
 interface TransformationAction<T> {
@@ -75,7 +79,7 @@ data class TransformGardsnummer(val number: Int, val newNumber: Int) : Transform
                 if (transform._data.gardsnummer.value == number) {
                     Transformation.Transform(
                         transform._data,
-                        listOf { it.copy(gardsnummer = Matrikkelnummer.Gardsnummer(newNumber)) }
+                        listOf { it.copy(gardsnummer = Matrikkelnummer.Gardsnummer(newNumber)) },
                     )
                 } else {
                     Transformation.NoOp(transform._data)
@@ -93,7 +97,7 @@ class TransformationExecution<T : Any> {
                 transformation.transformations.fold(transformation.data) { acc, function ->
                     println("Running transformation")
                     function(acc)
-                }
+                },
             )
         }
     }

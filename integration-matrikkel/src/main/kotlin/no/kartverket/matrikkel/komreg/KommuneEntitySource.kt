@@ -4,19 +4,19 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import no.kartverket.komreg.core.KrAppBootContext
 import no.kartverket.komreg.core.data.RawData
-import no.kartverket.komreg.core.domain.Matrikkelnummer
+import no.kartverket.komreg.core.domain.Kommune
 import no.kartverket.komreg.integration.spi.SimpleEntitySource
 import no.kartverket.komreg.integration.spi.SimpleEntitySourceFactory
 import java.sql.DriverManager
 import java.util.Properties
 
-class MatrikkelenhetEntitySource(
+class KommuneEntitySource(
     private val jdbcUrl: String,
     private val user: String,
     private val password: String,
-) : SimpleEntitySource<RawData<Matrikkelnummer>> {
+) : SimpleEntitySource<RawData<Kommune>> {
 
-    override val entityFlow: Flow<RawData<Matrikkelnummer>>
+    override val entityFlow: Flow<RawData<Kommune>>
         get() = flow {
             val props = Properties()
             props.setProperty("autoCommit", "false")
@@ -28,16 +28,13 @@ class MatrikkelenhetEntitySource(
             DriverManager.getConnection(jdbcUrl, props)
                 .use { conn ->
                     conn.createStatement().use { st ->
-                        st.executeQuery("SELECT m.id, m.kommuneid, m.gardsnr, m.bruksnr, m.festenr, m.seksjonsnr FROM matrikkelenhet m")
+                        st.executeQuery("SELECT m.id, m.kommunenr, m.kommunenavn FROM KOMMUNE m")
                             .use { rs ->
                                 while (rs.next()) {
                                     try {
-                                        val matrikkelnummer: RawData<Matrikkelnummer> = Matrikkelnummer(
+                                        val matrikkelnummer: RawData<Kommune> = Kommune(
                                             rs.getLong(2),
-                                            rs.getLong(3),
-                                            rs.getLong(4),
-                                            rs.getLong(5),
-                                            rs.getLong(6),
+                                            rs.getString(3),
                                         )
                                         emit(matrikkelnummer)
                                     } catch (ex: Exception) {
@@ -50,10 +47,10 @@ class MatrikkelenhetEntitySource(
         }
 }
 
-class MatrikkelnrEntitySourceFactory : SimpleEntitySourceFactory<RawData<Matrikkelnummer>> {
-    override fun KrAppBootContext.create(): SimpleEntitySource<RawData<Matrikkelnummer>> {
+class KommuneEntitySourceFactory : SimpleEntitySourceFactory<RawData<Kommune>> {
+    override fun KrAppBootContext.create(): SimpleEntitySource<RawData<Kommune>> {
         val matrikkelConfig = config.getConfig("integration.matrikkel")
-        return MatrikkelenhetEntitySource(
+        return KommuneEntitySource(
             matrikkelConfig.getString("jdbcUrl"),
             matrikkelConfig.getString("user"),
             matrikkelConfig.getString("password"),
