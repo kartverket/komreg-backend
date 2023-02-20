@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapMerge
 import no.kartverket.komreg.core.KrAppBootContext
 import no.kartverket.komreg.core.data.RawData
+import no.kartverket.komreg.core.domain.Fylke
 import no.kartverket.komreg.core.domain.Kommune
 import no.kartverket.komreg.core.domain.Matrikkelnummer
 import no.kartverket.komreg.integration.spi.SimpleEntitySource
@@ -47,5 +48,16 @@ class EntitySourceManager(bootContext: KrAppBootContext) {
     // Temporary function instead of converting and validating correctly
     fun makeKommuneListFromRawDataKommuneList(rawDataKommuneList: List<RawData<Kommune>>): List<Kommune> {
         return rawDataKommuneList.map { it.data }
+    }
+
+    fun buildFylkeFlow(): Flow<RawData<Fylke>> =
+        entitySources
+            .asFlow()
+            .flatMapMerge { it.entityFlow }
+            .filter { it.data is Fylke } as Flow<RawData<Fylke>>
+
+    // Temporary function instead of converting and validating correctly
+    fun makeFylkeListFromRawDataFylkeList(rawDataFylkeList: List<RawData<Fylke>>): List<Fylke> {
+        return rawDataFylkeList.map { it.data }
     }
 }

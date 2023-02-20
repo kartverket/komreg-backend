@@ -11,6 +11,7 @@ import no.kartverket.komreg.core.data.RawData
 import no.kartverket.komreg.core.data.Transformation
 import no.kartverket.komreg.core.data.Transformed
 import no.kartverket.komreg.core.data.Validated
+import no.kartverket.komreg.core.domain.Fylke
 import no.kartverket.komreg.core.domain.Kommune
 import no.kartverket.komreg.core.domain.Matrikkelnummer
 
@@ -149,4 +150,17 @@ suspend fun getAllKommuner(): List<Kommune> {
     val kommuner = entitySources.makeKommuneListFromRawDataKommuneList(rawKommuner)
 
     return kommuner
+}
+
+suspend fun getAllFylker(): List<Fylke> {
+    val bootContext = object : KrAppBootContext {
+        override val config by lazy {
+            ConfigFactory.load("reference-dev.conf")
+        }
+    }
+    val entitySources = EntitySourceManager(bootContext)
+    val rawFylker = entitySources.buildFylkeFlow().toList()
+    val fylker = entitySources.makeFylkeListFromRawDataFylkeList(rawFylker)
+
+    return fylker
 }
