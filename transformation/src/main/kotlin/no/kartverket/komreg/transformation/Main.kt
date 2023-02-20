@@ -11,6 +11,7 @@ import no.kartverket.komreg.core.data.RawData
 import no.kartverket.komreg.core.data.Transformation
 import no.kartverket.komreg.core.data.Transformed
 import no.kartverket.komreg.core.data.Validated
+import no.kartverket.komreg.core.domain.Kommune
 import no.kartverket.komreg.core.domain.Matrikkelnummer
 
 suspend fun main() {
@@ -136,3 +137,16 @@ fun validMatrikkelNummer(input: Validated<Matrikkelnummer>): Validated<Matrikkel
                 Validated.Invalid(input.data, "Invalid gardsnummer")
             }
     }
+
+suspend fun getAllKommuner(): List<Kommune> {
+    val bootContext = object : KrAppBootContext {
+        override val config by lazy {
+            ConfigFactory.load("reference-dev.conf")
+        }
+    }
+    val entitySources = EntitySourceManager(bootContext)
+    val rawKommuner = entitySources.buildKommuneFlow().toList()
+    val kommuner = entitySources.makeKommuneListFromRawDataKommuneList(rawKommuner)
+
+    return kommuner
+}
