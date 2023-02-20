@@ -31,6 +31,7 @@ data class ResponseMatrikel(val gardsnummer: Int)
 
 fun Application.routes() {
     val kommuneservice = KommuneService()
+    val fylkeservice = FylkeService()
     routing {
         route("/run") {
             post {
@@ -61,6 +62,11 @@ fun Application.routes() {
         route("/kommuner") {
             get {
                 call.respond(kommuneservice.getKommuner())
+            }
+        }
+        route("/fylker") {
+            get {
+                call.respond(fylkeservice.getFylker())
             }
         }
     }
