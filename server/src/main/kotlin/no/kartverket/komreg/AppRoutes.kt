@@ -11,17 +11,12 @@ import io.ktor.server.routing.routing
 import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.data.Transformed
 import no.kartverket.komreg.core.domain.Matrikkelnummer
-import no.kartverket.komreg.transformation.TransformGardsnummer
-import no.kartverket.komreg.transformation.TransformationExecution
-import no.kartverket.komreg.transformation.TransformationRules
-import no.kartverket.komreg.transformation.ValidateRaw
-import no.kartverket.komreg.transformation.executeSimpleRun
-import no.kartverket.komreg.transformation.validMatrikkelNummer
+import no.kartverket.komreg.transformation.*
 
 val validationRules = ValidateRaw(
     rules = listOf(
-        ::validMatrikkelNummer
-    )
+        ::validMatrikkelNummer,
+    ),
 )
 val transformationExecution = TransformationExecution<Matrikkelnummer>()
 
@@ -35,6 +30,7 @@ data class TransformRuleForGardsnummer(
 data class ResponseMatrikel(val gardsnummer: Int)
 
 fun Application.routes() {
+    val kommuneservice = KommuneService()
     routing {
         route("/run") {
             post {
@@ -42,7 +38,7 @@ fun Application.routes() {
                 val transformationRules = TransformationRules(
                     transformations = input.map {
                         TransformGardsnummer(it.from, it.to)
-                    }
+                    },
                 )
                 val result = executeSimpleRun(validationRules, transformationRules, transformationExecution)
                 val responseData = result.mapNotNull {
@@ -60,6 +56,11 @@ fun Application.routes() {
         route("/actuator/health") {
             get {
                 call.respond("OK")
+            }
+        }
+        route("/kommuner") {
+            get {
+                call.respond(kommuneservice.getKommuner())
             }
         }
     }
