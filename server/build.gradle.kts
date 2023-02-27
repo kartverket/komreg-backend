@@ -16,6 +16,8 @@ plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
     application
+    id("maven")
+    id("maven-publish")
 }
 
 repositories {
@@ -73,5 +75,6 @@ tasks.withType<KotlinCompile> {
 }
 
 application {
+    logger.error("An error log message.")
     mainClass.set("MainKt")
 }
