@@ -74,6 +74,6 @@ tasks.withType<KotlinCompile> {
 }
 
 application {
-    logger.error("An error log message.")
+    logger.error("Hello world")
     mainClass.set("MainKt")
 }
