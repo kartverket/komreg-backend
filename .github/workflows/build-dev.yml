@@ -23,7 +23,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
       - name: Run build with Gradle Wrapper
-        run: gradle build
+        run: gradle build --debug
 
       - name: Login to Github Container Registry
         uses: docker/login-action@v2
