@@ -42,7 +42,7 @@ dependencies {
 }
 
 application {
-    logger.error("Hello world")
+    logger.error("Hello world from gradle.kts!")
     mainClass.set("no.kartverket.komreg.ApplicationKt")
 }
 
