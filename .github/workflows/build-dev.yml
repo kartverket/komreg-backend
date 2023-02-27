@@ -12,6 +12,8 @@ jobs:
   build:
     name: Docker build and push
     runs-on: ubuntu-latest
+    env:
+      GRADLE_VERSION: 7.5.1
     permissions:
       contents: read
       packages: write
