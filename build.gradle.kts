@@ -8,7 +8,6 @@ plugins {
     kotlin("jvm") version kotlinVersion
     application
     id("io.ktor.plugin") version "2.2.1"
-    id("maven-publish")
 }
 
 repositories {
