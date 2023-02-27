@@ -16,7 +16,6 @@ plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
     application
-    id("maven")
     id("maven-publish")
 }
 
