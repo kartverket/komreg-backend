@@ -48,21 +48,13 @@ resource "kubernetes_manifest" "komreg-backend_application" {
         outbound = {
           rules = [
             {
-              application = "komreg-backend"
-              namespace   = "komreg"
+              application = "komreg-parameter-backend"
             }
           ]
           external = [
             {
-              host = "154.224.228.35.bc.googleusercontent.com"
-              ip   = "35.228.224.154"
-              ports : [
-                {
-                  name     = "komreg-parameter-database-connection"
-                  protocol = "TCP"
-                  port     = 5432
-                }
-              ]
+              host = "nnridb170.statkart.no"
+              ip   = "159.162.49.137"
             }
           ]
         }
