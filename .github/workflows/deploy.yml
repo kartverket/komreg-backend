@@ -101,7 +101,7 @@ jobs:
       image_url: ${{ needs.docker.outputs.image_url}}
 
   deploy-prod:
-    needs: [ docker, deploy-dev, deploy-test ]
+    needs: [ build, deploy-dev, deploy-test ]
     permissions:
       id-token: write
       pull-requests: write
