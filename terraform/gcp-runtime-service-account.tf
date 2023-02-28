@@ -1,7 +1,7 @@
 resource "google_service_account" "komreg_backend_runtime_sa" {
   project      = var.project_id
-  account_id   = "komreg-runtime"
-  display_name = "komreg-runtime"
+  account_id   = "komreg-backend-runtime"
+  display_name = "komreg-backend-runtime"
   description  = "SA for runtime integrations with GCP services"
 }
 
