@@ -47,11 +47,7 @@ suspend fun executeSimpleRun(
 ): List<Transformed<Matrikkelnummer>> {
     val bootContext = object : KrAppBootContext {
         override val config by lazy {
-            if (System.getenv("ENVIRONMENT") == "dev") {
-                ConfigFactory.load("reference-dev.conf")
-            } else {
-                ConfigFactory.load("reference-local.conf")
-            }
+            ConfigFactory.load("reference-dev.conf")
         }
     }
     val entitySources = EntitySourceManager(bootContext)
