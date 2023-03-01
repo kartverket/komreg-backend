@@ -36,11 +36,9 @@ subprojects {
     }
 }
 
-val logbackVersion = "1.4.5"
 
 dependencies {
     implementation(project(":server"))
-    implementation("ch.qos.logback:logback-classic:$logbackVersion")
 }
 
 application {

@@ -7,6 +7,8 @@ val junitVersion = "5.9.0"
 val spekVersion = "2.0.19"
 val ktorVersion = "2.2.1"
 val hamcrestVersion = "2.2"
+val logbackVersion = "1.4.5"
+
 
 group = "no.kartverket.komreg"
 version = "1.0-SNAPSHOT"
@@ -60,6 +62,9 @@ dependencies {
     testImplementation("io.mockk:mockk:$mockkVersion")
     testImplementation("org.hamcrest:hamcrest:$hamcrestVersion")
     testImplementation("org.hamcrest:hamcrest-library:$hamcrestVersion")
+
+    implementation("ch.qos.logback:logback-classic:$logbackVersion")
+
 }
 
 tasks.test {
