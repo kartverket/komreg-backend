@@ -55,7 +55,12 @@ resource "kubernetes_manifest" "komreg-backend_application" {
             {
               host = "nnridb170.statkart.no"
               ip   = "159.162.49.137"
-              port = 1521
+              ports = [
+                {
+                  port     = 1521
+                  protocol = "TCP"
+                }
+              ]
             }
           ]
         }
