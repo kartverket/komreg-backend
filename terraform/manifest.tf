@@ -57,6 +57,7 @@ resource "kubernetes_manifest" "komreg-backend_application" {
               ip   = "159.162.49.137"
               ports = [
                 {
+                  name     = "matrikkel-dev"
                   port     = 1521
                   protocol = "TCP"
                 }
