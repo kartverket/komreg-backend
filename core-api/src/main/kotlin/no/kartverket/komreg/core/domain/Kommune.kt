@@ -10,12 +10,12 @@ data class Kommune(
 ) {
     companion object {
         operator fun invoke(
-            kommuenummer: Long,
+            kommunenummer: Long,
             kommunenavn: String,
         ): RawData<Kommune> =
             RawData(
                 Kommune(
-                    Kommunenummer(kommuenummer),
+                    Kommunenummer(kommunenummer),
                     Kommunenavn(kommunenavn),
                 ),
             )
