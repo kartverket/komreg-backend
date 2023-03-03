@@ -1,3 +1,5 @@
+@Library('common') _
+
 pipeline {
     agent any
 
