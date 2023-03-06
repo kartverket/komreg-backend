@@ -64,6 +64,37 @@ jobs:
         run: |
           echo "image_url=${{ env.registry }}/${{ github.repository }}@${{ steps.build.outputs.digest }}" >> $GITHUB_OUTPUT
 
+  post-build-attest:
+    needs: build
+    name: Authentication and Attestation of Build
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      actions: read
+      security-events: write
+      statuses: write
+    uses: kartverket/github-workflows/.github/workflows/post-build-attest.yml@v3.1.3
+    with:
+      auth_project_number: 172982192640
+      service_account: komreg-deploy@komreg-dev-8b16.iam.gserviceaccount.com
+      image_url: ${{ needs.build.outputs.image_url }}
+
+  security-scans:
+    needs: build
+    name: Security Scans
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      actions: read
+      security-events: write
+    uses: kartverket/github-workflows/.github/workflows/run-security-scans.yml@v3.1.3
+    with:
+      auth_project_number: 172982192640
+      service_account: komreg-deploy@komreg-dev-8b16.iam.gserviceaccount.com
+      image_url: ${{ needs.build.outputs.image_url}}
+
   deploy-dev:
     name: Deploy to dev
     needs: build
