@@ -21,7 +21,7 @@ private fun String.toSecret(): String? {
 
 fun getSecret(projectId: String, secretId: String, secretVersion: String): String? {
     return SecretManagerServiceClient.create().use { client ->
-        val s = SecretVersionName.of(projectId, secretId, secretVersion);
+        val s = SecretVersionName.of(projectId, secretId, secretVersion)
         client.accessSecretVersion(s)
     }?.payload?.data?.toStringUtf8()
 }

@@ -36,7 +36,6 @@ subprojects {
     }
 }
 
-
 dependencies {
     implementation(project(":server"))
 }

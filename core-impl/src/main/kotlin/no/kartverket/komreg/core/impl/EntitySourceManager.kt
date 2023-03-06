@@ -34,5 +34,4 @@ class EntitySourceManager(bootContext: KrAppBootContext) {
         .asFlow()
         .flatMapMerge { it.entityFlow }
         .map { it.toEntityContext() }
-
 }

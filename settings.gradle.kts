@@ -15,5 +15,5 @@ include(
     ":integration-matrikkel",
     ":core-impl",
     ":transformation",
-    ":server"
+    ":server",
 )
