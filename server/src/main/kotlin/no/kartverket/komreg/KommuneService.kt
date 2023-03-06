@@ -1,11 +1,15 @@
 package no.kartverket.komreg
 
 import no.kartverket.komreg.core.domain.Kommune
-import no.kartverket.komreg.transformation.getAllKommuner
+import no.kartverket.komreg.transformation.TransformationKommune
 
 class KommuneService {
 
     suspend fun getKommuner(): List<Kommune> {
-        return getAllKommuner()
+        return TransformationKommune().getAllKommuner()
+    }
+
+    suspend fun updateKommune(oldNumber: Long, newNumber: Long) {
+        TransformationKommune().writeKommuneNummer(oldNumber, newNumber)
     }
 }

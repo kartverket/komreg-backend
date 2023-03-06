@@ -4,14 +4,16 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.call
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
-import io.ktor.server.routing.route
-import io.ktor.server.routing.routing
+import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.data.Transformed
 import no.kartverket.komreg.core.domain.Matrikkelnummer
-import no.kartverket.komreg.transformation.*
+import no.kartverket.komreg.transformation.TransformGardsnummer
+import no.kartverket.komreg.transformation.TransformationExecution
+import no.kartverket.komreg.transformation.TransformationRules
+import no.kartverket.komreg.transformation.ValidateRaw
+import no.kartverket.komreg.transformation.executeSimpleRun
+import no.kartverket.komreg.transformation.validMatrikkelNummer
 
 val validationRules = ValidateRaw(
     rules = listOf(
@@ -67,6 +69,12 @@ fun Application.routes() {
         route("/fylker") {
             get {
                 call.respond(fylkeservice.getFylker())
+            }
+        }
+        route("/kommune") {
+            put {
+                kommuneservice.updateKommune(1246, 9946)
+                call.respond("received put request")
             }
         }
     }

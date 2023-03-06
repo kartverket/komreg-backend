@@ -14,3 +14,8 @@ data class Kommunenummer(val fylkesnummer: Fylkesnummer, val lopenummer: Lopenum
         )
     }
 }
+
+data class OldToNewKommune(
+    val oldKommune: Long,
+    val newKommune: Long,
+)

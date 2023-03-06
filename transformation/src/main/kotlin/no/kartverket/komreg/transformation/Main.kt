@@ -1,10 +1,7 @@
 package no.kartverket.komreg.transformation
 
 import com.typesafe.config.ConfigFactory
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.flow.*
 import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.KrAppBootContext
 import no.kartverket.komreg.core.data.RawData
@@ -12,7 +9,6 @@ import no.kartverket.komreg.core.data.Transformation
 import no.kartverket.komreg.core.data.Transformed
 import no.kartverket.komreg.core.data.Validated
 import no.kartverket.komreg.core.domain.Fylke
-import no.kartverket.komreg.core.domain.Kommune
 import no.kartverket.komreg.core.domain.Matrikkelnummer
 
 suspend fun main() {
@@ -54,18 +50,20 @@ suspend fun executeSimpleRun(
     }
     val entitySources = EntitySourceManager(bootContext)
     // val data = entitySources.buildMatrikkelnummerFlow()
-    val result = mockDatabase.asFlow()
+    val result: Flow<Transformed<Matrikkelnummer>> = mockDatabase.asFlow()
         .map { rawValidationRules.rawToValidated(it) }
         .onEach { println(it) }
         .map { transformationRules.validToTransformation(it) }
         .onEach { println(it) }
         .map { transformationExecution.transformData(it) }
         .onEach { println(it) }
-        .toList()
 
+    // getAllWriteServices...
+    // data.filter(isKommen) as Flow<Kommune>
+    // if any service is typed with DataKommune use that with data filter
     entitySources.buildEntityFlow().onEach { println(it) }.toList()
 
-    return result
+    return result.toList()
 }
 
 interface TransformationAction<T> {
@@ -138,19 +136,6 @@ fun validMatrikkelNummer(input: Validated<Matrikkelnummer>): Validated<Matrikkel
                 Validated.Invalid(input.data, "Invalid gardsnummer")
             }
     }
-
-suspend fun getAllKommuner(): List<Kommune> {
-    val bootContext = object : KrAppBootContext {
-        override val config by lazy {
-            ConfigFactory.load("reference-dev.conf")
-        }
-    }
-    val entitySources = EntitySourceManager(bootContext)
-    val rawKommuner = entitySources.buildKommuneFlow().toList()
-    val kommuner = entitySources.makeKommuneListFromRawDataKommuneList(rawKommuner)
-
-    return kommuner
-}
 
 suspend fun getAllFylker(): List<Fylke> {
     val bootContext = object : KrAppBootContext {
