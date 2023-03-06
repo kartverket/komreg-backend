@@ -19,7 +19,8 @@ variable "deploy_env" {
 }
 
 variable "secret_ids" {
-  type    = set(string)
+  type = set(string)
+
   default = [
     "db_matrikkel_jdbc_url",
     "db_matrikkel_username",
