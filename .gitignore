@@ -218,9 +218,4 @@ gradle-app.setting
 # Avoid ignore Gradle wrappper properties
 !gradle-wrapper.properties
 
-gradle/
-gradlew
-gradlew.bat
-
-
 # End of https://www.toptal.com/developers/gitignore/api/linux,macos,windows,git,intellij+all,visualstudiocode,kotlin,java

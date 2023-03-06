@@ -5,7 +5,8 @@ interface LogEntry {
     val message: String
 
     data class PlainText(
-        override val severity: Severity.NonFatal, override val message: String
+        override val severity: Severity.NonFatal,
+        override val message: String,
     ) : LogEntry
 }
 
@@ -26,5 +27,3 @@ fun <F> LogContext<F, LogEntry>.warning(message: String): F =
 
 fun <F> LogContext<F, LogEntry>.error(message: String): F =
     log(Severity.NonFatal.ERROR, message)
-
-

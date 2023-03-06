@@ -19,7 +19,7 @@ interface DownloadContext : Context {
 class DownloadContextShared(cycleUUID: UUID) : DownloadContext, AutoCloseable {
     override val cacheDir = File(
         System.getProperty("java.io.tmpdir"),
-        "komreg-download-$cycleUUID"
+        "komreg-download-$cycleUUID",
     )
 
     override val rocksDB: RocksDB by lazy {
@@ -27,7 +27,7 @@ class DownloadContextShared(cycleUUID: UUID) : DownloadContext, AutoCloseable {
             Options().apply {
                 setCreateIfMissing(true)
             },
-            File(cacheDir, "cache.db").canonicalPath
+            File(cacheDir, "cache.db").canonicalPath,
         )
     }
 

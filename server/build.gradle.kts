@@ -6,8 +6,8 @@ val mockkVersion = "1.13.2"
 val junitVersion = "5.9.0"
 val spekVersion = "2.0.19"
 val ktorVersion = "2.2.1"
-val logbackVersion = "1.4.5"
 val hamcrestVersion = "2.2"
+val logbackVersion = "1.4.5"
 
 group = "no.kartverket.komreg"
 version = "1.0-SNAPSHOT"
@@ -52,7 +52,6 @@ dependencies {
     implementation("io.ktor:ktor-client-websockets:$ktorVersion")
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
 
-    implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("io.ktor:ktor-server-cors-jvm:2.2.1")
 
     testImplementation(kotlin("test"))
@@ -62,6 +61,8 @@ dependencies {
     testImplementation("io.mockk:mockk:$mockkVersion")
     testImplementation("org.hamcrest:hamcrest:$hamcrestVersion")
     testImplementation("org.hamcrest:hamcrest-library:$hamcrestVersion")
+
+    implementation("ch.qos.logback:logback-classic:$logbackVersion")
 }
 
 tasks.test {

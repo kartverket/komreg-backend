@@ -6,5 +6,5 @@ data class Matrikkelenhet(
     val gardsnummer: Int,
     val bruksnummer: Int,
     val festenummer: Int,
-    val seksjonernummer: Int
+    val seksjonernummer: Int,
 )

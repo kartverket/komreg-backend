@@ -14,7 +14,7 @@ sealed interface Entity<out A> : Referencable<A> {
     val data: Validation<A>
 
     fun <B> fold(ifInvalid: () -> B, ifValid: (A) -> B): B {
-        return data.fold({_, _ -> ifInvalid() }){ _, a ->
+        return data.fold({ _, _ -> ifInvalid() }) { _, a ->
             ifValid(a)
         }
     }
@@ -30,21 +30,21 @@ fun <FA : Entity<A>, A> FA.transform(f: (A) -> A): FA {
 
 sealed interface SourceEntity<out A> : Entity<A> {
     companion object {
-        inline operator fun <reified A> invoke(id: SourceId<A>, data: Validation<A>) : DatabaseEntity<A> = DatabaseEntity(id, data)
-        inline operator fun <reified A> invoke(id: GeneratedId<A>, data: Validation<A>) : VirtualEntity<A> = VirtualEntity(id, data)
+        inline operator fun <reified A> invoke(id: SourceId<A>, data: Validation<A>): DatabaseEntity<A> = DatabaseEntity(id, data)
+        inline operator fun <reified A> invoke(id: GeneratedId<A>, data: Validation<A>): VirtualEntity<A> =
+            VirtualEntity(id, data)
     }
 }
 
 data class DatabaseEntity<A>(
     override val id: SourceId<A>,
-    override val data: Validation<A>
+    override val data: Validation<A>,
 ) : SourceEntity<A>
 
 data class VirtualEntity<A>(
     override val id: GeneratedId<A>,
-    override val data: Validation<A>
+    override val data: Validation<A>,
 ) : SourceEntity<A>
-
 
 sealed interface Id<A> {
     val dataClass: Class<A>
@@ -79,7 +79,7 @@ data class GeneratedId<A>(override val dataClass: Class<A>, val uuid: UUID = UUI
 inline fun <reified FA : Entity<A>, reified A> FA.log(level: Level, msg: () -> String): FA {
     val data1 = data.log(level, null, msg())
     val id1 = this.id
-    return when(this) {
+    return when (this) {
         is DatabaseEntity<*> -> DatabaseEntity(id1 as SourceId<A>, data1)
         is VirtualEntity<*> -> VirtualEntity(id1 as GeneratedId<A>, data1)
         else -> throw UnsupportedOperationException()

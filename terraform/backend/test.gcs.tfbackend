@@ -1,0 +1,2 @@
+prefix  = "komreg-backend"
+bucket = "terraform_state_komreg_02c1"

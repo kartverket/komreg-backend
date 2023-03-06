@@ -1,8 +1,11 @@
-name: Java CI with Maven
-
+name: Build and Deploy
 on:
   push:
     branches: [ "*" ]
+
+permissions:
+  id-token: write
+  contents: "read"
 
 env:
   registry: ghcr.io
@@ -53,20 +56,15 @@ jobs:
         run: |
           echo "image_url=${{ env.registry }}/${{ github.repository }}@${{ steps.build.outputs.digest }}" >> $GITHUB_OUTPUT
 
-  dev:
-    name: Terraform dev deploy
+  deploy-dev:
+    name: Deploy to dev
     needs: build
     uses: kartverket/github-workflows/.github/workflows/run-terraform.yml@v3.1.3
-
-    # Allows job to log in to GCP and Vault with GitHub OIDC token
     permissions:
-      # For logging on to Vault, GCP
       id-token: write
-      # For writing comments on PR
       pull-requests: write
-      # For fetching git repo
       contents: read
-
+      packages: write
     with:
       runner: ubuntu-latest
       environment: dev
