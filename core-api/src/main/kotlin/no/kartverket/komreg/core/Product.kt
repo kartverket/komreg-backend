@@ -11,8 +11,10 @@ sealed class Product<out A : Product<A>> {
     class Just<out A>(override val elems: Nel<Pair<KType, Any?>>) : Product<Just<A>>()
     class And<out A, out B>(override val elems: Nel<Pair<KType, Any?>>) : Product<And<A, B>>()
 
-    class Mirror<@Suppress("unused")
-        out A : Product<*>,> private constructor(
+    class Mirror<
+        @Suppress("unused")
+        out A : Product<*>,
+        > private constructor(
         val types: List<KType>,
     ) {
         companion object {
