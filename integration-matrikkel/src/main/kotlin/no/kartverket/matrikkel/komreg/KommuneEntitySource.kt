@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.flow
 import no.kartverket.komreg.core.KrAppBootContext
 import no.kartverket.komreg.core.data.RawData
 import no.kartverket.komreg.core.domain.Kommune
+import no.kartverket.komreg.core.getSecretOrString
 import no.kartverket.komreg.integration.spi.SimpleEntitySource
 import no.kartverket.komreg.integration.spi.SimpleEntitySourceFactory
 import java.sql.DriverManager
@@ -51,9 +52,9 @@ class KommuneEntitySourceFactory : SimpleEntitySourceFactory<RawData<Kommune>> {
     override fun KrAppBootContext.create(): SimpleEntitySource<RawData<Kommune>> {
         val matrikkelConfig = config.getConfig("integration.matrikkel")
         return KommuneEntitySource(
-            matrikkelConfig.getString("jdbcUrl"),
-            matrikkelConfig.getString("user"),
-            matrikkelConfig.getString("password"),
+            matrikkelConfig.getSecretOrString("jdbcUrl"),
+            matrikkelConfig.getSecretOrString("user"),
+            matrikkelConfig.getSecretOrString("password"),
         )
     }
 }
