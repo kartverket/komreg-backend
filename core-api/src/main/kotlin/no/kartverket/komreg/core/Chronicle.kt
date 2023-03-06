@@ -109,7 +109,7 @@ inline fun <L, E, A, B, C, D, E_, F, R> productMap(
 ): Chronicle<L, E, R> =
     productMap(
         productMap(fa, fb, fc, fd, fe) { a, b, c, d, e -> { f: F -> f(a, b, c, d, e, f) } },
-        ff
+        ff,
     ) { fff, f1 -> fff(f1) }
 
 fun <L, E, A> Chronicle<Nothing, E, A>.withLog(log: List<L>): Chronicle<L, E, A> = when (this) {

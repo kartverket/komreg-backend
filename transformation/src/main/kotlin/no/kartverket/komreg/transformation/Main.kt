@@ -1,9 +1,9 @@
 package no.kartverket.komreg.transformation
 
 import com.typesafe.config.ConfigFactory
-import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.KrAppBootContext
@@ -53,8 +53,8 @@ suspend fun executeSimpleRun(
         }
     }
     val entitySources = EntitySourceManager(bootContext)
-    // val data = entitySources.buildMatrikkelnummerFlow()
-    val result = mockDatabase.asFlow()
+    val data = entitySources.buildMatrikkelnummerFlow()
+    val result = data.take(1000)
         .map { rawValidationRules.rawToValidated(it) }
         .onEach { println(it) }
         .map { transformationRules.validToTransformation(it) }
@@ -77,15 +77,14 @@ data class TransformGardsnummer(val number: Int, val newNumber: Int) : Transform
     override fun transform(transform: Transformation<Matrikkelnummer>): Transformation<Matrikkelnummer> {
         return when (transform) {
             is Transformation.Invalid -> transform
-            is Transformation.NoOp, is Transformation.Transform ->
-                if (transform._data.gardsnummer.value == number) {
-                    Transformation.Transform(
-                        transform._data,
-                        listOf { it.copy(gardsnummer = Matrikkelnummer.Gardsnummer(newNumber)) },
-                    )
-                } else {
-                    Transformation.NoOp(transform._data)
-                }
+            is Transformation.NoOp, is Transformation.Transform -> if (transform._data.gardsnummer.value == number) {
+                Transformation.Transform(
+                    transform._data,
+                    listOf { it.copy(gardsnummer = Matrikkelnummer.Gardsnummer(newNumber)) },
+                )
+            } else {
+                Transformation.NoOp(transform._data)
+            }
         }
     }
 }
@@ -110,34 +109,30 @@ class TransformationRules<T : Any>(
 ) {
     fun validToTransformation(
         validated: Validated<T>,
-    ): Transformation<T> =
-        when (validated) {
-            is Validated.Invalid -> Transformation.Invalid(validated.data)
-            is Validated.Valid -> transformations.fold(Transformation.NoOp(validated.data) as Transformation<T>) { acc, transformationAction ->
-                transformationAction.transform(acc)
-            }
+    ): Transformation<T> = when (validated) {
+        is Validated.Invalid -> Transformation.Invalid(validated.data)
+        is Validated.Valid -> transformations.fold(Transformation.NoOp(validated.data) as Transformation<T>) { acc, transformationAction ->
+            transformationAction.transform(acc)
         }
+    }
 }
 
 class ValidateRaw<T : Any>(
     private val rules: List<(Validated<T>) -> Validated<T>>,
 ) {
     fun rawToValidated(raw: RawData<T>): Validated<T> {
-        return rules
-            .fold(Validated.Valid(raw.data) as Validated<T>) { acc, function -> function(acc) }
+        return rules.fold(Validated.Valid(raw.data) as Validated<T>) { acc, function -> function(acc) }
     }
 }
 
-fun validMatrikkelNummer(input: Validated<Matrikkelnummer>): Validated<Matrikkelnummer> =
-    when (input) {
-        is Validated.Invalid -> input
-        is Validated.Valid ->
-            if (input.data.gardsnummer.value != 22) {
-                Validated.Valid(input.data, input.validatedWith + "Invalid gardsnummer")
-            } else {
-                Validated.Invalid(input.data, "Invalid gardsnummer")
-            }
+fun validMatrikkelNummer(input: Validated<Matrikkelnummer>): Validated<Matrikkelnummer> = when (input) {
+    is Validated.Invalid -> input
+    is Validated.Valid -> if (input.data.gardsnummer.value != 22) {
+        Validated.Valid(input.data, input.validatedWith + "Invalid gardsnummer")
+    } else {
+        Validated.Invalid(input.data, "Invalid gardsnummer")
     }
+}
 
 suspend fun getAllKommuner(): List<Kommune> {
     val bootContext = object : KrAppBootContext {

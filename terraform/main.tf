@@ -1,16 +1,15 @@
 terraform {
-  backend "gcs" {}
-  required_version = "~> 1.0"
-  required_providers {
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = "~> 2.6"
-    }
+  backend "gcs" {
+    prefix = "komreg-backend"
   }
 }
 
 provider "kubernetes" {
   config_path = "~/.kube/config"
+}
+
+provider "google" {
+  project = var.project_id
 }
 
 locals {

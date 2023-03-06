@@ -8,7 +8,8 @@ import java.util.Objects;
 public abstract class NumberWrapper<
         Self extends NumberWrapper<Self, T>,
         T extends Number & Comparable<T>
-> extends Number implements Comparable<Self>, HasValue<T> {
+        > extends Number implements Comparable<Self>, HasValue<T> {
+
     @Override
     public final int intValue() {
         return getValue().intValue();
@@ -50,8 +51,12 @@ public abstract class NumberWrapper<
 
     @Override
     public final boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         NumberWrapper<?, ?> that = (NumberWrapper<?, ?>) o;
         return getValue().equals(that.getValue());
     }

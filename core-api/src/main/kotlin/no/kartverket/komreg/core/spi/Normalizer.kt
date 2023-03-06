@@ -5,5 +5,5 @@ import kotlin.reflect.KClass
 
 interface Normalizer<A : Any> {
     val type: KClass<A>
-    fun normalize(a: A?) : And<*,*>
+    fun normalize(a: A?): And<*, *>
 }

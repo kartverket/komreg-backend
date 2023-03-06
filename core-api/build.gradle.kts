@@ -10,4 +10,7 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+
+    implementation(platform("com.google.cloud:libraries-bom:26.4.0"))
+    implementation("com.google.cloud:google-cloud-secretmanager")
 }

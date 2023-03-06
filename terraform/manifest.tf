@@ -2,6 +2,7 @@ resource "kubernetes_manifest" "komreg-backend_application" {
   manifest = {
     apiVersion = "skiperator.kartverket.no/v1alpha1"
     kind       = "Application"
+
     metadata = {
       name      = local.app_name
       namespace = local.namespace
@@ -9,6 +10,7 @@ resource "kubernetes_manifest" "komreg-backend_application" {
     spec = {
       image = var.image
       port  = 8080
+
       ingresses = [
         var.external_dns_hostname
       ]
@@ -17,6 +19,17 @@ resource "kubernetes_manifest" "komreg-backend_application" {
         max                  = 4
         min                  = 2
       }
+      gcp = {
+        auth = {
+          serviceAccount = google_service_account.komreg_backend_runtime_sa.email
+        }
+      }
+      env = [
+        {
+          name  = "GOOGLE_CLOUD_PROJECT"
+          value = var.project_id
+        },
+      ]
       liveness = {
         path = "/actuator/health"
         port = 8080
@@ -37,19 +50,19 @@ resource "kubernetes_manifest" "komreg-backend_application" {
         outbound = {
           rules = [
             {
-              application = "komreg-backend"
-              namespace   = "komreg"
+              application = "komreg-parameter-backend"
             }
           ]
           external = [
             {
-              host = "154.224.228.35.bc.googleusercontent.com"
-              ip   = "35.228.224.154"
-              ports : [
+              host = "nnridb170.statkart.no"
+              ip   = "159.162.49.137"
+
+              ports = [
                 {
-                  name     = "komreg-parameter-database-connection"
+                  name     = "matrikkel-dev"
+                  port     = 1521
                   protocol = "TCP"
-                  port     = 5432
                 }
               ]
             }
