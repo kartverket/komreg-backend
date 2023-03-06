@@ -8,7 +8,6 @@ import no.kartverket.komreg.core.domain.Matrikkelnummer
 import no.kartverket.komreg.core.getSecretOrString
 import no.kartverket.komreg.integration.spi.SimpleEntitySource
 import no.kartverket.komreg.integration.spi.SimpleEntitySourceFactory
-import org.slf4j.LoggerFactory
 import java.sql.DriverManager
 import java.util.Properties
 
@@ -55,9 +54,6 @@ class MatrikkelenhetEntitySource(
 class MatrikkelnrEntitySourceFactory : SimpleEntitySourceFactory<RawData<Matrikkelnummer>> {
     override fun KrAppBootContext.create(): SimpleEntitySource<RawData<Matrikkelnummer>> {
         val matrikkelConfig = config.getConfig("integration.matrikkel")
-
-        val logger = LoggerFactory.getLogger(MatrikkelnrEntitySourceFactory::class.java)
-        logger.info("jdbcUrl " + matrikkelConfig.getSecretOrString("jdbcUrl"))
 
         return MatrikkelenhetEntitySource(
             matrikkelConfig.getSecretOrString("jdbcUrl"),
