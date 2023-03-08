@@ -16,7 +16,7 @@ repositories {
 
 subprojects {
     group = "no.kartverket.komreg"
-    version = "0.1.0"
+    version = "0.1.1"
 
     plugins.withType<JavaBasePlugin> {
         val javaVersion = JavaVersion.VERSION_11
