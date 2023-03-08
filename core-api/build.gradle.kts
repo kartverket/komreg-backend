@@ -4,6 +4,10 @@ plugins {
     `maven-publish`
 }
 
+java {
+    withSourcesJar()
+}
+
 publishing {
     publications {
         create<MavenPublication>("maven") {
