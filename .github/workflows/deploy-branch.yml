@@ -1,8 +1,15 @@
-name: Build and Deploy
+name: Build and Deploy Branch
 on:
   push:
-    branches:
+    branches-ignore:
       - main
+  workflow_dispatch:
+    inputs:
+      deploy_dev:
+        description: 'Should deploy build to dev environment'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   id-token: write
@@ -90,7 +97,7 @@ jobs:
 
   deploy-dev:
     name: Deploy to dev
-    needs: [ build ]
+    needs: build
     uses: kartverket/github-workflows/.github/workflows/run-terraform.yml@v3.1.3
     permissions:
       id-token: write
