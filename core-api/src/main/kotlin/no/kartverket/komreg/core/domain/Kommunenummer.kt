@@ -15,6 +15,7 @@ data class Kommunenummer(val fylkesnummer: Fylkesnummer, val lopenummer: Lopenum
     }
 }
 
+// Temporary class for use in development
 data class OldToNewKommune(
     val oldKommune: Long,
     val newKommune: Long,

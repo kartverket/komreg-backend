@@ -1,13 +1,10 @@
 package no.kartverket.matrikkel.komreg
 
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.toList
 import no.kartverket.komreg.core.KrAppBootContext
 import no.kartverket.komreg.core.domain.OldToNewKommune
 import no.kartverket.komreg.integration.spi.WriteService
 import no.kartverket.komreg.integration.spi.WriteServiceFactory
-import java.sql.DriverManager
-import java.util.Properties
 
 class TilbakeførKommuneNr(
     private val jdbcUrl: String,
@@ -15,7 +12,10 @@ class TilbakeførKommuneNr(
     private val password: String,
 ) : WriteService<OldToNewKommune> {
     override suspend fun write(kommunenummer: Flow<OldToNewKommune>) {
-        val props = Properties()
+        // Writing to kommune table.
+        // Disabled because we started using dev db instead of local db.
+
+        /*val props = Properties()
         props.setProperty("autoCommit", "false")
         props.setProperty("defaultRowPrefetch", "65536")
         props.setProperty("oracle.jdbc.maxCachedBufferSize", "12")
@@ -34,7 +34,9 @@ class TilbakeførKommuneNr(
                     conn.commit()
                     println("Oppdatert database")
                 }
-            }
+            }*/
+
+        println("Skriver til database (skriving deaktivert)")
     }
 }
 

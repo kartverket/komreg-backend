@@ -24,8 +24,8 @@ class TransformationKommune {
     }
 
     suspend fun writeKommuneNummer(oldNumber: Long, newNumber: Long) {
-        val kommeWrite: WriteService<OldToNewKommune> = WriteServiceManager(bootContext).getKommuneWriteService()
+        val kommuneWrite: WriteService<OldToNewKommune> = WriteServiceManager(bootContext).getKommuneWriteService()
 
-        kommeWrite.write(listOf(OldToNewKommune(oldNumber, newNumber)).asFlow())
+        kommuneWrite.write(listOf(OldToNewKommune(oldNumber, newNumber)).asFlow())
     }
 }
