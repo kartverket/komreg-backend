@@ -33,11 +33,11 @@ class FylkeEntitySource(
                             .use { rs ->
                                 while (rs.next()) {
                                     try {
-                                        val fylke: RawData<Fylke> = Fylke(
+                                        val matrikkelnummer: RawData<Fylke> = Fylke(
                                             rs.getLong(2),
                                             rs.getString(3),
                                         )
-                                        emit(fylke)
+                                        emit(matrikkelnummer)
                                     } catch (ex: Exception) {
                                         println(ex.message)
                                     }

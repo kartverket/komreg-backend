@@ -17,13 +17,6 @@ repositories {
 subprojects {
     group = "no.kartverket.komreg"
     version = "0.1.1"
-    apply(plugin = "org.jetbrains.kotlin.jvm")
-
-    val logbackVersion = "1.4.5"
-
-    dependencies {
-        implementation("ch.qos.logback:logback-classic:$logbackVersion")
-    }
 
     plugins.withType<JavaBasePlugin> {
         val javaVersion = JavaVersion.VERSION_11
