@@ -5,7 +5,7 @@ val kotlinxCoroutinesVersion = "1.6.4"
 val mockkVersion = "1.13.2"
 val junitVersion = "5.9.0"
 val spekVersion = "2.0.19"
-val ktorVersion = "2.2.1"
+val ktorVersion = "2.2.4"
 val hamcrestVersion = "2.2"
 
 group = "no.kartverket.komreg"
@@ -51,7 +51,7 @@ dependencies {
     implementation("io.ktor:ktor-client-websockets:$ktorVersion")
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
 
-    implementation("io.ktor:ktor-server-cors-jvm:2.2.1")
+    implementation("io.ktor:ktor-server-cors-jvm:$ktorVersion")
 
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
