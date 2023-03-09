@@ -34,11 +34,11 @@ class KommuneEntitySource(
                             .use { rs ->
                                 while (rs.next()) {
                                     try {
-                                        val kommuner: RawData<Kommune> = Kommune(
+                                        val kommune: RawData<Kommune> = Kommune(
                                             rs.getLong(2),
                                             rs.getString(3),
                                         )
-                                        emit(kommuner)
+                                        emit(kommune)
                                     } catch (ex: Exception) {
                                         println(ex.message)
                                     }
