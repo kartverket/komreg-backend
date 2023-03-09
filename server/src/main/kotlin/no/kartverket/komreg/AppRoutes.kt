@@ -4,10 +4,7 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.call
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
-import io.ktor.server.routing.route
-import io.ktor.server.routing.routing
+import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.data.Transformed
 import no.kartverket.komreg.core.domain.Matrikkelnummer
@@ -67,6 +64,12 @@ fun Application.routes() {
         route("/fylker") {
             get {
                 call.respond(fylkeservice.getFylker())
+            }
+        }
+        route("/kommune") {
+            put {
+                kommuneservice.updateKommune(1246, 9946)
+                call.respond("received put request")
             }
         }
     }

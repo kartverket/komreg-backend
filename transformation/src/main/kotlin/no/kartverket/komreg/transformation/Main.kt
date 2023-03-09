@@ -12,7 +12,6 @@ import no.kartverket.komreg.core.data.Transformation
 import no.kartverket.komreg.core.data.Transformed
 import no.kartverket.komreg.core.data.Validated
 import no.kartverket.komreg.core.domain.Fylke
-import no.kartverket.komreg.core.domain.Kommune
 import no.kartverket.komreg.core.domain.Matrikkelnummer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -54,11 +53,13 @@ suspend fun executeSimpleRun(
         .onEach { println(it) }
         .map { transformationExecution.transformData(it) }
         .onEach { println(it) }
-        .toList()
 
+    // getAllWriteServices...
+    // data.filter(isKommen) as Flow<Kommune>
+    // if any service is typed with DataKommune use that with data filter
     entitySources.buildEntityFlow().onEach { println(it) }.toList()
 
-    return result
+    return result.toList()
 }
 
 interface TransformationAction<T> {
