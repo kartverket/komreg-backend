@@ -5,12 +5,17 @@ import no.kartverket.komreg.core.KrAppBootContext
 import no.kartverket.komreg.core.domain.OldToNewKommune
 import no.kartverket.komreg.integration.spi.WriteService
 import no.kartverket.komreg.integration.spi.WriteServiceFactory
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 class TilbakeførKommuneNr(
     private val jdbcUrl: String,
     private val user: String,
     private val password: String,
 ) : WriteService<OldToNewKommune> {
+
+    private val logger: Logger = LoggerFactory.getLogger(this::class.java)
+
     override suspend fun write(kommunenummer: Flow<OldToNewKommune>) {
         // Writing to kommune table.
         // Disabled because we started using dev db instead of local db.
@@ -32,11 +37,11 @@ class TilbakeførKommuneNr(
                     }
                     st.executeBatch()
                     conn.commit()
-                    println("Oppdatert database")
+                    logger.info("Oppdatert database")
                 }
             }*/
 
-        println("Skriver til database (skriving deaktivert)")
+        logger.info("Skriver til database (skriving deaktivert)")
     }
 }
 

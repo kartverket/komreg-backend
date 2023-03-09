@@ -16,7 +16,7 @@ import no.kartverket.komreg.core.domain.Matrikkelnummer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-val logger: Logger = LoggerFactory.getLogger("getAllKommuner")
+val logger: Logger = LoggerFactory.getLogger(object{}::class.java)
 
 suspend fun main() {
     val validationRules = ValidateRaw(
@@ -48,16 +48,16 @@ suspend fun executeSimpleRun(
     val data = entitySources.buildMatrikkelnummerFlow()
     val result = data.take(1000)
         .map { rawValidationRules.rawToValidated(it) }
-        .onEach { println(it) }
+        .onEach { logger.info(it.toString()) }
         .map { transformationRules.validToTransformation(it) }
-        .onEach { println(it) }
+        .onEach { logger.info(it.toString()) }
         .map { transformationExecution.transformData(it) }
-        .onEach { println(it) }
+        .onEach { logger.info(it.toString()) }
 
     // getAllWriteServices...
     // data.filter(isKommen) as Flow<Kommune>
     // if any service is typed with DataKommune use that with data filter
-    entitySources.buildEntityFlow().onEach { println(it) }.toList()
+    entitySources.buildEntityFlow().onEach { logger.info(it.toString()) }.toList()
 
     return result.toList()
 }
@@ -84,13 +84,16 @@ data class TransformGardsnummer(val number: Int, val newNumber: Int) : Transform
 }
 
 class TransformationExecution<T : Any> {
+
+    private val logger: Logger = LoggerFactory.getLogger(this::class.java)
+
     fun transformData(transformation: Transformation<T>): Transformed<T> {
         return when (transformation) {
             is Transformation.Invalid -> Transformed.Invalid(transformation.data)
             is Transformation.NoOp -> Transformed.Data(transformation.data)
             is Transformation.Transform -> Transformed.Data(
                 transformation.transformations.fold(transformation.data) { acc, function ->
-                    println("Running transformation")
+                    logger.info("Running transformation")
                     function(acc)
                 },
             )
@@ -126,19 +129,6 @@ fun validMatrikkelNummer(input: Validated<Matrikkelnummer>): Validated<Matrikkel
     } else {
         Validated.Invalid(input.data, "Invalid gardsnummer")
     }
-}
-
-suspend fun getAllKommuner(): List<Kommune> {
-    logger.info("Henter alle kommuner")
-    val bootContext = object : KrAppBootContext {
-        override val config by lazy {
-            ConfigFactory.load("reference-dev.conf")
-        }
-    }
-    val entitySources = EntitySourceManager(bootContext)
-    val rawKommuner = entitySources.buildKommuneFlow().toList()
-
-    return entitySources.makeKommuneListFromRawDataKommuneList(rawKommuner)
 }
 
 suspend fun getAllFylker(): List<Fylke> {
