@@ -14,6 +14,10 @@ import no.kartverket.komreg.core.data.Validated
 import no.kartverket.komreg.core.domain.Fylke
 import no.kartverket.komreg.core.domain.Kommune
 import no.kartverket.komreg.core.domain.Matrikkelnummer
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
+val logger: Logger = LoggerFactory.getLogger("getAllKommuner")
 
 suspend fun main() {
     val validationRules = ValidateRaw(
@@ -30,17 +34,6 @@ suspend fun main() {
 
     executeSimpleRun(validationRules, transformationRules, transformationExecution)
 }
-
-val mockDatabase = listOf(
-    Matrikkelnummer(1, 1, 1, 1, 1),
-    Matrikkelnummer(1, 2, 1, 1, 1),
-    Matrikkelnummer(1, 3, 1, 1, 1),
-    Matrikkelnummer(1, 4, 1, 1, 1),
-    Matrikkelnummer(1, 5, 1, 1, 1),
-    Matrikkelnummer(1, 6, 1, 1, 1),
-    Matrikkelnummer(1, 6, 2, 1, 1),
-    Matrikkelnummer(1, 6, 3, 1, 1),
-)
 
 suspend fun executeSimpleRun(
     rawValidationRules: ValidateRaw<Matrikkelnummer>,
@@ -135,6 +128,7 @@ fun validMatrikkelNummer(input: Validated<Matrikkelnummer>): Validated<Matrikkel
 }
 
 suspend fun getAllKommuner(): List<Kommune> {
+    logger.info("Henter alle kommuner")
     val bootContext = object : KrAppBootContext {
         override val config by lazy {
             ConfigFactory.load("reference-dev.conf")
@@ -142,9 +136,8 @@ suspend fun getAllKommuner(): List<Kommune> {
     }
     val entitySources = EntitySourceManager(bootContext)
     val rawKommuner = entitySources.buildKommuneFlow().toList()
-    val kommuner = entitySources.makeKommuneListFromRawDataKommuneList(rawKommuner)
 
-    return kommuner
+    return entitySources.makeKommuneListFromRawDataKommuneList(rawKommuner)
 }
 
 suspend fun getAllFylker(): List<Fylke> {
@@ -155,7 +148,6 @@ suspend fun getAllFylker(): List<Fylke> {
     }
     val entitySources = EntitySourceManager(bootContext)
     val rawFylker = entitySources.buildFylkeFlow().toList()
-    val fylker = entitySources.makeFylkeListFromRawDataFylkeList(rawFylker)
 
-    return fylker
+    return entitySources.makeFylkeListFromRawDataFylkeList(rawFylker)
 }

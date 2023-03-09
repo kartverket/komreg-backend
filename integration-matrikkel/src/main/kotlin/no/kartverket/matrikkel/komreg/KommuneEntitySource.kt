@@ -19,6 +19,7 @@ class KommuneEntitySource(
 
     override val entityFlow: Flow<RawData<Kommune>>
         get() = flow {
+
             val props = Properties()
             props.setProperty("autoCommit", "false")
             props.setProperty("defaultRowPrefetch", "65536")
@@ -33,11 +34,11 @@ class KommuneEntitySource(
                             .use { rs ->
                                 while (rs.next()) {
                                     try {
-                                        val matrikkelnummer: RawData<Kommune> = Kommune(
+                                        val kommuner: RawData<Kommune> = Kommune(
                                             rs.getLong(2),
                                             rs.getString(3),
                                         )
-                                        emit(matrikkelnummer)
+                                        emit(kommuner)
                                     } catch (ex: Exception) {
                                         println(ex.message)
                                     }
