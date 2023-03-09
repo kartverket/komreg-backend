@@ -12,16 +12,21 @@ import no.kartverket.komreg.core.domain.Kommune
 import no.kartverket.komreg.core.domain.Matrikkelnummer
 import no.kartverket.komreg.integration.spi.SimpleEntitySource
 import no.kartverket.komreg.integration.spi.SimpleEntitySourceFactory
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.util.ServiceLoader
 
 class EntitySourceManager(bootContext: KrAppBootContext) {
+
+    private val logger: Logger = LoggerFactory.getLogger(this::class.java)
+
     private val entitySources: List<SimpleEntitySource<*>>
 
     init {
         val services = ServiceLoader.load(SimpleEntitySourceFactory::class.java)
-        println("Found ${services.toList().size} services")
+        logger.info("Found ${services.toList().size} services")
         services.forEach {
-            println(it.toString())
+            logger.info(it.toString())
         }
         entitySources = with(bootContext) {
             services.map { service -> with(service) { create() } }

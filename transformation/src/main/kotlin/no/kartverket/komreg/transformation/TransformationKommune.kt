@@ -9,7 +9,7 @@ import no.kartverket.komreg.core.domain.OldToNewKommune
 import no.kartverket.komreg.integration.spi.WriteService
 
 class TransformationKommune {
-    val bootContext = object : KrAppBootContext {
+    private val bootContext = object : KrAppBootContext {
         override val config by lazy {
             ConfigFactory.load("reference-dev.conf")
         }
@@ -18,9 +18,8 @@ class TransformationKommune {
     suspend fun getAllKommuner(): List<Kommune> {
         val entitySources = EntitySourceManager(bootContext)
         val rawKommuner = entitySources.buildKommuneFlow().toList()
-        val kommuner = entitySources.makeKommuneListFromRawDataKommuneList(rawKommuner)
 
-        return kommuner
+        return entitySources.makeKommuneListFromRawDataKommuneList(rawKommuner)
     }
 
     suspend fun writeKommuneNummer(oldNumber: Long, newNumber: Long) {

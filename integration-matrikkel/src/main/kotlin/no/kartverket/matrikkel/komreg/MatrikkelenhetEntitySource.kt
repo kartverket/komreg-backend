@@ -8,6 +8,8 @@ import no.kartverket.komreg.core.domain.Matrikkelnummer
 import no.kartverket.komreg.core.getSecretOrString
 import no.kartverket.komreg.integration.spi.SimpleEntitySource
 import no.kartverket.komreg.integration.spi.SimpleEntitySourceFactory
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.sql.DriverManager
 import java.util.Properties
 
@@ -16,6 +18,8 @@ class MatrikkelenhetEntitySource(
     private val user: String,
     private val password: String,
 ) : SimpleEntitySource<RawData<Matrikkelnummer>> {
+
+    private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     override val entityFlow: Flow<RawData<Matrikkelnummer>>
         get() = flow {
@@ -42,7 +46,7 @@ class MatrikkelenhetEntitySource(
                                         )
                                         emit(matrikkelnummer)
                                     } catch (ex: Exception) {
-                                        println(ex.message)
+                                        logger.error(ex.message)
                                     }
                                 }
                             }
