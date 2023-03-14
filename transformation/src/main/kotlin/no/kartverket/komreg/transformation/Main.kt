@@ -15,10 +15,12 @@ suspend fun main() {
     executeSimpleRun()
 }
 
+fun getEnvironment(): String = System.getenv("environment") ?: "local"
+
 suspend fun executeSimpleRun(): List<Transformation> {
     val bootContext = object : KrAppBootContext {
         override val config by lazy {
-            ConfigFactory.load("reference-local.conf")
+            ConfigFactory.load("reference-${getEnvironment()}.conf")
         }
     }
     val entitySources = EntitySourceManager(bootContext)
