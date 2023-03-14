@@ -17,9 +17,6 @@ data class TransformRuleForGardsnummer(
     val to: Int,
 )
 
-@Serializable
-data class ResponseMatrikel(val gardsnummer: Int)
-
 fun Application.routes() {
     routing {
         route("/run") {
