@@ -3,11 +3,12 @@ package no.kartverket.matrikkel.komreg
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import no.kartverket.komreg.core.KrAppBootContext
-import no.kartverket.komreg.core.data.RawData
-import no.kartverket.komreg.core.domain.Fylke
+import no.kartverket.komreg.core.domain.Fylkesnavn
+import no.kartverket.komreg.core.domain.Fylkesnummer
 import no.kartverket.komreg.core.getSecretOrString
-import no.kartverket.komreg.integration.spi.SimpleEntitySource
-import no.kartverket.komreg.integration.spi.SimpleEntitySourceFactory
+import no.kartverket.komreg.integration.spi.Entity
+import no.kartverket.komreg.integration.spi.EntitySource
+import no.kartverket.komreg.integration.spi.EntitySourceFactory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.sql.DriverManager
@@ -17,11 +18,15 @@ class FylkeEntitySource(
     private val jdbcUrl: String,
     private val user: String,
     private val password: String,
-) : SimpleEntitySource<RawData<Fylke>> {
+) : EntitySource {
 
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
-    override val entityFlow: Flow<RawData<Fylke>>
+    override val id: String = "fylkeEntitySource"
+    override val preValidation: Set<() -> Unit> = emptySet()
+    override val postValidation: Set<() -> Unit> = emptySet()
+
+    override val entityFlow: Flow<Entity>
         get() = flow {
             val props = Properties()
             props.setProperty("autoCommit", "false")
@@ -37,11 +42,17 @@ class FylkeEntitySource(
                             .use { rs ->
                                 while (rs.next()) {
                                     try {
-                                        val fylke: RawData<Fylke> = Fylke(
-                                            rs.getLong(2),
-                                            rs.getString(3),
+                                        val fylkesnummer = Fylkesnummer(rs.getLong(2))
+                                        val fylkesnavn = Fylkesnavn(rs.getString(3))
+                                        emit(
+                                            Entity(
+                                                id = "fylke${fylkesnummer.hashCode()}${fylkesnavn.hashCode()}",
+                                                ident = mapOf<Any, Any>(
+                                                    Fylkesnummer::class to fylkesnummer,
+                                                    Fylkesnavn::class to fylkesnavn
+                                                )
+                                            )
                                         )
-                                        emit(fylke)
                                     } catch (ex: Exception) {
                                         logger.error(ex.message)
                                     }
@@ -52,13 +63,13 @@ class FylkeEntitySource(
         }
 }
 
-class FylkeEntitySourceFactory : SimpleEntitySourceFactory<RawData<Fylke>> {
-    override fun KrAppBootContext.create(): SimpleEntitySource<RawData<Fylke>> {
+class FylkeEntitySourceFactory : EntitySourceFactory {
+    override fun KrAppBootContext.create(): EntitySource {
         val matrikkelConfig = config.getConfig("integration.matrikkel")
         return FylkeEntitySource(
             matrikkelConfig.getSecretOrString("jdbcUrl"),
             matrikkelConfig.getSecretOrString("user"),
-            matrikkelConfig.getSecretOrString("password"),
+            matrikkelConfig.getSecretOrString("password")
         )
     }
 }

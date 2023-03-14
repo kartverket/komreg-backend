@@ -1,7 +1,6 @@
 package no.kartverket.komreg.core.domain
 
 import kotlinx.serialization.Serializable
-import no.kartverket.komreg.core.data.RawData
 
 @Serializable
 data class Fylke(
@@ -12,12 +11,10 @@ data class Fylke(
         operator fun invoke(
             fylkesnummer: Long,
             fylkesnavn: String,
-        ): RawData<Fylke> =
-            RawData(
-                Fylke(
-                    Fylkesnummer(fylkesnummer),
-                    Fylkesnavn(fylkesnavn),
-                ),
+        ): Fylke =
+            Fylke(
+                Fylkesnummer(fylkesnummer),
+                Fylkesnavn(fylkesnavn)
             )
     }
 }

@@ -1,7 +1,6 @@
 package no.kartverket.komreg.core.domain
 
 import kotlinx.serialization.Serializable
-import no.kartverket.komreg.core.data.RawData
 
 @Serializable
 data class Matrikkelnummer(
@@ -30,15 +29,13 @@ data class Matrikkelnummer(
             bruksnummer: Long,
             festenummer: Long?,
             seksjonsnummer: Long?,
-        ): RawData<Matrikkelnummer> =
-            RawData(
-                Matrikkelnummer(
-                    Kommunenummer(kommuenummer),
-                    Gardsnummer(gardsnummer.toInt()),
-                    Bruksnummer(bruksnummer.toShort()),
-                    festenummer?.let { Festenummer(it.toShort()) },
-                    seksjonsnummer?.let { Seksjonsnummer(it.toShort()) },
-                ),
+        ): Matrikkelnummer =
+            Matrikkelnummer(
+                Kommunenummer(kommuenummer),
+                Gardsnummer(gardsnummer.toInt()),
+                Bruksnummer(bruksnummer.toShort()),
+                festenummer?.let { Festenummer(it.toShort()) },
+                seksjonsnummer?.let { Seksjonsnummer(it.toShort()) }
             )
     }
 
