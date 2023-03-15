@@ -16,7 +16,6 @@ repositories {
 subprojects {
     group = "no.kartverket.komreg"
     version = "1.0-SNAPSHOT"
-    apply(plugin = "org.jetbrains.kotlin.jvm")
 
     afterEvaluate {
         // TODO: Antagelig ikke en god idé å gjøre dette her
