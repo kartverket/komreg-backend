@@ -4,10 +4,9 @@ group = "no.kartverket.komreg"
 version = "1.0-SNAPSHOT"
 
 plugins {
-    val kotlinVersion = "1.8.0"
-    kotlin("jvm") version kotlinVersion
+    kotlin("jvm")
     application
-    id("io.ktor.plugin") version "2.2.4"
+    id("io.ktor.plugin")
 }
 
 repositories {
@@ -19,10 +18,11 @@ subprojects {
     version = "1.0-SNAPSHOT"
     apply(plugin = "org.jetbrains.kotlin.jvm")
 
-    val logbackVersion = "1.4.5"
-
-    dependencies {
-        implementation("ch.qos.logback:logback-classic:$logbackVersion")
+    afterEvaluate {
+        // TODO: Antagelig ikke en god idé å gjøre dette her
+        dependencies {
+            implementation(libs.logback.classic)
+        }
     }
 
     plugins.withType<JavaBasePlugin> {
