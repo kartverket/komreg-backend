@@ -1,13 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val kotlinxCliVersion = "0.3.5"
-val kotlinxCoroutinesVersion = "1.6.4"
-val mockkVersion = "1.13.2"
-val junitVersion = "5.9.0"
-val spekVersion = "2.0.19"
-val ktorVersion = "2.2.4"
-val hamcrestVersion = "2.2"
-
 group = "no.kartverket.komreg"
 version = "1.0-SNAPSHOT"
 
@@ -25,41 +17,42 @@ dependencies {
     implementation(project(":core-api"))
     implementation(project(":transformation"))
 
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation(libs.kotlin.reflect)
 
-    implementation("org.jetbrains.kotlinx:kotlinx-cli:$kotlinxCliVersion")
+    implementation(libs.kotlinx.cli)
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk9:$kotlinxCoroutinesVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.5")
+    implementation(libs.kotlinx.coroutines.jdk9)
+    implementation(libs.kotlinx.collections.immutable.jvm)
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.4.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
+    implementation(libs.kotlinx.serialization.protobuf)
+    implementation(libs.kotlinx.serialization.json)
 
-    implementation("io.arrow-kt:arrow-fx-coroutines")
-    implementation("io.arrow-kt:arrow-fx-stm")
+    implementation(libs.arrow.fx.coroutines)
+    implementation(libs.arrow.fx.stm)
 
     implementation("com.oracle.database.jdbc:ojdbc11:21.7.0.0")
     implementation("org.rocksdb:rocksdbjni:7.7.3")
 
-    implementation("io.ktor:ktor-server-core:$ktorVersion")
-    implementation("io.ktor:ktor-server-netty:$ktorVersion")
-    implementation("io.ktor:ktor-server-cors:$ktorVersion")
-    implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
-    implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
-    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
-    implementation("io.ktor:ktor-server-websockets:$ktorVersion")
-    implementation("io.ktor:ktor-client-websockets:$ktorVersion")
-    implementation("io.ktor:ktor-client-cio:$ktorVersion")
+    implementation(libs.ktor.server.core)
+    implementation(libs.ktor.server.netty)
+    implementation(libs.ktor.server.cors)
+    implementation(libs.ktor.server.metrics.micrometer)
+    implementation(libs.ktor.server.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.server.websockets)
+    implementation(libs.ktor.client.websockets)
+    implementation(libs.ktor.client.cio)
 
-    implementation("io.ktor:ktor-server-cors-jvm:$ktorVersion")
+    implementation(libs.ktor.server.cors.jvm)
 
     testImplementation(kotlin("test"))
-    testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
-    testImplementation("org.spekframework.spek2:spek-dsl-jvm:$spekVersion")
-    testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:$spekVersion")
-    testImplementation("io.mockk:mockk:$mockkVersion")
-    testImplementation("org.hamcrest:hamcrest:$hamcrestVersion")
-    testImplementation("org.hamcrest:hamcrest-library:$hamcrestVersion")
+    testImplementation(libs.junit.jupiter.api)
+    testRuntimeOnly(libs.junit.jupiter.engine)
+    testImplementation(libs.spek.dsl.jvm)
+    testRuntimeOnly(libs.spek.runner.junit5)
+    testImplementation(libs.mockk)
+    testImplementation(libs.hamcrest)
+    testImplementation(libs.hamcrest.library)
 }
 
 tasks.test {
