@@ -16,7 +16,7 @@ repositories {
 
 subprojects {
     group = "no.kartverket.komreg"
-    version = "0.1.1"
+    version = "1.0-SNAPSHOT"
     apply(plugin = "org.jetbrains.kotlin.jvm")
 
     val logbackVersion = "1.4.5"

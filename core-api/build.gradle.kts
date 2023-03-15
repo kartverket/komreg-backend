@@ -1,3 +1,6 @@
+group = "no.kartverket.komreg"
+version = "0.1.2"
+
 plugins {
     kotlin("jvm") version "1.8.0"
     kotlin("plugin.serialization") version "1.8.0"
