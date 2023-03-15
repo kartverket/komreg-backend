@@ -3,15 +3,11 @@ package no.kartverket.komreg.transformation
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapMerge
 import no.kartverket.komreg.core.KrAppBootContext
-import no.kartverket.komreg.core.data.RawData
-import no.kartverket.komreg.core.domain.Fylke
-import no.kartverket.komreg.core.domain.Kommune
-import no.kartverket.komreg.core.domain.Matrikkelnummer
-import no.kartverket.komreg.integration.spi.SimpleEntitySource
-import no.kartverket.komreg.integration.spi.SimpleEntitySourceFactory
+import no.kartverket.komreg.integration.spi.Entity
+import no.kartverket.komreg.integration.spi.EntitySource
+import no.kartverket.komreg.integration.spi.EntitySourceFactory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.ServiceLoader
@@ -20,10 +16,10 @@ class EntitySourceManager(bootContext: KrAppBootContext) {
 
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
-    private val entitySources: List<SimpleEntitySource<*>>
+    private val entitySources: List<EntitySource>
 
     init {
-        val services = ServiceLoader.load(SimpleEntitySourceFactory::class.java)
+        val services = ServiceLoader.load(EntitySourceFactory::class.java)
         logger.info("Found ${services.toList().size} services")
         services.forEach {
             logger.info(it.toString())
@@ -31,38 +27,13 @@ class EntitySourceManager(bootContext: KrAppBootContext) {
         entitySources = with(bootContext) {
             services.map { service -> with(service) { create() } }
         }
+        entitySources.forEach {
+            logger.info("EntitySource: ${it.id} - $it")
+        }
     }
 
     @OptIn(FlowPreview::class)
-    fun buildEntityFlow(): Flow<RawData<*>> = entitySources
+    fun buildEntityFlow(): Flow<Entity> = entitySources
         .asFlow()
         .flatMapMerge { it.entityFlow }
-
-    fun buildMatrikkelnummerFlow(): Flow<RawData<Matrikkelnummer>> =
-        entitySources
-            .asFlow()
-            .flatMapMerge { it.entityFlow }
-            .filter { it.data is Matrikkelnummer } as Flow<RawData<Matrikkelnummer>>
-
-    fun buildKommuneFlow(): Flow<RawData<Kommune>> =
-        entitySources
-            .asFlow()
-            .flatMapMerge { it.entityFlow }
-            .filter { it.data is Kommune } as Flow<RawData<Kommune>>
-
-    // Temporary function instead of converting and validating correctly
-    fun makeKommuneListFromRawDataKommuneList(rawDataKommuneList: List<RawData<Kommune>>): List<Kommune> {
-        return rawDataKommuneList.map { it.data }
-    }
-
-    fun buildFylkeFlow(): Flow<RawData<Fylke>> =
-        entitySources
-            .asFlow()
-            .flatMapMerge { it.entityFlow }
-            .filter { it.data is Fylke } as Flow<RawData<Fylke>>
-
-    // Temporary function instead of converting and validating correctly
-    fun makeFylkeListFromRawDataFylkeList(rawDataFylkeList: List<RawData<Fylke>>): List<Fylke> {
-        return rawDataFylkeList.map { it.data }
-    }
 }
