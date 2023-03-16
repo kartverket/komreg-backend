@@ -46,7 +46,7 @@ jobs:
 
       - name: Build docker and push
         id: build
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           context: .
           push: true
