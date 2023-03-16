@@ -5,5 +5,5 @@ plugins {
 
 dependencies {
     api(project(":core-api"))
-    runtimeOnly("com.oracle.database.jdbc:ojdbc11:21.7.0.0")
+    runtimeOnly("com.oracle.database.jdbc:ojdbc11:21.9.0.0")
 }

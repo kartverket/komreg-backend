@@ -30,7 +30,7 @@ dependencies {
     implementation(libs.arrow.fx.coroutines)
     implementation(libs.arrow.fx.stm)
 
-    implementation("com.oracle.database.jdbc:ojdbc11:21.7.0.0")
+    implementation("com.oracle.database.jdbc:ojdbc11:21.9.0.0")
     implementation("org.rocksdb:rocksdbjni:7.7.3")
 
     implementation(libs.ktor.server.core)
