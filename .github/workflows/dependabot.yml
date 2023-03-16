@@ -1,0 +1,25 @@
+# Basic dependabot.yml file configuration for gradle package manager
+version: 2
+updates:
+  # Enable version updates for gradle
+  - package-ecosystem: gradle
+    # Look for build.gradle files from the `root` directory
+    directory: "/"
+    # Check for updates every day (weekdays)
+    schedule:
+      interval: daily
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: daily
+
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: daily
+
+  - package-ecosystem: "terraform"
+    directory: "/terraform"
+    schedule:
+      interval: daily
