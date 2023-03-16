@@ -57,7 +57,7 @@ class MatrikkelenhetEntitySource(
                                                     Fylkesnummer::class to matrikkelnummer.kommunenummer.fylkesnummer,
                                                     Kommunenummer.Lopenummer::class to matrikkelnummer.kommunenummer.lopenummer,
                                                     Matrikkelnummer.Gardsnummer::class to matrikkelnummer.gardsnummer,
-                                                    Matrikkelnummer.Bruksnummer::class to matrikkelnummer.gardsnummer,
+                                                    Matrikkelnummer.Bruksnummer::class to matrikkelnummer.bruksnummer,
                                                     Matrikkelnummer.Festenummer::class to matrikkelnummer.festenummer,
                                                     Matrikkelnummer.Seksjonsnummer::class to matrikkelnummer.seksjonsnummer
                                                 )
@@ -73,7 +73,7 @@ class MatrikkelenhetEntitySource(
         }
 }
 
-class MatrikkelnrEntitySourceFactory : EntitySourceFactory {
+class MatrikkelenhetEntitySourceFactory : EntitySourceFactory {
     override fun KrAppBootContext.create(): EntitySource {
         val matrikkelConfig = config.getConfig("integration.matrikkel")
 
