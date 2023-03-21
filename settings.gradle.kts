@@ -29,6 +29,7 @@ dependencyResolutionManagement {
             version("mockk", "1.13.2")
             version("junit", "5.9.0")
             version("spek", "2.0.19")
+            version("kotest", "5.5.5")
             version("ktor", "2.2.4")
             version("hamcrest", "2.2")
             version("logback", "1.4.5")
@@ -87,6 +88,8 @@ dependencyResolutionManagement {
 
             library("spek-dsl-jvm", "org.spekframework.spek2", "spek-dsl-jvm").versionRef("spek")
             library("spek-runner-junit5", "org.spekframework.spek2", "spek-runner-junit5").versionRef("spek")
+
+            library("kotest-runner", "io.kotest", "kotest-runner-junit5").versionRef("kotest")
 
             library("mockk", "io.mockk", "mockk").versionRef("mockk")
 

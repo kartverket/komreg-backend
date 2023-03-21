@@ -10,4 +10,10 @@ dependencies {
 
     // TODO: Denne må hentes fra et sted
     api(files("libs/matrikkel-komreg-4.10-SNAPSHOT.jar"))
+
+    testImplementation(libs.kotest.runner)
+}
+
+tasks.withType(Test::class).configureEach {
+    useJUnitPlatform()
 }
