@@ -29,7 +29,7 @@ suspend fun executeSimpleRun(input: Reguleringsinput): Int {
     val result = entitySources
         .buildEntityFlow()
         .mapNotNull {
-            //logger.info(it.toString())
+            // logger.info(it.toString())
             // Sjekke entity flowen mot reguleringsinput for å se om entityen skal transformeres
             // Lage transformeringsobjektene
             reguleringForKommunenr(input, it)
@@ -39,28 +39,30 @@ suspend fun executeSimpleRun(input: Reguleringsinput): Int {
 
     // Entity -> Trans, Trans.NoTransform -> Trans.NoTrans -> Trans.Something -> Trans.Something
 
-
     return result.toList().size
 }
 
 fun reguleringForKommunenr(input: Reguleringsinput, entity: Entity): Transformation? {
     // Finn entiteter med fylkesnummer + kommuneløpenummer
-    val fylkesnummer = entity.ident?.get(Fylkesnummer::class) as Fylkesnummer?
-    val lopenummer = entity.ident?.get(Kommunenummer.Lopenummer::class) as Kommunenummer.Lopenummer?
+    val fylkesnummer = entity.identOf<Fylkesnummer?>()
+    val lopenummer = entity.identOf<Kommunenummer.Lopenummer?>()
 
     if (fylkesnummer == null || lopenummer == null) return null
 
     // Finn regel i reguleringen som matcher fylkesnummer + kommuneløpenummer
-    val newKommune = input.endringer.find { it.fra.fylkesnummer == fylkesnummer && it.fra.lopenummer == lopenummer }?.til
+    val newKommune =
+        input.endringer.find { it.fra.fylkesnummer == fylkesnummer && it.fra.lopenummer == lopenummer }?.til
 
     return if (newKommune != null) {
         // Lag en transformasjon som oppdaterer fylkesnummer og kommuneløpenummer
         logger.info("Entitet som skal transformeres: $entity")
         val ident = entity.ident ?: emptyMap<Any, Any?>()
-        val newIdent = ident.plus(mapOf(
-            Fylkesnummer::class to newKommune.fylkesnummer,
-            Kommunenummer.Lopenummer::class to newKommune.lopenummer
-        ))
+        val newIdent = ident.plus(
+            Entity.typeMap(
+                newKommune.fylkesnummer,
+                newKommune.lopenummer
+            )
+        )
 
         Transformation(
             id = entity.id,
