@@ -13,40 +13,36 @@ import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.domain.Kommunenummer
 import no.kartverket.komreg.transformation.Kommuneendring
 import no.kartverket.komreg.transformation.Reguleringsinput
-import no.kartverket.komreg.transformation.executeSimpleRun
+import no.kartverket.komreg.transformation.transformEntities
 
 @Serializable
 data class Regulering(
     val id: String,
     val navn: String,
     val dato: String, // Date?
-    val fylkesendring: Fylkesendring, // Flertall? Entall? WAT?
+    val endringer: List<Fylkesdeling>, // Endringer som sealed classes og diskriminator?
 ) {
     fun toReguleringsinput(): Reguleringsinput {
         return Reguleringsinput(
-            endringer = fylkesendring.fylkesdelinger.flatMap { fylkesdeling ->
+            endringer = endringer.flatMap { fylkesdeling ->
                 fylkesdeling.nyeFylker.flatMap { fylke ->
                     fylke.kommuner.map { kommune ->
                         Kommuneendring(
                             Kommunenummer(kommune.kommunenummer.toLong()),
-                            Kommunenummer(kommune.nyttKommunenummer.toLong())
+                            Kommunenummer(kommune.nyttKommunenummer.toLong()),
                         )
                     }
                 }
-            }
+            },
         )
     }
 }
 
 @Serializable
-data class Fylkesendring(
-    val fylkesdelinger: List<Fylkesdeling>,
-)
-
-@Serializable
 data class Fylkesdeling(
     val id: String,
     val navn: String,
+    val type: String,
     val gammeltFylke: Fylke,
     val nyeFylker: List<Fylke>,
 )
@@ -54,14 +50,14 @@ data class Fylkesdeling(
 @Serializable
 data class Fylke(
     val navn: String,
-    val fylkesnummer: String, // Fylkesnummer?
-    val kommuner: List<Kommune>, // Eh? Er jo null for gammeltFylke
+    val fylkesnummer: String,
+    val kommuner: List<Kommune>,
 )
 
 @Serializable
 data class Kommune(
     val navn: String,
-    val kommunenummer: String, // Kommunenummer?
+    val kommunenummer: String,
     val nyttKommunenummer: String,
 )
 
@@ -71,8 +67,8 @@ fun Application.routes() {
             post {
                 val regulering: Regulering = call.receive()
                 call.application.log.info(regulering.toReguleringsinput().toString())
-                val result = executeSimpleRun(regulering.toReguleringsinput())
-                call.respond(result)
+                val result = transformEntities(regulering.toReguleringsinput())
+                call.respond(result.map { it.toString() })
             }
         }
         route("/actuator/health") {

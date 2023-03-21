@@ -1,0 +1,54 @@
+POST http://localhost:8080/run HTTP/1.1
+Content-Type: application/json
+
+{
+  "id": "fylkesdeling-troms-finnmark-2024",
+  "navn": "Fylkesdeling Troms og Finnmark 2024",
+  "dato": "2024-01-01",
+  "endringer": [
+    {
+      "id": "fylkesdeling",
+      "navn": "Deling av Troms og Finnmark",
+      "type": "Fylkesdeling",
+      "gammeltFylke": {
+        "navn": "Troms og Finnmark",
+        "fylkesnummer": "54",
+        "kommuner": []
+      },
+      "nyeFylker": [
+        {
+          "navn": "Troms",
+          "fylkesnummer": "55",
+          "kommuner": [
+            {
+              "navn": "Tromsø",
+              "kommunenummer": "5401",
+              "nyttKommunenummer": "5501"
+            },
+            {
+              "navn": "Harstad",
+              "kommunenummer": "5402",
+              "nyttKommunenummer": "5503"
+            }
+          ]
+        },
+        {
+          "navn": "Finnmark",
+          "fylkesnummer": "56",
+          "kommuner": [
+            {
+              "navn": "Alta",
+              "kommunenummer": "5403",
+              "nyttKommunenummer": "5601"
+            },
+            {
+              "navn": "Hammerfest",
+              "kommunenummer": "5406",
+              "nyttKommunenummer": "5603"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
