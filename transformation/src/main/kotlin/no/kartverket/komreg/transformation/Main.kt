@@ -41,8 +41,8 @@ suspend fun transformEntities(input: Reguleringsinput): List<Transformation> {
 
 fun transformerKommunenummer(input: Reguleringsinput, entity: Entity): Transformation? {
     // Finn entiteter med fylkesnummer + kommuneløpenummer
-    val fylkesnummer = entity.ident?.get(Fylkesnummer::class) as Fylkesnummer?
-    val lopenummer = entity.ident?.get(Kommunenummer.Lopenummer::class) as Kommunenummer.Lopenummer?
+    val fylkesnummer = entity.identOf<Fylkesnummer?>()
+    val lopenummer = entity.identOf<Kommunenummer.Lopenummer?>()
 
     if (fylkesnummer == null || lopenummer == null) return null
 
@@ -57,10 +57,10 @@ fun transformerKommunenummer(input: Reguleringsinput, entity: Entity): Transform
         logger.info("Entitet som skal transformeres: $entity")
         val ident = entity.ident ?: emptyMap<Any, Any?>()
         val newIdent = ident.plus(
-            mapOf(
-                Fylkesnummer::class to endring.fylkesnummer,
-                Kommunenummer.Lopenummer::class to endring.lopenummer,
-            ),
+            Entity.typeMap(
+                endring.fylkesnummer,
+                endring.lopenummer
+            )
         )
 
         Transformation(
@@ -68,7 +68,7 @@ fun transformerKommunenummer(input: Reguleringsinput, entity: Entity): Transform
             transformationType = "ChangeKommunenummer",
             transformedIdent = newIdent,
             transformedAssociatedIdents = entity.associatedIdents,
-            sourceObject = entity.sourceObject,
+            sourceObject = entity.sourceObject
         )
     } else {
         null
