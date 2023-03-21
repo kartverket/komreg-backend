@@ -8,15 +8,17 @@ data class Kommunenummer(val fylkesnummer: Fylkesnummer, val lopenummer: Lopenum
     data class Lopenummer(val value: Byte)
 
     companion object {
-        operator fun invoke(value: Long): Kommunenummer = Kommunenummer(
-            Fylkesnummer(value / 100L),
-            Lopenummer((value % 100L).toByte()),
-        )
+        operator fun invoke(value: Long): Kommunenummer {
+            val (fylkesnummer, løpenummer) = value.splitToFylkesnummerOgLøpenummer()
+            return Kommunenummer(
+                Fylkesnummer(fylkesnummer.toLong()),
+                Lopenummer(løpenummer.toByte()),
+            )
+        }
     }
 }
 
-// Temporary class for use in development
-data class OldToNewKommune(
-    val oldKommune: Long,
-    val newKommune: Long,
-)
+private fun Long.splitToFylkesnummerOgLøpenummer() = this.toString()
+    .padStart(4, '0')
+    .takeLast(4)
+    .chunked(2)

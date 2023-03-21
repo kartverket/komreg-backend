@@ -16,7 +16,7 @@ val logger: Logger = LoggerFactory.getLogger(object {}::class.java)
 
 fun getEnvironment(): String = System.getenv("environment") ?: "local"
 
-suspend fun executeSimpleRun(input: Reguleringsinput): Int {
+suspend fun transformEntities(input: Reguleringsinput): List<Transformation> {
     val bootContext = object : KrAppBootContext {
         override val config by lazy {
             ConfigFactory.load("reference-${getEnvironment()}.conf")
@@ -30,19 +30,16 @@ suspend fun executeSimpleRun(input: Reguleringsinput): Int {
         .buildEntityFlow()
         .mapNotNull {
             // logger.info(it.toString())
-            // Sjekke entity flowen mot reguleringsinput for å se om entityen skal transformeres
-            // Lage transformeringsobjektene
-            reguleringForKommunenr(input, it)
+            // Sjekke entity flowen mot reguleringsinput, og lage transformeringsobjektene
+            transformerKommunenummer(input, it)
         }
         // Konsumere transformasjonene inn i sinken
         .onEach { logger.info(it.toString()) }
 
-    // Entity -> Trans, Trans.NoTransform -> Trans.NoTrans -> Trans.Something -> Trans.Something
-
-    return result.toList().size
+    return result.toList()
 }
 
-fun reguleringForKommunenr(input: Reguleringsinput, entity: Entity): Transformation? {
+fun transformerKommunenummer(input: Reguleringsinput, entity: Entity): Transformation? {
     // Finn entiteter med fylkesnummer + kommuneløpenummer
     val fylkesnummer = entity.identOf<Fylkesnummer?>()
     val lopenummer = entity.identOf<Kommunenummer.Lopenummer?>()
@@ -50,23 +47,25 @@ fun reguleringForKommunenr(input: Reguleringsinput, entity: Entity): Transformat
     if (fylkesnummer == null || lopenummer == null) return null
 
     // Finn regel i reguleringen som matcher fylkesnummer + kommuneløpenummer
-    val newKommune =
-        input.endringer.find { it.fra.fylkesnummer == fylkesnummer && it.fra.lopenummer == lopenummer }?.til
+    val endring =
+        input.endringer.find {
+            it.fra.fylkesnummer == fylkesnummer && it.fra.lopenummer == lopenummer
+        }?.til
 
-    return if (newKommune != null) {
+    return if (endring != null) {
         // Lag en transformasjon som oppdaterer fylkesnummer og kommuneløpenummer
         logger.info("Entitet som skal transformeres: $entity")
         val ident = entity.ident ?: emptyMap<Any, Any?>()
         val newIdent = ident.plus(
             Entity.typeMap(
-                newKommune.fylkesnummer,
-                newKommune.lopenummer
+                endring.fylkesnummer,
+                endring.lopenummer
             )
         )
 
         Transformation(
             id = entity.id,
-            transformationType = "ChangeKommune",
+            transformationType = "ChangeKommunenummer",
             transformedIdent = newIdent,
             transformedAssociatedIdents = entity.associatedIdents,
             sourceObject = entity.sourceObject

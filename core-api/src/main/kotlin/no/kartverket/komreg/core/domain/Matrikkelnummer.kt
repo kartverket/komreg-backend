@@ -35,7 +35,7 @@ data class Matrikkelnummer(
                 Gardsnummer(gardsnummer.toInt()),
                 Bruksnummer(bruksnummer.toShort()),
                 festenummer?.let { Festenummer(it.toShort()) },
-                seksjonsnummer?.let { Seksjonsnummer(it.toShort()) }
+                seksjonsnummer?.let { Seksjonsnummer(it.toShort()) },
             )
     }
 
