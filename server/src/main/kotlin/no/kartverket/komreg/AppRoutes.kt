@@ -83,12 +83,12 @@ fun Application.routes() {
                         Transformasjonsresultat(
                             id = it.id,
                             fra = Kommunenummer(
-                                (it.sourceObject as Entity).identOf(),
-                                (it.sourceObject as Entity).identOf(),
+                                fylkesnummer = (it.sourceObject as Entity).identOf(),
+                                lopenummer = (it.sourceObject as Entity).identOf(),
                             ).verdi(),
                             til = Kommunenummer(
-                                it.transformedIdent[Fylkesnummer::class] as Fylkesnummer,
-                                it.transformedIdent[Kommunenummer.Lopenummer::class] as Kommunenummer.Lopenummer,
+                                fylkesnummer = it.transformedIdent[Fylkesnummer::class] as Fylkesnummer,
+                                lopenummer = it.transformedIdent[Kommunenummer.Lopenummer::class] as Kommunenummer.Lopenummer,
                             ).verdi(),
                         )
                     },
