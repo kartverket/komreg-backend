@@ -48,20 +48,20 @@ class MatrikkelenhetEntitySource(
                                             rs.getLong(3),
                                             rs.getLong(4),
                                             rs.getLong(5),
-                                            rs.getLong(6)
+                                            rs.getLong(6),
                                         )
                                         emit(
                                             Entity(
-                                                id = "matrikkelenhet${matrikkelnummer.hashCode()}",
+                                                id = "matrikkelenhet-${rs.getLong(1)}",
                                                 ident = mapOf<Any, Any?>(
                                                     Fylkesnummer::class to matrikkelnummer.kommunenummer.fylkesnummer,
                                                     Kommunenummer.Lopenummer::class to matrikkelnummer.kommunenummer.lopenummer,
                                                     Matrikkelnummer.Gardsnummer::class to matrikkelnummer.gardsnummer,
                                                     Matrikkelnummer.Bruksnummer::class to matrikkelnummer.bruksnummer,
                                                     Matrikkelnummer.Festenummer::class to matrikkelnummer.festenummer,
-                                                    Matrikkelnummer.Seksjonsnummer::class to matrikkelnummer.seksjonsnummer
-                                                )
-                                            )
+                                                    Matrikkelnummer.Seksjonsnummer::class to matrikkelnummer.seksjonsnummer,
+                                                ),
+                                            ),
                                         )
                                     } catch (ex: Exception) {
                                         logger.error(ex.message)
@@ -80,7 +80,7 @@ class MatrikkelenhetEntitySourceFactory : EntitySourceFactory {
         return MatrikkelenhetEntitySource(
             matrikkelConfig.getSecretOrString("jdbcUrl"),
             matrikkelConfig.getSecretOrString("user"),
-            matrikkelConfig.getSecretOrString("password")
+            matrikkelConfig.getSecretOrString("password"),
         )
     }
 }

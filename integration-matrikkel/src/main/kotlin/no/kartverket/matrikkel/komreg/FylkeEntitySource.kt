@@ -38,7 +38,7 @@ class FylkeEntitySource(
             DriverManager.getConnection(jdbcUrl, props)
                 .use { conn ->
                     conn.createStatement().use { st ->
-                        st.executeQuery("SELECT f.id, f.fylkesnr, f.fylkesnavn FROM FYLKE f")
+                        st.executeQuery("SELECT f.id, f.fylkesnr, f.fylkesnavn FROM fylke f")
                             .use { rs ->
                                 while (rs.next()) {
                                     try {
@@ -46,12 +46,12 @@ class FylkeEntitySource(
                                         val fylkesnavn = Fylkesnavn(rs.getString(3))
                                         emit(
                                             Entity(
-                                                id = "fylke${fylkesnummer.hashCode()}${fylkesnavn.hashCode()}",
+                                                id = "fylke-${rs.getLong(1)}",
                                                 ident = mapOf<Any, Any>(
                                                     Fylkesnummer::class to fylkesnummer,
-                                                    Fylkesnavn::class to fylkesnavn
-                                                )
-                                            )
+                                                    Fylkesnavn::class to fylkesnavn,
+                                                ),
+                                            ),
                                         )
                                     } catch (ex: Exception) {
                                         logger.error(ex.message)
@@ -69,7 +69,7 @@ class FylkeEntitySourceFactory : EntitySourceFactory {
         return FylkeEntitySource(
             matrikkelConfig.getSecretOrString("jdbcUrl"),
             matrikkelConfig.getSecretOrString("user"),
-            matrikkelConfig.getSecretOrString("password")
+            matrikkelConfig.getSecretOrString("password"),
         )
     }
 }
