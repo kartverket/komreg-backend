@@ -29,12 +29,11 @@ suspend fun transformEntities(input: Reguleringsinput): List<Transformation> {
     val result = entitySources
         .buildEntityFlow()
         .mapNotNull {
-            // logger.info(it.toString())
             // Sjekke entity flowen mot reguleringsinput, og lage transformeringsobjektene
             transformerKommunenummer(input, it)
         }
         // Konsumere transformasjonene inn i sinken
-        .onEach { logger.info(it.toString()) }
+        .onEach { logger.info("Transformert entitet: $it") }
 
     return result.toList()
 }
@@ -59,8 +58,8 @@ fun transformerKommunenummer(input: Reguleringsinput, entity: Entity): Transform
         val newIdent = ident.plus(
             Entity.typeMap(
                 endring.fylkesnummer,
-                endring.lopenummer
-            )
+                endring.lopenummer,
+            ),
         )
 
         Transformation(
@@ -68,7 +67,7 @@ fun transformerKommunenummer(input: Reguleringsinput, entity: Entity): Transform
             transformationType = "ChangeKommunenummer",
             transformedIdent = newIdent,
             transformedAssociatedIdents = entity.associatedIdents,
-            sourceObject = entity.sourceObject
+            sourceObject = entity, // entity.sourceObject?
         )
     } else {
         null

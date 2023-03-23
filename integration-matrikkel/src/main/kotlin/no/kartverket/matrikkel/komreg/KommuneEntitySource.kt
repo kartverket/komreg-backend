@@ -41,23 +41,23 @@ class KommuneEntitySource(
             DriverManager.getConnection(jdbcUrl, props)
                 .use { conn ->
                     conn.createStatement().use { st ->
-                        st.executeQuery("SELECT m.id, m.kommunenr, m.kommunenavn FROM KOMMUNE m")
+                        st.executeQuery("SELECT m.id, m.kommunenr, m.kommunenavn FROM kommune m")
                             .use { rs ->
                                 while (rs.next()) {
                                     try {
-                                        val kommune: Kommune = Kommune(
+                                        val kommune = Kommune(
                                             rs.getLong(2),
-                                            rs.getString(3)
+                                            rs.getString(3),
                                         )
                                         emit(
                                             Entity(
-                                                id = "kommune${kommune.hashCode()}",
+                                                id = "kommune-${rs.getLong(1)}",
                                                 ident = mapOf<Any, Any?>(
                                                     Fylkesnummer::class to kommune.kommunenummer.fylkesnummer,
                                                     Kommunenummer.Lopenummer::class to kommune.kommunenummer.lopenummer,
-                                                    Kommunenavn::class to kommune.kommunenavn
-                                                )
-                                            )
+                                                    Kommunenavn::class to kommune.kommunenavn,
+                                                ),
+                                            ),
                                         )
                                     } catch (ex: Exception) {
                                         logger.error(ex.message)
@@ -75,7 +75,7 @@ class KommuneEntitySourceFactory : EntitySourceFactory {
         return KommuneEntitySource(
             matrikkelConfig.getSecretOrString("jdbcUrl"),
             matrikkelConfig.getSecretOrString("user"),
-            matrikkelConfig.getSecretOrString("password")
+            matrikkelConfig.getSecretOrString("password"),
         )
     }
 }

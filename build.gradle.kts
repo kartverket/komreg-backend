@@ -18,7 +18,7 @@ subprojects {
     version = "1.0-SNAPSHOT"
 
     afterEvaluate {
-        // TODO: Antagelig ikke en god idé å gjøre dette her
+        // TODO: Antagelig ikke en god ide Ã¥ gjÃ¸re dette her
         dependencies {
             implementation(libs.logback.classic)
         }
