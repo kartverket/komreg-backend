@@ -6,7 +6,7 @@ pipeline {
     }
 
     environment {
-        MAVEN_PUBLISH = credentials('MAVEN_DEPLOY_RELEASES') // TODO: Riktig med RELEASES, eller heller ALPHA/BETA?
+        MAVEN_PUBLISH = credentials('MAVEN_DEPLOY_RELEASES')
     }
 
     stages {

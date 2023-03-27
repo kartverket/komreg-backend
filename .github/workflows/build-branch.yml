@@ -1,4 +1,4 @@
-name: Build and Deploy Branch
+name: Build Branch
 on:
   push:
     branches-ignore:
