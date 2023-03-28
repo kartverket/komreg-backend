@@ -29,6 +29,10 @@ resource "kubernetes_manifest" "komreg-backend_application" {
           name  = "GOOGLE_CLOUD_PROJECT"
           value = var.project_id
         },
+        {
+          name  = "environment"
+          value = local.environment
+        }
       ]
       liveness = {
         path = "/actuator/health"
