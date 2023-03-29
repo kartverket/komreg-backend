@@ -29,10 +29,6 @@ subprojects {
     plugins.withType<JavaBasePlugin> {
         val javaVersion = JavaVersion.VERSION_11
 
-        repositories {
-            mavenCentral()
-        }
-
         extensions.configure<JavaPluginExtension> {
             sourceCompatibility = javaVersion
             targetCompatibility = sourceCompatibility

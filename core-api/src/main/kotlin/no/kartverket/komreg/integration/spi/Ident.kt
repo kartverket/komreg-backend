@@ -4,8 +4,19 @@ import java.util.stream.Collectors
 import kotlin.reflect.KClass
 import kotlin.streams.asStream
 
-class Ident private constructor(val map: Map<KClass<*>, *>) {
+class Ident private constructor(val map: Map<KClass<*>, Any>) {
     constructor(vararg values: Any) : this(
+        values.asSequence()
+            .asStream()
+            .collect(
+                Collectors.toMap(
+                    { it::class },
+                    { it }
+                )
+            )
+    )
+
+    constructor(values: Iterable<Any>) : this(
         values.asSequence()
             .asStream()
             .collect(
