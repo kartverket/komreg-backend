@@ -48,7 +48,7 @@ fun transformerKommunenummer(input: Reguleringsinput, entity: Entity): Transform
     // Finn regel i reguleringen som matcher fylkesnummer + kommuneløpenummer
     val endring =
         input.endringer.find {
-            it.fra.fylkesnummer == fylkesnummer && it.fra.lopenummer == lopenummer
+            it.fra.fylkesnummer.matches(fylkesnummer) && it.fra.lopenummer == lopenummer
         }?.til
 
     return if (endring != null) {
@@ -72,4 +72,12 @@ fun transformerKommunenummer(input: Reguleringsinput, entity: Entity): Transform
     } else {
         null
     }
+}
+
+@Deprecated(
+    "Trengs pga. rare fylkesnumre i lokal database",
+    replaceWith = ReplaceWith("Database med korrekt format på fylkesnumre"),
+)
+fun Fylkesnummer.matches(fylkesnummer: Fylkesnummer?): Boolean {
+    return (fylkesnummer?.value.toString().takeLast(2).toLong() == this.value.toString().takeLast(2).toLong())
 }
