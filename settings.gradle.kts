@@ -16,6 +16,7 @@ include(
     ":core-impl",
     ":transformation",
     ":server",
+    ":integration-matrikkel"
 )
 
 dependencyResolutionManagement {
@@ -35,11 +36,30 @@ dependencyResolutionManagement {
             library("kotlin-reflect", "org.jetbrains.kotlin", "kotlin-reflect").withoutVersion()
 
             library("kotlinx-cli", "org.jetbrains.kotlinx", "kotlinx-cli").versionRef("kotlinx-cli")
-            library("kotlinx-collections-immutable-jvm", "org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.5")
-            library("kotlinx-coroutines-core", "org.jetbrains.kotlinx", "kotlinx-coroutines-core").versionRef("kotlinx-coroutines")
-            library("kotlinx-coroutines-jdk9", "org.jetbrains.kotlinx", "kotlinx-coroutines-jdk9").versionRef("kotlinx-coroutines")
-            library("kotlinx-serialization-json", "org.jetbrains.kotlinx", "kotlinx-serialization-json").versionRef("kotlinx-serialization")
-            library("kotlinx-serialization-protobuf", "org.jetbrains.kotlinx", "kotlinx-serialization-protobuf").versionRef("kotlinx-serialization")
+            library(
+                "kotlinx-collections-immutable-jvm",
+                "org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.5"
+            )
+            library(
+                "kotlinx-coroutines-core",
+                "org.jetbrains.kotlinx",
+                "kotlinx-coroutines-core"
+            ).versionRef("kotlinx-coroutines")
+            library(
+                "kotlinx-coroutines-jdk9",
+                "org.jetbrains.kotlinx",
+                "kotlinx-coroutines-jdk9"
+            ).versionRef("kotlinx-coroutines")
+            library(
+                "kotlinx-serialization-json",
+                "org.jetbrains.kotlinx",
+                "kotlinx-serialization-json"
+            ).versionRef("kotlinx-serialization")
+            library(
+                "kotlinx-serialization-protobuf",
+                "org.jetbrains.kotlinx",
+                "kotlinx-serialization-protobuf"
+            ).versionRef("kotlinx-serialization")
 
             library("google-cloud-libraries", "com.google.cloud", "libraries-bom").versionRef("google-cloud")
             library("google-cloud-secretmanager", "com.google.cloud", "google-cloud-secretmanager").withoutVersion()

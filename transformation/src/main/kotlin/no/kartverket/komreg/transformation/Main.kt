@@ -16,6 +16,15 @@ val logger: Logger = LoggerFactory.getLogger(object {}::class.java)
 
 fun getEnvironment(): String = System.getenv("environment") ?: "local"
 
+suspend fun main() {
+    transformEntities(
+        Reguleringsinput(
+            // data from local database
+            listOf(Kommuneendring(Kommunenummer(201L), Kommunenummer(3359L)))
+        )
+    )
+}
+
 suspend fun transformEntities(input: Reguleringsinput): List<Transformation> {
     val bootContext = object : KrAppBootContext {
         override val config by lazy {
@@ -25,6 +34,7 @@ suspend fun transformEntities(input: Reguleringsinput): List<Transformation> {
 
     // Setter opp datakildene våre
     val entitySources = EntitySourceManager(bootContext)
+    val entitySinks = EntitySinkManager(bootContext)
 
     val result = entitySources
         .buildEntityFlow()
@@ -34,6 +44,8 @@ suspend fun transformEntities(input: Reguleringsinput): List<Transformation> {
         }
         // Konsumere transformasjonene inn i sinken
         .onEach { logger.info("Transformert entitet: $it") }
+
+    entitySinks.consume(result)
 
     return result.toList()
 }
@@ -58,8 +70,8 @@ fun transformerKommunenummer(input: Reguleringsinput, entity: Entity): Transform
         val newIdent = ident.plus(
             Entity.typeMap(
                 endring.fylkesnummer,
-                endring.lopenummer,
-            ),
+                endring.lopenummer
+            )
         )
 
         Transformation(
@@ -67,17 +79,14 @@ fun transformerKommunenummer(input: Reguleringsinput, entity: Entity): Transform
             transformationType = "ChangeKommunenummer",
             transformedIdent = newIdent,
             transformedAssociatedIdents = entity.associatedIdents,
-            sourceObject = entity, // entity.sourceObject?
+            sourceObject = entity // entity.sourceObject?
         )
     } else {
         null
     }
 }
 
-@Deprecated(
-    "Trengs pga. rare fylkesnumre i lokal database",
-    replaceWith = ReplaceWith("Database med korrekt format på fylkesnumre"),
-)
+@Deprecated("Trengs pga. rare fylkesnumre i lokal database")
 fun Fylkesnummer.matches(fylkesnummer: Fylkesnummer?): Boolean {
     return (fylkesnummer?.value.toString().takeLast(2).toLong() == this.value.toString().takeLast(2).toLong())
 }
