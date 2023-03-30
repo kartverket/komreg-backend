@@ -6,7 +6,7 @@ data class Entity(
     val id: String,
     val ident: Map<*, *>? = null,
     val associatedIdents: Set<Map<*, *>>? = null,
-    val sourceObject: Any? = null,
+    val sourceObject: Any? = null
 ) {
     inline fun <reified T> identOf(): T = ident?.get(T::class) as T
 
@@ -21,7 +21,7 @@ data class Transformation(
     val transformationType: Any,
     val transformedIdent: Map<*, *>,
     val transformedAssociatedIdents: Set<Map<*, *>>? = null,
-    val sourceObject: Any? = null,
+    val sourceObject: Any? = null
 )
 
 interface EntitySource {
@@ -33,7 +33,7 @@ interface EntitySource {
 
 interface EntitySink {
     val id: String
-    fun consumeTransformations(flow: Flow<Transformation>)
+    suspend fun consumeTransformations(flow: Flow<Transformation>)
     val postValidation: Set<() -> Unit>
     val preValidation: Set<() -> Unit>
 }
