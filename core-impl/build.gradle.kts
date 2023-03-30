@@ -5,5 +5,4 @@ plugins {
 
 dependencies {
     api(project(":core-api"))
-    runtimeOnly(project(":integration-matrikkel"))
 }

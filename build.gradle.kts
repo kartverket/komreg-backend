@@ -9,8 +9,10 @@ plugins {
     id("io.ktor.plugin")
 }
 
-repositories {
-    mavenCentral()
+allprojects {
+    repositories {
+        mavenCentral()
+    }
 }
 
 subprojects {
@@ -25,7 +27,7 @@ subprojects {
     }
 
     plugins.withType<JavaBasePlugin> {
-        val javaVersion = JavaVersion.VERSION_11
+        val javaVersion = JavaVersion.VERSION_17
 
         repositories {
             mavenCentral()

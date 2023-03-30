@@ -13,7 +13,6 @@ pluginManagement {
 
 include(
     ":core-api",
-    ":integration-matrikkel",
     ":core-impl",
     ":transformation",
     ":server",

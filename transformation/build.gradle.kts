@@ -5,7 +5,7 @@ plugins {
 
 dependencies {
     api(project(":core-api"))
-    runtimeOnly(project(":integration-matrikkel"))
 
-    implementation(libs.kotlinx.serialization.json)
+    // TODO: Denne må hentes fra et sted
+    api(files("libs/matrikkel-komreg-4.10-SNAPSHOT.jar"))
 }
