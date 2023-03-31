@@ -16,7 +16,7 @@ include(
     ":core-impl",
     ":transformation",
     ":server",
-    ":integration-matrikkel"
+    // ":integration-matrikkel"
 )
 
 dependencyResolutionManagement {

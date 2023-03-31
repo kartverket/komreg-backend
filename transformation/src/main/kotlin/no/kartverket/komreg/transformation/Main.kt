@@ -20,8 +20,8 @@ suspend fun main() {
     transformEntities(
         Reguleringsinput(
             // data from local database
-            listOf(Kommuneendring(Kommunenummer(201L), Kommunenummer(3359L)))
-        )
+            listOf(Kommuneendring(Kommunenummer(201L), Kommunenummer(3359L))),
+        ),
     )
 }
 
@@ -70,8 +70,8 @@ fun transformerKommunenummer(input: Reguleringsinput, entity: Entity): Transform
         val newIdent = ident.plus(
             Entity.typeMap(
                 endring.fylkesnummer,
-                endring.lopenummer
-            )
+                endring.lopenummer,
+            ),
         )
 
         Transformation(
@@ -79,7 +79,7 @@ fun transformerKommunenummer(input: Reguleringsinput, entity: Entity): Transform
             transformationType = "ChangeKommunenummer",
             transformedIdent = newIdent,
             transformedAssociatedIdents = entity.associatedIdents,
-            sourceObject = entity // entity.sourceObject?
+            sourceObject = entity.sourceObject
         )
     } else {
         null
