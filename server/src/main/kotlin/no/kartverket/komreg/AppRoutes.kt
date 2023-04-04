@@ -33,7 +33,7 @@ data class Regulering(
                         )
                     }
                 }
-            },
+            }.take(1), // TODO: Begrenser p.t. til kun første kommune for å unngå at større reguleringer kjøres ved en feil
         )
     }
 }
@@ -67,7 +67,9 @@ fun Application.routes() {
             post {
                 val regulering: Regulering = call.receive()
                 call.application.log.info(regulering.toReguleringsinput().toString())
+
                 transformEntities(regulering.toReguleringsinput())
+
                 call.respond("OK")
             }
         }

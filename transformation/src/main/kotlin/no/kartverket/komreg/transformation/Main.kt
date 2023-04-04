@@ -1,9 +1,12 @@
 package no.kartverket.komreg.transformation
 
 import com.typesafe.config.ConfigFactory
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
 import no.kartverket.komreg.core.KrAppBootContext
 import no.kartverket.komreg.core.domain.Fylkesnummer
 import no.kartverket.komreg.core.domain.Kommunenummer
@@ -16,38 +19,26 @@ val logger: Logger = LoggerFactory.getLogger(object {}::class.java)
 
 fun getEnvironment(): String = System.getenv("environment") ?: "local"
 
-suspend fun main() {
-    transformEntities(
-        Reguleringsinput(
-            // data from local database
-            listOf(Kommuneendring(Kommunenummer(201L), Kommunenummer(3359L))),
-        ),
-    )
-}
-
-suspend fun transformEntities(input: Reguleringsinput): List<Transformation> {
+suspend fun transformEntities(input: Reguleringsinput) {
     val bootContext = object : KrAppBootContext {
         override val config by lazy {
             ConfigFactory.load("reference-${getEnvironment()}.conf")
         }
     }
 
-    // Setter opp datakildene våre
     val entitySources = EntitySourceManager(bootContext)
     val entitySinks = EntitySinkManager(bootContext)
 
-    val result = entitySources
-        .buildEntityFlow()
-        .mapNotNull {
-            // Sjekke entity flowen mot reguleringsinput, og lage transformeringsobjektene
-            transformerKommunenummer(input, it)
-        }
-        // Konsumere transformasjonene inn i sinken
-        .onEach { logger.info("Transformert entitet: $it") }
+    CoroutineScope(Dispatchers.IO).launch {
+        val result = entitySources
+            .buildEntityFlow()
+            .mapNotNull { transformerKommunenummer(input, it) }
+            .onEach { logger.info("Transformert entitet: $it") }
 
-    entitySinks.consume(result)
-
-    return result.toList()
+        logger.info("Starter tilbakeføring! Antall transformasjoner funnet: ${result.count()}")
+        entitySinks.consume(result)
+        logger.info("Fullført tilbakeføring!")
+    }
 }
 
 fun transformerKommunenummer(input: Reguleringsinput, entity: Entity): Transformation? {
@@ -65,7 +56,6 @@ fun transformerKommunenummer(input: Reguleringsinput, entity: Entity): Transform
 
     return if (endring != null) {
         // Lag en transformasjon som oppdaterer fylkesnummer og kommuneløpenummer
-        logger.info("Entitet som skal transformeres: $entity")
         val ident = entity.ident ?: emptyMap<Any, Any?>()
         val newIdent = ident.plus(
             Entity.typeMap(
@@ -79,7 +69,7 @@ fun transformerKommunenummer(input: Reguleringsinput, entity: Entity): Transform
             transformationType = "ChangeKommunenummer",
             transformedIdent = newIdent,
             transformedAssociatedIdents = entity.associatedIdents,
-            sourceObject = entity.sourceObject
+            sourceObject = entity.sourceObject,
         )
     } else {
         null
