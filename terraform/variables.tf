@@ -23,7 +23,9 @@ variable "secret_ids" {
 
   default = [
     "db_matrikkel_jdbc_url",
-    "db_matrikkel_username",
-    "db_matrikkel_password"
+    "db_matrikkel_kilde_username",
+    "db_matrikkel_kilde_password",
+    "db_matrikkel_mottaker_username",
+    "db_matrikkel_mottaker_password"
   ]
 }
