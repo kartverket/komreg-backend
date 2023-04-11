@@ -10,10 +10,7 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import kotlinx.serialization.Serializable
-import no.kartverket.komreg.core.domain.Fylkesnummer
 import no.kartverket.komreg.core.domain.Kommunenummer
-import no.kartverket.komreg.core.domain.verdi
-import no.kartverket.komreg.integration.spi.Entity
 import no.kartverket.komreg.transformation.Kommuneendring
 import no.kartverket.komreg.transformation.Reguleringsinput
 import no.kartverket.komreg.transformation.transformEntities
@@ -36,7 +33,7 @@ data class Regulering(
                         )
                     }
                 }
-            },
+            }.take(1), // TODO: Begrenser p.t. til kun første kommune for å unngå at større reguleringer kjøres ved en feil
         )
     }
 }
@@ -64,44 +61,16 @@ data class Kommune(
     val nyttKommunenummer: String,
 )
 
-@Serializable
-data class Transformasjonsresultat(
-    val antallTransformasjoner: Int,
-    val transformasjoner: List<Transformasjon>,
-)
-
-@Serializable
-data class Transformasjon(
-    val id: String,
-    val fra: String,
-    val til: String,
-)
-
 fun Application.routes() {
     routing {
         route("/run") {
             post {
                 val regulering: Regulering = call.receive()
                 call.application.log.info(regulering.toReguleringsinput().toString())
-                val result = transformEntities(regulering.toReguleringsinput())
-                call.respond(
-                    Transformasjonsresultat(
-                        antallTransformasjoner = result.size,
-                        transformasjoner = result.take(10).map {
-                            Transformasjon(
-                                id = it.id,
-                                fra = Kommunenummer(
-                                    fylkesnummer = (it.sourceObject as Entity).identOf(),
-                                    lopenummer = (it.sourceObject as Entity).identOf(),
-                                ).verdi(),
-                                til = Kommunenummer(
-                                    fylkesnummer = it.transformedIdent[Fylkesnummer::class] as Fylkesnummer,
-                                    lopenummer = it.transformedIdent[Kommunenummer.Lopenummer::class] as Kommunenummer.Lopenummer,
-                                ).verdi(),
-                            )
-                        },
-                    ),
-                )
+
+                transformEntities(regulering.toReguleringsinput())
+
+                call.respond("OK")
             }
         }
         route("/actuator/health") {
