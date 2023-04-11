@@ -5,7 +5,7 @@ plugins {
 
 dependencies {
     // implementation(project(":integration-matrikkel"))
-    implementation("com.oracle.database.jdbc:ojdbc11:21.9.0.0")
+    implementation("com.oracle.database.jdbc:ojdbc11:23.2.0.0")
     api(project(":core-api"))
 
     // TODO: Denne må hentes fra et sted
