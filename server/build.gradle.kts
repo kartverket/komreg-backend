@@ -27,7 +27,7 @@ dependencies {
     implementation(libs.arrow.fx.stm)
 
     implementation("com.oracle.database.jdbc:ojdbc11:21.9.0.0")
-    implementation("org.rocksdb:rocksdbjni:7.10.2")
+    implementation("org.rocksdb:rocksdbjni:8.0.0")
 
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
