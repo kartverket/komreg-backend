@@ -29,4 +29,11 @@ dependencies {
 
     implementation(platform(libs.google.cloud.libraries))
     implementation(libs.google.cloud.secretmanager)
+
+    testImplementation(libs.junit.jupiter.api)
+    testRuntimeOnly(libs.junit.jupiter.engine)
+}
+
+tasks.named("test", Test::class).configure {
+    useJUnitPlatform()
 }
