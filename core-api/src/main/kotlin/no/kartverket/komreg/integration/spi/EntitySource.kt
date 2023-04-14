@@ -4,24 +4,18 @@ import kotlinx.coroutines.flow.Flow
 
 data class Entity(
     val id: String,
-    val ident: Map<*, *>? = null,
-    val associatedIdents: Set<Map<*, *>>? = null,
+    val ident: Ident? = null,
+    val associatedIdents: Set<Ident>? = null,
     val sourceObject: Any? = null
-) {
-    inline fun <reified T> identOf(): T = ident?.get(T::class) as T
-
-    companion object {
-        fun typeMap(vararg values: Any): Map<*, *> =
-            values.associateBy { it::class }
-    }
-}
+)
 
 data class Transformation(
     val id: String,
+    val sourceEntity: Entity?,
     val transformationType: Any,
-    val transformedIdent: Map<*, *>,
-    val transformedAssociatedIdents: Set<Map<*, *>>? = null,
-    val sourceObject: Any? = null
+    val transformedIdent: Ident?,
+    val transformedAssociatedIdents: Set<Ident>? = null,
+    val resultObject: Any? = null
 )
 
 interface EntitySource {

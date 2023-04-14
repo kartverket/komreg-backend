@@ -11,6 +11,7 @@ import no.kartverket.komreg.core.KrAppBootContext
 import no.kartverket.komreg.core.domain.Fylkesnummer
 import no.kartverket.komreg.core.domain.Kommunenummer
 import no.kartverket.komreg.integration.spi.Entity
+import no.kartverket.komreg.integration.spi.Ident
 import no.kartverket.komreg.integration.spi.Transformation
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -43,22 +44,21 @@ suspend fun transformEntities(input: Reguleringsinput) {
 
 fun transformerKommunenummer(input: Reguleringsinput, entity: Entity): Transformation? {
     // Finn entiteter med fylkesnummer + kommuneløpenummer
-    val fylkesnummer = entity.identOf<Fylkesnummer?>()
-    val lopenummer = entity.identOf<Kommunenummer.Lopenummer?>()
+    val fylkesnummer = entity.ident?.get<Fylkesnummer?>()
+    val lopenummer = entity.ident?.get<Kommunenummer.Lopenummer?>()
 
     if (fylkesnummer == null || lopenummer == null) return null
 
     // Finn regel i reguleringen som matcher fylkesnummer + kommuneløpenummer
     val endring =
         input.endringer.find {
-            it.fra.fylkesnummer.matches(fylkesnummer) && it.fra.lopenummer == lopenummer
+            it.fra.fylkesnummer == fylkesnummer && it.fra.lopenummer == lopenummer
         }?.til
 
     return if (endring != null) {
         // Lag en transformasjon som oppdaterer fylkesnummer og kommuneløpenummer
-        val ident = entity.ident ?: emptyMap<Any, Any?>()
-        val newIdent = ident.plus(
-            Entity.typeMap(
+        val newIdent = entity.ident?.transform(
+            Ident(
                 endring.fylkesnummer,
                 endring.lopenummer,
             ),
@@ -67,16 +67,11 @@ fun transformerKommunenummer(input: Reguleringsinput, entity: Entity): Transform
         Transformation(
             id = entity.id,
             transformationType = "ChangeKommunenummer",
+            sourceEntity = entity,
             transformedIdent = newIdent,
             transformedAssociatedIdents = entity.associatedIdents,
-            sourceObject = entity.sourceObject,
         )
     } else {
         null
     }
-}
-
-@Deprecated("Trengs pga. rare fylkesnumre i lokal database")
-fun Fylkesnummer.matches(fylkesnummer: Fylkesnummer?): Boolean {
-    return (fylkesnummer?.value.toString().takeLast(2).toLong() == this.value.toString().takeLast(2).toLong())
 }
