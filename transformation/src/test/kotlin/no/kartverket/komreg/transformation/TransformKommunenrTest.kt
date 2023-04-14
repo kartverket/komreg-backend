@@ -22,13 +22,13 @@ object TransformKommunenrTest : Spek({
 
         describe("of idents") {
             it("should change kommunenr based on input") {
-                val entity = Entity("123", identOf(2, 5))
+                val entity = Entity(dummyId(123), identOf(2, 5))
                 val result = transformerKommunenummer(reguleringsInput, entity)
                 val expected = identOf(3, 6)
                 assertEquals(expected, result?.transformedIdent)
             }
             it("should not transform entity when unmatched idents") {
-                val entity = Entity("123", identOf(10, 50))
+                val entity = Entity(dummyId(123), identOf(10, 50))
                 val result = transformerKommunenummer(reguleringsInput, entity)
                 assertEquals(null, result)
             }
@@ -37,7 +37,7 @@ object TransformKommunenrTest : Spek({
         describe("of associated idents") {
             it("should change all matching idents") {
                 val entity = Entity(
-                    "123",
+                    dummyId(123),
                     associatedIdents = setOf(
                         identOf(2, 5, 1),
                         identOf(2, 5, 2),
@@ -52,7 +52,7 @@ object TransformKommunenrTest : Spek({
             }
             it("should not transform entity when unmatched idents") {
                 val entity = Entity(
-                    "123",
+                    dummyId(123),
                     associatedIdents = setOf(
                         identOf(10, 5, 1),
                         identOf(10, 5, 2),
@@ -64,7 +64,7 @@ object TransformKommunenrTest : Spek({
             }
             it("should only change matching idents") {
                 val entity = Entity(
-                    "123",
+                    dummyId(123),
                     associatedIdents = setOf(
                         identOf(2, 5, 1),
                         identOf(10, 15, 1),

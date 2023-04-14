@@ -1,16 +1,17 @@
 package no.kartverket.komreg.integration.spi
 
 import kotlinx.coroutines.flow.Flow
+import no.kartverket.komreg.core.domain.Id
 
 data class Entity(
-    val id: String,
+    val id: Id<*>,
     val ident: Ident? = null,
     val associatedIdents: Set<Ident>? = null,
     val sourceObject: Any? = null
 )
 
 data class Transformation(
-    val id: String,
+    val id: Id<*>,
     val sourceEntity: Entity?,
     val transformationType: Any,
     val transformedIdent: Ident?,
