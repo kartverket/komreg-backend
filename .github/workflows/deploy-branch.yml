@@ -65,20 +65,20 @@ jobs:
         run: |
           echo "image_url=${{ env.registry }}/${{ github.repository }}@${{ steps.build.outputs.digest }}" >> $GITHUB_OUTPUT
 
-  security-scans:
-    needs: build
-    name: Security Scans
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-      actions: read
-      security-events: write
-    uses: kartverket/github-workflows/.github/workflows/run-security-scans.yml@v4.0.0
-    with:
-      auth_project_number: 172982192640
-      service_account: komreg-deploy@komreg-dev-8b16.iam.gserviceaccount.com
-      image_url: ${{ needs.build.outputs.image_url}}
+  pharos:
+  name: Run Pharos with Required Permissions
+  needs: build
+  permissions:
+    actions: read
+    packages: read
+    contents: read
+    security-events: write
+  runs-on: ubuntu-latest
+  steps:
+    - name: "Run Pharos"
+      uses: kartverket/pharos@v0.1.0
+      with:
+        image_url: ${{ needs.build.outputs.image_url}}
 
   deploy-dev:
     name: Deploy to dev
