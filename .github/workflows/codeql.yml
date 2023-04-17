@@ -1,8 +1,9 @@
 name: "CodeQL"
 
 on:
-  push:
-    branches: [ "*" ]
+  schedule:
+    # 08:00 every day
+    - cron: '0 8 * * 1-5'
 
 jobs:
   analyze:
