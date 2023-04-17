@@ -20,7 +20,7 @@ data class Regulering(
     val id: String,
     val navn: String,
     val dato: String, // Date?
-    val endringer: List<Fylkesdeling> // Endringer som sealed classes og diskriminator?
+    val endringer: List<Fylkesdeling>, // Endringer som sealed classes og diskriminator?
 ) {
     fun toReguleringsinput(): Reguleringsinput {
         return Reguleringsinput(
@@ -29,12 +29,12 @@ data class Regulering(
                     fylke.kommuner.map { kommune ->
                         Kommuneendring(
                             Kommunenummer(kommune.kommunenummer.toLong()),
-                            Kommunenummer(kommune.nyttKommunenummer.toLong())
+                            Kommunenummer(kommune.nyttKommunenummer.toLong()),
                         )
                     }
                 }
             }
-                .take(50) // TODO: Begrenser p.t. til kun første kommune for å unngå at større reguleringer kjøres ved en feil
+                .take(50), // TODO: Begrenser p.t. til kun første kommune for å unngå at større reguleringer kjøres ved en feil
         )
     }
 }
@@ -45,21 +45,21 @@ data class Fylkesdeling(
     val navn: String,
     val type: String,
     val gammeltFylke: Fylke,
-    val nyeFylker: List<Fylke>
+    val nyeFylker: List<Fylke>,
 )
 
 @Serializable
 data class Fylke(
     val navn: String,
     val fylkesnummer: String,
-    val kommuner: List<Kommune>
+    val kommuner: List<Kommune>,
 )
 
 @Serializable
 data class Kommune(
     val navn: String,
     val kommunenummer: String,
-    val nyttKommunenummer: String
+    val nyttKommunenummer: String,
 )
 
 fun Application.routes() {

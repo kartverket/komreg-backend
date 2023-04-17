@@ -9,7 +9,7 @@ private val featureToggleLogger: Logger = LoggerFactory.getLogger({}::class.java
 suspend fun Config.featureToggle(
     feature: String,
     enabled: suspend () -> Unit,
-    disabled: suspend () -> Unit = {}
+    disabled: suspend () -> Unit = {},
 ) {
     val isFeatureEnabled = this.getBoolean(feature)
     featureToggleLogger.info("FeatureToggle invoked: $feature = $isFeatureEnabled")
