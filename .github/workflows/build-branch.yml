@@ -19,8 +19,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-      actions: read
-      security-events: write
     outputs:
       image_url: ${{ steps.setOutput.outputs.image_url }}
     steps:
@@ -63,7 +61,17 @@ jobs:
         run: |
           echo "image_url=${{ env.registry }}/${{ github.repository }}@${{ steps.build.outputs.digest }}" >> $GITHUB_OUTPUT
 
+  pharos:
+    name: Run Pharos with Required Permissions
+    needs: build
+    permissions:
+      actions: read
+      packages: read
+      contents: read
+      security-events: write
+    runs-on: ubuntu-latest
+    steps:
       - name: "Run Pharos"
         uses: kartverket/pharos@v0.1.0
         with:
-          image_url: ${{ steps.setOutput.outputs.image_url }}
+          image_url: ${{ needs.build.outputs.image_url}}
