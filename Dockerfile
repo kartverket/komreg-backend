@@ -1,4 +1,4 @@
-FROM eclipse-temurin:17-alpine
+FROM eclipse-temurin:20-alpine
 EXPOSE 8080:8080
 RUN mkdir /app
 WORKDIR .
