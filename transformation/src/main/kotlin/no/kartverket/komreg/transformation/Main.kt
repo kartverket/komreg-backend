@@ -36,7 +36,7 @@ suspend fun transformEntities(input: Reguleringsinput) {
             .mapNotNull { transformerKommunenummer(input, it) }
             .onEach { logger.info("Transformert entitet: $it") }
 
-        logger.info("Starter tilbakeføring! Antall transformasjoner funnet: ${result.count()}")
+        logger.info("Starter tilbakeføring..")
         entitySinks.consume(result)
         logger.info("Fullført tilbakeføring!")
     }

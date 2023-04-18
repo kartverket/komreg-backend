@@ -9,7 +9,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.ServiceLoader
 
-class EntitySinkManager(val bootContext: KrAppBootContext) {
+class EntitySinkManager(private val bootContext: KrAppBootContext) {
 
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
@@ -34,14 +34,14 @@ class EntitySinkManager(val bootContext: KrAppBootContext) {
             "feature.disable_sink",
             enabled = {
                 transformations.collect {
-                    logger.info(it.toString())
+                    logger.info("Konsumerer transformasjon (lokal stub): $it")
                 }
             },
             disabled = {
                 entitySinks.forEach {
                     it.consumeTransformations(transformations)
                 }
-            }
+            },
         )
     }
 }
