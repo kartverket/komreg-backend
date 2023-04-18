@@ -24,16 +24,18 @@ data class Regulering(
 ) {
     fun toReguleringsinput(): Reguleringsinput {
         return Reguleringsinput(
-            endringer = endringer.flatMap { fylkesdeling ->
-                fylkesdeling.nyeFylker.flatMap { fylke ->
-                    fylke.kommuner.map { kommune ->
-                        Kommuneendring(
-                            Kommunenummer(kommune.kommunenummer.toLong()),
-                            Kommunenummer(kommune.nyttKommunenummer.toLong()),
-                        )
+            endringer = endringer
+                .flatMap { fylkesdeling ->
+                    fylkesdeling.nyeFylker.flatMap { fylke ->
+                        fylke.kommuner.map { kommune ->
+                            Kommuneendring(
+                                Kommunenummer(kommune.kommunenummer.toLong()),
+                                Kommunenummer(kommune.nyttKommunenummer.toLong()),
+                            )
+                        }
                     }
                 }
-            }.take(1), // TODO: Begrenser p.t. til kun første kommune for å unngå at større reguleringer kjøres ved en feil
+                .take(1), // TODO: Begrenser p.t. til kun første kommune for å unngå at større reguleringer kjøres ved en feil
         )
     }
 }
