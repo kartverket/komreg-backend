@@ -26,11 +26,13 @@ class MockEntitySourceBuilder(private val collector: FlowCollector<Entity>) {
     suspend fun entity(
         id: String,
         ident: Ident? = null,
+        associatedIdents: Set<Ident>? = null
     ) {
         collector.emit(
             Entity(
                 id,
                 ident,
+                associatedIdents,
             )
         )
     }
