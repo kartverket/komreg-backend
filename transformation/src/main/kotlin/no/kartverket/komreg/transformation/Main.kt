@@ -7,11 +7,6 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import no.kartverket.komreg.core.KrAppBootContext
-import no.kartverket.komreg.core.domain.Fylkesnummer
-import no.kartverket.komreg.core.domain.Kommunenummer
-import no.kartverket.komreg.integration.spi.Entity
-import no.kartverket.komreg.integration.spi.Ident
-import no.kartverket.komreg.integration.spi.Transformation
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -38,39 +33,5 @@ suspend fun transformEntities(input: Reguleringsinput) {
         logger.info("Starter tilbakeføring..")
         entitySinks.consume(result)
         logger.info("Fullført tilbakeføring!")
-    }
-}
-
-fun transformerKommunenummer(input: Reguleringsinput, entity: Entity): Transformation? {
-    // Finn entiteter med fylkesnummer + kommuneløpenummer
-    val fylkesnummer = entity.ident?.get<Fylkesnummer?>()
-    val lopenummer = entity.ident?.get<Kommunenummer.Lopenummer?>()
-
-    if (fylkesnummer == null || lopenummer == null) return null
-
-    // Finn regel i reguleringen som matcher fylkesnummer + kommuneløpenummer
-    val endring =
-        input.endringer.find {
-            it.fra.fylkesnummer == fylkesnummer && it.fra.lopenummer == lopenummer
-        }?.til
-
-    return if (endring != null) {
-        // Lag en transformasjon som oppdaterer fylkesnummer og kommuneløpenummer
-        val newIdent = entity.ident?.transform(
-            Ident(
-                endring.fylkesnummer,
-                endring.lopenummer,
-            ),
-        )
-
-        Transformation(
-            id = entity.id,
-            transformationType = "ChangeKommunenummer",
-            sourceEntity = entity,
-            transformedIdent = newIdent,
-            transformedAssociatedIdents = entity.associatedIdents,
-        )
-    } else {
-        null
     }
 }
