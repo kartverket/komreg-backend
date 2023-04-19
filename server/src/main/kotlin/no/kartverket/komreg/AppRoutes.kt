@@ -35,7 +35,7 @@ data class Regulering(
                         }
                     }
                 }
-                .take(100), // TODO: Begrenser p.t. til kun første kommune for å unngå at større reguleringer kjøres ved en feil
+                .take(1), // TODO: Begrenser p.t. til kun første kommune for å unngå at større reguleringer kjøres ved en feil
         )
     }
 }
