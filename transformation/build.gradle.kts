@@ -3,6 +3,10 @@ plugins {
     `java-library`
 }
 
+tasks.test {
+    useJUnitPlatform()
+}
+
 dependencies {
     // implementation(project(":integration-matrikkel"))
     implementation("com.oracle.database.jdbc:ojdbc11:23.2.0.0")

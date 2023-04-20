@@ -8,17 +8,17 @@ import no.kartverket.komreg.integration.spi.Transformation
 
 fun transformerKommunenummer(input: Reguleringsinput, entity: Entity): Transformation? {
     val newIdent = entity.ident.transformKommunenr(input)
-    val newAssociatedIndents = entity.associatedIdents
+    val newAssociatedIdents = entity.associatedIdents
         ?.mapNotNull { it.transformKommunenr(input) }
         ?.toSet()
 
-    if (newIdent == null && newAssociatedIndents == null) return null
+    if (newIdent == null && newAssociatedIdents == null) return null
     return Transformation(
         id = entity.id,
         transformationType = "ChangeKommunenummer",
         sourceEntity = entity,
         transformedIdent = newIdent,
-        transformedAssociatedIdents = newAssociatedIndents?.ifEmpty { null },
+        transformedAssociatedIdents = newAssociatedIdents?.ifEmpty { null },
     )
 }
 

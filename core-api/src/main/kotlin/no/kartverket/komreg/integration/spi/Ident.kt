@@ -11,9 +11,9 @@ class Ident private constructor(val map: Map<KClass<*>, *>) {
             .collect(
                 Collectors.toMap(
                     { it::class },
-                    { it }
-                )
-            )
+                    { it },
+                ),
+            ),
     )
 
     inline fun <reified T> get(): T = map[T::class] as T
@@ -43,5 +43,4 @@ class Ident private constructor(val map: Map<KClass<*>, *>) {
     override fun toString(): String {
         return "Ident(map=$map)"
     }
-
 }
