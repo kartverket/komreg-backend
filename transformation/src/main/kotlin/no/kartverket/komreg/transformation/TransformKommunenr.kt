@@ -10,9 +10,10 @@ fun transformerKommunenummer(input: Reguleringsinput, entity: Entity): Transform
     val newIdent = entity.ident.transformKommunenr(input)
     val newAssociatedIdents = entity.associatedIdents
         ?.mapNotNull { it.transformKommunenr(input) }
-        ?.toSet()
+        ?.toSet()?.ifEmpty { null }
 
-    if (newIdent == null && newAssociatedIdents == null) return null
+    if (newIdent == entity.ident && newAssociatedIdents == entity.associatedIdents) return null
+
     return Transformation(
         id = entity.id,
         transformationType = "ChangeKommunenummer",
@@ -23,16 +24,18 @@ fun transformerKommunenummer(input: Reguleringsinput, entity: Entity): Transform
 }
 
 private fun Ident?.transformKommunenr(input: Reguleringsinput): Ident? {
-    val fylkesnummer = this?.get<Fylkesnummer?>()
-    val lopenummer = this?.get<Kommunenummer.Lopenummer?>()
+    if (this == null) return null
 
-    if (fylkesnummer == null || lopenummer == null) return null
+    val fylkesnummer = this.get<Fylkesnummer?>()
+    val lopenummer = this.get<Kommunenummer.Lopenummer?>()
+
+    if (fylkesnummer == null || lopenummer == null) return this
 
     val newKommunenr = input.endringer
         .find { it.fra.fylkesnummer == fylkesnummer && it.fra.lopenummer == lopenummer }
-        ?.til ?: return null
+        ?.til ?: return this
 
-    return this?.transform(
+    return this.transform(
         Ident(newKommunenr.fylkesnummer, newKommunenr.lopenummer),
     )
 }
