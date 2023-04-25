@@ -32,6 +32,10 @@ resource "kubernetes_manifest" "komreg-backend_application" {
         {
           name  = "environment"
           value = local.environment
+        },
+        {
+          name  = "JAVA_TOOL_OPTIONS"
+          value = "-XX:MaxRAMPercentage=70.0"
         }
       ]
       liveness = {
