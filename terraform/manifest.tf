@@ -44,7 +44,7 @@ resource "kubernetes_manifest" "komreg-backend_application" {
       }
       resources = {
         limits = {
-          memory = "5Gi"
+          memory = "8Gi"
         }
         requests = {
           cpu = "30m"
