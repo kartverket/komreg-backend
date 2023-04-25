@@ -76,4 +76,7 @@ resource "kubernetes_manifest" "komreg-backend_application" {
       }
     }
   }
+  field_manager {
+    force_conflicts = true
+  }
 }
