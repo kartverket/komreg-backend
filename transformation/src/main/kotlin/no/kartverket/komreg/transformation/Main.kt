@@ -3,6 +3,7 @@ package no.kartverket.komreg.transformation
 import com.typesafe.config.ConfigFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -23,6 +24,20 @@ suspend fun transformEntities(input: Reguleringsinput) {
 
     val entitySources = EntitySourceManager(bootContext)
     val entitySinks = EntitySinkManager(bootContext)
+
+    CoroutineScope(Dispatchers.Default).launch {
+        val runtime = Runtime.getRuntime()
+        val mb = 1024 * 1024
+
+        while (true) {
+            delay(1000)
+            val used = (runtime.totalMemory() - runtime.freeMemory()) / mb
+            val free = runtime.freeMemory() / mb
+            val total = runtime.totalMemory() / mb
+            val max = runtime.maxMemory() / mb
+            logger.info("Memory. Used: $used, free: $free, total: $total, max: $max")
+        }
+    }
 
     CoroutineScope(Dispatchers.IO).launch {
         val result = entitySources

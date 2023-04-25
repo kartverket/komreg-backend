@@ -37,14 +37,14 @@ resource "kubernetes_manifest" "komreg-backend_application" {
       liveness = {
         path             = "/actuator/health"
         port             = 8080
-        timeout          = 10
-        failureThreshold = 10
+        timeout          = 60
+        failureThreshold = 1000
       }
       readiness = {
         path             = "/actuator/health"
         port             = 8080
-        timeout          = 10
-        failureThreshold = 10
+        timeout          = 60
+        failureThreshold = 1000
       }
       resources = {
         limits = {
