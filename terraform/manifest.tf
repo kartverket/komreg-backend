@@ -45,20 +45,15 @@ resource "kubernetes_manifest" "komreg-backend_application" {
       resources = {
         limits = {
           memory = "8Gi"
-          cpu = "4"
+          cpu    = "4"
         }
         requests = {
           memory = "256Mi"
-          cpu = "30m"
+          cpu    = "30m"
         }
       }
       accessPolicy = {
         outbound = {
-          rules = [
-            {
-              application = "komreg-parameter-backend"
-            }
-          ]
           external = [
             {
               host = "nnridb170.statkart.no"
