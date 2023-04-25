@@ -4,4 +4,5 @@ EXPOSE 8080:8080
 RUN mkdir /app
 WORKDIR .
 COPY build/libs/*.jar /app/komreg-backend.jar
+ENV JAVA_OPTS="-Xms256m -Xmx4000m"
 ENTRYPOINT ["java","-jar","/app/komreg-backend.jar"]
