@@ -39,19 +39,19 @@ resource "kubernetes_manifest" "komreg-backend_application" {
         }
       ]
       liveness = {
-        path             = "/actuator/health"
-        port             = 8080
+        path = "/actuator/health"
+        port = 8080
       }
       readiness = {
-        path             = "/actuator/health"
-        port             = 8080
+        path = "/actuator/health"
+        port = 8080
       }
       resources = {
         limits = {
           memory = "8Gi"
         }
         requests = {
-          cpu    = "30m"
+          cpu = "30m"
         }
       }
       accessPolicy = {
