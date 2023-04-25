@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm")
+    kotlin("plugin.serialization")
     `java-library`
 }
 
@@ -10,6 +11,8 @@ tasks.test {
 dependencies {
     // implementation(project(":integration-matrikkel"))
     implementation("com.oracle.database.jdbc:ojdbc11:23.2.0.0")
+    implementation(libs.kotlinx.serialization.json)
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
     api(project(":core-api"))
 
     // TODO: Denne må hentes fra et sted
