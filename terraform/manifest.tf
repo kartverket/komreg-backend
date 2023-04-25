@@ -16,8 +16,8 @@ resource "kubernetes_manifest" "komreg-backend_application" {
       ]
       replicas = {
         targetCpuUtilization = 80
-        max                  = 4
-        min                  = 2
+        max                  = 1
+        min                  = 1
       }
       gcp = {
         auth = {
