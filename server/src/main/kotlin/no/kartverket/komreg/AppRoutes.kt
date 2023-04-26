@@ -14,6 +14,7 @@ import no.kartverket.komreg.core.domain.Kommunenummer
 import no.kartverket.komreg.transformation.Kommuneendring
 import no.kartverket.komreg.transformation.Reguleringsinput
 import no.kartverket.komreg.transformation.transformEntities
+import no.kartverket.komreg.transformation.transformStatus
 
 @Serializable
 data class Regulering(
@@ -78,6 +79,11 @@ fun Application.routes() {
         route("/actuator/health") {
             get {
                 call.respond("OK")
+            }
+        }
+        route("/transform/status") {
+            get {
+                call.respond(transformStatus)
             }
         }
     }
