@@ -15,8 +15,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
     api(project(":core-api"))
 
-    // TODO: Denne må hentes fra et sted
-    api(files("libs/matrikkel-komreg-4.10-SNAPSHOT.jar"))
+    api("no.statkart.matrikkel:matrikkel-komreg:4.10-SNAPSHOT")
 
     // Testing
     testImplementation(kotlin("test"))

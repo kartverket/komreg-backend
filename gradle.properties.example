@@ -1,0 +1,4 @@
+kotlin.code.style=official
+
+GH_USERNAME=<GITHUB_USERNAME>
+GH_PACKAGES_PAT=<GITHUB_PAT>
