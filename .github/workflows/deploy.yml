@@ -79,7 +79,7 @@ jobs:
   deploy-dev:
     name: Deploy to dev
     needs: [ build ]
-    uses: kartverket/github-workflows/.github/workflows/run-terraform.yml@v4.0.0
+    uses: kartverket/github-workflows/.github/workflows/run-terraform.yml@v4.0.1
     permissions:
       id-token: write
       pull-requests: write
