@@ -32,13 +32,14 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-      - name: Setup Gradle
+      - name: Build with Gradle
         uses: gradle/gradle-build-action@v2
         with:
           gradle-version: 7.5.1
-      - name: Run build with Gradle Wrapper
-        run: gradle build
-
+          arguments: build
+        env:
+          GH_USERNAME: ${{ secrets.GH_USERNAME }}
+          GH_PACKAGES_PAT: ${{ secrets.GH_PACKAGES_PAT }}
       - name: Login to Github Container Registry
         uses: docker/login-action@v2
         with:
