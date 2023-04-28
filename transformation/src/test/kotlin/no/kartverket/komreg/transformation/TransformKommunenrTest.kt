@@ -12,6 +12,7 @@ import kotlin.test.assertEquals
 object TransformKommunenrTest : Spek({
     describe("A transformation") {
         val reguleringsInput = Reguleringsinput(
+            id = "123",
             listOf(
                 Kommuneendring(
                     fra = Kommunenummer(Fylkesnummer(2), Kommunenummer.Lopenummer(5)),
