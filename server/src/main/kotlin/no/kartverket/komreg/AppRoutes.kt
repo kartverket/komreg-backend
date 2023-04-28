@@ -14,7 +14,7 @@ import no.kartverket.komreg.core.domain.Kommunenummer
 import no.kartverket.komreg.transformation.Kommuneendring
 import no.kartverket.komreg.transformation.Reguleringsinput
 import no.kartverket.komreg.transformation.transformEntities
-import no.kartverket.komreg.transformation.transformStatus
+import no.kartverket.komreg.transformation.transformStatuses
 
 @Serializable
 data class Regulering(
@@ -25,6 +25,7 @@ data class Regulering(
 ) {
     fun toReguleringsinput(): Reguleringsinput {
         return Reguleringsinput(
+            id,
             endringer = endringer
                 .flatMap { fylkesdeling ->
                     fylkesdeling.nyeFylker.flatMap { fylke ->
@@ -83,7 +84,7 @@ fun Application.routes() {
         }
         route("/transform/status") {
             get {
-                call.respond(transformStatus)
+                call.respond(transformStatuses)
             }
         }
     }
