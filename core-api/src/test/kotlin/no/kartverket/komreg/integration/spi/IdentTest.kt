@@ -26,7 +26,7 @@ class IdentTest {
                 Fylkesnummer(98),
             )
         }
-        assertEquals("Duplicate key class no.kartverket.komreg.core.domain.Fylkesnummer (Kotlin reflection is not available) (attempted merging values Fylkesnummer(value=99) and Fylkesnummer(value=98))", e.message)
+        assertEquals("Duplicate key class no.kartverket.komreg.core.domain.Fylkesnummer (attempted merging values Fylkesnummer(value=99) and Fylkesnummer(value=98))", e.message)
     }
 
     @Test
@@ -40,6 +40,6 @@ class IdentTest {
         val e = assertThrows<IllegalArgumentException> {
             ident.transform(transformation)
         }
-        assertEquals("Can not transform non-existing values: [class no.kartverket.komreg.core.domain.Kommunenummer\$Lopenummer (Kotlin reflection is not available)]", e.message)
+        assertEquals("Can not transform non-existing values: [class no.kartverket.komreg.core.domain.Kommunenummer\$Lopenummer]", e.message)
     }
 }
