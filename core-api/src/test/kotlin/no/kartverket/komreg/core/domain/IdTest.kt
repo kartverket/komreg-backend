@@ -1,5 +1,6 @@
 package no.kartverket.komreg.core.domain
 
+import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.ExpectSpec
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.ints.shouldBeLessThan
@@ -67,6 +68,63 @@ class IdTest : ExpectSpec({
 
         expect("bravoX != bravoY") {
             Id(Bar.Bravo, "X") shouldNotBe Id(Bar.Bravo, "Y")
+        }
+    }
+
+    context("isOfType") {
+        val alpha1 = Id(Foo.Alpha, 1L)
+        val charlie2 = Id(Foo.Charlie, 2L)
+        val bravoX = Id(Bar.Bravo, "X")
+
+        expect("alpha1") {
+            withClue("isOfType(Alpha)") {
+                alpha1.isOfType(Foo.Alpha) shouldBe true
+            }
+            withClue("isOfType(Charlie)") {
+                alpha1.isOfType(Foo.Charlie) shouldBe false
+            }
+            withClue("isOfType(Bravo)") {
+                alpha1.isOfType(Bar.Bravo) shouldBe false
+            }
+        }
+        expect("charlie2") {
+            withClue("isOfType(Alpha)") {
+                charlie2.isOfType(Foo.Alpha) shouldBe false
+            }
+            withClue("isOfType(Charlie)") {
+                charlie2.isOfType(Foo.Charlie) shouldBe true
+            }
+            withClue("isOfType(Bravo)") {
+                charlie2.isOfType(Bar.Bravo) shouldBe false
+            }
+        }
+        expect("bravoX") {
+            withClue("isOfType(Alpha)") {
+                bravoX.isOfType(Foo.Alpha) shouldBe false
+            }
+            withClue("isOfType(Charlie)") {
+                bravoX.isOfType(Foo.Charlie) shouldBe false
+            }
+            withClue("isOfType(Bravo)") {
+                bravoX.isOfType(Bar.Bravo) shouldBe true
+            }
+        }
+    }
+
+    context("typedValue") {
+        val alpha1 = Id(Foo.Alpha, 1L)
+        val bravoX = Id(Bar.Bravo, "X")
+
+        expect("Long from Alpha") {
+            alpha1.typedValue(Foo.Alpha) shouldBe 1L
+            alpha1.typedValue(Foo.Charlie) shouldBe null
+            alpha1.typedValue(Bar.Bravo) shouldBe null
+        }
+
+        expect("String from Bravo") {
+            bravoX.typedValue(Foo.Alpha) shouldBe null
+            bravoX.typedValue(Foo.Charlie) shouldBe null
+            bravoX.typedValue(Bar.Bravo) shouldBe "X"
         }
     }
 })
