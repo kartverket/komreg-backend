@@ -35,9 +35,10 @@ data class TransformStatus(
     }
 }
 
-val transformStatus = TransformStatus()
+val transformStatuses = mutableMapOf<String, TransformStatus>()
 
 suspend fun transformEntities(input: Reguleringsinput) {
+    val transformStatus = TransformStatus().also { transformStatuses[input.id] = it }
     transformStatus.start()
     val bootContext = object : KrAppBootContext {
         override val config by lazy {
