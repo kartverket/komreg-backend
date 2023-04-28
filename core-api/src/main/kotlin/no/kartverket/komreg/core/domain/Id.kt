@@ -27,6 +27,18 @@ data class Id<V : Any> (
         }
     }
 
+    fun isOfType(otherType: IdType<*, *>): Boolean {
+        return type == otherType
+    }
+
+    fun <RV : Any> typedValue(requestedType: IdType<RV, *>) : RV? {
+        return if (isOfType(requestedType)) {
+            value as RV
+        } else {
+            null
+        }
+    }
+
     companion object {
         private fun <V : Any> compareType(t1: IdType<*, *>, t2: IdType<*, *>): Int {
             return (t1 as IdType<V, Any>).compareTo(t2)
