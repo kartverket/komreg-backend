@@ -26,5 +26,5 @@ resource "google_secret_manager_secret_iam_member" "komreg_backend_runtime_sa_se
 resource "google_service_account_iam_member" "komreg_backend_runtime_sa_iam_impersonate" {
   service_account_id = google_service_account.komreg_backend_runtime_sa.name
   role               = "roles/iam.workloadIdentityUser"
-  member             = "serviceAccount:${var.kubernetes_project_id}.svc.id.goog[komreg/komreg-backend]"
+  member             = "serviceAccount:${var.kubernetes_project_id}.svc.id.goog[komreg-main/komreg-backend]"
 }
