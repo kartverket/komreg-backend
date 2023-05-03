@@ -2,14 +2,14 @@ POST https://komreg-backend.dev.skip.statkart.no/run HTTP/1.1
 Content-Type: application/json
 
 {
-  "id": "enkel-transformasjon",
-  "navn": "Enkel transformasjon",
-  "dato": "2024-01-01",
+  "id": "a76f0227b61e",
+  "navn": "Statustest",
+  "dato": "2023-04-28T11:04:16.505Z",
   "endringer": [
     {
-      "id": "en-kommune",
-      "navn": "Test av en kommuneendring",
       "type": "Fylkesdeling",
+      "id": "733271b7db1b",
+      "navn": "Testdeling",
       "gammeltFylke": {
         "navn": "Viken",
         "fylkesnummer": "30",
@@ -18,7 +18,7 @@ Content-Type: application/json
       "nyeFylker": [
         {
           "navn": "Østfold",
-          "fylkesnummer": "1",
+          "fylkesnummer": "01",
           "kommuner": [
             {
               "navn": "Aremark",
