@@ -19,6 +19,6 @@ Under `transformation/src/resources/` finner man konfigurasjonsfilene for hvilke
 transformasjonene går mot. Når man kjører opp løsningen lokalt defaulter løsningen til `reference-local.conf`.
 For å velge en annen database enn default lokalt docker-image overskriv verdiene i denne fila.
 
-Kjør opp applikasjonen ved å kjøre funksjonen `Application.main()` som ligger i `server/src/.../Application.kt`.
+Start applikasjonen ved å kjøre funksjonen `Application.main()` som ligger i `server/src/.../Application.kt`.
 
-For å starte transformeringene kjør http-requesten som ligger under `http/local/runTransformation.http`.
+For å starte transformeringen kjør http-requesten som ligger under `http/local/runTransformation.http`.
