@@ -2,7 +2,7 @@
 
 ## Modernisert kommuneendringssystem
 
-## Lolkalt oppsett
+## Lokalt oppsett
 
 | Fil                                   | Path                                                  |
 |---------------------------------------|-------------------------------------------------------|
