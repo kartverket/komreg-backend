@@ -34,7 +34,7 @@ class EntitySinkManager(private val bootContext: KrAppBootContext) {
             "feature.disable_sink",
             enabled = {
                 transformations.collect {
-                    logger.info("Konsumerer transformasjon (lokal stub): $it")
+                    // logger.info("Konsumerer transformasjon (lokal stub): $it")
                 }
             },
             disabled = {
