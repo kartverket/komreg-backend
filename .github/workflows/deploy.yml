@@ -77,8 +77,8 @@ jobs:
         with:
           image_url: ${{ needs.build.outputs.image_url}}
 
-  deploy-dev:
-    name: Deploy to dev
+  provision:
+    name: Provision environment
     needs: [ build ]
     uses: kartverket/github-workflows/.github/workflows/run-terraform.yml@v4.0.1
     permissions:
@@ -91,10 +91,8 @@ jobs:
       environment: dev
       kubernetes_cluster: atkv1-dev
       terraform_option_1: -var-file=variables/dev.tfvars
-      terraform_option_2: -var=image=${{ needs.build.outputs.image_url }}
       terraform_init_option_1: -backend-config=backend/dev.gcs.tfbackend
       working_directory: terraform
       auth_project_number: 172982192640
       service_account: komreg-deploy@komreg-dev-8b16.iam.gserviceaccount.com
       project_id: kubernetes-dev-94b9
-      deploy_on: ${{ github.ref }}
