@@ -19,13 +19,19 @@ val logger: Logger = LoggerFactory.getLogger(object {}::class.java)
 fun getEnvironment(): String = System.getenv("environment") ?: "local"
 
 @Serializable
-data class TransformStatus(
+data class TransformationInfo(
     var numberOfTransformations: Int = 0,
+    var firstTransformation: Instant? = null,
+    var lastTransformation: Instant? = null,
+)
+
+@Serializable
+data class TransformStatus(
+    var numberOfTransformationsByType: MutableMap<String, TransformationInfo>? = mutableMapOf(),
     var started: Instant? = null,
     var finished: Instant? = null,
 ) {
     fun start() {
-        numberOfTransformations = 0
         started = Clock.System.now()
         finished = null
     }
@@ -68,7 +74,24 @@ suspend fun transformEntities(input: Reguleringsinput) {
             .buildEntityFlow()
             .mapNotNull { transformerKommunenummer(input, it) }
             .onEach { logger.info("Transformert entitet: $it") }
-            .onEach { transformStatus.numberOfTransformations += 1 }
+            .onEach {
+                transformStatus
+                    .numberOfTransformationsByType
+                    ?.merge(
+                        it.id.type.toString(),
+                        TransformationInfo(
+                            1,
+                            Clock.System.now(),
+                            Clock.System.now(),
+                        ),
+                    ) { old, new ->
+                        TransformationInfo(
+                            old.numberOfTransformations + 1,
+                            old.firstTransformation ?: new.firstTransformation,
+                            new.lastTransformation,
+                        )
+                    }
+            }
 
         logger.info("Starter tilbakeføring..")
         entitySinks.consume(result)
