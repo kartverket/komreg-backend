@@ -101,6 +101,7 @@ jobs:
   argo:
     name: Update version in apps-repo
     needs: build
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout apps-repo
         uses: actions/checkout@v2
