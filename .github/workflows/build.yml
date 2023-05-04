@@ -1,12 +1,8 @@
-name: Build and Deploy Branch
+name: Build image
 on:
-  workflow_dispatch:
-    inputs:
-      deploy_dev:
-        description: 'Should deploy build to dev environment'
-        required: false
-        type: boolean
-        default: false
+  push:
+    branches:
+      - main
 
 permissions:
   id-token: write
@@ -15,6 +11,7 @@ permissions:
 env:
   registry: ghcr.io
   image_name: ${{ github.repository }}
+  argo_version_file: backend-version
 
 jobs:
   build:
@@ -81,9 +78,9 @@ jobs:
         with:
           image_url: ${{ needs.build.outputs.image_url}}
 
-  deploy-dev:
-    name: Deploy to dev
-    needs: build
+  provision:
+    name: Provision environment
+    needs: [ build ]
     uses: kartverket/github-workflows/.github/workflows/run-terraform.yml@v4.0.1
     permissions:
       id-token: write
@@ -95,10 +92,26 @@ jobs:
       environment: dev
       kubernetes_cluster: atkv1-dev
       terraform_option_1: -var-file=variables/dev.tfvars
-      terraform_option_2: -var=image=${{ needs.build.outputs.image_url }}
       terraform_init_option_1: -backend-config=backend/dev.gcs.tfbackend
       working_directory: terraform
       auth_project_number: 172982192640
       service_account: komreg-deploy@komreg-dev-8b16.iam.gserviceaccount.com
       project_id: kubernetes-dev-94b9
-      deploy_on: ${{ github.ref }}
+
+  argo:
+    name: Update version in apps-repo
+    needs: build
+    steps:
+      - name: Checkout apps-repo
+        uses: actions/checkout@v2
+        with:
+          repository: kartverket/komreg-apps
+          token: ${{ secrets.PAT_REPO }}
+      - name: Update version
+        run: |
+          env_type="dev"
+          echo "\"${{ needs.build.outputs.image_url }}\"" > "${env_type}/komreg-main/${{ env.argo_version_file }}"
+          git config --global user.email "noreply@kartverket.no"
+          git config --global user.name "Komreg CI"
+          git commit -am "Update Komreg ${{ env.argo_version_file }}"
+          git push
