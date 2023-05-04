@@ -104,10 +104,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout apps-repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: kartverket/komreg-apps
-          token: ${{ secrets.PAT_REPO }}
+          ref: main
+          token: ${{ secrets.PAT_APPS_REPO }}
       - name: Update version
         run: |
           env_type="dev"
