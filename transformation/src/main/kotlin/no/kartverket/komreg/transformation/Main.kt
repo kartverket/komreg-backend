@@ -72,28 +72,27 @@ suspend fun transformEntities(input: Reguleringsinput) {
 
     CoroutineScope(Dispatchers.IO).launch {
         sources.map {
-            Runtime.getRuntime().gc()
             val flow = it.entityFlow
             val type = it::class.toString()
             val transformResult = flow.mapNotNull { transformerKommunenummer(input, it) }
                 .onEach {
-                transformStatus
-                    .numberOfTransformationsByType
-                    ?.merge(
-                        it.id.type.toString(),
-                        TransformationInfo(
-                            1,
-                            Clock.System.now(),
-                            Clock.System.now(),
-                        ),
-                    ) { old, new ->
-                        TransformationInfo(
-                            old.numberOfTransformations + 1,
-                            old.firstTransformation ?: new.firstTransformation,
-                            new.lastTransformation,
-                        )
-                    }
-            }
+                    transformStatus
+                        .numberOfTransformationsByType
+                        ?.merge(
+                            it.id.type.toString(),
+                            TransformationInfo(
+                                1,
+                                Clock.System.now(),
+                                Clock.System.now(),
+                            ),
+                        ) { old, new ->
+                            TransformationInfo(
+                                old.numberOfTransformations + 1,
+                                old.firstTransformation ?: new.firstTransformation,
+                                new.lastTransformation,
+                            )
+                        }
+                }
                 .onCompletion {
                     logger.info("Completed flow of type $type")
                 }
