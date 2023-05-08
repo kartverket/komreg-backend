@@ -5,6 +5,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
@@ -52,7 +53,6 @@ suspend fun transformEntities(input: Reguleringsinput) {
         }
     }
 
-    val entitySources = EntitySourceManager(bootContext)
     val entitySinks = EntitySinkManager(bootContext)
 
     CoroutineScope(Dispatchers.Default).launch {
@@ -68,34 +68,38 @@ suspend fun transformEntities(input: Reguleringsinput) {
             logger.info("Memory. Used: $used, free: $free, total: $total, max: $max")
         }
     }
+    val sources = EntitySourceManager(bootContext).entitySources
 
     CoroutineScope(Dispatchers.IO).launch {
-        val result = entitySources
-            .buildEntityFlow()
-            .mapNotNull { transformerKommunenummer(input, it) }
-            .onEach { logger.info("Transformert entitet: $it") }
-            .onEach {
-                transformStatus
-                    .numberOfTransformationsByType
-                    ?.merge(
-                        it.id.type.toString(),
-                        TransformationInfo(
-                            1,
-                            Clock.System.now(),
-                            Clock.System.now(),
-                        ),
-                    ) { old, new ->
-                        TransformationInfo(
-                            old.numberOfTransformations + 1,
-                            old.firstTransformation ?: new.firstTransformation,
-                            new.lastTransformation,
-                        )
-                    }
-            }
-
-        logger.info("Starter tilbakeføring..")
-        entitySinks.consume(result)
-        logger.info("Fullført tilbakeføring!")
+        sources.map {
+            val flow = it.entityFlow
+            val type = it::class.toString()
+            val transformResult = flow.mapNotNull { transformerKommunenummer(input, it) }
+                .onEach {
+                    transformStatus
+                        .numberOfTransformationsByType
+                        ?.merge(
+                            it.id.type.toString(),
+                            TransformationInfo(
+                                1,
+                                Clock.System.now(),
+                                Clock.System.now(),
+                            ),
+                        ) { old, new ->
+                            TransformationInfo(
+                                old.numberOfTransformations + 1,
+                                old.firstTransformation ?: new.firstTransformation,
+                                new.lastTransformation,
+                            )
+                        }
+                }
+                .onCompletion {
+                    logger.info("Completed flow of type $type")
+                }
+            logger.info("Starter tilbakeføring fra source: $type")
+            entitySinks.consume(transformResult)
+            logger.info("Fullført tilbakeføring av source: $type")
+        }
         transformStatus.finish()
     }
 }

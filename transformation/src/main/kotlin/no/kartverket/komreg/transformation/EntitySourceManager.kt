@@ -2,8 +2,6 @@ package no.kartverket.komreg.transformation
 
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.flatMapMerge
 import no.kartverket.komreg.core.KrAppBootContext
 import no.kartverket.komreg.integration.spi.Entity
 import no.kartverket.komreg.integration.spi.EntitySource
@@ -16,7 +14,7 @@ class EntitySourceManager(bootContext: KrAppBootContext) {
 
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
-    private val entitySources: List<EntitySource>
+    val entitySources: List<EntitySource>
 
     init {
         val services = ServiceLoader.load(EntitySourceFactory::class.java)
@@ -33,7 +31,6 @@ class EntitySourceManager(bootContext: KrAppBootContext) {
     }
 
     @OptIn(FlowPreview::class)
-    fun buildEntityFlow(): Flow<Entity> = entitySources
-        .asFlow()
-        .flatMapMerge { it.entityFlow }
+    fun buildEntityFlow(): List<Pair<String, Flow<Entity>>> =
+        entitySources.map { Pair(it::class.toString(), it.entityFlow) }
 }
