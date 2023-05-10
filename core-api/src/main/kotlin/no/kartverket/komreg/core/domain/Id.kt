@@ -10,8 +10,8 @@ data class Id<V : Any> (
         val myName = type::class.qualifiedName!!
         val otherName = other.type::class.qualifiedName!!
 
-        val nameComparrison = myName.compareTo(otherName)
-        return if (nameComparrison == 0) {
+        val nameComparison = myName.compareTo(otherName)
+        return if (nameComparison == 0) {
             if (type::class != other.type::class) {
                 throw IllegalStateException("Multiple classes with name $myName")
             }
@@ -23,7 +23,7 @@ data class Id<V : Any> (
                 typeComparrison
             }
         } else {
-            nameComparrison
+            nameComparison
         }
     }
 
@@ -31,7 +31,7 @@ data class Id<V : Any> (
         return type == otherType
     }
 
-    fun <RV : Any> typedValue(requestedType: IdType<RV, *>) : RV? {
+    fun <RV : Any> typedValue(requestedType: IdType<RV, *>): RV? {
         return if (isOfType(requestedType)) {
             value as RV
         } else {

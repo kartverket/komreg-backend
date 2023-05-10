@@ -8,6 +8,8 @@ import no.kartverket.komreg.integration.spi.Transformation
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.ServiceLoader
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTimedValue
 
 class EntitySinkManager(private val bootContext: KrAppBootContext) {
 
@@ -29,17 +31,23 @@ class EntitySinkManager(private val bootContext: KrAppBootContext) {
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     suspend fun consume(transformations: Flow<Transformation>) {
         bootContext.config.featureToggle(
             "feature.disable_sink",
             enabled = {
-                transformations.collect {
-                    logger.info("Konsumerer transformasjon (lokal stub): $it")
+                entitySinks.forEach { sink ->
+                    transformations.collect {
+                        logger.info("Lokal stub ${sink.id} konsumerer transformasjon: $it")
+                    }
                 }
             },
             disabled = {
                 entitySinks.forEach {
-                    it.consumeTransformations(transformations)
+                    val (_, time) = measureTimedValue {
+                        it.consumeTransformations(transformations)
+                    }
+                    logger.info("Sink ${it.id} took ${time.inWholeMilliseconds}ms")
                 }
             },
         )

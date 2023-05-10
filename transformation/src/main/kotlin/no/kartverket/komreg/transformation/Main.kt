@@ -4,9 +4,7 @@ import com.typesafe.config.ConfigFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.onCompletion
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -24,6 +22,8 @@ data class TransformationInfo(
     var numberOfTransformations: Int = 0,
     var firstTransformation: Instant? = null,
     var lastTransformation: Instant? = null,
+    var source: String? = null,
+    var finished: Instant? = null,
 )
 
 @Serializable
@@ -68,36 +68,47 @@ suspend fun transformEntities(input: Reguleringsinput) {
             logger.info("Memory. Used: $used, free: $free, total: $total, max: $max")
         }
     }
+
     val sources = EntitySourceManager(bootContext).entitySources
 
     CoroutineScope(Dispatchers.IO).launch {
         sources.map {
             val flow = it.entityFlow
-            val type = it::class.toString()
-            val transformResult = flow.mapNotNull { transformerKommunenummer(input, it) }
-                .onEach {
-                    transformStatus
-                        .numberOfTransformationsByType
-                        ?.merge(
-                            it.id.type.toString(),
-                            TransformationInfo(
-                                1,
-                                Clock.System.now(),
-                                Clock.System.now(),
-                            ),
-                        ) { old, new ->
-                            TransformationInfo(
-                                old.numberOfTransformations + 1,
-                                old.firstTransformation ?: new.firstTransformation,
-                                new.lastTransformation,
-                            )
-                        }
+            val type = it.id
+            val transformResult = flow.mapNotNull { entity -> transformerKommunenummer(input, entity) }
+                .onEach { transformation ->
+                    // logger.info("Laget transformasjon: $transformation")
+                    val status = transformStatus.numberOfTransformationsByType?.get(transformation.id.type.toString())
+                    if (status?.finished == null) {
+                        transformStatus
+                            .numberOfTransformationsByType
+                            ?.merge(
+                                transformation.id.type.toString(),
+                                TransformationInfo(
+                                    1,
+                                    Clock.System.now(),
+                                    Clock.System.now(),
+                                    type,
+                                ),
+                            ) { old, new ->
+                                TransformationInfo(
+                                    old.numberOfTransformations + 1,
+                                    old.firstTransformation ?: new.firstTransformation,
+                                    new.lastTransformation,
+                                    type,
+                                )
+                            }
+                    }
                 }
+            val readyToTransform = transformResult
                 .onCompletion {
                     logger.info("Completed flow of type $type")
+                    transformStatus.numberOfTransformationsByType?.entries?.firstOrNull {
+                        it.value.source == type
+                    }?.value?.finished = Clock.System.now()
                 }
             logger.info("Starter tilbakeføring fra source: $type")
-            entitySinks.consume(transformResult)
+            entitySinks.consume(readyToTransform)
             logger.info("Fullført tilbakeføring av source: $type")
         }
         transformStatus.finish()
