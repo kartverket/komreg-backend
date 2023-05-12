@@ -37,9 +37,11 @@ class EntitySinkManager(private val bootContext: KrAppBootContext) {
             "feature.disable_sink",
             enabled = {
                 entitySinks.forEach { sink ->
+                    var sum = 0
                     transformations.collect {
-                        logger.info("Lokal stub ${sink.id} konsumerer transformasjon: $it")
+                        sum++
                     }
+                    logger.info("Sink ${sink.id} har konsumert $sum transformasjoner.")
                 }
             },
             disabled = {
