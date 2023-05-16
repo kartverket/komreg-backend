@@ -4,18 +4,19 @@ import com.typesafe.config.ConfigFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.KrAppBootContext
+import no.kartverket.komreg.core.getSecretOrString
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 val logger: Logger = LoggerFactory.getLogger(object {}::class.java)
-
-fun getEnvironment(): String = System.getenv("environment") ?: "local"
 
 @Serializable
 data class TransformationInfo(
@@ -49,7 +50,8 @@ suspend fun transformEntities(input: Reguleringsinput) {
     transformStatus.start()
     val bootContext = object : KrAppBootContext {
         override val config by lazy {
-            ConfigFactory.load("reference-${getEnvironment()}.conf")
+            ConfigFactory.invalidateCaches()
+            ConfigFactory.load("properties.conf")
         }
     }
 
