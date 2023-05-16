@@ -10,6 +10,7 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.KrAppBootContext
+import no.kartverket.komreg.integration.spi.Transformation
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -18,20 +19,25 @@ val logger: Logger = LoggerFactory.getLogger(object {}::class.java)
 fun getEnvironment(): String = System.getenv("environment") ?: "local"
 
 @Serializable
-data class TransformationInfo(
+data class TransformationStatusForSource(
+    val source: String?,
     var numberOfTransformations: Int = 0,
     var firstTransformation: Instant? = null,
-    var lastTransformation: Instant? = null,
-    var source: String? = null,
-    var finished: Instant? = null,
+    var transformationFinished: Instant? = null,
+    var tilbakefoeringFinished: Instant? = null,
 )
 
 @Serializable
-data class TransformStatus(
-    var numberOfTransformationsByType: MutableMap<String, TransformationInfo>? = mutableMapOf(),
+data class TransformationStatusForRegulering(
+    var transformationsBySource: MutableList<TransformationStatusForSource> = mutableListOf(),
     var started: Instant? = null,
     var finished: Instant? = null,
 ) {
+
+    fun addSourceStatus(sourceStatus: TransformationStatusForSource) {
+        transformationsBySource.add(sourceStatus)
+    }
+
     fun start() {
         started = Clock.System.now()
         finished = null
@@ -42,10 +48,10 @@ data class TransformStatus(
     }
 }
 
-val transformStatuses = mutableMapOf<String, TransformStatus>()
+val transformStatuses = mutableMapOf<String, TransformationStatusForRegulering>()
 
 suspend fun transformEntities(input: Reguleringsinput) {
-    val transformStatus = TransformStatus().also { transformStatuses[input.id] = it }
+    val transformStatus = TransformationStatusForRegulering().also { transformStatuses[input.id] = it }
     transformStatus.start()
     val bootContext = object : KrAppBootContext {
         override val config by lazy {
@@ -75,41 +81,30 @@ suspend fun transformEntities(input: Reguleringsinput) {
         sources.map {
             val flow = it.entityFlow
             val type = it.id
-            val transformResult = flow.mapNotNull { entity -> transformerKommunenummer(input, entity) }
-                .onEach { transformation ->
-                    // logger.info("Laget transformasjon: $transformation")
-                    val status = transformStatus.numberOfTransformationsByType?.get(transformation.id.type.toString())
-                    if (status?.finished == null) {
-                        transformStatus
-                            .numberOfTransformationsByType
-                            ?.merge(
-                                transformation.id.type.toString(),
-                                TransformationInfo(
-                                    1,
-                                    Clock.System.now(),
-                                    Clock.System.now(),
-                                    type,
-                                ),
-                            ) { old, new ->
-                                TransformationInfo(
-                                    old.numberOfTransformations + 1,
-                                    old.firstTransformation ?: new.firstTransformation,
-                                    new.lastTransformation,
-                                    type,
-                                )
-                            }
-                    }
+            val statusForSource = TransformationStatusForSource(source = type)
+            transformStatus.addSourceStatus(statusForSource)
+            val transformResult = flow
+                .onStart {
+                    logger.info("Starting flow of type: $type")
+                    statusForSource.firstTransformation = Clock.System.now()
                 }
-            val readyToTransform = transformResult
+                .mapNotNull { entity -> transformerKommunenummer(input, entity) }
+                .onEach {
+                    statusForSource.numberOfTransformations += 1
+                }
                 .onCompletion {
-                    logger.info("Completed flow of type $type")
-                    transformStatus.numberOfTransformationsByType?.entries?.firstOrNull {
-                        it.value.source == type
-                    }?.value?.finished = Clock.System.now()
+                    logger.info("Completed transformations for flow of type $type")
+                    statusForSource.transformationFinished = Clock.System.now()
+                }
+            // .launchIn(CoroutineScope(Dispatchers.IO))
+            val newFlow: Flow<Transformation> =
+                transformResult.toList().asFlow().onStart {
+                    logger.info("Starting SECOND part of flow lolz")
                 }
             logger.info("Starter tilbakeføring fra source: $type")
-            entitySinks.consume(readyToTransform)
+            entitySinks.consume(newFlow)
             logger.info("Fullført tilbakeføring av source: $type")
+            statusForSource.tilbakefoeringFinished = Clock.System.now()
         }
         transformStatus.finish()
     }

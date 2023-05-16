@@ -37,9 +37,12 @@ class EntitySinkManager(private val bootContext: KrAppBootContext) {
             "feature.disable_sink",
             enabled = {
                 entitySinks.forEach { sink ->
-                    transformations.collect {
-                        logger.info("Lokal stub ${sink.id} konsumerer transformasjon: $it")
+                    val (_, time) = measureTimedValue {
+                        transformations.collect {
+                            // logger.info("Lokal stub ${sink.id} konsumerer transformasjon: $it")
+                        }
                     }
+                    logger.info("Sink ${sink.id} took ${time.inWholeMilliseconds}ms")
                 }
             },
             disabled = {
