@@ -1,5 +1,6 @@
 package no.kartverket.komreg
 
+import io.github.cdimascio.dotenv.dotenv
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.serialization.kotlinx.json.json
@@ -19,6 +20,10 @@ fun main(args: Array<String>) =
 
 @Suppress("unused") // Referenced in application.conf
 fun Application.module() {
+    dotenv {
+        systemProperties = true
+        ignoreIfMissing = true
+    }
     install(ContentNegotiation) {
         json()
     }

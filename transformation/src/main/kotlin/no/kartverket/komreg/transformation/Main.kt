@@ -16,8 +16,6 @@ import org.slf4j.LoggerFactory
 
 val logger: Logger = LoggerFactory.getLogger(object {}::class.java)
 
-fun getEnvironment(): String = System.getenv("environment") ?: "local"
-
 @Serializable
 data class TransformationStatusForSource(
     val source: String?,
@@ -55,7 +53,8 @@ suspend fun transformEntities(input: Reguleringsinput) {
     transformStatus.start()
     val bootContext = object : KrAppBootContext {
         override val config by lazy {
-            ConfigFactory.load("reference-${getEnvironment()}.conf")
+            ConfigFactory.invalidateCaches()
+            ConfigFactory.load("properties.conf")
         }
     }
 
