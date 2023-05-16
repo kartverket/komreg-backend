@@ -66,7 +66,7 @@ suspend fun transformEntities(input: Reguleringsinput) {
         val mb = 1024 * 1024
 
         while (true) {
-            delay(5000)
+            delay(30000)
             val used = (runtime.totalMemory() - runtime.freeMemory()) / mb
             val free = runtime.freeMemory() / mb
             val total = runtime.totalMemory() / mb
