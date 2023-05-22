@@ -24,7 +24,7 @@ data class TransformationStatusForSource(
     var numberOfTransformations: Int = 0,
     var firstTransformation: Instant? = null,
     var transformationFinished: Instant? = null,
-    var tilbakefoeringFinished: Instant? = null,
+    var tilbakeføringFinished: Instant? = null,
 )
 
 @Serializable
@@ -99,12 +99,12 @@ suspend fun transformEntities(input: Reguleringsinput) {
             // .launchIn(CoroutineScope(Dispatchers.IO))
             val newFlow: Flow<Transformation> =
                 transformResult.toList().asFlow().onStart {
-                    logger.info("Starting SECOND part of flow lolz")
+                    logger.info("Starting second part of flow")
                 }
             logger.info("Starter tilbakeføring fra source: $type")
             entitySinks.consume(newFlow)
             logger.info("Fullført tilbakeføring av source: $type")
-            statusForSource.tilbakefoeringFinished = Clock.System.now()
+            statusForSource.tilbakeføringFinished = Clock.System.now()
         }
         transformStatus.finish()
     }
