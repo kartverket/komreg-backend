@@ -27,9 +27,6 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     api(libs.kotlinx.coroutines.core)
 
-    implementation(platform(libs.google.cloud.libraries))
-    implementation(libs.google.cloud.secretmanager)
-
     testImplementation(libs.junit.jupiter.api)
     testRuntimeOnly(libs.junit.jupiter.engine)
     testImplementation(libs.kotest.runner)
