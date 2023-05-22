@@ -13,10 +13,8 @@ pluginManagement {
 
 include(
     ":core-api",
-    ":core-impl",
     ":transformation",
     ":server",
-    // ":integration-matrikkel"
 )
 
 dependencyResolutionManagement {
