@@ -12,6 +12,9 @@ import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.KrAppBootContext
 import no.kartverket.komreg.core.domain.Fylkesdata
 import no.kartverket.komreg.integration.spi.Ident
+import no.kartverket.komreg.core.domain.Fylkesnummer
+import no.kartverket.komreg.core.domain.Id
+import no.kartverket.komreg.integration.spi.Ident
 import no.kartverket.komreg.integration.spi.Transformation
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
