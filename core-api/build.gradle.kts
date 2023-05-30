@@ -1,5 +1,5 @@
 group = "no.kartverket.komreg"
-version = "0.1.8"
+version = "0.1.9"
 
 plugins {
     kotlin("jvm")
