@@ -10,6 +10,9 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.KrAppBootContext
+import no.kartverket.komreg.core.domain.Fylkesnummer
+import no.kartverket.komreg.core.domain.Id
+import no.kartverket.komreg.integration.spi.Ident
 import no.kartverket.komreg.integration.spi.Transformation
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -107,4 +110,32 @@ suspend fun transformEntities(input: Reguleringsinput) {
         }
         transformStatus.finish()
     }
+}
+
+suspend fun createFylker(input: Reguleringsinput) {
+    logger.info("Følgende fylker skal opprettes:")
+    input.fylker.forEach { fylke ->
+        logger.info("Fylke: ${fylke.fylkesnummer} ${fylke.fylkesnavn}")
+    }
+
+    val bootContext = object : KrAppBootContext {
+        override val config by lazy {
+            ConfigFactory.invalidateCaches()
+            ConfigFactory.load("properties.conf")
+        }
+    }
+
+    val entitySinks = EntitySinkManager(bootContext)
+    logger.info("EntitySinks: $entitySinks")
+
+    /*val fylkesFlow = input.fylker.asFlow().map { fylke ->
+        Transformation(
+            id = entitySinks.nextId(),
+            transformationType = "CreateFylke",
+            sourceEntity = null,
+            transformedIdent = Ident(fylke)
+        )
+    }*/
+
+    /*entitySinks.consume(fylkesFlow)*/
 }
