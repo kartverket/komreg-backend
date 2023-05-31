@@ -7,6 +7,7 @@ import no.kartverket.komreg.integration.spi.EntitySinkFactory
 import no.kartverket.komreg.integration.spi.Transformation
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 import java.util.ServiceLoader
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTimedValue
@@ -32,7 +33,7 @@ class EntitySinkManager(private val bootContext: KrAppBootContext) {
     }
 
     @OptIn(ExperimentalTime::class)
-    suspend fun consume(transformations: Flow<Transformation>) {
+    suspend fun consume(transformations: Flow<Transformation>, ikrafttredelsesdato: LocalDate) {
         bootContext.config.featureToggle(
             "feature.disable_sink",
             enabled = {
@@ -48,7 +49,7 @@ class EntitySinkManager(private val bootContext: KrAppBootContext) {
             disabled = {
                 entitySinks.forEach {
                     val (_, time) = measureTimedValue {
-                        it.consumeTransformations(transformations)
+                        it.consumeTransformations(transformations, ikrafttredelsesdato)
                     }
                     logger.info("Sink ${it.id} took ${time.inWholeMilliseconds}ms")
                 }
