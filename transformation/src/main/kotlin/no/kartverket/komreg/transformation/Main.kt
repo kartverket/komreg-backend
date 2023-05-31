@@ -101,7 +101,7 @@ suspend fun transformEntities(input: Reguleringsinput) {
                     logger.info("Starting second part of flow")
                 }
             logger.info("Starter tilbakeføring fra source: $type")
-            entitySinks.consume(newFlow)
+            entitySinks.consume(newFlow, input.ikrafttredelsesdato)
             logger.info("Fullført tilbakeføring av source: $type")
             statusForSource.tilbakeføringFinished = Clock.System.now()
         }

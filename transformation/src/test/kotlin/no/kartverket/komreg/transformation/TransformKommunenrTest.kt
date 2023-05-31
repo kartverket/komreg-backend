@@ -7,12 +7,14 @@ import no.kartverket.komreg.integration.spi.Entity
 import no.kartverket.komreg.integration.spi.Ident
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.time.LocalDate
 import kotlin.test.assertEquals
 
 object TransformKommunenrTest : Spek({
     describe("A transformation") {
         val reguleringsInput = Reguleringsinput(
             id = "123",
+            LocalDate.now(),
             listOf(
                 Kommuneendring(
                     fra = Kommunenummer(Fylkesnummer(2), Kommunenummer.Lopenummer(5)),

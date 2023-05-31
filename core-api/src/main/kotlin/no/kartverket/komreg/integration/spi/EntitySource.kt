@@ -2,6 +2,7 @@ package no.kartverket.komreg.integration.spi
 
 import kotlinx.coroutines.flow.Flow
 import no.kartverket.komreg.core.domain.Id
+import java.time.LocalDate
 
 data class Entity(
     val id: Id<*>,
@@ -28,7 +29,7 @@ interface EntitySource {
 
 interface EntitySink {
     val id: String
-    suspend fun consumeTransformations(flow: Flow<Transformation>)
+    suspend fun consumeTransformations(flow: Flow<Transformation>, ikrafttredelsesdato: LocalDate)
     val postValidation: Set<() -> Unit>
     val preValidation: Set<() -> Unit>
 }
