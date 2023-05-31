@@ -1,4 +1,4 @@
-FROM eclipse-temurin:17-alpine
+FROM eclipse-temurin:17.0.6_10-jre-alpine
 RUN apk --no-cache add libgcc libstdc++
 EXPOSE 8080:8080
 RUN mkdir /app

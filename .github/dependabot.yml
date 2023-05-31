@@ -17,4 +17,7 @@ updates:
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
-      interval: daily
+      interval: "daily"
+    target-branch: "*"
+    allow:
+      - dependency-name: "eclipse-temurin"
