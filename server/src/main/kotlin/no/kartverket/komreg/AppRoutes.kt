@@ -15,6 +15,7 @@ import no.kartverket.komreg.transformation.Kommuneendring
 import no.kartverket.komreg.transformation.Reguleringsinput
 import no.kartverket.komreg.transformation.transformEntities
 import no.kartverket.komreg.transformation.transformStatuses
+import java.time.LocalDate
 
 @Serializable
 data class Regulering(
@@ -26,6 +27,7 @@ data class Regulering(
     fun toReguleringsinput(): Reguleringsinput {
         return Reguleringsinput(
             id,
+            LocalDate.parse(dato),
             endringer = endringer
                 .flatMap { fylkesdeling ->
                     fylkesdeling.nyeFylker.flatMap { fylke ->

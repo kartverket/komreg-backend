@@ -4,7 +4,7 @@ Content-Type: application/json
 {
   "id": "a76f0227b61e",
   "navn": "Statustest",
-  "dato": "2023-04-28T11:04:16.505Z",
+  "dato": "2023-04-28",
   "endringer": [
     {
       "type": "Fylkesdeling",
