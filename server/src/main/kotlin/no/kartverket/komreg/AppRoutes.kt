@@ -34,10 +34,10 @@ data class Regulering(
             endringer = endringer
                 .flatMap { fylkesdeling ->
                     fylkesdeling.nyeFylker.flatMap { fylke ->
-                        fylke.kommuner.map {
+                        fylke.kommuner.map { kommune ->
                             Kommuneendring(
-                                Kommunenummer(it.kommunenummer.toLong()),
-                                Kommunenummer(it.nyttKommunenummer.toLong()),
+                                Kommunenummer(kommune.kommunenummer.toLong()),
+                                Kommunenummer(kommune.nyttKommunenummer.toLong()),
                             )
                         }
                     }
