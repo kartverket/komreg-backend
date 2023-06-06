@@ -16,7 +16,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
     implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
 
-    api("no.statkart.matrikkel:matrikkel-komreg:4.10-SNAPSHOT")
+    api("no.statkart.matrikkel:matrikkel-komreg:4.11-SNAPSHOT")
 
     // Testing
     testImplementation(kotlin("test"))
