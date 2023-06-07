@@ -10,6 +10,8 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.KrAppBootContext
+import no.kartverket.komreg.core.domain.Fylkesdata
+import no.kartverket.komreg.integration.spi.Ident
 import no.kartverket.komreg.integration.spi.Transformation
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -60,6 +62,17 @@ suspend fun transformEntities(input: Reguleringsinput) {
 
     val entitySinks = EntitySinkManager(bootContext)
 
+    if (input.fylker.isNotEmpty()) {
+        writeFylker(bootContext, input, entitySinks)
+        return
+    }
+
+    printMemoryUsage()
+
+    runAndWriteTransformations(bootContext, transformStatus, input, entitySinks)
+}
+
+private fun printMemoryUsage() {
     CoroutineScope(Dispatchers.Default).launch {
         val runtime = Runtime.getRuntime()
         val mb = 1024 * 1024
@@ -73,7 +86,45 @@ suspend fun transformEntities(input: Reguleringsinput) {
             logger.info("Memory. Used: $used, free: $free, total: $total, max: $max")
         }
     }
+}
 
+private suspend fun writeFylker(
+    bootContext: KrAppBootContext,
+    input: Reguleringsinput,
+    entitySinks: EntitySinkManager,
+) {
+    val kommuneService = KommuneServiceManager(bootContext).kommuneService
+
+    logger.info("Følgende fylker skal opprettes:")
+    input.fylker.forEach { fylke ->
+        logger.info("Fylke: ${fylke.fylkesnummer} ${fylke.fylkesnavn}")
+    }
+
+    val transformedFylker = flow {
+        input.fylker.forEach { fylke ->
+            emit(
+                Transformation(
+                    id = kommuneService.idForFylke(fylke.fylkesnummer),
+                    sourceEntity = null,
+                    transformationType = "NyttFylke",
+                    transformedIdent = Ident(fylke.fylkesnummer),
+                    transformedAssociatedIdents = null,
+                    resultObject = Fylkesdata(fylke.fylkesnavn.name),
+                ),
+            )
+        }
+    }
+
+    logger.info("Starter tilbakeføring av fylker")
+    entitySinks.consume(transformedFylker, input.ikrafttredelsesdato)
+}
+
+private fun runAndWriteTransformations(
+    bootContext: KrAppBootContext,
+    transformStatus: TransformationStatusForRegulering,
+    input: Reguleringsinput,
+    entitySinks: EntitySinkManager,
+) {
     val sources = EntitySourceManager(bootContext).entitySources
 
     CoroutineScope(Dispatchers.IO).launch {

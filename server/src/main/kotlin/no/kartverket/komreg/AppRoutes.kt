@@ -10,12 +10,15 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import kotlinx.serialization.Serializable
+import no.kartverket.komreg.core.domain.Fylkesnavn
+import no.kartverket.komreg.core.domain.Fylkesnummer
 import no.kartverket.komreg.core.domain.Kommunenummer
 import no.kartverket.komreg.transformation.Kommuneendring
 import no.kartverket.komreg.transformation.Reguleringsinput
 import no.kartverket.komreg.transformation.transformEntities
 import no.kartverket.komreg.transformation.transformStatuses
 import java.time.LocalDate
+import no.kartverket.komreg.core.domain.Fylke as NyttFylke
 
 @Serializable
 data class Regulering(
@@ -40,6 +43,14 @@ data class Regulering(
                     }
                 }
                 .take(1), // TODO: Begrenser p.t. til kun første kommune for å unngå at større reguleringer kjøres ved en feil
+            fylker = endringer.flatMap { fylkesdeling ->
+                fylkesdeling.nyeFylker.filter { it.skalOpprettes == true }.map {
+                    NyttFylke(
+                        Fylkesnummer(it.fylkesnummer.toLong()),
+                        Fylkesnavn(it.navn),
+                    )
+                }
+            },
         )
     }
 }
@@ -58,6 +69,7 @@ data class Fylke(
     val navn: String,
     val fylkesnummer: String,
     val kommuner: List<Kommune>,
+    val skalOpprettes: Boolean? = false,
 )
 
 @Serializable
@@ -72,6 +84,7 @@ fun Application.routes() {
         route("/run") {
             post {
                 val regulering: Regulering = call.receive()
+                call.application.log.info(regulering.toString())
                 call.application.log.info(regulering.toReguleringsinput().toString())
 
                 transformEntities(regulering.toReguleringsinput())

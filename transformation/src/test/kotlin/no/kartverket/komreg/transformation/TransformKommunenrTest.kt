@@ -21,6 +21,7 @@ object TransformKommunenrTest : Spek({
                     til = Kommunenummer(Fylkesnummer(3), Kommunenummer.Lopenummer(6)),
                 ),
             ),
+            emptyList(),
         )
 
         describe("of idents") {

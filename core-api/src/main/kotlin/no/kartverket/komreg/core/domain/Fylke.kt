@@ -14,7 +14,7 @@ data class Fylke(
         ): Fylke =
             Fylke(
                 Fylkesnummer(fylkesnummer),
-                Fylkesnavn(fylkesnavn)
+                Fylkesnavn(fylkesnavn),
             )
     }
 }
