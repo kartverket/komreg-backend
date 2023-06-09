@@ -12,6 +12,7 @@ import io.ktor.server.routing.routing
 import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.domain.Fylkesnavn
 import no.kartverket.komreg.core.domain.Fylkesnummer
+import no.kartverket.komreg.core.domain.Kommunenavn
 import no.kartverket.komreg.core.domain.Kommunenummer
 import no.kartverket.komreg.transformation.Kommuneendring
 import no.kartverket.komreg.transformation.Reguleringsinput
@@ -19,6 +20,7 @@ import no.kartverket.komreg.transformation.transformEntities
 import no.kartverket.komreg.transformation.transformStatuses
 import java.time.LocalDate
 import no.kartverket.komreg.core.domain.Fylke as NyttFylke
+import no.kartverket.komreg.core.domain.Kommune as NyKommune
 
 @Serializable
 data class Regulering(
@@ -51,6 +53,16 @@ data class Regulering(
                     )
                 }
             },
+            kommuner = endringer.flatMap { fylkesdeling ->
+                fylkesdeling.nyeFylker.flatMap { fylke ->
+                    fylke.kommuner.filter { it.skalOpprettes == true }.map {
+                        NyKommune(
+                            Kommunenummer(it.nyttKommunenummer.toLong()),
+                            Kommunenavn(it.navn),
+                        )
+                    }
+                }
+            },
         )
     }
 }
@@ -77,6 +89,7 @@ data class Kommune(
     val navn: String,
     val kommunenummer: String,
     val nyttKommunenummer: String,
+    val skalOpprettes: Boolean? = false,
 )
 
 fun Application.routes() {

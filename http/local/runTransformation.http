@@ -18,12 +18,14 @@ Content-Type: application/json
       "nyeFylker": [
         {
           "navn": "Østfold",
-          "fylkesnummer": "01",
+          "fylkesnummer": "31",
+          "skalOpprettes": true,
           "kommuner": [
             {
               "navn": "Aremark",
               "kommunenummer": "3012",
-              "nyttKommunenummer": "0118"
+              "nyttKommunenummer": "3124",
+              "skalOpprettes": true
             }
           ]
         }

@@ -22,6 +22,7 @@ object TransformKommunenrTest : Spek({
                 ),
             ),
             emptyList(),
+            emptyList(),
         )
 
         describe("of idents") {
