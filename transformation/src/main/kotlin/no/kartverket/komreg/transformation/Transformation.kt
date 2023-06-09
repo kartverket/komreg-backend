@@ -11,6 +11,7 @@ import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.KrAppBootContext
 import no.kartverket.komreg.core.domain.Fylkesdata
+import no.kartverket.komreg.core.domain.Kommunedata
 import no.kartverket.komreg.integration.spi.Ident
 import no.kartverket.komreg.integration.spi.Transformation
 import org.slf4j.Logger
@@ -64,7 +65,10 @@ suspend fun transformEntities(input: Reguleringsinput) {
 
     if (input.fylker.isNotEmpty()) {
         writeFylker(bootContext, input, entitySinks)
-        return
+    }
+
+    if (input.kommuner.isNotEmpty()) {
+        writeKommuner(bootContext, input, entitySinks)
     }
 
     printMemoryUsage()
@@ -108,7 +112,6 @@ private suspend fun writeFylker(
                     sourceEntity = null,
                     transformationType = "NyttFylke",
                     transformedIdent = Ident(fylke.fylkesnummer),
-                    transformedAssociatedIdents = null,
                     resultObject = Fylkesdata(fylke.fylkesnavn.name),
                 ),
             )
@@ -117,6 +120,32 @@ private suspend fun writeFylker(
 
     logger.info("Starter tilbakeføring av fylker")
     entitySinks.consume(transformedFylker, input.ikrafttredelsesdato)
+}
+
+private suspend fun writeKommuner(bootContext: KrAppBootContext, input: Reguleringsinput, entitySinks: EntitySinkManager) {
+    val kommuneService = KommuneServiceManager(bootContext).kommuneService
+
+    logger.info("Følgende kommuner skal opprettes:")
+    input.kommuner.forEach { kommune ->
+        logger.info("Kommune: ${kommune.kommunenummer} ${kommune.kommunenavn}")
+    }
+
+    val transformedKommuner = flow {
+        input.kommuner.forEach { kommune ->
+            emit(
+                Transformation(
+                    id = kommuneService.idForKommune(kommune.kommunenummer),
+                    sourceEntity = null,
+                    transformationType = "NyKommune",
+                    transformedIdent = Ident(kommune.kommunenummer.fylkesnummer, kommune.kommunenummer.lopenummer),
+                    resultObject = Kommunedata(kommune.kommunenavn.name),
+                ),
+            )
+        }
+    }
+
+    logger.info("Starter tilbakeføring av kommuner")
+    entitySinks.consume(transformedKommuner, input.ikrafttredelsesdato)
 }
 
 private fun runAndWriteTransformations(
