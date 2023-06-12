@@ -43,7 +43,9 @@ class EntitySinkManager(private val bootContext: KrAppBootContext) {
                             // logger.info("Lokal stub ${sink.id} konsumerer transformasjon: $it")
                         }
                     }
-                    logger.info("Sink ${sink.id} took ${time.inWholeMilliseconds}ms")
+                    if (time.inWholeSeconds > 5) {
+                        logger.info("Sink ${sink.id} took ${time.inWholeMilliseconds}ms")
+                    }
                 }
             },
             disabled = {
@@ -51,7 +53,9 @@ class EntitySinkManager(private val bootContext: KrAppBootContext) {
                     val (_, time) = measureTimedValue {
                         it.consumeTransformations(transformations, ikrafttredelsesdato)
                     }
-                    logger.info("Sink ${it.id} took ${time.inWholeMilliseconds}ms")
+                    if (time.inWholeSeconds > 5) {
+                        logger.info("Sink ${it.id} took ${time.inWholeMilliseconds}ms")
+                    }
                 }
             },
         )

@@ -12,7 +12,7 @@ suspend fun Config.featureToggle(
     disabled: suspend () -> Unit = {},
 ) {
     val isFeatureEnabled = this.getBoolean(feature)
-    featureToggleLogger.info("FeatureToggle invoked: $feature = $isFeatureEnabled")
+    featureToggleLogger.debug("FeatureToggle invoked: $feature = $isFeatureEnabled")
     when (isFeatureEnabled) {
         true -> enabled()
         false -> disabled()

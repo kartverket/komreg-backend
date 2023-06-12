@@ -157,7 +157,7 @@ private fun runAndWriteTransformations(
     val sources = EntitySourceManager(bootContext).entitySources
 
     CoroutineScope(Dispatchers.IO).launch {
-        sources.map {
+        sources.reversed().map {
             val flow = it.entityFlow
             val type = it.id
             val statusForSource = TransformationStatusForSource(source = type)
@@ -175,11 +175,9 @@ private fun runAndWriteTransformations(
                     logger.info("Completed transformations for flow of type $type")
                     statusForSource.transformationFinished = Clock.System.now()
                 }
-            // .launchIn(CoroutineScope(Dispatchers.IO))
-            val newFlow: Flow<Transformation> =
-                transformResult.toList().asFlow().onStart {
-                    logger.info("Starting second part of flow")
-                }
+
+            val newFlow: Flow<Transformation> = transformResult.toList().asFlow()
+
             logger.info("Starter tilbakeføring fra source: $type")
             entitySinks.consume(newFlow, input.ikrafttredelsesdato)
             logger.info("Fullført tilbakeføring av source: $type")
