@@ -1,6 +1,5 @@
 package no.kartverket.komreg
 
-import io.github.cdimascio.dotenv.dotenv
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.serialization.kotlinx.json.json
@@ -8,6 +7,7 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
+import no.kartverket.komreg.transformation.Config
 import org.rocksdb.RocksDB
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -24,10 +24,6 @@ fun main(args: Array<String>) =
 
 @Suppress("unused") // Referenced in application.conf
 fun Application.module() {
-    dotenv {
-        systemProperties = true
-        ignoreIfMissing = true
-    }
     install(ContentNegotiation) {
         json()
     }
@@ -39,5 +35,5 @@ fun Application.module() {
     }
     routes()
 
-    logger.info("Source DB: ${System.getProperty("DB_MATRIKKEL_KILDE_USERNAME")}")
+    logger.info("Source DB: ${Config.get("DB_MATRIKKEL_KILDE_USERNAME")}")
 }
