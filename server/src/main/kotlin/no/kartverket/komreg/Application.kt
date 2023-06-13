@@ -9,7 +9,11 @@ import io.ktor.server.application.install
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
 import org.rocksdb.RocksDB
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.util.concurrent.ForkJoinPool
+
+val logger: Logger = LoggerFactory.getLogger(object {}::class.java)
 
 fun main(args: Array<String>) =
     ForkJoinPool.commonPool().execute {
@@ -34,4 +38,6 @@ fun Application.module() {
         allowHeader(HttpHeaders.ContentType)
     }
     routes()
+
+    logger.info("Source DB: ${System.getProperty("DB_MATRIKKEL_KILDE_USERNAME")}")
 }
