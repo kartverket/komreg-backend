@@ -20,7 +20,7 @@ class EntitySinkManager(private val bootContext: KrAppBootContext) {
 
     init {
         val services = ServiceLoader.load(EntitySinkFactory::class.java)
-        logger.info("Found ${services.toList().size} sink services")
+        logger.info("Fant ${services.toList().size} mottakere")
         services.forEach {
             logger.info(it.toString())
         }
@@ -44,7 +44,7 @@ class EntitySinkManager(private val bootContext: KrAppBootContext) {
                         }
                     }
                     if (time.inWholeSeconds > 5) {
-                        logger.info("Sink ${sink.id} took ${time.inWholeMilliseconds}ms")
+                        logger.info("Mottaker ${sink.id} tok ${time.inWholeMilliseconds}ms")
                     }
                 }
             },
@@ -54,7 +54,7 @@ class EntitySinkManager(private val bootContext: KrAppBootContext) {
                         it.consumeTransformations(transformations, ikrafttredelsesdato)
                     }
                     if (time.inWholeSeconds > 5) {
-                        logger.info("Sink ${it.id} took ${time.inWholeMilliseconds}ms")
+                        logger.info("Mottaker ${it.id} tok ${time.inWholeMilliseconds}ms")
                     }
                 }
             },

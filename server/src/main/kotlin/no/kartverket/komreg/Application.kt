@@ -35,5 +35,5 @@ fun Application.module() {
     }
     routes()
 
-    logger.info("Source DB: ${Config.get("DB_MATRIKKEL_KILDE_USERNAME")}")
+    logger.info("Kilde DB: ${Config.get("DB_MATRIKKEL_KILDE_USERNAME")}")
 }

@@ -52,6 +52,7 @@ data class TransformationStatusForRegulering(
 val transformStatuses = mutableMapOf<String, TransformationStatusForRegulering>()
 
 suspend fun transformEntities(input: Reguleringsinput) {
+    logger.info("Starter transformasjon!")
     val transformStatus = TransformationStatusForRegulering().also { transformStatuses[input.id] = it }
     transformStatus.start()
     val bootContext = object : KrAppBootContext {
@@ -164,7 +165,7 @@ private fun runAndWriteTransformations(
             transformStatus.addSourceStatus(statusForSource)
             val transformResult = flow
                 .onStart {
-                    logger.info("Starting flow of type: $type")
+                    logger.info("Starter flow av type: $type")
                     statusForSource.firstTransformation = Clock.System.now()
                 }
                 .mapNotNull { entity -> transformerKommunenummer(input, entity) }
@@ -172,7 +173,7 @@ private fun runAndWriteTransformations(
                     statusForSource.numberOfTransformations += 1
                 }
                 .onCompletion {
-                    logger.info("Completed transformations for flow of type $type")
+                    logger.info("Fullført transformasjoner for flow av type $type")
                     statusForSource.transformationFinished = Clock.System.now()
                 }
 
@@ -184,5 +185,6 @@ private fun runAndWriteTransformations(
             statusForSource.tilbakeføringFinished = Clock.System.now()
         }
         transformStatus.finish()
+        logger.info("Avsluttet transformasjon!")
     }
 }
