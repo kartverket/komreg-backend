@@ -33,7 +33,7 @@ data class Regulering(
                 fylkesdeling.nyeFylker.flatMap { fylke ->
                     fylke.kommuner.map { kommune ->
                         Kommuneendring(
-                            Kommunenummer(kommune.kommunenr.toLong()),
+                            Kommunenummer(kommune.kommunenummer.toLong()),
                             Kommunenummer(kommune.nyttKommunenummer.toLong()),
                         )
                     }
@@ -52,7 +52,7 @@ data class Regulering(
                     fylke.kommuner.filter { it.skalOpprettes == true }.map {
                         NyKommune(
                             Kommunenummer(it.nyttKommunenummer.toLong()),
-                            Kommunenavn(it.kommunenavn),
+                            Kommunenavn(it.navn),
                         )
                     }
                 }
@@ -80,8 +80,8 @@ data class Fylke(
 
 @Serializable
 data class Kommune(
-    val kommunenavn: String,
-    val kommunenr: String,
+    val navn: String,
+    val kommunenummer: String,
     val nyttKommunenummer: String,
     val skalOpprettes: Boolean? = false,
 )
@@ -89,13 +89,13 @@ data class Kommune(
 @Serializable
 data class apiKommune(
     val kommunenavn: String,
-    val kommunenr: Int,
+    val kommunenr: String,
 )
 
 @Serializable
 data class apiFylke(
     val fylkesnavn: String,
-    val fylkesnr: Int,
+    val fylkesnr: String,
 )
 
 fun Application.routes() {
@@ -131,32 +131,34 @@ fun Application.routes() {
         }
         route("/kommuner") {
             get {
+                call.application.log.info("Kommuner endpoint called")
                 val kommunerFraMatrikkel = kommuneService.findAlleKommuner()
-                val resultatKommuner = mutableListOf<apiKommune>()
+                val apiKommuner = mutableListOf<apiKommune>()
                 kommunerFraMatrikkel.forEach { kommuneFraMatrikkel ->
-                    resultatKommuner.add(
+                    apiKommuner.add(
                         apiKommune(
                             kommunenavn = kommuneFraMatrikkel.kommunenavn.name,
-                            kommunenr = kommuneFraMatrikkel.kommunenummer.verdi().toInt(),
+                            kommunenr = kommuneFraMatrikkel.kommunenummer.verdi(),
                         ),
                     )
                 }
-                call.respond(resultatKommuner)
+                call.respond(apiKommuner)
             }
         }
         route("/fylker") {
             get {
+                call.application.log.info("Fylker endpoint called")
                 val fylkerFraMatrikkel = kommuneService.findAlleFylker()
-                val resultatFylker = mutableListOf<apiFylke>()
+                val apiFylker = mutableListOf<apiFylke>()
                 fylkerFraMatrikkel.forEach { fylkeFraMatrikkel ->
-                    resultatFylker.add(
+                    apiFylker.add(
                         apiFylke(
                             fylkesnavn = fylkeFraMatrikkel.fylkesnavn.name,
-                            fylkesnr = fylkeFraMatrikkel.fylkesnummer.value.toInt(),
+                            fylkesnr = fylkeFraMatrikkel.fylkesnummer.verdi(),
                         ),
                     )
                 }
-                call.respond(resultatFylker)
+                call.respond(apiFylker)
             }
         }
     }
