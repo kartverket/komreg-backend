@@ -14,7 +14,7 @@ data class Kommune(
         ): Kommune =
             Kommune(
                 Kommunenummer(kommunenummer),
-                Kommunenavn(kommunenavn)
+                Kommunenavn(kommunenavn),
             )
     }
 }
