@@ -89,13 +89,13 @@ data class Kommune(
 @Serializable
 data class apiKommune(
     val kommunenavn: String,
-    val kommunenr: Int,
+    val kommunenr: String,
 )
 
 @Serializable
 data class apiFylke(
     val fylkesnavn: String,
-    val fylkesnr: Int,
+    val fylkesnr: String,
 )
 
 fun Application.routes() {
@@ -131,13 +131,14 @@ fun Application.routes() {
         }
         route("/kommuner") {
             get {
+                call.application.log.info("Kommuner endpoint called")
                 val kommunerFraMatrikkel = kommuneService.findAlleKommuner()
                 val resultatKommuner = mutableListOf<apiKommune>()
                 kommunerFraMatrikkel.forEach { kommuneFraMatrikkel ->
                     resultatKommuner.add(
                         apiKommune(
                             kommunenavn = kommuneFraMatrikkel.kommunenavn.name,
-                            kommunenr = kommuneFraMatrikkel.kommunenummer.verdi().toInt(),
+                            kommunenr = kommuneFraMatrikkel.kommunenummer.verdi(),
                         ),
                     )
                 }
@@ -146,13 +147,14 @@ fun Application.routes() {
         }
         route("/fylker") {
             get {
+                call.application.log.info("Fylker endpoint called")
                 val fylkerFraMatrikkel = kommuneService.findAlleFylker()
                 val resultatFylker = mutableListOf<apiFylke>()
                 fylkerFraMatrikkel.forEach { fylkeFraMatrikkel ->
                     resultatFylker.add(
                         apiFylke(
                             fylkesnavn = fylkeFraMatrikkel.fylkesnavn.name,
-                            fylkesnr = fylkeFraMatrikkel.fylkesnummer.value.toInt(),
+                            fylkesnr = fylkeFraMatrikkel.fylkesnummer.verdi(),
                         ),
                     )
                 }
