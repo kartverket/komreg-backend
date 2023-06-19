@@ -1,5 +1,6 @@
 package no.kartverket.komreg
 
+import com.typesafe.config.ConfigFactory
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
 import io.ktor.server.application.log
@@ -10,14 +11,9 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import kotlinx.serialization.Serializable
-import no.kartverket.komreg.core.domain.Fylkesnavn
-import no.kartverket.komreg.core.domain.Fylkesnummer
-import no.kartverket.komreg.core.domain.Kommunenavn
-import no.kartverket.komreg.core.domain.Kommunenummer
-import no.kartverket.komreg.transformation.Kommuneendring
-import no.kartverket.komreg.transformation.Reguleringsinput
-import no.kartverket.komreg.transformation.transformEntities
-import no.kartverket.komreg.transformation.transformStatuses
+import no.kartverket.komreg.core.KrAppBootContext
+import no.kartverket.komreg.core.domain.*
+import no.kartverket.komreg.transformation.*
 import java.time.LocalDate
 import no.kartverket.komreg.core.domain.Fylke as NyttFylke
 import no.kartverket.komreg.core.domain.Kommune as NyKommune
@@ -90,7 +86,27 @@ data class Kommune(
     val skalOpprettes: Boolean? = false,
 )
 
+@Serializable
+data class KommuneDTO(
+    val kommunenavn: String,
+    val kommunenr: String,
+)
+
+@Serializable
+data class FylkeDTO(
+    val fylkesnavn: String,
+    val fylkesnr: String,
+)
+
 fun Application.routes() {
+    val bootContext = object : KrAppBootContext {
+        override val config by lazy {
+            ConfigFactory.invalidateCaches()
+            ConfigFactory.load("properties.conf")
+        }
+    }
+    val kommuneService = KommuneServiceManager(bootContext).kommuneService
+
     routing {
         route("/run") {
             post {
@@ -111,6 +127,38 @@ fun Application.routes() {
         route("/transform/status") {
             get {
                 call.respond(transformStatuses)
+            }
+        }
+        route("/kommuner") {
+            get {
+                call.application.log.info("Kommuner endpoint called")
+                val kommunerFraMatrikkel = kommuneService.findAlleKommuner()
+                val kommuner = mutableListOf<KommuneDTO>()
+                kommunerFraMatrikkel.forEach { kommuneFraMatrikkel ->
+                    kommuner.add(
+                        KommuneDTO(
+                            kommunenavn = kommuneFraMatrikkel.kommunenavn.name,
+                            kommunenr = kommuneFraMatrikkel.kommunenummer.verdi(),
+                        ),
+                    )
+                }
+                call.respond(kommuner)
+            }
+        }
+        route("/fylker") {
+            get {
+                call.application.log.info("Fylker endpoint called")
+                val fylkerFraMatrikkel = kommuneService.findAlleFylker()
+                val fylker = mutableListOf<FylkeDTO>()
+                fylkerFraMatrikkel.forEach { fylkeFraMatrikkel ->
+                    fylker.add(
+                        FylkeDTO(
+                            fylkesnavn = fylkeFraMatrikkel.fylkesnavn.name,
+                            fylkesnr = fylkeFraMatrikkel.fylkesnummer.verdi(),
+                        ),
+                    )
+                }
+                call.respond(fylker)
             }
         }
     }
