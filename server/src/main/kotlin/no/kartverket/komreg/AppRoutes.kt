@@ -87,13 +87,13 @@ data class Kommune(
 )
 
 @Serializable
-data class apiKommune(
+data class KommuneDTO(
     val kommunenavn: String,
     val kommunenr: String,
 )
 
 @Serializable
-data class apiFylke(
+data class FylkeDTO(
     val fylkesnavn: String,
     val fylkesnr: String,
 )
@@ -133,32 +133,32 @@ fun Application.routes() {
             get {
                 call.application.log.info("Kommuner endpoint called")
                 val kommunerFraMatrikkel = kommuneService.findAlleKommuner()
-                val apiKommuner = mutableListOf<apiKommune>()
+                val kommuner = mutableListOf<KommuneDTO>()
                 kommunerFraMatrikkel.forEach { kommuneFraMatrikkel ->
-                    apiKommuner.add(
-                        apiKommune(
+                    kommuner.add(
+                        KommuneDTO(
                             kommunenavn = kommuneFraMatrikkel.kommunenavn.name,
                             kommunenr = kommuneFraMatrikkel.kommunenummer.verdi(),
                         ),
                     )
                 }
-                call.respond(apiKommuner)
+                call.respond(kommuner)
             }
         }
         route("/fylker") {
             get {
                 call.application.log.info("Fylker endpoint called")
                 val fylkerFraMatrikkel = kommuneService.findAlleFylker()
-                val apiFylker = mutableListOf<apiFylke>()
+                val fylker = mutableListOf<FylkeDTO>()
                 fylkerFraMatrikkel.forEach { fylkeFraMatrikkel ->
-                    apiFylker.add(
-                        apiFylke(
+                    fylker.add(
+                        FylkeDTO(
                             fylkesnavn = fylkeFraMatrikkel.fylkesnavn.name,
                             fylkesnr = fylkeFraMatrikkel.fylkesnummer.verdi(),
                         ),
                     )
                 }
-                call.respond(apiFylker)
+                call.respond(fylker)
             }
         }
     }
