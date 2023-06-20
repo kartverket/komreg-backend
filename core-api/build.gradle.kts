@@ -27,6 +27,8 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     api(libs.kotlinx.coroutines.core)
 
+    implementation(kotlin("reflect"))
+
     testImplementation(libs.junit.jupiter.api)
     testRuntimeOnly(libs.junit.jupiter.engine)
     testImplementation(libs.kotest.runner)

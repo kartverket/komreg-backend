@@ -5,7 +5,9 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Kommunenummer(val fylkesnummer: Fylkesnummer, val lopenummer: Lopenummer) {
     @Serializable
-    data class Lopenummer(val value: Byte)
+    data class Lopenummer(val value: Byte) : Comparable<Lopenummer> {
+        override fun compareTo(other: Lopenummer): Int = value.compareTo(other.value)
+    }
 
     companion object {
         operator fun invoke(value: Long): Kommunenummer {

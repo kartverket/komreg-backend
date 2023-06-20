@@ -11,16 +11,24 @@ data class Matrikkelnummer(
     val seksjonsnummer: Seksjonsnummer?,
 ) {
     @Serializable
-    data class Gardsnummer(val value: Int)
+    data class Gardsnummer(val value: Int) : Comparable<Gardsnummer> {
+        override fun compareTo(other: Gardsnummer): Int = value.compareTo(other.value)
+    }
 
     @Serializable
-    data class Bruksnummer(val value: Short)
+    data class Bruksnummer(val value: Short) : Comparable<Bruksnummer> {
+        override fun compareTo(other: Bruksnummer): Int = value.compareTo(other.value)
+    }
 
     @Serializable
-    data class Festenummer(val value: Short)
+    data class Festenummer(val value: Short) : Comparable<Festenummer> {
+        override fun compareTo(other: Festenummer): Int = value.compareTo(other.value)
+    }
 
     @Serializable
-    data class Seksjonsnummer(val value: Short)
+    data class Seksjonsnummer(val value: Short) : Comparable<Seksjonsnummer> {
+        override fun compareTo(other: Seksjonsnummer): Int = value.compareTo(other.value)
+    }
 
     companion object {
         operator fun invoke(
