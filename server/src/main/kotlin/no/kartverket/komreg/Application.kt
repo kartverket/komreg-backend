@@ -29,7 +29,7 @@ fun Application.module() {
         systemProperties = true
     }
 
-    logger.info("Source DB: ${env["DB_MATRIKKEL_KILDE_USERNAME"]}")
+    logger.info("Source DB: ${env["DB_MATRIKKEL_KILDE_USERNAME"]}, Mottaker DB: ${env["DB_MATRIKKEL_MOTTAKER_USERNAME"]}")
 
     install(ContentNegotiation) {
         json()
