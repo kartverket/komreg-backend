@@ -13,6 +13,11 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ForkJoinPool
 
+val env = dotenv {
+    ignoreIfMissing = true
+    systemProperties = true
+}
+
 val logger: Logger = LoggerFactory.getLogger(object {}::class.java)
 
 fun main(args: Array<String>) =
@@ -24,11 +29,6 @@ fun main(args: Array<String>) =
 
 @Suppress("unused") // Referenced in application.conf
 fun Application.module() {
-    val env = dotenv {
-        ignoreIfMissing = true
-        systemProperties = true
-    }
-
     logger.info("Source DB: ${env["DB_MATRIKKEL_KILDE_USERNAME"]}, Mottaker DB: ${env["DB_MATRIKKEL_MOTTAKER_USERNAME"]}")
 
     install(ContentNegotiation) {
