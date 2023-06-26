@@ -1,5 +1,6 @@
 package no.kartverket.komreg.transformation
 
+import kotlinx.coroutines.runBlocking
 import no.kartverket.komreg.core.domain.Fylkesnummer
 import no.kartverket.komreg.core.domain.Kommunenummer
 import no.kartverket.komreg.core.domain.Matrikkelnummer
@@ -87,15 +88,17 @@ object TransformKommunenrTest : Spek({
 })
 
 private fun identOf(fylkesnummer: Int, lopenummer: Int, gardsnummer: Int? = null) =
-    if (gardsnummer != null) {
-        Ident(
-            Fylkesnummer(fylkesnummer.toLong()),
-            Kommunenummer.Lopenummer(lopenummer.toByte()),
-            Matrikkelnummer.Gardsnummer(gardsnummer),
-        )
-    } else {
-        Ident(
-            Fylkesnummer(fylkesnummer.toLong()),
-            Kommunenummer.Lopenummer(lopenummer.toByte()),
-        )
+    runBlocking {
+        if (gardsnummer != null) {
+            Ident(
+                Fylkesnummer(fylkesnummer.toLong()),
+                Kommunenummer.Lopenummer(lopenummer.toByte()),
+                Matrikkelnummer.Gardsnummer(gardsnummer),
+            )
+        } else {
+            Ident(
+                Fylkesnummer(fylkesnummer.toLong()),
+                Kommunenummer.Lopenummer(lopenummer.toByte()),
+            )
+        }
     }
