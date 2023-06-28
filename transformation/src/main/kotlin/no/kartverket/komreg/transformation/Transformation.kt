@@ -158,7 +158,7 @@ private fun runAndWriteTransformations(
     val sources = EntitySourceManager(bootContext).entitySources
 
     CoroutineScope(Dispatchers.IO).launch {
-        sources.reversed().map {
+        sources.map {
             val flow = it.entityFlow
             val type = it.id
             val statusForSource = TransformationStatusForSource(source = type)
