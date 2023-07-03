@@ -19,9 +19,7 @@ class EntitySourceManager(bootContext: KrAppBootContext) {
     init {
         val services = ServiceLoader.load(EntitySourceFactory::class.java)
         logger.info("Fant ${services.toList().size} kilder")
-        services.forEach {
-            logger.info(it.toString())
-        }
+
         entitySources = with(bootContext) {
             services.map { service -> with(service) { create() } }
         }

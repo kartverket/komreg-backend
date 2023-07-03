@@ -21,9 +21,7 @@ class EntitySinkManager(private val bootContext: KrAppBootContext) {
     init {
         val services = ServiceLoader.load(EntitySinkFactory::class.java)
         logger.info("Fant ${services.toList().size} mottakere")
-        services.forEach {
-            logger.info(it.toString())
-        }
+
         entitySinks = with(bootContext) {
             services.map { service -> with(service) { create() } }
         }

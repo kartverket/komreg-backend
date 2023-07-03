@@ -121,6 +121,7 @@ private suspend fun writeFylker(
 
     logger.info("Starter tilbakeføring av fylker")
     entitySinks.consume(transformedFylker, input.ikrafttredelsesdato)
+    logger.info("Fullført tilbakeføring av fylker")
 }
 
 private suspend fun writeKommuner(bootContext: KrAppBootContext, input: Reguleringsinput, entitySinks: EntitySinkManager) {
@@ -147,6 +148,7 @@ private suspend fun writeKommuner(bootContext: KrAppBootContext, input: Reguleri
 
     logger.info("Starter tilbakeføring av kommuner")
     entitySinks.consume(transformedKommuner, input.ikrafttredelsesdato)
+    logger.info("Fullført tilbakeføring av kommuner")
 }
 
 private fun runAndWriteTransformations(
