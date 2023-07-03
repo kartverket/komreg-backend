@@ -51,7 +51,7 @@ data class TransformationStatusForRegulering(
 
 val transformStatuses = mutableMapOf<String, TransformationStatusForRegulering>()
 
-suspend fun transformEntities(input: Reguleringsinput) {
+fun transformEntities(input: Reguleringsinput) {
     logger.info("Starter transformasjon!")
     val transformStatus = TransformationStatusForRegulering().also { transformStatuses[input.id] = it }
     transformStatus.start()
@@ -63,14 +63,6 @@ suspend fun transformEntities(input: Reguleringsinput) {
     }
 
     val entitySinks = EntitySinkManager(bootContext)
-
-    if (input.fylker.isNotEmpty()) {
-        writeFylker(bootContext, input, entitySinks)
-    }
-
-    if (input.kommuner.isNotEmpty()) {
-        writeKommuner(bootContext, input, entitySinks)
-    }
 
     printMemoryUsage()
 
@@ -124,7 +116,11 @@ private suspend fun writeFylker(
     logger.info("Fullført tilbakeføring av fylker")
 }
 
-private suspend fun writeKommuner(bootContext: KrAppBootContext, input: Reguleringsinput, entitySinks: EntitySinkManager) {
+private suspend fun writeKommuner(
+    bootContext: KrAppBootContext,
+    input: Reguleringsinput,
+    entitySinks: EntitySinkManager,
+) {
     val kommuneService = KommuneServiceManager(bootContext).kommuneService
 
     logger.info("Følgende kommuner skal opprettes:")
@@ -160,6 +156,14 @@ private fun runAndWriteTransformations(
     val sources = EntitySourceManager(bootContext).entitySources
 
     CoroutineScope(Dispatchers.IO).launch {
+        if (input.fylker.isNotEmpty()) {
+            writeFylker(bootContext, input, entitySinks)
+        }
+
+        if (input.kommuner.isNotEmpty()) {
+            writeKommuner(bootContext, input, entitySinks)
+        }
+
         sources.map {
             val flow = it.entityFlow
             val type = it.id
