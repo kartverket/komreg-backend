@@ -111,10 +111,12 @@ fun Application.routes() {
         route("/run") {
             post {
                 val regulering: Regulering = call.receive()
-                call.application.log.info(regulering.toString())
-                call.application.log.info(regulering.toReguleringsinput().toString())
+                val reguleringsinput = regulering.toReguleringsinput()
 
-                transformEntities(regulering.toReguleringsinput())
+                call.application.log.info(regulering.toString())
+                call.application.log.info(reguleringsinput.toString())
+
+                transformEntities(reguleringsinput)
 
                 call.respond("OK")
             }
