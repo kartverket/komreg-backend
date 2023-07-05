@@ -12,12 +12,15 @@ import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.KrAppBootContext
 import no.kartverket.komreg.core.domain.Fylkesdata
 import no.kartverket.komreg.core.domain.Kommunedata
+import no.kartverket.komreg.integration.spi.EntitySource
 import no.kartverket.komreg.integration.spi.Ident
 import no.kartverket.komreg.integration.spi.Transformation
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 val logger: Logger = LoggerFactory.getLogger(object {}::class.java)
+
+private var isLocal = false
 
 @Serializable
 data class TransformationStatusForSource(
@@ -83,6 +86,36 @@ private fun printMemoryUsage() {
             logger.info("Memory. Used: $used, free: $free, total: $total, max: $max")
         }
     }
+}
+
+// Flips the whole sources list, then flips order of just veg and vegadresse
+private fun createSourceListWithCustomOrderForLocalEnv(
+    bootContext: KrAppBootContext,
+): MutableList<EntitySource> {
+    logger.info("Converting custom source order for local env")
+    logger.info("Flipping whole source list")
+    val sources = EntitySourceManager(bootContext).entitySources.reversed().toMutableList()
+    var vegIndex = -1
+    var vegadresseIndex = -1
+
+    for (i in sources.indices) {
+        val currentId = sources[i].id.lowercase()
+
+        if (currentId.contains("veg") && !currentId.contains("vegadresse") && vegIndex == -1) {
+            vegIndex = i
+        }
+        if (currentId.contains("vegadresse") && vegadresseIndex == -1) {
+            vegadresseIndex = i
+        }
+    }
+
+    if (vegIndex != -1 && vegadresseIndex != -1) {
+        logger.info("Swapping entities containing 'veg' and 'vegadresse' in source list")
+        val temp = sources[vegIndex]
+        sources[vegIndex] = sources[vegadresseIndex]
+        sources[vegadresseIndex] = temp
+    }
+    return sources
 }
 
 private suspend fun writeFylker(
@@ -153,7 +186,16 @@ private fun runAndWriteTransformations(
     input: Reguleringsinput,
     entitySinks: EntitySinkManager,
 ) {
-    val sources = EntitySourceManager(bootContext).entitySources
+    isLocal = System.getenv("environment") == "local" || System.getenv("environment") == null
+    logger.info("Current environment: ${System.getenv("environment")}")
+
+    var sources: MutableList<EntitySource>
+
+    if (isLocal) {
+        sources = createSourceListWithCustomOrderForLocalEnv(bootContext)
+    } else {
+        sources = EntitySourceManager(bootContext).entitySources.toMutableList()
+    }
 
     CoroutineScope(Dispatchers.IO).launch {
         if (input.fylker.isNotEmpty()) {
