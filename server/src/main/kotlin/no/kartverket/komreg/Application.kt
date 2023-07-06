@@ -29,6 +29,7 @@ fun main(args: Array<String>) =
 
 @Suppress("unused") // Referenced in application.conf
 fun Application.module() {
+    logger.info("Current environment: ${System.getenv("environment")}")
     logger.info("Source DB: ${env["DB_MATRIKKEL_KILDE_USERNAME"]}, Mottaker DB: ${env["DB_MATRIKKEL_MOTTAKER_USERNAME"]}")
 
     install(ContentNegotiation) {

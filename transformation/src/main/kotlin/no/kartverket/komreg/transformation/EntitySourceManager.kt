@@ -24,7 +24,6 @@ class EntitySourceManager(bootContext: KrAppBootContext) {
         }
 
         isLocal = System.getenv("environment") == "local" || System.getenv("environment") == null
-        logger.info("Current environment: ${System.getenv("environment")}")
 
         if (isLocal) {
             entitySources = entitySources.reversed()
