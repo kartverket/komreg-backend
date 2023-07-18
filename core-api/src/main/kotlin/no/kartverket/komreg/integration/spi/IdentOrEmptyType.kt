@@ -128,7 +128,7 @@ class IdentType<T : Ident, A : Comparable<A>> private constructor(
 
     @Suppress("UNCHECKED_CAST")
     suspend inline fun <reified  V : Comparable<V>> append(): IdentType<Ident.And<T, A>, V> =
-        identTypeFromKotlinTypes(prefix.types.first(), *(prefix.types.drop(1) + typeOf<V>()).toTypedArray()) as IdentType<Ident.And<T, A>, V>
+        identTypeFromKotlinTypes(types.first(), *(types.drop(1) + typeOf<V>()).toTypedArray()) as IdentType<Ident.And<T, A>, V>
 
     @Suppress("UNCHECKED_CAST")
     fun T.append(value: A) : Ident.And<T, A> {
