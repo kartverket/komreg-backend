@@ -79,11 +79,34 @@ data class Fylke(
 )
 
 @Serializable
+data class Senterpunkt(
+    val x: Double,
+    val y: Double
+)
+
+@Serializable
+data class Gardsnummerserie(
+    val fra: Int,
+    val til: Int
+)
+
+@Serializable
 data class Kommune(
     val navn: String,
     val kommunenummer: String,
     val nyttKommunenummer: String,
-    val skalOpprettes: Boolean? = false,
+    val koordinatsystem: String? = null,
+    val senterpunkt: Senterpunkt? = null,
+    val nedsattKonsesjonsgrense: Boolean? = null,
+    val brukteGardsnummer: List<Gardsnummerserie>? = null,
+    val adresselinje1: String? = null,
+    val adresselinje2: String? = null,
+    val postnummer: String? = null,
+    val poststed: String? = null,
+    val standardRekvirentorgnummer: String? = null,
+    val standardRekvirentnavn: String? = null,
+    val kommunevapen: String? = null,
+    val skalOpprettes: Boolean? = false
 )
 
 @Serializable
