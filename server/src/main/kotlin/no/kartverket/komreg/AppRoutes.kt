@@ -44,6 +44,7 @@ data class Regulering(
                     NyttFylke(
                         Fylkesnummer(it.fylkesnummer.toLong()),
                         Fylkesnavn(it.navn),
+                        null // TODO: Bør bruke en annen type
                     )
                 }
             },
@@ -53,6 +54,7 @@ data class Regulering(
                         NyKommune(
                             Kommunenummer(it.nyttKommunenummer.toLong()),
                             Kommunenavn(it.navn),
+                            null // TODO: Bør bruke en annen type
                         )
                     }
                 }
@@ -159,14 +161,16 @@ fun Application.routes() {
                 call.application.log.info("Kommuner endpoint called")
                 val kommunerFraMatrikkel = kommuneService.findAlleKommuner()
                 val kommuner = mutableListOf<KommuneDTO>()
-                kommunerFraMatrikkel.forEach { kommuneFraMatrikkel ->
-                    kommuner.add(
-                        KommuneDTO(
-                            kommunenavn = kommuneFraMatrikkel.kommunenavn.name,
-                            kommunenr = kommuneFraMatrikkel.kommunenummer.verdi(),
-                        ),
-                    )
-                }
+                kommunerFraMatrikkel
+                    .filter { it.gyldigTilDato == null }
+                    .forEach { kommuneFraMatrikkel ->
+                        kommuner.add(
+                            KommuneDTO(
+                                kommunenavn = kommuneFraMatrikkel.kommunenavn.name,
+                                kommunenr = kommuneFraMatrikkel.kommunenummer.verdi(),
+                            ),
+                        )
+                    }
                 call.respond(kommuner)
             }
         }
@@ -175,14 +179,16 @@ fun Application.routes() {
                 call.application.log.info("Fylker endpoint called")
                 val fylkerFraMatrikkel = kommuneService.findAlleFylker()
                 val fylker = mutableListOf<FylkeDTO>()
-                fylkerFraMatrikkel.forEach { fylkeFraMatrikkel ->
-                    fylker.add(
-                        FylkeDTO(
-                            fylkesnavn = fylkeFraMatrikkel.fylkesnavn.name,
-                            fylkesnr = fylkeFraMatrikkel.fylkesnummer.verdi(),
-                        ),
-                    )
-                }
+                fylkerFraMatrikkel
+                    .filter { it.gyldigTilDato == null }
+                    .forEach { fylkeFraMatrikkel ->
+                        fylker.add(
+                            FylkeDTO(
+                                fylkesnavn = fylkeFraMatrikkel.fylkesnavn.name,
+                                fylkesnr = fylkeFraMatrikkel.fylkesnummer.verdi(),
+                            ),
+                        )
+                    }
                 call.respond(fylker)
             }
         }
