@@ -21,6 +21,7 @@ dependencyResolutionManagement {
     versionCatalogs {
         create("libs") {
             version("kotlinx-cli", "0.3.5")
+            version("kotlinx-datetime", "0.4.0")
             version("kotlinx-coroutines", "1.6.4")
             version("kotlinx-serialization", "1.4.1")
             version("mockk", "1.13.2")
@@ -34,6 +35,7 @@ dependencyResolutionManagement {
             library("kotlin-reflect", "org.jetbrains.kotlin", "kotlin-reflect").withoutVersion()
 
             library("kotlinx-cli", "org.jetbrains.kotlinx", "kotlinx-cli").versionRef("kotlinx-cli")
+            library("kotlinx-datetime", "org.jetbrains.kotlinx", "kotlinx-datetime").versionRef("kotlinx-datetime")
             library(
                 "kotlinx-collections-immutable-jvm",
                 "org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.5",

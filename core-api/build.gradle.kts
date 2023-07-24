@@ -1,5 +1,5 @@
 group = "no.kartverket.komreg"
-version = "0.1.13"
+version = "0.1.14"
 
 plugins {
     kotlin("jvm")
@@ -26,6 +26,7 @@ dependencies {
 
     implementation(libs.kotlinx.serialization.json)
     api(libs.kotlinx.coroutines.core)
+    api(libs.kotlinx.datetime)
 
     implementation(kotlin("reflect"))
 
