@@ -44,7 +44,7 @@ data class Regulering(
                     NyttFylke(
                         Fylkesnummer(it.fylkesnummer.toLong()),
                         Fylkesnavn(it.navn),
-                        null // TODO: Bør bruke en annen type
+                        null, // TODO: Bør bruke en annen type
                     )
                 }
             },
@@ -54,7 +54,7 @@ data class Regulering(
                         NyKommune(
                             Kommunenummer(it.nyttKommunenummer.toLong()),
                             Kommunenavn(it.navn),
-                            null // TODO: Bør bruke en annen type
+                            null, // TODO: Bør bruke en annen type
                         )
                     }
                 }
@@ -83,13 +83,13 @@ data class Fylke(
 @Serializable
 data class Senterpunkt(
     val x: Double,
-    val y: Double
+    val y: Double,
 )
 
 @Serializable
 data class Gardsnummerserie(
     val fra: Int,
-    val til: Int
+    val til: Int,
 )
 
 @Serializable
@@ -108,7 +108,7 @@ data class Kommune(
     val standardRekvirentorgnummer: String? = null,
     val standardRekvirentnavn: String? = null,
     val kommunevapen: String? = null,
-    val skalOpprettes: Boolean? = false
+    val skalOpprettes: Boolean? = false,
 )
 
 @Serializable

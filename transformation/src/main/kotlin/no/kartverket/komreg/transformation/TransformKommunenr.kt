@@ -24,7 +24,6 @@ fun transformerKommunenummer(input: Reguleringsinput, entity: Entity): Transform
 private fun Ident?.transformKommunenr(input: Reguleringsinput): Ident? {
     if (this == null) return null
 
-
     val fylkesnummer = getOrNull<Fylkesnummer>()
     val lopenummer = getOrNull<Kommunenummer.Lopenummer>()
 
