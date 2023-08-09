@@ -8,6 +8,7 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
+import org.flywaydb.core.Flyway
 import org.rocksdb.RocksDB
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -31,6 +32,17 @@ fun main(args: Array<String>) =
 fun Application.module() {
     logger.info("Current environment: ${System.getenv("environment")}")
     logger.info("Source DB: ${env["DB_MATRIKKEL_KILDE_USERNAME"]}, Mottaker DB: ${env["DB_MATRIKKEL_MOTTAKER_USERNAME"]}")
+
+    val databaseConfig = environment.config.config("database")
+    val flyway = Flyway.configure()
+        .dataSource(
+            databaseConfig.property("url").getString(),
+            databaseConfig.property("username").getString(),
+            databaseConfig.property("password").getString(),
+        )
+        .load()
+
+    flyway.migrate()
 
     install(ContentNegotiation) {
         json()

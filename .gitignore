@@ -222,3 +222,6 @@ gradle-app.setting
 
 gradle.properties
 .env
+
+# H2 database directory
+h2database/

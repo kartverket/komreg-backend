@@ -42,6 +42,9 @@ dependencies {
 
     implementation("net.logstash.logback:logstash-logback-encoder:7.4")
 
+    implementation("com.h2database:h2:2.1.210")
+    implementation("org.flywaydb:flyway-core:9.21.1")
+
     testImplementation(kotlin("test"))
     testImplementation(libs.junit.jupiter.api)
     testRuntimeOnly(libs.junit.jupiter.engine)
