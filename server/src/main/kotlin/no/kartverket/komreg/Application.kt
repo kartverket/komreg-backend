@@ -33,12 +33,11 @@ fun Application.module() {
     logger.info("Current environment: ${System.getenv("environment")}")
     logger.info("Source DB: ${env["DB_MATRIKKEL_KILDE_USERNAME"]}, Mottaker DB: ${env["DB_MATRIKKEL_MOTTAKER_USERNAME"]}")
 
-    val databaseConfig = environment.config.config("database")
     val flyway = Flyway.configure()
         .dataSource(
-            databaseConfig.property("url").getString(),
-            databaseConfig.property("username").getString(),
-            databaseConfig.property("password").getString(),
+            env["DB_TRANSFORMATION_JDBC_URL"],
+            env["DB_TRANSFORMATION_USERNAME"],
+            env["DB_TRANSFORMATION_PASSWORD"],
         )
         .load()
 

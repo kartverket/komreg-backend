@@ -1,0 +1,99 @@
+name: Manually build branch to dev
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: "read"
+
+env:
+  registry: ghcr.io
+  image_name: ${{ github.repository }}
+  argo_version_file: backend-version
+
+jobs:
+  build:
+    name: Docker build and push
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image_url: ${{ steps.setOutput.outputs.image_url }}
+    steps:
+      - name: Checkout project sources
+        uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Build with Gradle
+        uses: gradle/gradle-build-action@v2.7.0
+        with:
+          gradle-version: 7.5.1
+          arguments: build
+        env:
+          GH_USERNAME: ${{ secrets.GH_USERNAME }}
+          GH_PACKAGES_PAT: ${{ secrets.GH_PACKAGES_PAT }}
+      - name: Login to Github Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.registry }}
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Bump version and push tag
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.1
+        with:
+          github_token: ${{ github.token }}
+
+      - name: Build docker and push
+        id: build
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ env.registry }}/${{ github.repository }}:${{ steps.tag_version.outputs.new_tag }},${{ env.registry }}/${{ github.repository }}:latest
+
+      - name: Set output with build values
+        id: setOutput
+        run: |
+          echo "image_url=${{ env.registry }}/${{ github.repository }}@${{ steps.build.outputs.digest }}" >> $GITHUB_OUTPUT
+
+  pharos:
+    name: Run Pharos with Required Permissions
+    needs: build
+    permissions:
+      actions: read
+      packages: read
+      contents: read
+      security-events: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Run Pharos"
+        uses: kartverket/pharos@v0.1.3
+        with:
+          image_url: ${{ needs.build.outputs.image_url}}
+
+  argo:
+    name: Update version in apps-repo
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout apps-repo
+        uses: actions/checkout@v3
+        with:
+          repository: kartverket/komreg-apps
+          ref: main
+          token: ${{ secrets.PAT_APPS_REPO }}
+      - name: Update version
+        run: |
+          env_type="dev"
+          echo "\"${{ needs.build.outputs.image_url }}\"" > "${env_type}/komreg-main/${{ env.argo_version_file }}"
+          git config --global user.email "noreply@kartverket.no"
+          git config --global user.name "Komreg CI"
+          git commit -am "Update Komreg ${{ env.argo_version_file }}"
+          git push
