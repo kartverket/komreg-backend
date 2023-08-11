@@ -1,8 +1,15 @@
 name: Manually build branch to dev
+
 on:
-  push:
-    branches:
+  workflow_dispatch:
+    branches-ignore:
       - main
+    inputs:
+      reason:
+        description: 'Reason for running this workflow:'
+        required: true
+        default: 'Just testing things out'
+
 
 permissions:
   id-token: write
