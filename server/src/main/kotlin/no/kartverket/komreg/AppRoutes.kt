@@ -1,6 +1,7 @@
 package no.kartverket.komreg
 
 import com.typesafe.config.ConfigFactory
+import io.github.cdimascio.dotenv.dotenv
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
 import io.ktor.server.application.log
@@ -14,9 +15,15 @@ import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.KrAppBootContext
 import no.kartverket.komreg.core.domain.*
 import no.kartverket.komreg.transformation.*
+import java.sql.Connection
+import java.sql.DriverManager
+import java.sql.Timestamp
 import java.time.LocalDate
+import java.util.Date
 import no.kartverket.komreg.core.domain.Fylke as NyttFylke
 import no.kartverket.komreg.core.domain.Kommune as NyKommune
+
+
 
 @Serializable
 data class Regulering(
@@ -192,5 +199,92 @@ fun Application.routes() {
                 call.respond(fylker)
             }
         }
+        route("/testdb") {
+            post {
+                connectToGCP()
+                call.respond("OK")
+            }
+        }
+        route("/writetransform") {
+            post {
+                insertIntoTransformation("dev")
+                call.respond("OK")
+            }
+        }
     }
+}
+
+fun insertIntoTransformation(name: String) {
+    val jdbcUrl = env["DB_TRANSFORMATION_JDBC_URL"]
+    val user = env["DB_TRANSFORMATION_USERNAME"]
+    val password = env["DB_TRANSFORMATION_PASSWORD"]
+
+    DriverManager.getConnection(jdbcUrl, user, password).use { connection ->
+        val sql = """
+            INSERT INTO public.transformation (name, created_at, updated_at) 
+            VALUES (?, ?, ?)
+        """
+        connection.prepareStatement(sql).use { preparedStatement ->
+            preparedStatement.setString(1, name)
+            preparedStatement.setTimestamp(2, Timestamp(Date().time))
+            preparedStatement.setTimestamp(3, Timestamp(Date().time))
+            preparedStatement.executeUpdate()
+        }
+    }
+}
+
+fun connectToGCP() {
+    println("Connecting to PostgreSQL database...")
+    val url = "jdbc:postgresql://34.116.175.97:5432/postgres"
+    val user = "komreg-db-dev-user"
+    val password = "password"
+
+    // Connect to the database
+    DriverManager.getConnection(url, user, password).use { connection ->
+        println("Connected to the PostgreSQL server successfully.")
+
+        // Insert sample data
+        insertSampleData(connection)
+
+        // Retrieve all entries from new_table
+        retrieveAllEntries(connection)
+    }
+}
+
+fun insertSampleData(connection: Connection) {
+    val sql = "INSERT INTO new_table (id, name, valid) VALUES (?, ?, ?)"
+
+    connection.prepareStatement(sql).use { preparedStatement ->
+        preparedStatement.setInt(1, 1)
+        preparedStatement.setString(2, "Testname")
+        preparedStatement.setBoolean(3, true)
+
+        val rowAffected = preparedStatement.executeUpdate()
+        println("Rows affected: $rowAffected")
+    }
+}
+
+fun retrieveAllEntries(connection: Connection): List<Map<String, Any?>> {
+    val sql = "SELECT * FROM new_table"
+    val results = mutableListOf<Map<String, Any?>>()
+
+    connection.prepareStatement(sql).use { preparedStatement ->
+        val resultSet = preparedStatement.executeQuery()
+
+        val metaData = resultSet.metaData
+        val columnCount = metaData.columnCount
+
+        while (resultSet.next()) {
+            val row = mutableMapOf<String, Any?>()
+            for (i in 1..columnCount) {
+                row[metaData.getColumnName(i)] = resultSet.getObject(i)
+            }
+            results.add(row)
+        }
+    }
+
+    // For demonstration purposes, printing the results
+    println("Retrieved entries: $results")
+
+    return results
 }
