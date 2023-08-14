@@ -1,9 +1,9 @@
 package no.kartverket.komreg.transformation
 
+import kotlinx.datetime.LocalDate
 import no.kartverket.komreg.core.domain.Fylke
 import no.kartverket.komreg.core.domain.Kommune
 import no.kartverket.komreg.core.domain.Kommunenummer
-import java.time.LocalDate
 
 data class Reguleringsinput(
     val id: String,

@@ -1,6 +1,7 @@
 package no.kartverket.komreg.transformation
 
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.toKotlinLocalDate
 import no.kartverket.komreg.core.domain.Fylkesnummer
 import no.kartverket.komreg.core.domain.Kommunenummer
 import no.kartverket.komreg.core.domain.Matrikkelnummer
@@ -15,7 +16,7 @@ object TransformKommunenrTest : Spek({
     describe("A transformation") {
         val reguleringsInput = Reguleringsinput(
             id = "123",
-            LocalDate.now(),
+            LocalDate.now().toKotlinLocalDate(),
             listOf(
                 Kommuneendring(
                     fra = Kommunenummer(Fylkesnummer(2), Kommunenummer.Lopenummer(5)),

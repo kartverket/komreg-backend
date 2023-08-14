@@ -8,8 +8,10 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.datetime.toJavaLocalDate
 import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.KrAppBootContext
+import no.kartverket.komreg.core.domain.AdresseForOppretting
 import no.kartverket.komreg.core.domain.Fylkesdata
 import no.kartverket.komreg.core.domain.Kommunedata
 import no.kartverket.komreg.integration.spi.Ident
@@ -112,7 +114,7 @@ private suspend fun writeFylker(
     }
 
     logger.info("Starter tilbakeføring av fylker")
-    entitySinks.consume(transformedFylker, input.ikrafttredelsesdato)
+    entitySinks.consume(transformedFylker, input.ikrafttredelsesdato.toJavaLocalDate())
     logger.info("Fullført tilbakeføring av fylker")
 }
 
@@ -136,14 +138,28 @@ private suspend fun writeKommuner(
                     sourceEntity = null,
                     transformationType = "NyKommune",
                     transformedIdent = Ident(kommune.kommunenummer.fylkesnummer, kommune.kommunenummer.lopenummer),
-                    resultObject = Kommunedata(kommune.kommunenavn.name),
+                    resultObject = Kommunedata(
+                        navn = kommune.kommunenavn.name,
+                        // Alle kommuner vi oppretter skal ha koordinatsystem
+                        koordinatsystem = kommune.koordinatsystem!!,
+                        senterpunkt = kommune.senterpunkt,
+                        nedsattKonsesjonsgrense = kommune.nedsattKonsesjonsgrense,
+                        godkjenteGardsnumre = kommune.godkjenteGardsnumre,
+                        adresse = AdresseForOppretting(
+                            adresselinje1 = kommune.adresse.adresselinje1?.trim()?.ifEmpty { null },
+                            adresselinje2 = kommune.adresse.adresselinje2?.trim()?.ifEmpty { null },
+                            postnummer = kommune.adresse.postnummer,
+                        ),
+                        standardRekvirentOrgnummer = kommune.standardRekvirent.orgnummer,
+                        kommunevapen = kommune.kommunevapen,
+                    ),
                 ),
             )
         }
     }
 
     logger.info("Starter tilbakeføring av kommuner")
-    entitySinks.consume(transformedKommuner, input.ikrafttredelsesdato)
+    entitySinks.consume(transformedKommuner, input.ikrafttredelsesdato.toJavaLocalDate())
     logger.info("Fullført tilbakeføring av kommuner")
 }
 
@@ -186,7 +202,7 @@ private fun runAndWriteTransformations(
             val newFlow: Flow<Transformation> = transformResult.toList().asFlow()
 
             logger.info("Starter tilbakeføring fra source: $type")
-            entitySinks.consume(newFlow, input.ikrafttredelsesdato)
+            entitySinks.consume(newFlow, input.ikrafttredelsesdato.toJavaLocalDate())
             logger.info("Fullført tilbakeføring av source: $type")
             statusForSource.tilbakeføringFinished = Clock.System.now()
         }

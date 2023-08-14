@@ -10,25 +10,24 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.KrAppBootContext
 import no.kartverket.komreg.core.domain.*
 import no.kartverket.komreg.transformation.*
-import java.time.LocalDate
-import no.kartverket.komreg.core.domain.Fylke as NyttFylke
-import no.kartverket.komreg.core.domain.Kommune as NyKommune
+import java.util.Base64
 
 @Serializable
 data class Regulering(
     val id: String,
     val navn: String,
-    val dato: String, // Date?
-    val endringer: List<Fylkesdeling>, // Endringer som sealed classes og diskriminator?
+    val dato: LocalDate,
+    val endringer: List<Fylkesdeling>,
 ) {
     fun toReguleringsinput(): Reguleringsinput {
         return Reguleringsinput(
             id,
-            LocalDate.parse(dato),
+            dato,
             endringer = endringer.flatMap { fylkesdeling ->
                 fylkesdeling.nyeFylker.flatMap { fylke ->
                     fylke.kommuner.map { kommune ->
@@ -41,7 +40,7 @@ data class Regulering(
             },
             fylker = endringer.flatMap { fylkesdeling ->
                 fylkesdeling.nyeFylker.filter { it.skalOpprettes == true }.map {
-                    NyttFylke(
+                    Fylke(
                         Fylkesnummer(it.fylkesnummer.toLong()),
                         Fylkesnavn(it.navn),
                         null, // TODO: Bør bruke en annen type
@@ -51,10 +50,28 @@ data class Regulering(
             kommuner = endringer.flatMap { fylkesdeling ->
                 fylkesdeling.nyeFylker.flatMap { fylke ->
                     fylke.kommuner.filter { it.skalOpprettes == true }.map {
-                        NyKommune(
-                            Kommunenummer(it.nyttKommunenummer.toLong()),
-                            Kommunenavn(it.navn),
-                            null, // TODO: Bør bruke en annen type
+                        Kommune(
+                            kommunenummer = Kommunenummer(it.nyttKommunenummer.toLong()),
+                            kommunenavn = Kommunenavn(it.navn),
+                            gyldigTilDato = null,
+                            koordinatsystem = it.koordinatsystem,
+                            senterpunkt = Senterpunkt(
+                                x = it.senterpunkt.x,
+                                y = it.senterpunkt.y,
+                            ),
+                            nedsattKonsesjonsgrense = it.nedsattKonsesjonsgrense,
+                            godkjenteGardsnumre = it.godkjenteGardsnumre.joinToString(",") { serie -> serie.join() },
+                            adresse = Adresse(
+                                adresselinje1 = it.adresse.adresselinje1,
+                                adresselinje2 = it.adresse.adresselinje2,
+                                postnummer = it.adresse.postnummer,
+                                poststed = it.adresse.poststed,
+                            ),
+                            standardRekvirent = StandardRekvirent(
+                                orgnummer = it.standardRekvirent.orgnummer,
+                                navn = it.standardRekvirent.navn,
+                            ),
+                            kommunevapen = Base64.getDecoder().decode(it.kommunevapen),
                         )
                     }
                 }
@@ -68,20 +85,56 @@ data class Fylkesdeling(
     val id: String,
     val navn: String,
     val type: String,
-    val gammeltFylke: Fylke,
-    val nyeFylker: List<Fylke>,
+    val gammeltFylke: FylkeDTO,
+    val nyeFylker: List<NyttFylke>,
 )
 
 @Serializable
-data class Fylke(
+data class FylkeDTO(
     val navn: String,
     val fylkesnummer: String,
-    val kommuner: List<Kommune>,
+)
+
+@Serializable
+data class NyttFylke(
+    val navn: String,
+    val fylkesnummer: String,
+    val kommuner: List<NyKommune>,
     val skalOpprettes: Boolean? = false,
 )
 
 @Serializable
-data class Senterpunkt(
+data class KommuneDTO(
+    val navn: String,
+    val kommunenummer: String,
+    val gyldigTilDato: LocalDate?,
+    val koordinatsystem: Koordinatsystem,
+    val senterpunkt: SenterpunktDTO,
+    val nedsattKonsesjonsgrense: Boolean,
+    val godkjenteGardsnumre: List<Gardsnummerserie>,
+    val adresse: AdresseDTO,
+    val standardRekvirent: StandardRekvirentDTO,
+    val kommunevapen: String?,
+)
+
+@Serializable
+data class NyKommune(
+    val navn: String,
+    val kommunenummer: String,
+    val gyldigTilDato: LocalDate?,
+    val koordinatsystem: Koordinatsystem,
+    val senterpunkt: SenterpunktDTO,
+    val nedsattKonsesjonsgrense: Boolean,
+    val godkjenteGardsnumre: List<Gardsnummerserie>,
+    val adresse: AdresseDTO,
+    val standardRekvirent: StandardRekvirentDTO,
+    val kommunevapen: String?,
+    val nyttKommunenummer: String,
+    val skalOpprettes: Boolean? = false,
+)
+
+@Serializable
+data class SenterpunktDTO(
     val x: Double,
     val y: Double,
 )
@@ -93,34 +146,17 @@ data class Gardsnummerserie(
 )
 
 @Serializable
-data class Kommune(
-    val navn: String,
-    val kommunenummer: String,
-    val nyttKommunenummer: String,
-    val koordinatsystem: String? = null,
-    val senterpunkt: Senterpunkt? = null,
-    val nedsattKonsesjonsgrense: Boolean? = null,
-    val brukteGardsnummer: List<Gardsnummerserie>? = null,
-    val adresselinje1: String? = null,
-    val adresselinje2: String? = null,
-    val postnummer: String? = null,
+data class AdresseDTO(
+    val adresselinje1: String?,
+    val adresselinje2: String?,
+    val postnummer: String?,
     val poststed: String? = null,
-    val standardRekvirentorgnummer: String? = null,
-    val standardRekvirentnavn: String? = null,
-    val kommunevapen: String? = null,
-    val skalOpprettes: Boolean? = false,
 )
 
 @Serializable
-data class KommuneDTO(
-    val kommunenavn: String,
-    val kommunenr: String,
-)
-
-@Serializable
-data class FylkeDTO(
-    val fylkesnavn: String,
-    val fylkesnr: String,
+data class StandardRekvirentDTO(
+    val orgnummer: String?,
+    val navn: String? = null,
 )
 
 fun Application.routes() {
@@ -166,8 +202,30 @@ fun Application.routes() {
                     .forEach { kommuneFraMatrikkel ->
                         kommuner.add(
                             KommuneDTO(
-                                kommunenavn = kommuneFraMatrikkel.kommunenavn.name,
-                                kommunenr = kommuneFraMatrikkel.kommunenummer.verdi(),
+                                navn = kommuneFraMatrikkel.kommunenavn.name,
+                                kommunenummer = kommuneFraMatrikkel.kommunenummer.verdi(),
+                                gyldigTilDato = kommuneFraMatrikkel.gyldigTilDato,
+                                // Alle ikke-utgåtte kommuner skal ha koordinatsystem
+                                koordinatsystem = kommuneFraMatrikkel.koordinatsystem!!,
+                                senterpunkt = SenterpunktDTO(
+                                    x = kommuneFraMatrikkel.senterpunkt.x,
+                                    y = kommuneFraMatrikkel.senterpunkt.y,
+                                ),
+                                nedsattKonsesjonsgrense = kommuneFraMatrikkel.nedsattKonsesjonsgrense,
+                                godkjenteGardsnumre = godkjenteGardsnumreTilListe(kommuneFraMatrikkel.godkjenteGardsnumre),
+                                adresse = AdresseDTO(
+                                    adresselinje1 = kommuneFraMatrikkel.adresse.adresselinje1,
+                                    adresselinje2 = kommuneFraMatrikkel.adresse.adresselinje2,
+                                    postnummer = kommuneFraMatrikkel.adresse.postnummer,
+                                    poststed = kommuneFraMatrikkel.adresse.poststed,
+                                ),
+                                standardRekvirent = StandardRekvirentDTO(
+                                    orgnummer = kommuneFraMatrikkel.standardRekvirent.orgnummer,
+                                    navn = kommuneFraMatrikkel.standardRekvirent.navn,
+                                ),
+                                kommunevapen = kommuneFraMatrikkel.kommunevapen?.let {
+                                    Base64.getEncoder().encodeToString(it)
+                                },
                             ),
                         )
                     }
@@ -184,8 +242,8 @@ fun Application.routes() {
                     .forEach { fylkeFraMatrikkel ->
                         fylker.add(
                             FylkeDTO(
-                                fylkesnavn = fylkeFraMatrikkel.fylkesnavn.name,
-                                fylkesnr = fylkeFraMatrikkel.fylkesnummer.verdi(),
+                                navn = fylkeFraMatrikkel.fylkesnavn.name,
+                                fylkesnummer = fylkeFraMatrikkel.fylkesnummer.verdi(),
                             ),
                         )
                     }
@@ -194,3 +252,26 @@ fun Application.routes() {
         }
     }
 }
+
+fun godkjenteGardsnumreTilListe(godkjenteGardsnumre: String?): List<Gardsnummerserie> {
+    if (godkjenteGardsnumre == null) return emptyList()
+
+    val serier = godkjenteGardsnumre.split(',')
+    if (serier.isEmpty()) return emptyList()
+
+    val liste = mutableListOf<Gardsnummerserie>()
+    for (serie in serier) {
+        if (serie.isNotBlank()) {
+            if (serie.contains('-')) {
+                val (fra, til) = serie.split('-')
+                liste.add(Gardsnummerserie(fra.toInt(), til.toInt()))
+            } else {
+                liste.add(Gardsnummerserie(serie.toInt(), serie.toInt()))
+            }
+        }
+    }
+
+    return liste
+}
+
+fun Gardsnummerserie.join(): String = if (this.fra == this.til) "${this.fra}" else "${this.fra}-${this.til}"

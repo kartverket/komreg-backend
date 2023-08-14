@@ -20,6 +20,7 @@ dependencies {
 
     implementation(libs.kotlinx.serialization.protobuf)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.datetime)
 
     implementation(libs.arrow.fx.coroutines)
     implementation(libs.arrow.fx.stm)
@@ -50,6 +51,7 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.hamcrest)
     testImplementation(libs.hamcrest.library)
+    testImplementation(libs.kotest.runner)
 }
 
 tasks.test {
