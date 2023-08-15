@@ -10,12 +10,12 @@ interface KommuneService {
     /**
      * Bestemmer hvilken id som skal brukes for et nytt fylke med gitt fylkesnummer.
      */
-    fun idForFylke(fylkesnummer: Fylkesnummer): Id<*>
+    fun idForFylke(fylkesnummer: Fylkesnummer): Id
 
     /**
      * Bestemmer hvilken id som skal brukes for en ny kommune med gitt kommunenummer.
      */
-    fun idForKommune(kommunenummer: Kommunenummer): Id<*>
+    fun idForKommune(kommunenummer: Kommunenummer): Id
 
     /**
      * Finner alle fylkene.
