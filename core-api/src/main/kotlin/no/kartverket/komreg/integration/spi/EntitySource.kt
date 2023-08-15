@@ -5,14 +5,14 @@ import no.kartverket.komreg.core.domain.Id
 import java.time.LocalDate
 
 data class Entity(
-    val id: Id<*>,
+    val id: Id,
     val ident: Ident? = null,
     val associatedIdents: Set<Ident>? = null,
     val sourceObject: Any? = null
 )
 
 data class Transformation(
-    val id: Id<*>,
+    val id: Id,
     val sourceEntity: Entity?,
     val transformationType: Any,
     val transformedIdent: Ident?,
