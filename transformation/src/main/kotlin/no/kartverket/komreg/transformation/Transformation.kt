@@ -11,9 +11,9 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.KrAppBootContext
-import no.kartverket.komreg.core.domain.AdresseForOppretting
 import no.kartverket.komreg.core.domain.Fylkesdata
 import no.kartverket.komreg.core.domain.Kommunedata
+import no.kartverket.komreg.core.domain.PostadresseForOppretting
 import no.kartverket.komreg.integration.spi.Ident
 import no.kartverket.komreg.integration.spi.Transformation
 import org.slf4j.Logger
@@ -140,17 +140,18 @@ private suspend fun writeKommuner(
                     transformedIdent = Ident(kommune.kommunenummer.fylkesnummer, kommune.kommunenummer.lopenummer),
                     resultObject = Kommunedata(
                         navn = kommune.kommunenavn.name,
-                        // Alle kommuner vi oppretter skal ha koordinatsystem
-                        koordinatsystem = kommune.koordinatsystem!!,
+                        koordinatsystem = kommune.koordinatsystem,
                         senterpunkt = kommune.senterpunkt,
                         nedsattKonsesjonsgrense = kommune.nedsattKonsesjonsgrense,
                         godkjenteGardsnumre = kommune.godkjenteGardsnumre,
-                        adresse = AdresseForOppretting(
-                            adresselinje1 = kommune.adresse.adresselinje1?.trim()?.ifEmpty { null },
-                            adresselinje2 = kommune.adresse.adresselinje2?.trim()?.ifEmpty { null },
-                            postnummer = kommune.adresse.postnummer,
-                        ),
-                        standardRekvirentOrgnummer = kommune.standardRekvirent.orgnummer,
+                        adresse = kommune.adresse?.let {
+                            PostadresseForOppretting(
+                                adresselinje1 = it.adresselinje1?.trim()?.ifEmpty { null },
+                                adresselinje2 = it.adresselinje2?.trim()?.ifEmpty { null },
+                                postnummer = it.postnummer,
+                            )
+                        },
+                        standardRekvirentOrgnummer = kommune.standardRekvirent?.orgnummer,
                         kommunevapen = kommune.kommunevapen,
                     ),
                 ),

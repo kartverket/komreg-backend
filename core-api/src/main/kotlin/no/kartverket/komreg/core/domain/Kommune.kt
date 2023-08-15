@@ -8,12 +8,12 @@ data class Kommune(
     val kommunenummer: Kommunenummer,
     val kommunenavn: Kommunenavn,
     val gyldigTilDato: LocalDate?,
-    val koordinatsystem: Koordinatsystem?,
-    val senterpunkt: Senterpunkt,
+    val koordinatsystem: Koordinatsystem,
+    val senterpunkt: Koordinat,
     val nedsattKonsesjonsgrense: Boolean,
     val godkjenteGardsnumre: String,
-    val adresse: Adresse,
-    val standardRekvirent: StandardRekvirent,
+    val adresse: Postadresse?,
+    val standardRekvirent: StandardRekvirent?,
     val kommunevapen: ByteArray?,
 ) {
     companion object {
@@ -22,11 +22,11 @@ data class Kommune(
             kommunenavn: String,
             gyldigTilDato: LocalDate?,
             koordinatsystem: Koordinatsystem,
-            senterpunkt: Senterpunkt,
+            senterpunkt: Koordinat,
             nedsattKonsesjonsgrense: Boolean,
             godkjenteGardsnumre: String,
-            adresse: Adresse,
-            standardRekvirent: StandardRekvirent,
+            adresse: Postadresse?,
+            standardRekvirent: StandardRekvirent?,
             kommunevapen: ByteArray?,
         ): Kommune =
             Kommune(
@@ -65,37 +65,30 @@ data class Kommune(
 }
 
 @Serializable
-data class Senterpunkt(
+data class Koordinat(
     val x: Double,
     val y: Double,
 )
 
 @Serializable
-data class Adresse(
+data class Postadresse(
     val adresselinje1: String?,
     val adresselinje2: String?,
     val adresselinje3: String? = null,
-    val postnummer: String?,
-    val poststed: String?,
+    val postnummer: String,
+    val poststed: String,
 )
 
 @Serializable
 data class StandardRekvirent(
-    val orgnummer: String?,
-    val navn: String?,
+    val orgnummer: String,
+    val navn: String,
 )
 
 @Serializable
-enum class Koordinatsystem(val kodeId: Long) {
-    UTM32(10),
-    UTM33(11),
-    UTM35(13),
-    TESTKOORDINATSYSTEM(2), // Brukes av Testkommune 9999
-    ;
-
-    companion object {
-        fun fraKode(kodeId: Long): Koordinatsystem? {
-            return values().firstOrNull { it.kodeId == kodeId }
-        }
-    }
+enum class Koordinatsystem {
+    UTM32,
+    UTM33,
+    UTM35,
+    UKJENT,
 }

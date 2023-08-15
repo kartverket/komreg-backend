@@ -6,10 +6,10 @@ package no.kartverket.komreg.core.domain
 data class Kommunedata(
     val navn: String,
     val koordinatsystem: Koordinatsystem,
-    val senterpunkt: Senterpunkt,
+    val senterpunkt: Koordinat,
     val nedsattKonsesjonsgrense: Boolean,
     val godkjenteGardsnumre: String,
-    val adresse: AdresseForOppretting,
+    val adresse: PostadresseForOppretting?,
     val standardRekvirentOrgnummer: String?,
     val kommunevapen: ByteArray?,
 ) {
@@ -44,8 +44,8 @@ data class Kommunedata(
     }
 }
 
-data class AdresseForOppretting(
+data class PostadresseForOppretting(
     val adresselinje1: String?,
     val adresselinje2: String?,
-    val postnummer: String?,
+    val postnummer: String,
 )

@@ -30,7 +30,6 @@ class EntitySinkManager(private val bootContext: KrAppBootContext) {
         }
     }
 
-    @OptIn(ExperimentalTime::class)
     suspend fun consume(transformations: Flow<Transformation>, ikrafttredelsesdato: LocalDate) {
         bootContext.config.featureToggle(
             "feature.disable_sink",

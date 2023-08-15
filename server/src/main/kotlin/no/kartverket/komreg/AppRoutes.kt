@@ -49,29 +49,30 @@ data class Regulering(
             },
             kommuner = endringer.flatMap { fylkesdeling ->
                 fylkesdeling.nyeFylker.flatMap { fylke ->
-                    fylke.kommuner.filter { it.skalOpprettes == true }.map {
+                    fylke.kommuner.filter { nyKommune -> nyKommune.skalOpprettes == true }.map { nyKommune ->
                         Kommune(
-                            kommunenummer = Kommunenummer(it.nyttKommunenummer.toLong()),
-                            kommunenavn = Kommunenavn(it.navn),
+                            kommunenummer = Kommunenummer(nyKommune.nyttKommunenummer.toLong()),
+                            kommunenavn = Kommunenavn(nyKommune.navn),
                             gyldigTilDato = null,
-                            koordinatsystem = it.koordinatsystem,
-                            senterpunkt = Senterpunkt(
-                                x = it.senterpunkt.x,
-                                y = it.senterpunkt.y,
+                            koordinatsystem = nyKommune.koordinatsystem,
+                            senterpunkt = Koordinat(
+                                x = nyKommune.senterpunkt.x,
+                                y = nyKommune.senterpunkt.y,
                             ),
-                            nedsattKonsesjonsgrense = it.nedsattKonsesjonsgrense,
-                            godkjenteGardsnumre = it.godkjenteGardsnumre.joinToString(",") { serie -> serie.join() },
-                            adresse = Adresse(
-                                adresselinje1 = it.adresse.adresselinje1,
-                                adresselinje2 = it.adresse.adresselinje2,
-                                postnummer = it.adresse.postnummer,
-                                poststed = it.adresse.poststed,
-                            ),
-                            standardRekvirent = StandardRekvirent(
-                                orgnummer = it.standardRekvirent.orgnummer,
-                                navn = it.standardRekvirent.navn,
-                            ),
-                            kommunevapen = Base64.getDecoder().decode(it.kommunevapen),
+                            nedsattKonsesjonsgrense = nyKommune.nedsattKonsesjonsgrense,
+                            godkjenteGardsnumre = nyKommune.godkjenteGardsnumre.joinToString(",") { serie -> serie.join() },
+                            adresse = nyKommune.adresse?.let {
+                                Postadresse(
+                                    adresselinje1 = it.adresselinje1,
+                                    adresselinje2 = it.adresselinje2,
+                                    postnummer = it.postnummer,
+                                    poststed = it.poststed,
+                                )
+                            },
+                            standardRekvirent = nyKommune.standardRekvirent?.let {
+                                StandardRekvirent(it.orgnummer, it.navn)
+                            },
+                            kommunevapen = Base64.getDecoder().decode(nyKommune.kommunevapen),
                         )
                     }
                 }
@@ -109,11 +110,11 @@ data class KommuneDTO(
     val kommunenummer: String,
     val gyldigTilDato: LocalDate?,
     val koordinatsystem: Koordinatsystem,
-    val senterpunkt: SenterpunktDTO,
+    val senterpunkt: KoordinatDTO,
     val nedsattKonsesjonsgrense: Boolean,
     val godkjenteGardsnumre: List<Gardsnummerserie>,
-    val adresse: AdresseDTO,
-    val standardRekvirent: StandardRekvirentDTO,
+    val adresse: AdresseDTO?,
+    val standardRekvirent: StandardRekvirentDTO?,
     val kommunevapen: String?,
 )
 
@@ -123,18 +124,18 @@ data class NyKommune(
     val kommunenummer: String,
     val gyldigTilDato: LocalDate?,
     val koordinatsystem: Koordinatsystem,
-    val senterpunkt: SenterpunktDTO,
+    val senterpunkt: KoordinatDTO,
     val nedsattKonsesjonsgrense: Boolean,
     val godkjenteGardsnumre: List<Gardsnummerserie>,
-    val adresse: AdresseDTO,
-    val standardRekvirent: StandardRekvirentDTO,
+    val adresse: AdresseDTO?,
+    val standardRekvirent: StandardRekvirentDTO?,
     val kommunevapen: String?,
     val nyttKommunenummer: String,
     val skalOpprettes: Boolean? = false,
 )
 
 @Serializable
-data class SenterpunktDTO(
+data class KoordinatDTO(
     val x: Double,
     val y: Double,
 )
@@ -149,14 +150,14 @@ data class Gardsnummerserie(
 data class AdresseDTO(
     val adresselinje1: String?,
     val adresselinje2: String?,
-    val postnummer: String?,
-    val poststed: String? = null,
+    val postnummer: String,
+    val poststed: String,
 )
 
 @Serializable
 data class StandardRekvirentDTO(
-    val orgnummer: String?,
-    val navn: String? = null,
+    val orgnummer: String,
+    val navn: String,
 )
 
 fun Application.routes() {
@@ -205,24 +206,24 @@ fun Application.routes() {
                                 navn = kommuneFraMatrikkel.kommunenavn.name,
                                 kommunenummer = kommuneFraMatrikkel.kommunenummer.verdi(),
                                 gyldigTilDato = kommuneFraMatrikkel.gyldigTilDato,
-                                // Alle ikke-utgåtte kommuner skal ha koordinatsystem
-                                koordinatsystem = kommuneFraMatrikkel.koordinatsystem!!,
-                                senterpunkt = SenterpunktDTO(
+                                koordinatsystem = kommuneFraMatrikkel.koordinatsystem,
+                                senterpunkt = KoordinatDTO(
                                     x = kommuneFraMatrikkel.senterpunkt.x,
                                     y = kommuneFraMatrikkel.senterpunkt.y,
                                 ),
                                 nedsattKonsesjonsgrense = kommuneFraMatrikkel.nedsattKonsesjonsgrense,
                                 godkjenteGardsnumre = godkjenteGardsnumreTilListe(kommuneFraMatrikkel.godkjenteGardsnumre),
-                                adresse = AdresseDTO(
-                                    adresselinje1 = kommuneFraMatrikkel.adresse.adresselinje1,
-                                    adresselinje2 = kommuneFraMatrikkel.adresse.adresselinje2,
-                                    postnummer = kommuneFraMatrikkel.adresse.postnummer,
-                                    poststed = kommuneFraMatrikkel.adresse.poststed,
-                                ),
-                                standardRekvirent = StandardRekvirentDTO(
-                                    orgnummer = kommuneFraMatrikkel.standardRekvirent.orgnummer,
-                                    navn = kommuneFraMatrikkel.standardRekvirent.navn,
-                                ),
+                                adresse = kommuneFraMatrikkel.adresse?.let {
+                                    AdresseDTO(
+                                        adresselinje1 = it.adresselinje1,
+                                        adresselinje2 = it.adresselinje2,
+                                        postnummer = it.postnummer,
+                                        poststed = it.poststed,
+                                    )
+                                },
+                                standardRekvirent = kommuneFraMatrikkel.standardRekvirent?.let {
+                                    StandardRekvirentDTO(it.orgnummer, it.navn)
+                                },
                                 kommunevapen = kommuneFraMatrikkel.kommunevapen?.let {
                                     Base64.getEncoder().encodeToString(it)
                                 },
