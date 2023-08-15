@@ -23,7 +23,7 @@ dependencyResolutionManagement {
             version("kotlinx-cli", "0.3.5")
             version("kotlinx-datetime", "0.4.0")
             version("kotlinx-coroutines", "1.6.4")
-            version("kotlinx-serialization", "1.4.1")
+            version("kotlinx-serialization", "1.5.1")
             version("mockk", "1.13.2")
             version("junit", "5.9.0")
             version("spek", "2.0.19")

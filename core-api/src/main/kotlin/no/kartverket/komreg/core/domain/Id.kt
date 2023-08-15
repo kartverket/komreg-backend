@@ -1,7 +1,16 @@
 package no.kartverket.komreg.core.domain
 
-interface IdType<V : Any, Self> : Comparable<Self>, Comparator<V>
+import kotlinx.serialization.*
+import kotlinx.serialization.builtins.NothingSerializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.encoding.*
 
+interface IdType<V : @Contextual Any, Self : @Contextual Any> : Comparable<Self>, Comparator<V> {
+    val valueSerializer: KSerializer<V>
+}
+
+@Serializable(IdSerializer::class)
 data class Id internal constructor(
     internal val type: IdType<out Any, *>,
     internal val value: Any,
@@ -40,7 +49,7 @@ data class Id internal constructor(
     }
 
     companion object {
-        operator fun <V : Any> invoke(type: IdType<V, *>, value: V): Id {
+        operator fun <V : @Contextual Any> invoke(type: IdType<V, *>, value: V): Id {
             return Id(type, value)
         }
 
@@ -50,6 +59,45 @@ data class Id internal constructor(
 
         private fun <V : Any> IdType<V, *>.compareValue(v1: Any, v2: Any): Int {
             return compare(v1 as V, v2 as V)
+        }
+    }
+}
+
+@OptIn(ExperimentalSerializationApi::class)
+class IdSerializer : KSerializer<Id> {
+    private val typeSerializer = PolymorphicSerializer(IdType::class)
+
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("id") {
+        element("type", typeSerializer.descriptor)
+        element("value", NothingSerializer().descriptor)
+    }
+
+    override fun serialize(encoder: Encoder, value: Id) {
+        encoder.encodeStructure(descriptor) {
+            encodeSerializableElement(descriptor, 0, typeSerializer, value.type)
+
+            fun <V : Any> IdType<V, *>.encode(v: Any) {
+                encodeSerializableElement(descriptor, 1, valueSerializer, v as V)
+            }
+
+            value.type.encode(value.value)
+        }
+    }
+
+    override fun deserialize(decoder: Decoder): Id {
+        return decoder.decodeStructure(descriptor) {
+            lateinit var type: IdType<out Any, *>
+            lateinit var idValue: Any
+            while (true) {
+                val i = decodeElementIndex(descriptor)
+                when (i) {
+                    0 -> type = decodeSerializableElement(descriptor, 0, typeSerializer)
+                    1 -> idValue = decodeSerializableElement(descriptor, 1, type.valueSerializer)
+                    CompositeDecoder.DECODE_DONE -> break
+                    else -> throw SerializationException("Unknown index $i")
+                }
+            }
+            Id(type, idValue)
         }
     }
 }
