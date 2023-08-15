@@ -6,6 +6,14 @@ import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.ints.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
+import kotlinx.serialization.serializer
+import no.kartverket.komreg.PolymorphicEnumSerializer
 
 class IdTest : ExpectSpec({
     context("compare") {
@@ -127,6 +135,32 @@ class IdTest : ExpectSpec({
             bravoX.typedValue(Bar.Bravo) shouldBe "X"
         }
     }
+
+    context("serialization") {
+        val alpha1 = Id(Foo.Alpha, 1L)
+        val bravoX = Id(Bar.Bravo, "X")
+
+        val json = Json {
+            serializersModule = SerializersModule {
+                polymorphic(IdType::class) {
+                    subclass(Foo::class, PolymorphicEnumSerializer(serializer()))
+                    subclass(Bar::class, PolymorphicEnumSerializer(serializer()))
+                }
+            }
+        }
+
+        expect("Alpha serialized and deserialized to Alpha") {
+            val str = json.encodeToString(alpha1)
+            val id = json.decodeFromString<Id>(str)
+            id shouldBe alpha1
+        }
+
+        expect("Bravo serialized and deserialized to Bravo") {
+            val str = json.encodeToString(bravoX)
+            val id = json.decodeFromString<Id>(str)
+            id shouldBe bravoX
+        }
+    }
 })
 
 private enum class Foo : IdType<Long, Foo> {
@@ -137,6 +171,8 @@ private enum class Foo : IdType<Long, Foo> {
     override fun compare(o1: Long, o2: Long): Int {
         return o1.compareTo(o2)
     }
+
+    override val valueSerializer: KSerializer<Long> = Long.serializer()
 }
 
 private enum class Bar : IdType<String, Bar> {
@@ -146,4 +182,6 @@ private enum class Bar : IdType<String, Bar> {
     override fun compare(o1: String, o2: String): Int {
         return o1.compareTo(o2)
     }
+
+    override val valueSerializer: KSerializer<String> = String.serializer()
 }
