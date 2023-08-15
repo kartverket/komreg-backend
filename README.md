@@ -17,8 +17,8 @@ https://github.com/settings/tokens (du trenger bare `read:packages`).
 
 I `transformation/src/resources/properties.conf` finner man konfigurasjonen for hvilken database
 transformasjonene går mot, som henter inn nødvendige properties fra miljøvariabler i det gitte miljøet.
-Når man kjører opp løsningen lokalt trenger man å lage en kopi av `.env.template` på rot, og kalle den `.env`. 
-Hvis man vil kjøre mot en spesifikk database så endrer man bare på verdiene i denne. Den er ignorert i git, så 
+Når man kjører opp løsningen lokalt trenger man å lage en kopi av `.env.template` på rot, og kalle den `.env`.
+Hvis man vil kjøre mot en spesifikk database så endrer man bare på verdiene i denne. Den er ignorert i git, så
 det er ingen fare for å sjekke den inn.
 
 Start applikasjonen ved å kjøre funksjonen `Application.main()` som ligger i `server/src/.../Application.kt`.
@@ -29,7 +29,7 @@ For å starte transformeringen kjør http-requesten som ligger under `http/local
 ### Førstegangsoppsett av lokal transformasjonsdatabase:
 
 1. Kopier `DB_KOMREG_JDBC_URL`, `DB_KOMREG_USERNAME` og `DB_KOMREG_PASSWORD` fra .env.template
-til din egen .env-fil.
+   til din egen .env-fil.
 
 2. Start Docker eller Colima (antar Colima):
 ```bash
