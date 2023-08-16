@@ -1,7 +1,7 @@
 CREATE TABLE regulering (
     id SERIAL PRIMARY KEY,
     reguleringsId VARCHAR(255) NOT NULL,
-    regulering JSON NOT NULL,
+    regulering JSONB NOT NULL,
     ikrafttredelsesdato DATE NOT NULL,
     opprettet TIMESTAMP NOT NULL,
     endret TIMESTAMP NOT NULL,
@@ -17,9 +17,9 @@ CREATE TABLE kjoring (
 
 CREATE TABLE transformasjon (
     id SERIAL PRIMARY KEY,
-    transformasjonsId JSON NOT NULL,
+    transformasjonsId JSONB NOT NULL,
     kjoring INT NOT NULL,
-    transformasjon JSON NOT NULL,
+    transformasjon JSONB NOT NULL,
     tid TIMESTAMP NOT NULL
 );
 
