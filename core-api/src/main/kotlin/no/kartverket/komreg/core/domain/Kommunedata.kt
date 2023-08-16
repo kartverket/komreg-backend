@@ -5,7 +5,7 @@ package no.kartverket.komreg.core.domain
  */
 data class Kommunedata(
     val navn: String,
-    val koordinatsystem: Koordinatsystem,
+    val koordinatsystem: Koordinatsystem, // TODO: Bytt med en egen enum som ikke har UKJENT
     val senterpunkt: Koordinat,
     val nedsattKonsesjonsgrense: Boolean,
     val godkjenteGardsnumre: String,
