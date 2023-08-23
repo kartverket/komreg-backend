@@ -3,15 +3,28 @@ package no.kartverket.komreg.integration.spi
 import arrow.core.NonEmptyList
 import arrow.core.nonEmptyListOf
 import arrow.core.toNonEmptyListOrNull
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.listSerialDescriptor
+import kotlinx.serialization.encoding.CompositeDecoder
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.encoding.decodeStructure
 import no.kartverket.komreg.core.util.kotlin.typeClosure
-import java.lang.IllegalStateException
+import no.kartverket.komreg.integration.spi.Ident.Empty.appendWith
 import java.lang.ref.ReferenceQueue
 import java.lang.ref.WeakReference
 import java.util.TreeMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
+import kotlin.reflect.full.starProjectedType
+import kotlin.reflect.javaType
 import kotlin.reflect.typeOf
 
 /**
@@ -148,9 +161,13 @@ class IdentType<T : Ident, A : Comparable<A>> private constructor(
     private fun <U : Ident, B : Comparable<B>> Ident.And<U, B>.unsafeAppendAndWith(value: A) : Ident.And<Ident.And<U, B>, A> =
         this.appendWith(this@IdentType as IdentType<Ident.And<U, B>, A>, value)
 
+    override fun toString(): String {
+        return this::class.simpleName + ": " + types.toString()
+    }
 }
 
 /** Sum type for IdentType og EmptyIdentType */
+@Serializable(IdentTypeSerializer::class)
 sealed class IdentOrEmptyType<T : Ident> {
 
 
@@ -226,6 +243,10 @@ object EmptyIdentType : IdentOrEmptyType<Ident.Empty>() {
     @Suppress("UNCHECKED_CAST")
     suspend inline fun <reified  V : Comparable<V>> append(): IdentType<Ident.Empty, V> =
         identTypeFromKotlinTypes(typeOf<V>()) as IdentType<Ident.Empty, V>
+
+    override fun toString(): String {
+        return this::class.simpleName.orEmpty()
+    }
 }
 
 
@@ -372,3 +393,34 @@ private fun IdentOrEmptyType<*>.createIndexMapping(
         this.bottomTypes[targetElemType]?.let { it to targetElemIndex }
     }
     .toMap()
+
+@OptIn(ExperimentalSerializationApi::class, ExperimentalStdlibApi::class)
+class IdentTypeSerializer : KSerializer<IdentOrEmptyType<*>> {
+    private val elementSerializer = String.serializer()
+
+    override val descriptor: SerialDescriptor = listSerialDescriptor(elementSerializer.descriptor)
+
+    override fun serialize(encoder: Encoder, value: IdentOrEmptyType<*>) {
+        encoder.beginCollection(descriptor, value.size).apply {
+            value.types.forEachIndexed { index, element ->
+                encodeSerializableElement(descriptor, index, elementSerializer, element.javaType.typeName)
+            }
+        }.endStructure(descriptor)
+    }
+
+    override fun deserialize(decoder: Decoder): IdentOrEmptyType<*> {
+        val types = decoder.decodeStructure(descriptor) {
+            val types = mutableListOf<KType>()
+            while (true) {
+                val index = decodeElementIndex(descriptor)
+                if (index == CompositeDecoder.DECODE_DONE) break
+                val typeString = decodeSerializableElement(descriptor, index, elementSerializer)
+                val c = Class.forName(typeString) // TODO: Dette virker ikke for alle typer
+                val type = c.kotlin.starProjectedType // TODO: Blant annet så blir ikke eventuelle typeparametre med
+                types.add(type)
+            }
+            types
+        }
+        return runBlocking { identTypeFromKotlinTypes(types.first(), *types.drop(1).toTypedArray()) }
+    }
+}
