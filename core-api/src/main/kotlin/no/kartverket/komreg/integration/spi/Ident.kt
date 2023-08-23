@@ -2,6 +2,11 @@
 
 package no.kartverket.komreg.integration.spi
 
+import kotlinx.serialization.*
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.descriptors.listSerialDescriptor
+import kotlinx.serialization.encoding.*
 import no.kartverket.komreg.integration.spi.Ident.And
 import no.kartverket.komreg.integration.spi.Ident.Empty
 import kotlin.reflect.cast
@@ -36,6 +41,7 @@ import kotlin.reflect.typeOf
  *
  *
  */
+@Serializable(IdentSerializer::class)
 sealed class Ident private constructor() {
 
     @Suppress("DeprecatedCallableAddReplaceWith")
@@ -1140,5 +1146,56 @@ private data class OfAtLeast9<T : Ident, A, B, C, D, E, F, G, H>(
             if (cmp != 0) return cmp
         }
         return 0
+    }
+}
+
+@OptIn(ExperimentalSerializationApi::class)
+class IdentSerializer : KSerializer<Ident> {
+    private val identTypeSerializer = IdentTypeSerializer()
+    private val elementSerializer = PolymorphicSerializer(Comparable::class)
+
+    private val listSerializerDescriptor = listSerialDescriptor(elementSerializer.descriptor)
+
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("ident") {
+        element("type", identTypeSerializer.descriptor)
+        element("values", listSerializerDescriptor)
+    }
+
+    override fun serialize(encoder: Encoder, value: Ident) {
+        encoder.encodeStructure(descriptor) {
+            encodeSerializableElement(descriptor, 0, identTypeSerializer, value.type)
+            encodeInlineElement(descriptor, 1).beginCollection(listSerializerDescriptor, value.size).apply {
+                value.toArray().forEachIndexed { index, element ->
+                    encodeSerializableElement(listSerializerDescriptor, index, elementSerializer, element)
+                }
+            }.endStructure(listSerializerDescriptor)
+        }
+    }
+
+    override fun deserialize(decoder: Decoder): Ident {
+        return decoder.decodeStructure(descriptor) {
+            lateinit var type: IdentOrEmptyType<*>
+            lateinit var value: List<Comparable<*>>
+            while (true) {
+                when (val index = decodeElementIndex(descriptor)) {
+                    0 -> type = decodeSerializableElement(descriptor, index, identTypeSerializer)
+                    1 -> decodeInlineElement(descriptor, index)
+                        .beginStructure(listSerializerDescriptor)
+                        .apply {
+                            val list = ArrayList<Comparable<*>>()
+                            while (true) {
+                                val listIndex = decodeElementIndex(listSerializerDescriptor)
+                                if (listIndex == CompositeDecoder.DECODE_DONE) break
+                                list.add(decodeSerializableElement(listSerializerDescriptor, listIndex, elementSerializer))
+                            }
+                            value = list
+                        }
+                        .endStructure(listSerializerDescriptor)
+                    CompositeDecoder.DECODE_DONE -> break
+                    else -> throw IllegalStateException("Deserialization failure")
+                }
+            }
+            identWithTypeOrThrow(type as IdentType<*, *>, *value.toTypedArray())
+        }
     }
 }
