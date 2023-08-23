@@ -1,6 +1,11 @@
 package no.kartverket.komreg.integration.spi
 
 import io.kotest.core.spec.style.AnnotationSpec
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
+import kotlinx.serialization.modules.subclass
 import no.kartverket.komreg.core.domain.Fylkesnummer
 import no.kartverket.komreg.core.domain.Kommunenummer
 import org.junit.jupiter.api.Assertions.*
@@ -183,5 +188,23 @@ class IdentTest : AnnotationSpec() {
 
         assertEquals(LongerIdent(Fylkesnummer(fnr.value + 1), knr, "foo", Foo(2), Baz(3)), updatedLongerIdent)
     }
-}
 
+    @Test
+    suspend fun serialization() {
+        val identType = identTypeOf2<Fylkesnummer, Kommunenummer.Lopenummer>()
+        val json = Json {
+            serializersModule = SerializersModule {
+                polymorphic(Comparable::class) {
+                    subclass(Fylkesnummer::class)
+                    subclass(Kommunenummer.Lopenummer::class)
+                }
+            }
+        }
+
+        val ident1: Ident = identType(Fylkesnummer(98), Kommunenummer.Lopenummer(76))
+        val str = json.encodeToString(ident1)
+        val ident2 = json.decodeFromString<Ident>(str)
+
+        assertEquals(ident1, ident2)
+    }
+}
