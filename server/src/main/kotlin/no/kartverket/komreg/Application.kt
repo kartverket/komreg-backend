@@ -6,8 +6,12 @@ import io.ktor.http.HttpMethod
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
+import io.ktor.server.metrics.micrometer.*
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import io.micrometer.prometheus.*
 import org.rocksdb.RocksDB
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -32,9 +36,16 @@ fun Application.module() {
     logger.info("Current environment: ${System.getenv("environment")}")
     logger.info("Source DB: ${env["DB_MATRIKKEL_KILDE_USERNAME"]}, Mottaker DB: ${env["DB_MATRIKKEL_MOTTAKER_USERNAME"]}")
 
+    val metricsRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
+
+    install(MicrometerMetrics) {
+        registry = metricsRegistry
+    }
+
     install(ContentNegotiation) {
         json()
     }
+
     install(CORS) {
         allowMethod(HttpMethod.Options)
         allowHost("localhost:3000")
@@ -42,5 +53,6 @@ fun Application.module() {
         allowHost("komreg.test.skip.statkart.no", schemes = listOf("http", "https"))
         allowHeader(HttpHeaders.ContentType)
     }
-    routes()
+
+    routes(metricsRegistry)
 }

@@ -10,6 +10,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import io.micrometer.prometheus.PrometheusMeterRegistry
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.KrAppBootContext
@@ -161,7 +162,7 @@ data class StandardRekvirentDTO(
     val navn: String,
 )
 
-fun Application.routes() {
+fun Application.routes(metricsRegistry: PrometheusMeterRegistry) {
     val bootContext = object : KrAppBootContext {
         override val config by lazy {
             ConfigFactory.invalidateCaches()
@@ -171,6 +172,18 @@ fun Application.routes() {
     val kommuneService = KommuneServiceManager(bootContext).kommuneService
 
     routing {
+        route("/actuator/health") {
+            get {
+                call.respond("OK")
+            }
+        }
+
+        route("/actuator/metrics") {
+            get {
+                call.respond(metricsRegistry.scrape())
+            }
+        }
+
         route("/run") {
             post {
                 val regulering: Regulering = call.receive()
@@ -184,16 +197,32 @@ fun Application.routes() {
                 call.respond("OK")
             }
         }
-        route("/actuator/health") {
-            get {
-                call.respond("OK")
-            }
-        }
+
         route("/transform/status") {
             get {
                 call.respond(transformStatuses)
             }
         }
+
+        route("/fylker") {
+            get {
+                call.application.log.info("Fylker endpoint called")
+                val fylkerFraMatrikkel = kommuneService.findAlleFylker()
+                val fylker = mutableListOf<FylkeDTO>()
+                fylkerFraMatrikkel
+                    .filter { it.gyldigTilDato == null }
+                    .forEach { fylkeFraMatrikkel ->
+                        fylker.add(
+                            FylkeDTO(
+                                navn = fylkeFraMatrikkel.fylkesnavn.name,
+                                fylkesnummer = fylkeFraMatrikkel.fylkesnummer.verdi(),
+                            ),
+                        )
+                    }
+                call.respond(fylker)
+            }
+        }
+
         route("/kommuner") {
             get {
                 call.application.log.info("Kommuner endpoint called")
@@ -232,24 +261,6 @@ fun Application.routes() {
                         )
                     }
                 call.respond(kommuner)
-            }
-        }
-        route("/fylker") {
-            get {
-                call.application.log.info("Fylker endpoint called")
-                val fylkerFraMatrikkel = kommuneService.findAlleFylker()
-                val fylker = mutableListOf<FylkeDTO>()
-                fylkerFraMatrikkel
-                    .filter { it.gyldigTilDato == null }
-                    .forEach { fylkeFraMatrikkel ->
-                        fylker.add(
-                            FylkeDTO(
-                                navn = fylkeFraMatrikkel.fylkesnavn.name,
-                                fylkesnummer = fylkeFraMatrikkel.fylkesnummer.verdi(),
-                            ),
-                        )
-                    }
-                call.respond(fylker)
             }
         }
     }

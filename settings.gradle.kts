@@ -33,6 +33,7 @@ dependencyResolutionManagement {
             version("ktor", "2.2.4")
             version("hamcrest", "2.2")
             version("logback", "1.4.5")
+            version("micrometer-prometheus", "1.10.3")
 
             library("kotlin-reflect", "org.jetbrains.kotlin", "kotlin-reflect").withoutVersion()
 
@@ -95,6 +96,12 @@ dependencyResolutionManagement {
             library("hamcrest-library", "org.hamcrest", "hamcrest-library").versionRef("hamcrest")
 
             library("logback-classic", "ch.qos.logback", "logback-classic").versionRef("logback")
+
+            library(
+                "micrometer-registry-prometheus",
+                "io.micrometer",
+                "micrometer-registry-prometheus",
+            ).versionRef("micrometer-prometheus")
         }
     }
 }
