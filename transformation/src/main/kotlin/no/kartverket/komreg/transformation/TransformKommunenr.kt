@@ -8,7 +8,7 @@ fun transformerKommunenummer(input: Reguleringsinput, entity: Entity): Transform
     val newIdent = entity.ident.transformKommunenr(input)
     val newAssociatedIdents = entity.associatedIdents
         ?.mapNotNull { it.transformKommunenr(input) }
-        ?.toSet()?.ifEmpty { null }
+        ?.toSet()
 
     if (newIdent == entity.ident && newAssociatedIdents == entity.associatedIdents) return null
 
