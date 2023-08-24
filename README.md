@@ -42,8 +42,12 @@ docker run --name local-postgres -e POSTGRES_USER=komreg -e POSTGRES_PASSWORD=pa
 ```
 (Bytt ut XX så du bruker en ledig port på maskinen din.)
 
-3. Legg til local-tr-db som en datasource i IntelliJ hvis du vil:\
-Bruk url `jdbc:postgresql://localhost:5433/local-transformation-db` og brukernavn/passord fra .env-filen.
+### Legg til local-tr-db som en datasource i IntelliJ hvis du vil:
+Bruk url `jdbc:postgresql://localhost:54XX/local-transformation-db`  
+Bruk porten du satte i run-kommandoen over.  
+Fyll også inn inn brukernavn og passord i vinduet der du legger til Data Source.  
+I schemas-fanen i samme vindu: velg å vise alle schemas i databasen.
+
 
 ### Kjøring av lokal transformasjonsdatabase:
 
@@ -52,7 +56,7 @@ Bruk url `jdbc:postgresql://localhost:5433/local-transformation-db` og brukernav
 colima start
 ```
 
-2. Se om du har containeren kjørende:
+2. Se om du har containeren kjørende (local-postgres):
 ```bash
 docker ps -a
 ```
