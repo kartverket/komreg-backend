@@ -3,24 +3,23 @@ CREATE TABLE regulering (
     reguleringsId VARCHAR(255) NOT NULL,
     regulering JSONB NOT NULL,
     ikrafttredelsesdato DATE NOT NULL,
-    opprettet TIMESTAMP NOT NULL,
-    endret TIMESTAMP NOT NULL,
+    opprettet TIMESTAMP WITH TIME ZONE NOT NULL,
+    endret TIMESTAMP WITH TIME ZONE NOT NULL,
     opprettetav VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE kjoring (
     id SERIAL PRIMARY KEY,
     regulering INT NOT NULL,
-    start TIMESTAMP,
-    slutt TIMESTAMP
+    start TIMESTAMP WITH TIME ZONE NOT NULL,
+    slutt TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
 CREATE TABLE transformasjon (
-    id SERIAL PRIMARY KEY,
-    transformasjonsId JSONB NOT NULL,
+    transformasjonsId JSONB PRIMARY KEY,
     kjoring INT NOT NULL,
     transformasjon JSONB NOT NULL,
-    tid TIMESTAMP NOT NULL
+    tid TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
 
