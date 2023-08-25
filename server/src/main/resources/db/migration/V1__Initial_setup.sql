@@ -1,6 +1,5 @@
 CREATE TABLE regulering (
-    id SERIAL PRIMARY KEY,
-    reguleringsId VARCHAR(255) NOT NULL,
+    reguleringsId VARCHAR(255) PRIMARY KEY,
     regulering JSONB NOT NULL,
     ikrafttredelsesdato DATE NOT NULL,
     opprettet TIMESTAMP WITH TIME ZONE NOT NULL,
