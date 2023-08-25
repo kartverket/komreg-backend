@@ -28,7 +28,7 @@ For å starte transformeringen kjør http-requesten som ligger under `http/local
 
 ### Førstegangsoppsett av lokal transformasjonsdatabase:
 
-1. Kopier `DB_TRANSFORMATION_JDBC_URL`, `DB_TRANSFORMATION_USERNAME` og `DB_TRANSFORMATION_PASSWORD` fra .env.template
+1. Kopier `DB_KOMREG_JDBC_URL`, `DB_KOMREG_USERNAME` og `DB_KOMREG_PASSWORD` fra .env.template
 til din egen .env-fil.
 
 2. Start Docker eller Colima (antar Colima):
@@ -38,12 +38,12 @@ colima start
 
 2. Kjør:
 ```bash
-docker run --name local-postgres -e POSTGRES_USER=komreg -e POSTGRES_PASSWORD=passord -e POSTGRES_DB=local-transformation-db -p 54XX:5432 -d postgres
+docker run --name local-postgres -e POSTGRES_USER=komreg -e POSTGRES_PASSWORD=passord -e POSTGRES_DB=local-komreg-db -p 54XX:5432 -d postgres
 ```
 (Bytt ut XX så du bruker en ledig port på maskinen din.)
 
 ### Legg til local-tr-db som en datasource i IntelliJ hvis du vil:
-Bruk url `jdbc:postgresql://localhost:54XX/local-transformation-db`  
+Bruk url `jdbc:postgresql://localhost:54XX/local-komreg-db`  
 Bruk porten du satte i run-kommandoen over.  
 Fyll også inn inn brukernavn og passord i vinduet der du legger til Data Source.  
 I schemas-fanen i samme vindu: velg å vise alle schemas i databasen.

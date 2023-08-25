@@ -42,15 +42,17 @@ fun Application.module() {
     install(MicrometerMetrics) {
         registry = metricsRegistry
     }
-    val flyway = Flyway.configure()
-        .dataSource(
-            env["DB_TRANSFORMATION_JDBC_URL"],
-            env["DB_TRANSFORMATION_USERNAME"],
-            env["DB_TRANSFORMATION_PASSWORD"],
-        )
-        .load()
+    if (!env["DB_KOMREG_JDBC_URL"].isNullOrEmpty()) {
+        val flyway = Flyway.configure()
+            .dataSource(
+                env["DB_KOMREG_JDBC_URL"],
+                env["DB_KOMREG_USERNAME"],
+                env["DB_KOMREG_PASSWORD"],
+            )
+            .load()
 
-    flyway.migrate()
+        flyway.migrate()
+    }
 
     install(ContentNegotiation) {
         json()
