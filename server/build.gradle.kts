@@ -43,6 +43,9 @@ dependencies {
 
     implementation("net.logstash.logback:logstash-logback-encoder:7.4")
 
+    implementation(libs.ktor.server.metrics.micrometer)
+    implementation(libs.micrometer.registry.prometheus)
+
     testImplementation(kotlin("test"))
     testImplementation(libs.junit.jupiter.api)
     testRuntimeOnly(libs.junit.jupiter.engine)
