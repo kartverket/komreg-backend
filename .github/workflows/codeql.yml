@@ -49,7 +49,7 @@ jobs:
 #          GH_PACKAGES_PAT: ${{ secrets.GH_PACKAGES_PAT }}
 
       - name: Build with Gradle
-        uses: gradle/gradle-build-action@v2.7.1
+        uses: gradle/gradle-build-action@v2.8.0
         with:
           gradle-version: 7.5.1
           arguments: build
