@@ -12,6 +12,7 @@ import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.micrometer.prometheus.*
+import org.flywaydb.core.Flyway
 import org.rocksdb.RocksDB
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -40,6 +41,17 @@ fun Application.module() {
 
     install(MicrometerMetrics) {
         registry = metricsRegistry
+    }
+    if (!env["DB_KOMREG_JDBC_URL"].isNullOrEmpty()) {
+        val flyway = Flyway.configure()
+            .dataSource(
+                env["DB_KOMREG_JDBC_URL"],
+                env["DB_KOMREG_USERNAME"],
+                env["DB_KOMREG_PASSWORD"],
+            )
+            .load()
+
+        flyway.migrate()
     }
 
     install(ContentNegotiation) {
