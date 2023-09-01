@@ -1,6 +1,8 @@
 package no.kartverket.komreg.transformation.rule
 
 import arrow.core.*
+import arrow.core.raise.either
+import arrow.core.raise.zipOrAccumulate
 import com.google.common.collect.ImmutableRangeSet
 import com.google.common.collect.Range
 import com.google.common.collect.RangeSet
@@ -22,7 +24,7 @@ import no.kartverket.komreg.transformation.widenToDomainOrNull
  * | **Switch**    |           |       |                |       |
  *
  */
-sealed interface ComponentRule<A : Comparable<A>> : Rule<A>, CanCauseRangeErrorImpl<A> {
+sealed interface ComponentRule<A : Comparable<A>> : ComponentRuleLike<A>, CanCauseRangeErrorImpl<A> {
 
     override val domain: ComponentDomain<A>
 
@@ -87,11 +89,56 @@ sealed interface ComponentRule<A : Comparable<A>> : Rule<A>, CanCauseRangeErrorI
     fun allDomains(): NonEmptySet<ComponentDomain<*>> = nonEmptySetOf(domain)
 }
 
-operator fun <X : Comparable<X>> Either<RuleError, ComponentRule<X>>.plus(other: ComponentRule<out X>): Either<RuleError, ComponentRule<X>> =
-    when (this) {
-        is Either.Left -> this
-        is Either.Right -> this.value.plus(other)
+sealed interface ComponentRuleLike<in A : Comparable<*>> : Rule<A>
+
+operator fun <A : Comparable<A>, B : A> ComponentRuleLike<A>.plus(other: ComponentRuleLike<B>): Either<RuleError, ComponentRule<A>> {
+    val a = when (this) {
+        is ComponentRule -> this
     }
+    val b = when (other) {
+        is ComponentRule -> other
+    }
+    return a + b
+}
+
+operator fun <A : Comparable<A>, B : A> ComponentRuleLike<A>.plus(other: Either<RuleError, ComponentRuleLike<B>>): Either<RuleError, ComponentRule<A>> {
+    val a = when (this) {
+        is ComponentRule -> this
+    }
+    val b = when (other) {
+        is Either.Left -> return other
+        is Either.Right -> when (val b = other.value) {
+            is ComponentRule -> b
+        }
+    }
+    return a + b
+}
+
+operator fun <A : Comparable<A>, B : A> Either<RuleError, ComponentRuleLike<A>>.plus(
+    other: ComponentRuleLike<B>
+): Either<RuleError, ComponentRule<A>> {
+    val a = when (this) {
+        is Either.Left -> return this
+        is Either.Right -> when (this.value) {
+            is ComponentRule -> this.value
+        }
+    }
+    val b = when (other) {
+        is ComponentRule -> other
+    }
+    return a + b
+}
+
+operator fun <A : Comparable<A>, B : A> Either<RuleError, ComponentRuleLike<A>>.plus(
+    other: Either<RuleError,ComponentRuleLike<B>>
+): Either<RuleError, ComponentRule<A>> = either {
+    zipOrAccumulate(
+        RuleError::plus,
+        { when (val a = this@plus.bind()) { is ComponentRule -> a} },
+        { when (val b = other.bind()) { is ComponentRule -> b} }) { a, b ->
+        a + b
+    }.bind()
+}
 
 
 
