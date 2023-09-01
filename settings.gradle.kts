@@ -29,7 +29,7 @@ dependencyResolutionManagement {
             version("mockk", "1.13.2")
             version("junit", "5.9.0")
             version("spek", "2.0.19")
-            version("kotest", "5.5.5")
+            version("kotest", "5.6.2")
             version("ktor", "2.2.4")
             version("hamcrest", "2.2")
             version("logback", "1.4.5")
@@ -75,7 +75,7 @@ dependencyResolutionManagement {
             library("ktor-client-cio", "io.ktor", "ktor-client-cio").versionRef("ktor")
             library("ktor-server-cors-jvm", "io.ktor", "ktor-server-cors-jvm").versionRef("ktor")
 
-            library("arrow-stack", "io.arrow-kt", "arrow-stack").version("1.1.3")
+            library("arrow-stack", "io.arrow-kt", "arrow-stack").version("1.2.0")
             library("arrow-core", "io.arrow-kt", "arrow-core").withoutVersion()
             library("arrow-fx-coroutines", "io.arrow-kt", "arrow-fx-coroutines").withoutVersion()
             library("arrow-fx-stm", "io.arrow-kt", "arrow-fx-stm").withoutVersion()
@@ -89,6 +89,8 @@ dependencyResolutionManagement {
             library("spek-runner-junit5", "org.spekframework.spek2", "spek-runner-junit5").versionRef("spek")
 
             library("kotest-runner", "io.kotest", "kotest-runner-junit5").versionRef("kotest")
+            library("kotest-extensions-arrow", "io.kotest.extensions:kotest-assertions-arrow:1.3.3")
+
 
             library("mockk", "io.mockk", "mockk").versionRef("mockk")
 
