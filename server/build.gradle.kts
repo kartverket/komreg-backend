@@ -57,6 +57,10 @@ dependencies {
     testImplementation(libs.hamcrest)
     testImplementation(libs.hamcrest.library)
     testImplementation(libs.kotest.runner)
+
+    // TODO: For PoC på uthenting av fordelingsparametre for kommune
+    implementation("com.zaxxer:HikariCP:5.0.1")
+    implementation("com.oracle.database.jdbc:ojdbc11:23.2.0.0")
 }
 
 tasks.test {
