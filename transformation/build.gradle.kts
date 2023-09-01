@@ -24,6 +24,9 @@ dependencies {
 
     api("no.statkart.matrikkel:matrikkel-komreg:4.13-SNAPSHOT")
 
+    api("com.google.guava:guava:32.1.1-jre")
+    implementation(kotlin("reflect"))
+
     // Testing
     testImplementation(kotlin("test"))
     testImplementation(libs.junit.jupiter.api)
@@ -33,4 +36,7 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.hamcrest)
     testImplementation(libs.hamcrest.library)
+    testImplementation(libs.kotest.runner)
+    testImplementation(libs.kotest.extensions.arrow)
+
 }
