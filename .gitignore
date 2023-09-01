@@ -80,7 +80,7 @@ fabric.properties
 .mtj.tmp/
 
 # Package Files #
-# *.jar TODO: Legg tilbake denne når vi har en annen måte å hente matrikkel-komreg-biblioteket
+*.jar
 *.war
 *.nar
 *.ear
