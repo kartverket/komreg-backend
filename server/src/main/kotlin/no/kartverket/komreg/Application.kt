@@ -6,13 +6,13 @@ import io.ktor.http.HttpMethod
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
-import io.ktor.server.metrics.micrometer.*
+import io.ktor.server.metrics.micrometer.MicrometerMetrics
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import io.micrometer.prometheus.*
+import io.micrometer.prometheus.PrometheusConfig
+import io.micrometer.prometheus.PrometheusMeterRegistry
 import org.flywaydb.core.Flyway
+import org.jetbrains.exposed.sql.Database
 import org.rocksdb.RocksDB
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -44,6 +44,7 @@ fun Application.module() {
     }
     if (!env["DB_KOMREG_JDBC_URL"].isNullOrEmpty()) {
         val flyway = Flyway.configure()
+            .schemas("komreg")
             .dataSource(
                 env["DB_KOMREG_JDBC_URL"],
                 env["DB_KOMREG_USERNAME"],
@@ -65,6 +66,13 @@ fun Application.module() {
         allowHost("komreg.test.skip.statkart.no", schemes = listOf("http", "https"))
         allowHeader(HttpHeaders.ContentType)
     }
+
+    Database.connect(
+        url = env["DB_KOMREG_JDBC_URL"],
+        driver = "org.postgresql.Driver",
+        user = env["DB_KOMREG_USERNAME"],
+        password = env["DB_KOMREG_PASSWORD"],
+    )
 
     routes(metricsRegistry)
 }
