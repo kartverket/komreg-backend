@@ -44,6 +44,7 @@ fun Application.module() {
     }
     if (!env["DB_KOMREG_JDBC_URL"].isNullOrEmpty()) {
         val flyway = Flyway.configure()
+            .schemas("komreg")
             .dataSource(
                 env["DB_KOMREG_JDBC_URL"],
                 env["DB_KOMREG_USERNAME"],
