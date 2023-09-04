@@ -29,14 +29,14 @@ For å starte transformeringen kjør http-requesten som ligger under `http/local
 ### Førstegangsoppsett av lokal transformasjonsdatabase:
 
 1. Kopier `DB_KOMREG_JDBC_URL`, `DB_KOMREG_USERNAME` og `DB_KOMREG_PASSWORD` fra .env.template
-   til din egen .env-fil.
+til din egen .env-fil.
 
 2. Start Docker eller Colima (antar Colima):
 ```bash
 colima start
 ```
 
-2. Kjør:
+3. Kjør:
 ```bash
 docker run --name local-postgres -e POSTGRES_USER=komreg -e POSTGRES_PASSWORD=passord -e POSTGRES_DB=local-komreg-db -p 54XX:5432 -d postgres
 ```
