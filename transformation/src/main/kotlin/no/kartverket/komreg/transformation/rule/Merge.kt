@@ -7,14 +7,10 @@ import arrow.core.raise.either
 import arrow.core.right
 import com.google.common.collect.ImmutableRangeSet
 import com.google.common.collect.Range
-import no.kartverket.komreg.transformation.ComponentDomain
-import no.kartverket.komreg.transformation.Transform
+import no.kartverket.komreg.transformation.*
 import no.kartverket.komreg.transformation.error.ConflictingTargetValue
-import no.kartverket.komreg.transformation.error.ConflictingTargetValue.Companion
 import no.kartverket.komreg.transformation.error.RuleError
 import no.kartverket.komreg.transformation.error.TransformError
-import no.kartverket.komreg.transformation.narrowToDomainOrNull
-import no.kartverket.komreg.transformation.widenToDomainOrLeft
 import kotlin.reflect.safeCast
 
 class Merge<A : Comparable<A>> internal constructor(
@@ -26,6 +22,19 @@ class Merge<A : Comparable<A>> internal constructor(
     ComponentRule.SingleTarget<A> {
     override val targetRanges: ImmutableRangeSet<A> =
         ImmutableRangeSet.of(domain.canonicalRange(Range.singleton(targetValue)))
+
+    override fun narrowSourceRange(newSourceRange: Range<out A>): ComponentRule<A>? {
+        if (newSourceRange.widen().encloses(sourceRanges.span())) {
+            return this
+        } else {
+            val newSourceRanges = ImmutableRangeSet
+                .of(newSourceRange.widen())
+                .narrowToDomainOrNull(domain)
+                ?.takeIf { rangeSet -> !rangeSet.isEmpty }
+                ?: return null
+            return Copy(Merge(domain, newSourceRanges, targetValue, explicitRules), explicitRules)
+        }
+    }
 
     override fun <X : A> asCopy(otherDomain: ComponentDomain<X>): Copy<X>? {
         val sourceRanges = sourceRanges.narrowToDomainOrNull(otherDomain) ?: return null
@@ -62,7 +71,7 @@ class Merge<A : Comparable<A>> internal constructor(
     }
 
     override fun transformComponentUnconditionally(value: A): Either<TransformError.Uni, Transform<A>> {
-        return no.kartverket.komreg.transformation.ValueTransform(this, targetValue).right()
+        return ValueTransform(this, targetValue).right()
     }
 
     override fun canEqual(other: Any): Boolean {

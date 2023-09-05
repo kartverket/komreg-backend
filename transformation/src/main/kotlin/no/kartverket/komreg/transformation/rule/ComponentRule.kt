@@ -10,6 +10,7 @@ import no.kartverket.komreg.transformation.ComponentDomain
 import no.kartverket.komreg.transformation.error.DomainMismatch
 import no.kartverket.komreg.transformation.error.CanCauseRangeErrorImpl
 import no.kartverket.komreg.transformation.error.RuleError
+import no.kartverket.komreg.transformation.widen
 import no.kartverket.komreg.transformation.widenToDomainOrNull
 
 /**
@@ -24,9 +25,9 @@ import no.kartverket.komreg.transformation.widenToDomainOrNull
  * | **Switch**    |           |       |                |       |
  *
  */
-sealed interface ComponentRule<A : Comparable<A>> : ComponentRuleLike<A>, CanCauseRangeErrorImpl<A> {
+sealed interface ComponentRule<A : Comparable<A>> : ComponentRuleLike<A>, CanCauseRangeErrorImpl<A, A> {
 
-    override val domain: ComponentDomain<A>
+    val domain: ComponentDomain<A>
 
     sealed interface NonCopy<A : Comparable<A>> : ComponentRule<A>
     sealed interface NonSplit<A : Comparable<A>> : NonCopy<A>
@@ -48,7 +49,15 @@ sealed interface ComponentRule<A : Comparable<A>> : ComponentRuleLike<A>, CanCau
             domain,
             ImmutableRangeSet.of(Range.singleton(sourceValue)),
             targetRanges
-        )
+        ) {
+            final override fun narrowSourceRange(newSourceRange: Range<out A>): SingleSource<A>? {
+                return if (newSourceRange.widen().contains(sourceValue)) {
+                    this
+                } else {
+                    null
+                }
+            }
+        }
 
         final override val sourceRanges: ImmutableRangeSet<A> = requireNotNull(sourceRanges.widenToDomainOrNull(domain)) {
             "Source ranges $sourceRanges does not match domain $domain"
@@ -87,6 +96,8 @@ sealed interface ComponentRule<A : Comparable<A>> : ComponentRuleLike<A>, CanCau
     fun toNonCopy(): NonCopy<A>
 
     fun allDomains(): NonEmptySet<ComponentDomain<*>> = nonEmptySetOf(domain)
+
+    fun narrowSourceRange(newSourceRange: Range<out A>) : ComponentRule<A>?
 }
 
 sealed interface ComponentRuleLike<in A : Comparable<*>> : Rule<A>

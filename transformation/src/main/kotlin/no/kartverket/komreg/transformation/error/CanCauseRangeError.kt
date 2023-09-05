@@ -1,17 +1,13 @@
 package no.kartverket.komreg.transformation.error
 
 import com.google.common.collect.ImmutableRangeSet
-import no.kartverket.komreg.transformation.ComponentDomain
 
-sealed interface CanCauseRangeError<out A : Comparable<*>> {
-    val domain: ComponentDomain<out A>
+sealed interface CanCauseRangeError<out A : Comparable<*>, out B : Comparable<*>> {
     val sourceRanges: ImmutableRangeSet<out A>
-    val targetRanges: ImmutableRangeSet<out A>
-    interface Base<out A :Comparable<*>> : CanCauseRangeError<A>
+    val targetRanges: ImmutableRangeSet<out B>
 }
 
-interface CanCauseRangeErrorImpl<X : Comparable<X>> : CanCauseRangeError.Base<X> {
-    override val domain: ComponentDomain<X>
-    override val sourceRanges: ImmutableRangeSet<X>
-    override val targetRanges: ImmutableRangeSet<X>
+interface CanCauseRangeErrorImpl<A : Comparable<A>, B : Comparable<B>> : CanCauseRangeError<A, B> {
+    override val sourceRanges: ImmutableRangeSet<A>
+    override val targetRanges: ImmutableRangeSet<B>
 }

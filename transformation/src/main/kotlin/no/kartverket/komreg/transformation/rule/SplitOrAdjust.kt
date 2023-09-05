@@ -32,6 +32,7 @@ sealed class SplitOrAdjust<A : Comparable<A>>(
             sourceValue: A,
             splitEntries: NonEmptySet<SplitEntry<*, out A>>
         ): Either<RuleError, Map<KClass<*>, ImmutableRangeMap<*, SplitEntry<*, out A>>>> = either {
+
             val rootDomains =
                 rootDomainMap(splitEntries.map { (rule, _) -> rule.domain })
                     .entries
@@ -60,13 +61,25 @@ sealed class SplitOrAdjust<A : Comparable<A>>(
                     createSplitEntryTreeMap(splitEntry) as TreeRangeMap<Comparable<Any>, Either<RuleError, SplitEntry<*, out A>>>
                 }) { _, acc, splitEntry ->
                     acc.apply {
-                        unsafeAddSplitEntry(domain, sourceValue, splitEntry as SplitEntry<*, A>)
+                        @Suppress("UNCHECKED_CAST")
+                        unsafeAddSplitEntry(splitEntry as SplitEntry<*, A>)
                     }
                 }
                 .mapOrAccumulate(RuleError::plus) { (_, treeRangeMap) ->
                     treeRangeMap
                         .asMapOfRanges()
                         .bindAll()
+                        .entries
+                        .mapNotNull { (range, entry) ->
+                            if (entry.splitOnRule.sourceRanges.span() == range) {
+                                range to entry
+                            } else {
+                                @Suppress("UNCHECKED_CAST")
+                                val entryTyped = (entry as SplitEntry<Comparable<Any>, out A>)
+                                val splitOnRule = entryTyped.splitOnRule.narrowSourceRange(range.widen()) ?: return@mapNotNull null
+                                range to entryTyped.copy(splitOnRule = splitOnRule)
+                            }
+                        }
                         .fold(ImmutableRangeMap.builder<Comparable<Any>, SplitEntry<*, out A>>()) { acc, (range, splitEntry) ->
                             acc.apply {
                                 put(range, splitEntry)
@@ -80,34 +93,59 @@ sealed class SplitOrAdjust<A : Comparable<A>>(
         }
 
         private fun <B : Comparable<B>, A : Comparable<A>> TreeRangeMap<*, out Either<RuleError, SplitEntry<*, out A>>>.unsafeAddSplitEntry(
-            domain: ComponentDomain<A>,
-            sourceValue: A,
             splitEntry: SplitEntry<B, A>
         ) {
 
             @Suppress("UNCHECKED_CAST")
-            val self = this@unsafeAddSplitEntry as TreeRangeMap<B, Either<RuleError, SplitEntry<B, A>>>
+            val self = this@unsafeAddSplitEntry as TreeRangeMap<B, Either<RuleError, SplitEntry<B, out A>>>
 
-            splitEntry.splitOnRule.sourceRanges.asRanges().forEach { sourceRange ->
-                self.merge(sourceRange, splitEntry.right()) { entry1, entry2 ->
-                    either {
-                        val splitEntry1 = entry1.bind()
-                        val splitEntry2 = entry2.bind()
-                        if (splitEntry1.targetValue != splitEntry2.targetValue) {
-                            splitEntry1.asForSourceValue(domain, sourceValue)
-                            raise(
-                                ConflictingTargetValue(
-                                    nonEmptySetOf(
-                                        splitEntry1.asForSourceValue(domain, sourceValue),
-                                        splitEntry2.asForSourceValue(domain, sourceValue)
-                                    )
-                                )
-                            )
-                        }
-                        splitEntry.copy(splitOnRule = splitEntry1.splitOnRule.plus(splitEntry2.splitOnRule).bind())
-                    }
+            for (sourceRange in splitEntry.splitOnRule.sourceRanges.asRanges()) {
+                val intersectMap = ImmutableRangeMap.copyOf(self.subRangeMap(sourceRange))
+                val nonConflictSourceRanges = ImmutableRangeSet.of(sourceRange)
+                    .difference(ImmutableRangeSet.unionOf(intersectMap.asMapOfRanges().keys))
+
+                for (nonIntersectRange in nonConflictSourceRanges.asRanges()) {
+                    require(nonIntersectRange.encloses(splitEntry.splitOnRule.sourceRanges.span()))
+                    self.put(nonIntersectRange, splitEntry.right())
                 }
 
+                for ((intersectRange, existingEntryOrErr) in intersectMap.asMapOfRanges().entries) {
+                    when(existingEntryOrErr) {
+                        is Either.Left -> self.put(intersectRange, existingEntryOrErr)
+                        is Either.Right -> {
+                            val existingEntry = existingEntryOrErr.value
+                            if (existingEntry.targetValue != splitEntry.targetValue) {
+                                self.put(intersectRange, ConflictingTargetValue(nonEmptySetOf(existingEntry, splitEntry)).left())
+                            } else {
+                                when(val splitOnRuleOrErr = existingEntry.splitOnRule + splitEntry.splitOnRule) {
+                                    is Either.Left -> self.put(intersectRange, splitOnRuleOrErr)
+                                    is Either.Right -> {
+                                        when (val backingRule = splitOnRuleOrErr.value.toNonCopy()) {
+                                            is Switch -> {
+                                                backingRule
+                                                    .ruleMap
+                                                    .asMapOfRanges()
+                                                    .values
+                                                    .mapNotNull { rule ->
+                                                        rule.narrowSourceRange(intersectRange)
+                                                    }
+                                                    .forEach { splitOnRule ->
+                                                        self.put(intersectRange, SplitEntry(splitOnRule, splitEntry.targetValue).right())
+                                                    }
+                                            }
+                                            is ComponentRule.NonSwitch -> {
+                                                splitOnRuleOrErr.value.narrowSourceRange(intersectRange)?.let { splitOnRule ->
+                                                    self.put(intersectRange, SplitEntry(splitOnRule, splitEntry.targetValue).right())
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+                }
             }
         }
 
@@ -178,37 +216,13 @@ sealed class SplitOrAdjust<A : Comparable<A>>(
     data class SplitEntry<B : Comparable<B>, A : Comparable<A>>(
         val splitOnRule: ComponentRule<B>,
         val targetValue: A
-    ) {
+    ) : CanCauseRangeErrorImpl<B, A> {
 
-        fun asForSourceValue(domain: ComponentDomain<A>, sourceValue: A): CanCauseRangeError<A> =
-            WithSourceValue(domain, sourceValue)
+        override val sourceRanges: ImmutableRangeSet<B>
+            get() = splitOnRule.sourceRanges
+        override val targetRanges: ImmutableRangeSet<A>
+            get() = ImmutableRangeSet.of(Range.singleton(targetValue))
 
-        private inner class WithSourceValue(override val domain: ComponentDomain<A>, sourceValue: A) :
-            CanCauseRangeErrorImpl<A> {
-            override val sourceRanges: ImmutableRangeSet<A> =
-                ImmutableRangeSet.of(domain.canonicalRange(Range.singleton(sourceValue)))
-            override val targetRanges: ImmutableRangeSet<A> =
-                ImmutableRangeSet.of(domain.canonicalRange(Range.singleton(targetValue)))
-
-            override fun equals(other: Any?): Boolean {
-                if (this === other) return true
-                if (javaClass != other?.javaClass) return false
-
-                other as SplitEntry<*, *>.WithSourceValue
-
-                if (sourceRanges != other.sourceRanges) return false
-                if (targetRanges != other.targetRanges) return false
-
-                return true
-            }
-
-            override fun hashCode(): Int {
-                var result = sourceRanges.hashCode()
-                result = 31 * result + targetRanges.hashCode()
-                return result
-            }
-
-        }
     }
 
     override fun transform(values: Iterable<Comparable<*>>): Either<TransformError, List<Transform<*>>> = either {

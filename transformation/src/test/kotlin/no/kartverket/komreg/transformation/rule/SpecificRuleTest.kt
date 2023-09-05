@@ -35,7 +35,7 @@ class SpecificRuleTest : BehaviorSpec({
                 val b = Specific(Fylkesnummer.domain, specific.sourceValue, Fylkesnummer(22))
                 then("the rules should not compose") {
                     val error = (specific + b).shouldBeLeft()
-                    error as ConflictingTargetValue<*>
+                    error as ConflictingTargetValue<*,*>
                     error.rules.map { (it as ComponentRule<*>).toNonCopy() } shouldBe (setOf(specific, b))
                 }
             }
@@ -79,7 +79,7 @@ class SpecificRuleTest : BehaviorSpec({
                     Fylkesnummer.domain.distance(specific.sourceValue, specific.targetValue) - 1)
                 then("the rules should not compose") {
                     val error = (specific + increment).shouldBeLeft()
-                    error.shouldBeTypeOf<ConflictingTargetValue<*>>()
+                    error.shouldBeTypeOf<ConflictingTargetValue<*,*>>()
 
                     error.rules.map { (it as ComponentRule<*>).toNonCopy() } shouldBe (setOf(specific, increment))
                 }

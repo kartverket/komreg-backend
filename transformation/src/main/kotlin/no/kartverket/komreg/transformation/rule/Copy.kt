@@ -3,6 +3,7 @@ package no.kartverket.komreg.transformation.rule
 import arrow.core.*
 import arrow.core.raise.either
 import com.google.common.collect.ImmutableRangeSet
+import com.google.common.collect.Range
 import no.kartverket.komreg.transformation.ComponentDomain
 import no.kartverket.komreg.transformation.Transform
 import no.kartverket.komreg.transformation.error.RuleError
@@ -68,6 +69,14 @@ class Copy<A : Comparable<A>>(
 
     override fun toNonCopy(): ComponentRule.NonCopy<A> {
         return backingRule
+    }
+
+    override fun narrowSourceRange(newSourceRange: Range<out A>): ComponentRule<A>? {
+        val backingRule= backingRule.narrowSourceRange(newSourceRange) ?: return null
+        return when (backingRule) {
+            is ComponentRule.NonCopy -> Copy(backingRule, explicitRules)
+            is Copy -> backingRule
+        }
     }
 
     override fun equals(other: Any?): Boolean {

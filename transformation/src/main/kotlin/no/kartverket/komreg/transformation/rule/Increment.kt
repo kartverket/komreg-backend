@@ -66,10 +66,6 @@ class Increment<A : Comparable<A>>(
         }
     }
 
-    init {
-        require(domain.span(sourceRanges.widen().span())?.let { it > 1L } ?: true) { "Increment must span at least two source values" }
-    }
-
     override fun plus(other: ComponentRule<out A>): Either<RuleError, ComponentRule<A>> = either {
         val sourceRangeIntersect = sourceRanges.intersection(other.sourceRanges.widen())
         if (!sourceRangeIntersect.isEmpty) {
@@ -119,5 +115,19 @@ class Increment<A : Comparable<A>>(
 
     override fun canEqual(other: Any): Boolean {
         return other is Increment<*>
+    }
+
+    override fun narrowSourceRange(newSourceRange: Range<out A>): ComponentRule<A>? {
+        if (newSourceRange.widen().encloses(sourceRanges.span())) {
+            return this
+        } else {
+            val newSourceRanges = ImmutableRangeSet
+                .of(newSourceRange.widen())
+                .narrowToDomainOrNull(domain)
+                ?.takeIf { rangeSet -> !rangeSet.isEmpty }
+                ?: return null
+
+            return Copy(Increment(domain, newSourceRanges, offset), nonEmptySetOf(this))
+        }
     }
 }

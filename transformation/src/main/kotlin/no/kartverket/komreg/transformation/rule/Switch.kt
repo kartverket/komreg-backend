@@ -6,16 +6,13 @@ import com.google.common.collect.*
 import no.kartverket.komreg.transformation.*
 import no.kartverket.komreg.transformation.NoTransformAny
 import no.kartverket.komreg.transformation.NoTransformNothing
-import no.kartverket.komreg.transformation.error.AmbiguousTransform
-import no.kartverket.komreg.transformation.error.NoRules
-import no.kartverket.komreg.transformation.error.RuleError
-import no.kartverket.komreg.transformation.error.TransformError
+import no.kartverket.komreg.transformation.error.*
 import java.lang.UnsupportedOperationException
 import kotlin.reflect.safeCast
 
 class Switch<A : Comparable<A>> private constructor(
     domain: ComponentDomain<A>,
-    val ruleMap: ImmutableRangeMap<A, out ComponentRule.NonSwitch<out A>>,
+    val ruleMap: ImmutableRangeMap<A, out ComponentRule.NonSwitch<A>>,
     override val explicitRules: NonEmptySet<ComponentRule.Explicit<*>>
 ) : NonCopyImpl<A>(domain), ComponentRule.Implicit<A>, ComponentRule.NonSplit<A> {
     companion object {
@@ -46,34 +43,68 @@ class Switch<A : Comparable<A>> private constructor(
 
         private fun <A : Comparable<A>> make(
             domain: ComponentDomain<A>,
-            moreRulePairs: NonEmptySet<Pair<Range<out A>, ComponentRule<out A>>>
+            rulePairs: NonEmptySet<Pair<Range<out A>, ComponentRule<out A>>>
         ): Either<RuleError, Switch<A>> = either {
             TreeRangeMap
-                .create<A, Either<RuleError, ComponentRule<out A>>>()
+                .create<A, Either<RuleError, ComponentRule.NonSwitch<A>>>()
                 .apply {
-                    moreRulePairs
-                        .toList()
-                        .flatMap { rangeRulePair ->
-                            when (val rule = rangeRulePair.second) {
-                                is Switch -> {
-                                    rule.ruleMap.asMapOfRanges().entries.map { (range, rule) ->
-                                        range to rule
+                    rulePairs
+//                        .toList()
+//                        .flatMap { rangeRulePair ->
+//                            when (val rule = rangeRulePair.second) {
+//                                is Switch -> {
+//                                    rule.ruleMap.asMapOfRanges().entries.map { (range, rule) ->
+//                                        range to rule
+//                                    }
+//                                }
+//
+//                                else -> listOf(rangeRulePair)
+//                            }
+//                        }
+//                        .mapOrAccumulate(RuleError::plus) { (range, rule) ->
+//                            range.widen().narrowToDomainOrLeft(domain).bind() to rule.toDomainOrLeft(domain)
+//                        }
+//                        .bind()
+                        //.filterNot { (range, _) -> range.isEmpty }
+                        .forEach { (range, rule) ->
+                            either {
+                                val sourceRangeBounds = range.widen().narrowToDomainOrLeft(domain).bind()
+                                require(sourceRangeBounds.encloses(rule.sourceRanges.span().widen()))
+
+                                when(val backingRule = rule.toNonCopy()) {
+                                    is ComponentRule.NonSwitch -> {
+                                        put(sourceRangeBounds, rule.toDomainOrLeft(domain).map { it as ComponentRule.NonSwitch<A> })
+                                    }
+                                    is Switch -> {
+                                        for ((switchedRuleRange,switchedRule) in backingRule.ruleMap.asMapOfRanges().entries) {
+                                            require(switchedRule.sourceRanges.span().widen().encloses(switchedRuleRange.widen()))
+                                            val intersectMap = ImmutableRangeMap.copyOf(subRangeMap(switchedRuleRange.widen()))
+                                            val nonIntersectRanges = ImmutableRangeSet.of(switchedRuleRange.widen()).difference(ImmutableRangeSet.unionOf(intersectMap.asMapOfRanges().keys))
+                                            for (nonIntersectRange in nonIntersectRanges.asRanges()) {
+                                                put(nonIntersectRange, switchedRule.toDomainOrLeft(domain).map { it as ComponentRule.NonSwitch<A> })
+                                            }
+                                            for ((intersectRange, existingRuleOrErr) in intersectMap.asMapOfRanges()) {
+                                                val existingRule = existingRuleOrErr.bind()
+                                                val either = (existingRule + switchedRule).bind()
+                                                if (either is ComponentRule.NonSwitch) {
+                                                    put(intersectRange, either.right())
+                                                } else {
+                                                    put(
+                                                        intersectRange,
+                                                        ConflictingTargetValue(
+                                                            nonEmptySetOf(
+                                                                switchedRule,
+                                                                existingRule
+                                                            )
+                                                        ).left()
+                                                    )
+                                                }
+                                            }
+
+                                        }
                                     }
                                 }
 
-                                else -> listOf(rangeRulePair)
-                            }
-                        }
-                        .mapOrAccumulate(RuleError::plus) { (range, rule) ->
-                            range.widen().narrowToDomainOrLeft(domain).bind() to rule.toDomainOrLeft(domain)
-                        }
-                        .bind()
-                        .filterNot { (range, _) -> range.isEmpty }
-                        .forEach { (range, rule) ->
-                            merge(range, rule) { errOrRule1, errOrRule2 ->
-                                with(domain) {
-                                    (errOrRule1.bind() plusInDomain errOrRule2.bind())
-                                }
                             }
                         }
                 }
@@ -82,12 +113,7 @@ class Switch<A : Comparable<A>> private constructor(
                 .entries
                 .flatMap { (range, rule) ->
                     when (val rule = rule.toNonCopy()) {
-                        is Switch -> {
-                            rule.ruleMap.asMapOfRanges().entries.map { (range, rule) ->
-                                range.widen() to rule
-                            }
-                        }
-
+                        is Switch -> throw IllegalStateException("NonCopy of NonSwitch should not be Switch")
                         is ComponentRule.Explicit -> listOf(range to rule)
                         is Merge -> listOf(range to rule)
                     }
@@ -95,10 +121,10 @@ class Switch<A : Comparable<A>> private constructor(
                 .filterNot { (range, _) -> range.isEmpty }
                 .let { entries ->
                     if (entries.isEmpty()) {
-                        raise(NoRules(domain, moreRulePairs.map { it.second }.toNonEmptySet()))
+                        raise(NoRules(domain, rulePairs.map { it.second }.toNonEmptySet()))
                     }
                     val newRuleMap = ImmutableRangeMap
-                        .builder<A, ComponentRule.NonSwitch<out A>>()
+                        .builder<A, ComponentRule.NonSwitch<A>>()
                         .run {
                             for ((range, mergedRule) in entries) {
                                 put(range, mergedRule)
@@ -135,6 +161,28 @@ class Switch<A : Comparable<A>> private constructor(
             .flatMap { rule -> rule.targetRanges.asRanges() }
             .map { range -> domain.canonicalRange(range.widen()) }
             .let { ImmutableRangeSet.unionOf(it) }
+
+    override fun narrowSourceRange(newSourceRange: Range<out A>): ComponentRule<A>? {
+        if (newSourceRange.widen().encloses(sourceRanges.span())) {
+            return this
+        }
+        val newRuleMap = ruleMap.asMapOfRanges()
+            .values
+            .mapNotNull { v ->
+                v.narrowSourceRange(newSourceRange) as ComponentRule.NonSwitch<A>?
+            }
+            .fold(ImmutableRangeMap.builder<A, ComponentRule.NonSwitch<A>>()) { acc, nonSwitch ->
+                acc.apply {
+                    nonSwitch.sourceRanges.asRanges().forEach { range -> put(range, nonSwitch) }
+                }
+            }
+            .build()
+        return if (ruleMap.asMapOfRanges().isNotEmpty()) {
+            Switch(domain, newRuleMap, explicitRules)
+        } else {
+            null
+        }
+    }
 
     override fun plus(other: ComponentRule<out A>): Either<RuleError, Switch<A>> = either {
         val rulePairs = other.sourceRanges.asRanges().mapOrAccumulate(RuleError::plus) { range ->

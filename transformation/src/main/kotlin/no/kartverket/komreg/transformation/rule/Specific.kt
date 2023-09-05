@@ -50,7 +50,7 @@ class Specific<A : Comparable<A>>(
                 if (targetValue - other.offset == sourceValue) {
                     other.toDomainOrLeft(domain).bind()
                 } else {
-                    raise(raise(ConflictingTargetValue(nonEmptySetOf(this@Specific, other))))
+                    raise(ConflictingTargetValue(nonEmptySetOf(this@Specific, other)))
                 }
             }
             is Specific ->

@@ -66,7 +66,8 @@ class SplitRuleTest : BehaviorSpec({
                     )
                 ).shouldBeRight().toNonCopy()
 
-                val err = (aSplitRule + otherSplitRule).shouldBeLeft().shouldBeInstanceOf<ConflictingTargetValue<Fylkesnummer>>()
+                val result = aSplitRule + otherSplitRule
+                val err = result.shouldBeLeft().shouldBeInstanceOf<ConflictingTargetValue<Kommunenummer.Lopenummer, Fylkesnummer>>()
 
                 err.conflictRanges.asMapOfRanges().values.shouldForAll { targetRanges ->
                     targetRanges.asRanges().shouldForAll { targetRange -> targetRange.contains(targetFylkesnummer) || targetRange.contains(otherFylkesnummer) }
@@ -103,7 +104,7 @@ class SplitRuleTest : BehaviorSpec({
     given(""""at man prøver å splitte et fylke i tre deler, der:
         knr < 10 går til fnr 21,
         knr 2..4 går til fnr 22, og 
-        knr 6..8 går til fnr 23""") {
+        knr 6..8 går til fnr 23""".replace('\n', ';')) {
         val fylkeSomSkalSplittes = Fylkesnummer(11)
         val knrLt10ToFnr21 = SplitOrAdjust.SplitEntry(
             Increment(
@@ -133,18 +134,16 @@ class SplitRuleTest : BehaviorSpec({
 
 
         then("skal det feile med at konflikt i målverdier") {
-            val errValue = Split(
+            val split = Split(
                 Fylkesnummer.domain,
                 fylkeSomSkalSplittes,
                 invalidSplitEntries
-            ).shouldBeLeft()
+            )
+            val errValue = split.shouldBeLeft()
 
-            errValue.shouldBeInstanceOf<ConflictingTargetValue<*>>()
+            errValue.shouldBeInstanceOf<ConflictingTargetValue<*, *>>()
 
-            errValue.conflictRanges.asMapOfRanges().entries.shouldForAll { (sourceValue, targetValues) ->
-                sourceValue
-                    .shouldBeInstanceOf<Range<Fylkesnummer>>()
-                    .shouldBe(Fylkesnummer.domain.canonicalRange(Range.singleton(fylkeSomSkalSplittes)))
+            errValue.conflictRanges.asMapOfRanges().entries.shouldForAll { (_, targetValues) ->
                 targetValues.asRanges().shouldForAll { targetRange ->
                     targetRange.shouldBeInstanceOf<Range<Fylkesnummer>>()
                         .intersection(Range.closed(Fylkesnummer(21), Fylkesnummer(23)))
@@ -226,7 +225,7 @@ class SplitRuleTest : BehaviorSpec({
                 val composite = listOf(Fylkesnummer(10), Kommunenummer.Lopenummer(5))
                 val result = splitRule.transform(composite).shouldBeRight()
 
-                result.shouldForAll { it.shouldBeInstanceOf<no.kartverket.komreg.transformation.NoTransform<*>>() }
+                result.shouldForAll { it.shouldBeInstanceOf<NoTransform<*>>() }
             }
         }
 
