@@ -17,8 +17,8 @@ https://github.com/settings/tokens (du trenger bare `read:packages`).
 
 I `transformation/src/resources/properties.conf` finner man konfigurasjonen for hvilken database
 transformasjonene går mot, som henter inn nødvendige properties fra miljøvariabler i det gitte miljøet.
-Når man kjører opp løsningen lokalt trenger man å lage en kopi av `.env.template` på rot, og kalle den `.env`. 
-Hvis man vil kjøre mot en spesifikk database så endrer man bare på verdiene i denne. Den er ignorert i git, så 
+Når man kjører opp løsningen lokalt trenger man å lage en kopi av `.env.template` på rot, og kalle den `.env`.
+Hvis man vil kjøre mot en spesifikk database så endrer man bare på verdiene i denne. Den er ignorert i git, så
 det er ingen fare for å sjekke den inn.
 
 Start applikasjonen ved å kjøre funksjonen `Application.main()` som ligger i `server/src/.../Application.kt`.
@@ -36,7 +36,7 @@ til din egen .env-fil.
 colima start
 ```
 
-2. Kjør:
+3. Kjør:
 ```bash
 docker run --name local-postgres -e POSTGRES_USER=komreg -e POSTGRES_PASSWORD=passord -e POSTGRES_DB=local-komreg-db -p 54XX:5432 -d postgres
 ```
