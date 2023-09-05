@@ -48,10 +48,6 @@ dependencies {
     implementation("org.postgresql:postgresql:42.6.0")
     implementation("org.flywaydb:flyway-core:9.21.1")
 
-    implementation("org.jetbrains.exposed:exposed-core:0.42.1")
-    implementation("org.jetbrains.exposed:exposed-dao:0.42.1")
-    runtimeOnly("org.jetbrains.exposed:exposed-jdbc:0.42.1")
-
     testImplementation(kotlin("test"))
     testImplementation(libs.junit.jupiter.api)
     testRuntimeOnly(libs.junit.jupiter.engine)

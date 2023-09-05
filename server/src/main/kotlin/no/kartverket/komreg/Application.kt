@@ -12,7 +12,6 @@ import io.ktor.server.plugins.cors.routing.CORS
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import org.flywaydb.core.Flyway
-import org.jetbrains.exposed.sql.Database
 import org.rocksdb.RocksDB
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -66,13 +65,6 @@ fun Application.module() {
         allowHost("komreg.test.skip.statkart.no", schemes = listOf("http", "https"))
         allowHeader(HttpHeaders.ContentType)
     }
-
-    Database.connect(
-        url = env["DB_KOMREG_JDBC_URL"],
-        driver = "org.postgresql.Driver",
-        user = env["DB_KOMREG_USERNAME"],
-        password = env["DB_KOMREG_PASSWORD"],
-    )
 
     routes(metricsRegistry)
 }
