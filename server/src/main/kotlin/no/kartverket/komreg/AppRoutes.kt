@@ -257,7 +257,7 @@ fun Application.routes(metricsRegistry: PrometheusMeterRegistry) {
         }
 
         // Get regulering by id
-        route("/regulering/{id}") {
+        route("/reguleringer/{id}") {
             get {
                 val regId = call.parameters["id"]
 
@@ -279,7 +279,7 @@ fun Application.routes(metricsRegistry: PrometheusMeterRegistry) {
         }
 
         // Create new regulering
-        route("/regulering") {
+        route("/reguleringer") {
             post {
                 val regulering: Regulering = call.receive()
 
@@ -300,7 +300,7 @@ fun Application.routes(metricsRegistry: PrometheusMeterRegistry) {
         }
 
         // Modify (replace) existing regulering
-        route("/regulering") {
+        route("/reguleringer") {
             put {
                 val regulering: Regulering = call.receive()
 
@@ -336,7 +336,7 @@ fun Application.routes(metricsRegistry: PrometheusMeterRegistry) {
         }
 
         // Delete regulering by id
-        route("/regulering/{regId}") {
+        route("/reguleringer/{regId}") {
             delete {
                 val regId = call.parameters["regId"]
 
@@ -365,7 +365,7 @@ fun Application.routes(metricsRegistry: PrometheusMeterRegistry) {
         }
 
         // Get endring by id in regulering by id
-        route("/regulering/{regId}/{endrId}") {
+        route("/reguleringer/{regId}/{endrId}") {
             get {
                 val regId = call.parameters["regId"]
                 val endrId = call.parameters["endrId"]
@@ -396,7 +396,7 @@ fun Application.routes(metricsRegistry: PrometheusMeterRegistry) {
         }
 
         // Create new endring in regulering by reguleringId
-        route("/regulering/{regId}") {
+        route("/reguleringer/{regId}") {
             post {
                 val regId = call.parameters["regId"]
                 val endringJson: String = call.receiveText()
@@ -431,7 +431,7 @@ fun Application.routes(metricsRegistry: PrometheusMeterRegistry) {
         }
 
         // Modify (replace) existing endring by id in regulering by id
-        route("/regulering/{regId}/{endringId}") {
+        route("/reguleringer/{regId}/{endringId}") {
             put {
                 val regId = call.parameters["regId"]
                 val endringId = call.parameters["endringId"]
@@ -473,7 +473,7 @@ fun Application.routes(metricsRegistry: PrometheusMeterRegistry) {
         }
 
         // Delete existing endring by id in regulering by id
-        route("/regulering/{regId}/{endringId}") {
+        route("/reguleringer/{regId}/{endringId}") {
             delete {
                 val regId = call.parameters["regId"]
                 val endringId = call.parameters["endringId"]
