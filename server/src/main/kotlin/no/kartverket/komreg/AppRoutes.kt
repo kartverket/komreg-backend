@@ -395,6 +395,33 @@ fun Application.routes(metricsRegistry: PrometheusMeterRegistry) {
             }
         }
 
+        route("/reguleringer/{regId}/endringer") {
+            get {
+                val regId = call.parameters["regId"]
+
+                val connection = DriverManager.getConnection(url, user, password)
+                val statement = connection.prepareStatement("SELECT regulering FROM regulering WHERE id = ?")
+                statement.setString(1, regId)
+                val resultSet = statement.executeQuery()
+
+                if (resultSet.next()) {
+                    val reguleringJson = resultSet.getString("regulering")
+                    val regulering = Json.decodeFromString<Regulering>(reguleringJson)
+
+                    if (regulering.endringer.isNotEmpty()) {
+                        call.respond(regulering.endringer)
+                    } else {
+                        call.respond(HttpStatusCode.NotFound, "No Endringer found for the specified Regulering.")
+                    }
+                } else {
+                    call.respond(HttpStatusCode.NotFound, "Regulering not found.")
+                }
+
+                statement.close()
+                connection.close()
+            }
+        }
+
         // Create new endring in regulering by reguleringId
         route("/reguleringer/{regId}/endringer") {
             post {
