@@ -1,3 +1,5 @@
+ALTER DATABASE "komreg-db" SET search_path TO komreg;
+
 CREATE TABLE regulering (
     id VARCHAR(255) PRIMARY KEY,
     regulering JSONB NOT NULL,
