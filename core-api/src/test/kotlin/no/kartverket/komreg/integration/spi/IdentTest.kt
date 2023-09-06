@@ -1,6 +1,7 @@
 package no.kartverket.komreg.integration.spi
 
 import io.kotest.core.spec.style.AnnotationSpec
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
@@ -10,7 +11,7 @@ import no.kartverket.komreg.core.domain.Fylkesnummer
 import no.kartverket.komreg.core.domain.Kommunenummer
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.assertThrows
-import java.lang.IllegalArgumentException
+import kotlin.IllegalArgumentException
 
 private typealias KommuneIdent = Ident2<Fylkesnummer, Kommunenummer.Lopenummer>
 private typealias FylkeIdent = Ident1<Fylkesnummer>
@@ -206,5 +207,32 @@ class IdentTest : AnnotationSpec() {
         val ident2 = json.decodeFromString<Ident>(str)
 
         assertEquals(ident1, ident2)
+    }
+
+    @Test
+    suspend fun nonSerializableType() {
+        abstract class IllegalIdentType<T : Comparable<T>> : Comparable<IllegalIdentType<T>> {
+            abstract val value: T
+        }
+
+        @Serializable
+        class IllegalIdentTypeImpl(override val value: Int) : IllegalIdentType<Int>() {
+            override fun compareTo(other: IllegalIdentType<Int>): Int {
+                return this.value.compareTo(other.value)
+            }
+        }
+
+        val identType = identTypeOf1<IllegalIdentType<Int>>()
+        val json = Json {
+            serializersModule = SerializersModule {
+                polymorphic(Comparable::class) {
+                    subclass(IllegalIdentTypeImpl::class)
+                }
+            }
+        }
+
+        val ident1: Ident = identType(IllegalIdentTypeImpl(13))
+        val ex = assertThrows<IllegalArgumentException> { json.encodeToString(ident1) }
+        assertEquals("Can not serialize Ident with non-Class types", ex.message)
     }
 }

@@ -24,7 +24,7 @@ import java.util.TreeMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.full.starProjectedType
-import kotlin.reflect.javaType
+import kotlin.reflect.jvm.javaType
 import kotlin.reflect.typeOf
 
 /**
@@ -403,6 +403,10 @@ class IdentTypeSerializer : KSerializer<IdentOrEmptyType<*>> {
     override fun serialize(encoder: Encoder, value: IdentOrEmptyType<*>) {
         encoder.beginCollection(descriptor, value.size).apply {
             value.types.forEachIndexed { index, element ->
+                val javaType = element.javaType
+                if (javaType !is Class<*>) {
+                    throw IllegalArgumentException("Can not serialize Ident with non-Class types")
+                }
                 encodeSerializableElement(descriptor, index, elementSerializer, element.javaType.typeName)
             }
         }.endStructure(descriptor)
@@ -415,8 +419,8 @@ class IdentTypeSerializer : KSerializer<IdentOrEmptyType<*>> {
                 val index = decodeElementIndex(descriptor)
                 if (index == CompositeDecoder.DECODE_DONE) break
                 val typeString = decodeSerializableElement(descriptor, index, elementSerializer)
-                val c = Class.forName(typeString) // TODO: Dette virker ikke for alle typer
-                val type = c.kotlin.starProjectedType // TODO: Blant annet så blir ikke eventuelle typeparametre med
+                val c = Class.forName(typeString)
+                val type = c.kotlin.starProjectedType
                 types.add(type)
             }
             types
