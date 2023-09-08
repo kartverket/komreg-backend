@@ -44,8 +44,13 @@ class IdentType<T : Ident, A : Comparable<A>> private constructor(
         private val refQueue: ReferenceQueue<IdentOrEmptyType<*>> = ReferenceQueue()
         private val cacheLock = Mutex()
 
-        internal suspend fun makeOrGetFromCache(kotlinTypes: NonEmptyList<KType>): IdentType<*, *> =
-            makeOrGetFromCache(kotlinTypes, true)
+        internal suspend fun makeOrGetFromCache(kotlinTypes: NonEmptyList<KType>): IdentType<*, *> {
+            kotlinTypes.forEach {
+                if (it.isMarkedNullable) throw IllegalArgumentException("Ident component can not be nullable")
+                if (it.arguments.isNotEmpty()) throw IllegalArgumentException("Ident component type can't have arguments")
+            }
+            return makeOrGetFromCache(kotlinTypes, true)
+        }
 
         private suspend fun makeOrGetFromCache(
             kotlinTypes: NonEmptyList<KType>,
@@ -394,7 +399,7 @@ private fun IdentOrEmptyType<*>.createIndexMapping(
     }
     .toMap()
 
-@OptIn(ExperimentalSerializationApi::class, ExperimentalStdlibApi::class)
+@OptIn(ExperimentalSerializationApi::class)
 class IdentTypeSerializer : KSerializer<IdentOrEmptyType<*>> {
     private val elementSerializer = String.serializer()
 
