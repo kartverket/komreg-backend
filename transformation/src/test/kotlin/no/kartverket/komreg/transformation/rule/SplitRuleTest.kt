@@ -10,14 +10,14 @@ import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.inspectors.shouldForAll
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldMatchInOrder
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.matchers.types.shouldBeTypeOf
-import no.kartverket.komreg.core.domain.Fylkesnummer
-import no.kartverket.komreg.core.domain.Kommunenummer
+import no.kartverket.komreg.core.domain.*
 import no.kartverket.komreg.matrikkel.domain.domain
 import no.kartverket.komreg.transformation.NoTransform
 import no.kartverket.komreg.transformation.ValueTransform
@@ -306,6 +306,31 @@ class SplitRuleTest : BehaviorSpec({
             }
 
 
+        }
+    }
+
+    given("an uncountable domain") {
+        // Ikke realistisk at kretstype endres fra S til S1/S2, men dette er bare for å teste at rule og domain spiller på lag
+        val rule = Split(
+            Kretstype.domain,
+            Kretstype("S"),
+            listOf(
+                SplitOrAdjust.SplitEntry(
+                    Specific(Kretsnummer.domain, Kretsnummer(1), Kretsnummer(1)),
+                    Kretstype("S1")
+                ),
+                SplitOrAdjust.SplitEntry(
+                    Specific(Kretsnummer.domain, Kretsnummer(2), Kretsnummer(1)),
+                    Kretstype("S2")
+                ),
+            )
+        ).shouldBeRight()
+
+        then ("Split rule should work") {
+            val result = rule.transform(listOf(Kretstype("S"), Kretsnummer(1))).shouldBeRight()
+            result.shouldHaveSize(2).toList()[0]
+                .shouldBeInstanceOf<ValueTransform<Kretstype>>()
+                .targetValue shouldBe Kretstype("S1")
         }
     }
 

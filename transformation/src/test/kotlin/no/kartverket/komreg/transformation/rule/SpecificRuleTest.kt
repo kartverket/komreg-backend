@@ -5,11 +5,15 @@ import com.google.common.collect.Range
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.BehaviorSpec
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.matchers.types.shouldBeTypeOf
+import no.kartverket.komreg.core.domain.Adressenummerbokstav
 import no.kartverket.komreg.core.domain.Fylkesnummer
 import no.kartverket.komreg.matrikkel.domain.domain
+import no.kartverket.komreg.transformation.ValueTransform
 import no.kartverket.komreg.transformation.error.ConflictingTargetValue
 
 class SpecificRuleTest : BehaviorSpec({
@@ -84,6 +88,23 @@ class SpecificRuleTest : BehaviorSpec({
                     error.rules.map { (it as ComponentRule<*>).toNonCopy() } shouldBe (setOf(specific, increment))
                 }
             }
+        }
+    }
+
+    given("an uncountable domain") {
+        // Det er ikke forventet at man skal endre bokstaver på denne måte, men det skal i prinsippet virke
+        val rule = Specific(
+            Adressenummerbokstav.domain,
+            Adressenummerbokstav('A'),
+            Adressenummerbokstav('B')
+        )
+
+        then ("Specific rule should work") {
+            val result = rule.transform(listOf(Adressenummerbokstav('A'))).shouldBeRight()
+            result.shouldHaveSize(1)
+                .single()
+                .shouldBeInstanceOf<ValueTransform<Adressenummerbokstav>>()
+                .targetValue shouldBe Adressenummerbokstav('B')
         }
     }
 })
