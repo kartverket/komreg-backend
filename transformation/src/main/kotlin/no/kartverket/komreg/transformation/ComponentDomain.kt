@@ -368,6 +368,35 @@ abstract class ComponentDomain<A : Comparable<A>> {
 
     }
 
+    /**
+     * A base class for domains of values that are comparable, but not countable.
+     * @see [ComponentDomain]
+     */
+    abstract class Uncountable<A : Comparable<A>>(
+        final override val classifier: KClass<A>
+    ) : ComponentDomain<A>() {
+
+        final override val minValue: A? = null
+        final override val maxValue: A? = null
+
+        final override fun A.unsafePlus(n: Long): A {
+            throw ArithmeticException("Value not addable")
+        }
+
+        final override fun A.unsafeMinus(n: Long): A {
+            throw ArithmeticException("Value not subtractable")
+        }
+
+        final override fun distance(start: A, end: A): Long {
+            throw ArithmeticException("Value not have distance")
+        }
+
+        final override fun isOfSameTypeAs(other: ComponentDomain<*>): Boolean {
+            return other is Uncountable<*>
+        }
+
+    }
+
     infix fun ComponentRule<out A>.plusInDomain(
         other: ComponentRule<out A>
     ): Either<RuleError, ComponentRule<A>> = either {
