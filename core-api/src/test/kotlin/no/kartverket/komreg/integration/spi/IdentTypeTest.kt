@@ -1,6 +1,8 @@
 package no.kartverket.komreg.integration.spi
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
 import no.kartverket.komreg.core.domain.Fylkesnummer
 import no.kartverket.komreg.core.domain.Kommunenummer
 import org.junit.jupiter.api.Assertions.*
@@ -22,5 +24,16 @@ class IdentTypeTest : FunSpec({
         assertEquals(2, type1.types.size, "type1.types.size")
         assertEquals(3, type2.types.size, "type2.types.size")
         assertEquals(type1.types, type2.types.subList(0, 2), "type1 ⊆ type2")
+    }
+
+    test("can't have type arguments") {
+        class IllegalComponentType<T> : Comparable<IllegalComponentType<T>> {
+            override fun compareTo(other: IllegalComponentType<T>): Int {
+                throw NotImplementedError()
+            }
+        }
+
+        shouldThrow<IllegalArgumentException> { identTypeOf1<IllegalComponentType<String>>() }
+            .message shouldBe "Ident component type can't have arguments"
     }
 })
