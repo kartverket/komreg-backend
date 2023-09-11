@@ -7,7 +7,6 @@ import io.ktor.server.request.receive
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
 import io.ktor.server.routing.*
-import io.micrometer.prometheus.PrometheusMeterRegistry
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -17,9 +16,7 @@ import no.kartverket.komreg.env
 import java.sql.Date
 import java.sql.DriverManager
 
-class ReguleringRoutes
-
-fun Application.reguleringRoutes(metricsRegistry: PrometheusMeterRegistry) {
+fun Application.reguleringRoutes() {
     val url = env["DB_KOMREG_JDBC_URL"]
     val user = env["DB_KOMREG_USERNAME"]
     val password = env["DB_KOMREG_PASSWORD"]

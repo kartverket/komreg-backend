@@ -12,7 +12,8 @@ import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
-import no.kartverket.komreg.routes.appRoutes
+import no.kartverket.komreg.routes.grunndataRoutes
+import no.kartverket.komreg.routes.internalRoutes
 import no.kartverket.komreg.routes.reguleringRoutes
 import org.flywaydb.core.Flyway
 import org.rocksdb.RocksDB
@@ -69,6 +70,7 @@ fun Application.module() {
         allowHeader(HttpHeaders.ContentType)
     }
 
-    appRoutes(metricsRegistry)
-    reguleringRoutes(metricsRegistry)
+    internalRoutes(metricsRegistry)
+    reguleringRoutes()
+    grunndataRoutes()
 }

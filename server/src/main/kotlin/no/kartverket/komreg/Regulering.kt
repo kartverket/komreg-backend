@@ -1,10 +1,10 @@
 package no.kartverket.komreg
 
-import io.ktor.server.routing.*
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.domain.*
-import no.kartverket.komreg.transformation.*
+import no.kartverket.komreg.transformation.Kommuneendring
+import no.kartverket.komreg.transformation.Reguleringsinput
 import java.util.Base64
 
 @Serializable
