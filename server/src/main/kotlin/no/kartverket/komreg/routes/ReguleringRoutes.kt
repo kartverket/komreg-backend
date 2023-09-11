@@ -3,6 +3,7 @@ package no.kartverket.komreg.routes
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
+import io.ktor.server.application.log
 import io.ktor.server.request.receive
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
@@ -38,7 +39,7 @@ fun Application.reguleringRoutes() {
                 }
 
                 if (reguleringerList.isEmpty()) {
-                    no.kartverket.komreg.logger.info("No reguleringer found.")
+                    call.application.log.info("No reguleringer found.")
                 }
                 call.respond(reguleringerList)
 
