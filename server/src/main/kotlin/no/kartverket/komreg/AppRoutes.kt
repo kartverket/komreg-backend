@@ -585,6 +585,7 @@ fun Application.routes(metricsRegistry: PrometheusMeterRegistry, dataSource: Dat
         route("/kommuner/{kommuneId}/fordelingsparametre") {
             get {
                 val kommuneId = call.parameters["kommuneId"]
+                call.application.log.info("Henter fordelingsparametre for kommune $kommuneId")
 
                 // TODO: PoC for uthenting av fordelingsparametre for kommune
                 val gårdsnumre = mutableListOf<String>()
