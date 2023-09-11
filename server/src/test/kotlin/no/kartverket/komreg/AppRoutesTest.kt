@@ -1,6 +1,9 @@
 package no.kartverket.komreg
 
 import io.kotest.core.spec.style.AnnotationSpec
+import no.kartverket.komreg.routes.Gardsnummerserie
+import no.kartverket.komreg.routes.godkjenteGardsnumreTilListe
+import no.kartverket.komreg.routes.join
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 

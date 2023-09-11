@@ -7,10 +7,13 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.metrics.micrometer.MicrometerMetrics
+import io.ktor.server.netty.EngineMain
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
+import no.kartverket.komreg.routes.appRoutes
+import no.kartverket.komreg.routes.reguleringRoutes
 import org.flywaydb.core.Flyway
 import org.rocksdb.RocksDB
 import org.slf4j.Logger
@@ -28,7 +31,7 @@ fun main(args: Array<String>) =
     ForkJoinPool.commonPool().execute {
         RocksDB.loadLibrary()
     }.also {
-        io.ktor.server.netty.EngineMain.main(args)
+        EngineMain.main(args)
     }
 
 @Suppress("unused") // Referenced in application.conf
@@ -66,5 +69,6 @@ fun Application.module() {
         allowHeader(HttpHeaders.ContentType)
     }
 
-    routes(metricsRegistry)
+    appRoutes(metricsRegistry)
+    reguleringRoutes(metricsRegistry)
 }
