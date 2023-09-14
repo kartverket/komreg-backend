@@ -22,7 +22,7 @@ dependencies {
     implementation(libs.kotlinx.datetime)
     implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
 
-    api("no.statkart.matrikkel:matrikkel-komreg:4.13-SNAPSHOT")
+    api("no.statkart.matrikkel:matrikkel-komreg:4.14-SNAPSHOT")
 
     api("com.google.guava:guava:32.1.2-jre")
     implementation(kotlin("reflect"))

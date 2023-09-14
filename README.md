@@ -38,12 +38,12 @@ colima start
 
 3. Kjør:
 ```bash
-docker run --name local-postgres -e POSTGRES_USER=komreg -e POSTGRES_PASSWORD=passord -e POSTGRES_DB=local-komreg-db -p 54XX:5432 -d postgres
+docker run --name local-postgres -e POSTGRES_USER=komreg -e POSTGRES_PASSWORD=passord -e POSTGRES_DB=komreg-db -p 54XX:5432 -d postgres
 ```
 (Bytt ut XX så du bruker en ledig port på maskinen din.)
 
-### Legg til local-tr-db som en datasource i IntelliJ hvis du vil:
-Bruk url `jdbc:postgresql://localhost:54XX/local-komreg-db`  
+### Legg til komreg-db som en datasource i IntelliJ hvis du vil:
+Bruk url `jdbc:postgresql://localhost:54XX/komreg-db`
 Bruk porten du satte i run-kommandoen over.  
 Fyll også inn inn brukernavn og passord i vinduet der du legger til Data Source.  
 I schemas-fanen i samme vindu: velg å vise alle schemas i databasen.
