@@ -8,10 +8,9 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import no.kartverket.komreg.*
 import no.kartverket.komreg.core.KrAppBootContext
 import no.kartverket.komreg.core.domain.verdi
-import no.kartverket.komreg.transformation.KommuneServiceManager
+import no.kartverket.komreg.integration.KommuneServiceManager
 import java.util.Base64
 
 fun Application.grunndataRoutes() {

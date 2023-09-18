@@ -1,4 +1,4 @@
-package no.kartverket.komreg.transformation
+package no.kartverket.komreg
 
 import com.typesafe.config.Config
 import org.slf4j.Logger

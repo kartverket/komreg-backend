@@ -11,8 +11,6 @@ import io.ktor.server.routing.*
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import no.kartverket.komreg.Fylkesdeling
-import no.kartverket.komreg.Regulering
 import no.kartverket.komreg.env
 import java.sql.Date
 import java.sql.DriverManager

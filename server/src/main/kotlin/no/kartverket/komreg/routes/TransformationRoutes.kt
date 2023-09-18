@@ -9,9 +9,8 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import no.kartverket.komreg.Regulering
-import no.kartverket.komreg.transformation.transformEntities
-import no.kartverket.komreg.transformation.transformStatuses
+import no.kartverket.komreg.services.transformEntities
+import no.kartverket.komreg.services.transformStatuses
 
 fun Application.transformationRoutes() {
     routing {
