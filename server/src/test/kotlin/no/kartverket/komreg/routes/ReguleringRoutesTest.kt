@@ -1,10 +1,10 @@
-package no.kartverket.komreg
+package no.kartverket.komreg.routes
 
 import io.kotest.core.spec.style.AnnotationSpec
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 
-class AppRoutesTest : AnnotationSpec() {
+class ReguleringRoutesTest : AnnotationSpec() {
 
     @Test
     fun godkjenteGardsnumreFraStringTilListe() {

@@ -1,4 +1,4 @@
-package no.kartverket.komreg
+package no.kartverket.komreg.routes
 
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable

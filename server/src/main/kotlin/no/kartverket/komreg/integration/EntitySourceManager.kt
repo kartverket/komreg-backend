@@ -1,4 +1,4 @@
-package no.kartverket.komreg.transformation
+package no.kartverket.komreg.integration
 
 import no.kartverket.komreg.core.KrAppBootContext
 import no.kartverket.komreg.integration.spi.EntitySource

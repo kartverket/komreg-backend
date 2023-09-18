@@ -1,4 +1,4 @@
-package no.kartverket.komreg.transformation
+package no.kartverket.komreg.services
 
 import com.typesafe.config.ConfigFactory
 import kotlinx.coroutines.CoroutineScope
@@ -14,12 +14,13 @@ import no.kartverket.komreg.core.KrAppBootContext
 import no.kartverket.komreg.core.domain.Fylkesdata
 import no.kartverket.komreg.core.domain.Kommunedata
 import no.kartverket.komreg.core.domain.PostadresseForOppretting
+import no.kartverket.komreg.integration.EntitySinkManager
+import no.kartverket.komreg.integration.EntitySourceManager
+import no.kartverket.komreg.integration.KommuneServiceManager
 import no.kartverket.komreg.integration.spi.Ident
 import no.kartverket.komreg.integration.spi.Transformation
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-
-val logger: Logger = LoggerFactory.getLogger(object {}::class.java)
+import no.kartverket.komreg.logger
+import no.kartverket.komreg.transformation.*
 
 @Serializable
 data class TransformationStatusForSource(
