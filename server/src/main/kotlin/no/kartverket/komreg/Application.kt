@@ -12,6 +12,7 @@ import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
+import no.kartverket.komreg.repositories.ReguleringRepo
 import no.kartverket.komreg.routes.grunndataRoutes
 import no.kartverket.komreg.routes.internalRoutes
 import no.kartverket.komreg.routes.reguleringRoutes
@@ -46,18 +47,25 @@ fun Application.module() {
     install(MicrometerMetrics) {
         registry = metricsRegistry
     }
-    if (!env["DB_KOMREG_JDBC_URL"].isNullOrEmpty()) {
+
+    val jdbcUrl = env["DB_KOMREG_JDBC_URL"]
+    val user = env["DB_KOMREG_USERNAME"]
+    val password = env["DB_KOMREG_PASSWORD"]
+
+    if (!jdbcUrl.isNullOrEmpty()) {
         val flyway = Flyway.configure()
             .schemas("komreg")
             .dataSource(
-                env["DB_KOMREG_JDBC_URL"],
-                env["DB_KOMREG_USERNAME"],
-                env["DB_KOMREG_PASSWORD"],
+                jdbcUrl,
+                user,
+                password,
             )
             .load()
 
         flyway.migrate()
     }
+
+    val reguleringsRepo = ReguleringRepo(jdbcUrl, user, password)
 
     install(ContentNegotiation) {
         json()
@@ -72,7 +80,7 @@ fun Application.module() {
     }
 
     internalRoutes(metricsRegistry)
-    reguleringRoutes()
+    reguleringRoutes(reguleringsRepo)
     transformationRoutes()
     grunndataRoutes()
 }
