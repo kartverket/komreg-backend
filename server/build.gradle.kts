@@ -48,7 +48,7 @@ dependencies {
     implementation(libs.ktor.server.metrics.micrometer)
     implementation(libs.micrometer.registry.prometheus)
     implementation("org.postgresql:postgresql:42.6.0")
-    implementation("org.flywaydb:flyway-core:9.22.1")
+    implementation("org.flywaydb:flyway-core:9.22.2")
 
     testImplementation(kotlin("test"))
     testImplementation(libs.junit.jupiter.api)
