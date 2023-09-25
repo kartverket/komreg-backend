@@ -1,8 +1,12 @@
 package no.kartverket.komreg.core.domain
 
+import kotlinx.serialization.Serializable
+import no.kartverket.komreg.integration.spi.Payload
+
 /**
  * Ekstra data for ny kommune.
  */
+@Serializable
 data class Kommunedata(
     val navn: String,
     val koordinatsystem: Koordinatsystem, // TODO: Bytt med en egen enum som ikke har UKJENT
@@ -12,7 +16,7 @@ data class Kommunedata(
     val adresse: PostadresseForOppretting?,
     val standardRekvirentOrgnummer: String?,
     val kommunevapen: ByteArray?,
-) {
+) : Payload {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -44,6 +48,7 @@ data class Kommunedata(
     }
 }
 
+@Serializable
 data class PostadresseForOppretting(
     val adresselinje1: String?,
     val adresselinje2: String?,

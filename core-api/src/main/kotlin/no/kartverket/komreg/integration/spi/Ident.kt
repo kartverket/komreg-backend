@@ -784,7 +784,7 @@ private data class OfExactly3<A, B, C>(
         else -> throw IndexOutOfBoundsException("Index: $n, $size")
     }
 
-    override fun toArray(): Array<Comparable<*>> = toArray()
+    override fun toArray(): Array<Comparable<*>> = arrayOf(n3, n2, last)
 
     override fun <V : Comparable<V>> appendWith(
         type: IdentType<Ident3<A, B, C>, V>,
@@ -828,7 +828,7 @@ private data class OfExactly4<A, B, C, D>(
         else -> throw IndexOutOfBoundsException("Index: $n, Size: $size")
     }
 
-    override fun toArray(): Array<Comparable<*>> = toArray()
+    override fun toArray(): Array<Comparable<*>> = arrayOf(n4, n3, n2, last)
 
     override fun <V : Comparable<V>> appendWith(
         type: IdentType<Ident4<A, B, C, D>, V>,
@@ -879,7 +879,7 @@ private data class OfExactly5<A, B, C, D, E>(
         else -> throw IndexOutOfBoundsException("Index: $n, Size: $size")
     }
 
-    override fun toArray(): Array<Comparable<*>> = toArray()
+    override fun toArray(): Array<Comparable<*>> = arrayOf(n5, n4, n3, n2, last)
 
     override fun compareTo(other: And<And<And<And<And<Empty, A>, B>, C>, D>, E>): Int {
         val that = other as OfExactly5
