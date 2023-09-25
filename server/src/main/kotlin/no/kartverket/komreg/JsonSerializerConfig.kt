@@ -13,8 +13,6 @@ fun jsonSerializer() = Json {
     val registerSerializationList = ServiceLoader.load(RegisterSerialization::class.java).toList()
     serializersModule = SerializersModule {
         polymorphic(IdType::class) {
-            // TODO: fjern og gi x bedre navn
-            //
             registerSerializationList.forEach {
                 with(it) {
                     registerIdTypes()

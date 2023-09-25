@@ -28,7 +28,6 @@ fun Application.transformationRoutes(transformationRepo: TransformationRepo, kjo
                 if (kjoringId != null) {
                     val reguleringsinput = regulering.toReguleringsinput()
 
-                    // Run the transformations
                     transformEntities(reguleringsinput, kjoringId, transformationRepo, kjoringRepo)
 
                     call.respond("OK")

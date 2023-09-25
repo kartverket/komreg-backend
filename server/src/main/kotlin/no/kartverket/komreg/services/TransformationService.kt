@@ -108,7 +108,6 @@ private suspend fun writeFylker(
                 Transformation(
                     id = kommuneService.idForFylke(fylke.fylkesnummer),
                     sourceEntity = null,
-                    // transformationType = "NyttFylke",
                     transformedIdent = Ident(fylke.fylkesnummer),
                     resultObject = Fylkesdata(fylke.fylkesnavn.name),
                 ),
@@ -141,7 +140,6 @@ private suspend fun writeKommuner(
                 Transformation(
                     id = kommuneService.idForKommune(kommune.kommunenummer),
                     sourceEntity = null,
-                    // transformationType = "NyKommune",
                     transformedIdent = Ident(kommune.kommunenummer.fylkesnummer, kommune.kommunenummer.lopenummer),
                     resultObject = Kommunedata(
                         navn = kommune.kommunenavn.name,

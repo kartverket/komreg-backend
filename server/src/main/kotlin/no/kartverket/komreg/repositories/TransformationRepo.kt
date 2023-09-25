@@ -1,11 +1,9 @@
 package no.kartverket.komreg.repositories
 
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.serializer
 import no.kartverket.komreg.core.domain.*
 import no.kartverket.komreg.integration.spi.Transformation
 import no.kartverket.komreg.logger
-import no.statkart.matrikkel.komreg.model.*
 import java.sql.DriverManager
 
 class TransformationRepo(
