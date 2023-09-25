@@ -14,7 +14,6 @@ fun transformerKommunenummer(input: Reguleringsinput, entity: Entity): Transform
 
     return Transformation(
         id = entity.id,
-        transformationType = "ChangeKommunenummer",
         sourceEntity = entity,
         transformedIdent = newIdent,
         transformedAssociatedIdents = newAssociatedIdents?.ifEmpty { null },

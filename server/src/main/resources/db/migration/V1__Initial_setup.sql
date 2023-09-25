@@ -13,14 +13,15 @@ CREATE TABLE kjoring (
     id SERIAL PRIMARY KEY,
     regulering VARCHAR(255) NOT NULL,
     start TIMESTAMP WITH TIME ZONE NOT NULL,
-    slutt TIMESTAMP WITH TIME ZONE NOT NULL
+    slutt TIMESTAMP WITH TIME ZONE
 );
 
 CREATE TABLE transformasjon (
-    transformasjonsId JSONB PRIMARY KEY,
+    transformasjonsId JSONB,
     kjoring INT NOT NULL,
     transformasjon JSONB NOT NULL,
-    tid TIMESTAMP WITH TIME ZONE NOT NULL
+    tid TIMESTAMP WITH TIME ZONE NOT NULL,
+    PRIMARY KEY (transformasjonsid, kjoring)
 );
 
 

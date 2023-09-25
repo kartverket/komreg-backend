@@ -58,7 +58,7 @@ class ReguleringRepo(
         )
 
         statement.setString(1, regulering.id)
-        statement.setString(2, Json.encodeToString(Regulering.serializer(), regulering))
+        statement.setString(2, Json.encodeToString(regulering))
         statement.setDate(3, Date.valueOf(regulering.dato.toJavaLocalDate()))
         statement.setString(4, "system")
 
@@ -88,7 +88,7 @@ class ReguleringRepo(
         val updateStatement = connection.prepareStatement(
             "UPDATE regulering SET regulering = ?::jsonb, ikrafttredelsesdato = ?, endret = now(), opprettetav = ? WHERE ID = ?",
         )
-        updateStatement.setString(1, Json.encodeToString(Regulering.serializer(), regulering))
+        updateStatement.setString(1, Json.encodeToString(regulering))
         updateStatement.setDate(2, Date.valueOf(regulering.dato.toJavaLocalDate()))
         updateStatement.setString(3, "system")
         updateStatement.setString(4, regulering.id)

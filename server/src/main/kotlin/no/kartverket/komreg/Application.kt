@@ -12,7 +12,9 @@ import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
+import no.kartverket.komreg.repositories.KjoringRepo
 import no.kartverket.komreg.repositories.ReguleringRepo
+import no.kartverket.komreg.repositories.TransformationRepo
 import no.kartverket.komreg.routes.grunndataRoutes
 import no.kartverket.komreg.routes.internalRoutes
 import no.kartverket.komreg.routes.reguleringRoutes
@@ -66,6 +68,8 @@ fun Application.module() {
     }
 
     val reguleringsRepo = ReguleringRepo(jdbcUrl, user, password)
+    val transformationRepo = TransformationRepo(jdbcUrl, user, password, jsonSerializer())
+    val kjoringRepo = KjoringRepo(jdbcUrl, user, password)
 
     install(ContentNegotiation) {
         json()
@@ -81,6 +85,6 @@ fun Application.module() {
 
     internalRoutes(metricsRegistry)
     reguleringRoutes(reguleringsRepo)
-    transformationRoutes()
+    transformationRoutes(transformationRepo, kjoringRepo)
     grunndataRoutes()
 }

@@ -62,8 +62,8 @@ data class Regulering(
                             standardRekvirent = nyKommune.standardRekvirent?.let {
                                 StandardRekvirent(it.orgnummer, it.navn)
                             },
-                            // TODO: Vil feile dersom kommunevåpen ikke er satt
-                            kommunevapen = Base64.getDecoder().decode(nyKommune.kommunevapen),
+                            // TODO: Vil feile i sinken dersom kommunevåpen ikke er satt
+                            kommunevapen = nyKommune.kommunevapen?.let { Base64.getDecoder().decode(nyKommune.kommunevapen) }
                         )
                     }
                 }
