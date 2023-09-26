@@ -53,7 +53,8 @@ fun Application.grunndataRoutes() {
                         kommuner.add(
                             KommuneDTO(
                                 navn = kommuneFraMatrikkel.kommunenavn.name,
-                                kommunenummer = kommuneFraMatrikkel.kommunenummer.verdi(),
+                                fylkesnummer = kommuneFraMatrikkel.kommunenummer.fylkesnummer.verdi(),
+                                kommunenummer = kommuneFraMatrikkel.kommunenummer.lopenummer.verdi(),
                                 gyldigTilDato = kommuneFraMatrikkel.gyldigTilDato,
                                 koordinatsystem = kommuneFraMatrikkel.koordinatsystem,
                                 senterpunkt = KoordinatDTO(

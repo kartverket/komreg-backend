@@ -19,20 +19,25 @@ fun Application.transformationRoutes(transformationRepo: TransformationRepo, kjo
     routing {
         route("/run") {
             post {
-                val regulering: Regulering = call.receive()
+                try {
+                    val regulering: Regulering = call.receive()
 
-                call.application.log.info(regulering.toString())
-                call.application.log.info(regulering.toReguleringsinput().toString())
+                    call.application.log.info(regulering.toString())
+                    call.application.log.info(regulering.toReguleringsinput().toString())
 
-                val kjoringId = kjoringRepo.insertAndRetrieveKjoringId(regulering.id)
-                if (kjoringId != null) {
-                    val reguleringsinput = regulering.toReguleringsinput()
+                    val kjoringId = kjoringRepo.insertAndRetrieveKjoringId(regulering.id)
+                    if (kjoringId != null) {
+                        val reguleringsinput = regulering.toReguleringsinput()
 
-                    transformEntities(reguleringsinput, kjoringId, transformationRepo, kjoringRepo)
+                        transformEntities(reguleringsinput, kjoringId, transformationRepo, kjoringRepo)
 
-                    call.respond("OK")
-                } else {
-                    call.respond(HttpStatusCode.InternalServerError, "Failed to insert into kjoring table.")
+                        call.respond("OK")
+                    } else {
+                        call.respond(HttpStatusCode.InternalServerError, "Failed to insert into kjoring table.")
+                    }
+                } catch (t: Throwable) {
+                    call.application.log.error("Feil under serialisering", t)
+                    call.respond(HttpStatusCode.BadRequest)
                 }
             }
         }

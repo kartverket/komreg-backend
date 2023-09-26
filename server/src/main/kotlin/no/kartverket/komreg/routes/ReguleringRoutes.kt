@@ -115,7 +115,7 @@ fun Application.reguleringRoutes(reguleringRepo: ReguleringRepo) {
             post {
                 val regId = call.parameters["regId"]
                 val endringJson: String = call.receiveText()
-                val endring = Json.decodeFromString<Fylkesdeling>(endringJson)
+                val endring = Json.decodeFromString<EndringDTO>(endringJson)
 
                 val wasAdded = reguleringRepo.addEndringToRegulering(regId!!, endring)
 
@@ -133,7 +133,7 @@ fun Application.reguleringRoutes(reguleringRepo: ReguleringRepo) {
                 val regId = call.parameters["regId"]
                 val endringId = call.parameters["endringId"]
                 val endringJson: String = call.receiveText()
-                val updatedEndring = Json.decodeFromString<Fylkesdeling>(endringJson)
+                val updatedEndring = Json.decodeFromString<EndringDTO>(endringJson)
 
                 val wasUpdated = reguleringRepo.updateEndringOfRegulering(regId!!, endringId!!, updatedEndring)
 
