@@ -50,26 +50,26 @@ fun Application.module() {
         registry = metricsRegistry
     }
 
-    val jdbcUrl = env["DB_KOMREG_JDBC_URL"]
-    val user = env["DB_KOMREG_USERNAME"]
-    val password = env["DB_KOMREG_PASSWORD"]
+    val komregJdbcUrl = env["DB_KOMREG_JDBC_URL"]
+    val komregDbUsername = env["DB_KOMREG_USERNAME"]
+    val komregDbPassword = env["DB_KOMREG_PASSWORD"]
 
-    if (!jdbcUrl.isNullOrEmpty()) {
+    if (!komregJdbcUrl.isNullOrEmpty()) {
         val flyway = Flyway.configure()
             .schemas("komreg")
             .dataSource(
-                jdbcUrl,
-                user,
-                password,
+                komregJdbcUrl,
+                komregDbUsername,
+                komregDbPassword,
             )
             .load()
 
         flyway.migrate()
     }
 
-    val reguleringsRepo = ReguleringRepo(jdbcUrl, user, password)
-    val transformationRepo = TransformationRepo(jdbcUrl, user, password, jsonSerializer())
-    val kjoringRepo = KjoringRepo(jdbcUrl, user, password)
+    val reguleringsRepo = ReguleringRepo(komregJdbcUrl, komregDbUsername, komregDbPassword)
+    val transformationRepo = TransformationRepo(komregJdbcUrl, komregDbUsername, komregDbPassword, jsonSerializer())
+    val kjoringRepo = KjoringRepo(komregJdbcUrl, komregDbUsername, komregDbPassword)
 
     install(ContentNegotiation) {
         json()
