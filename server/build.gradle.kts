@@ -7,11 +7,19 @@ plugins {
     application
 }
 
+configurations.all {
+    resolutionStrategy {
+        cacheChangingModulesFor(0, "seconds")
+    }
+}
+
 dependencies {
     implementation(project(":core-api"))
     implementation(project(":transformation"))
 
-    api("no.statkart.matrikkel:matrikkel-komreg:4.14-SNAPSHOT")
+    api("no.statkart.matrikkel:matrikkel-komreg:4.14-SNAPSHOT") {
+        isChanging = true
+    }
 
     implementation(libs.kotlin.reflect)
 

@@ -8,12 +8,6 @@ tasks.test {
     useJUnitPlatform()
 }
 
-configurations.all {
-    resolutionStrategy {
-        cacheChangingModulesFor(0, "seconds")
-    }
-}
-
 dependencies {
     api(project(":core-api"))
 
