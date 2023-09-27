@@ -10,7 +10,7 @@ data class Adressenummerbokstav(
     val value: Char
 ) : Comparable<Adressenummerbokstav> {
     companion object {
-        const val NONE = '\u0000'
+        const val NONE = '\u0030'
     }
 
     override fun compareTo(other: Adressenummerbokstav): Int =
