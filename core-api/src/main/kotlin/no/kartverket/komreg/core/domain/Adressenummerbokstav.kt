@@ -12,11 +12,6 @@ data class Adressenummerbokstav(
 
     override fun compareTo(other: Adressenummerbokstav): Int {
 
-        return when {
-            value == null && other.value == null -> 0
-            value == null -> -1
-            other.value == null -> 1
-            else -> value.compareTo(other.value)
-        }
+        return Comparator.nullsFirst(Comparator.naturalOrder<Char>()).compare(value, other.value)
     }
 }
