@@ -4,8 +4,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.domain.*
-import no.kartverket.komreg.transformation.Kommuneendring
-import no.kartverket.komreg.transformation.Reguleringsinput
+import no.kartverket.komreg.transformation.*
 import java.util.Base64
 
 @Serializable
@@ -20,17 +19,43 @@ data class Regulering(
             id,
             dato,
             endringer = endringer.flatMap { endring ->
-                endring.transformasjoner.mapNotNull {
-                    when {
-                        it is KommuneTransformasjonDTO -> {
-                            Kommuneendring(
-                                fra = Kommunenummer((it.fylkesnummer.fra + it.kommunenummer.fra).toLong()),
-                                til = Kommunenummer((it.fylkesnummer.til + it.kommunenummer.til).toLong())
+                endring.transformasjoner.map { transformasjon ->
+                    when (transformasjon) {
+                        is FylkeTransformasjonDTO -> {
+                            Fylkeendring(
+                                fylkesnummer = Endring.FraTil(
+                                    fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
+                                    til = Fylkesnummer(transformasjon.fylkesnummer.til.toLong()),
+                                ),
                             )
                         }
-
-                        else -> {
-                            null
+                        is KommuneTransformasjonDTO -> {
+                            Kommuneendring(
+                                fylkesnummer = Endring.FraTil(
+                                    fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
+                                    til = Fylkesnummer(transformasjon.fylkesnummer.til.toLong()),
+                                ),
+                                kommuneløpenummer = Endring.FraTil(
+                                    fra = Kommunenummer.Lopenummer(transformasjon.kommunenummer.fra.toByte()),
+                                    til = Kommunenummer.Lopenummer(transformasjon.kommunenummer.til.toByte()),
+                                ),
+                            )
+                        }
+                        is MatrikkelenhetTransformasjonDTO -> {
+                            Matrikkelenhetendring(
+                                fylkesnummer = Endring.FraTil(
+                                    fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
+                                    til = Fylkesnummer(transformasjon.fylkesnummer.til.toLong()),
+                                ),
+                                kommuneløpenummer = Endring.FraTil(
+                                    fra = Kommunenummer.Lopenummer(transformasjon.kommunenummer.fra.toByte()),
+                                    til = Kommunenummer.Lopenummer(transformasjon.kommunenummer.til.toByte()),
+                                ),
+                                gårdsnummer = Endring.FraTil(
+                                    fra = Matrikkelnummer.Gardsnummer(transformasjon.gårdsnummer.fra.toInt()),
+                                    til = Matrikkelnummer.Gardsnummer(transformasjon.gårdsnummer.til.toInt()),
+                                ),
+                            )
                         }
                     }
                 }
@@ -49,7 +74,7 @@ data class Regulering(
                     Kommune(
                         kommunenummer = Kommunenummer(
                             Fylkesnummer(kommune.fylkesnummer.toLong()),
-                            Kommunenummer.Lopenummer(kommune.kommunenummer.toByte())
+                            Kommunenummer.Lopenummer(kommune.kommunenummer.toByte()),
                         ),
                         kommunenavn = Kommunenavn(kommune.navn),
                         gyldigTilDato = null,
@@ -72,11 +97,10 @@ data class Regulering(
                             StandardRekvirent(it.orgnummer, it.navn)
                         },
                         // TODO: Vil feile i sinken dersom kommunevåpen ikke er satt
-                        kommunevapen = kommune.kommunevapen?.let { Base64.getDecoder().decode(kommune.kommunevapen) }
+                        kommunevapen = kommune.kommunevapen?.let { Base64.getDecoder().decode(kommune.kommunevapen) },
                     )
                 }
-
-            }
+            },
         )
     }
 }
@@ -90,13 +114,7 @@ data class EndringDTO(
     val utgåendeKommuner: List<EnkelKommuneDTO>,
     val nyeFylker: List<FylkeDTO>,
     val nyeKommuner: List<KommuneDTO>,
-    val transformasjoner: List<TransformasjonDTO>
-)
-
-@Serializable
-data class FraTil(
-    val fra: String,
-    val til: String?
+    val transformasjoner: List<TransformasjonDTO>,
 )
 
 @Serializable
@@ -107,15 +125,29 @@ sealed class TransformasjonDTO {
 @Serializable
 @SerialName("fylke")
 data class FylkeTransformasjonDTO(
-    override val fylkesnummer: FraTil
+    override val fylkesnummer: FraTil,
 ) : TransformasjonDTO()
 
 @Serializable
 @SerialName("kommune")
 data class KommuneTransformasjonDTO(
     override val fylkesnummer: FraTil,
-    val kommunenummer: FraTil
+    val kommunenummer: FraTil,
 ) : TransformasjonDTO()
+
+@Serializable
+@SerialName("matrikkelenhet")
+data class MatrikkelenhetTransformasjonDTO(
+    override val fylkesnummer: FraTil,
+    val kommunenummer: FraTil,
+    val gårdsnummer: FraTil,
+) : TransformasjonDTO()
+
+@Serializable
+data class FraTil(
+    val fra: String,
+    val til: String,
+)
 
 @Serializable
 data class FylkeDTO(
@@ -127,7 +159,7 @@ data class FylkeDTO(
 data class EnkelKommuneDTO(
     val navn: String,
     val fylkesnummer: String,
-    val kommunenummer: String
+    val kommunenummer: String,
 )
 
 @Serializable
