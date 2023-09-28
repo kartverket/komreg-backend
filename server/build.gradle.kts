@@ -17,7 +17,7 @@ dependencies {
     implementation(project(":core-api"))
     implementation(project(":transformation"))
 
-    api("no.statkart.matrikkel:matrikkel-komreg:4.15-SNAPSHOT") {
+    api("no.statkart.matrikkel:matrikkel-komreg:4.14-SNAPSHOT") {
         isChanging = true
     }
 
