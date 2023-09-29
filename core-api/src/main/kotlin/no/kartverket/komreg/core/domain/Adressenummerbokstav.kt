@@ -7,12 +7,11 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class Adressenummerbokstav(
-    val value: Char
+    val value: Char?
 ) : Comparable<Adressenummerbokstav> {
-    companion object {
-        const val NONE = '\u0000'
-    }
 
-    override fun compareTo(other: Adressenummerbokstav): Int =
-        value.compareTo(other.value)
+    override fun compareTo(other: Adressenummerbokstav): Int {
+
+        return Comparator.nullsFirst(Comparator.naturalOrder<Char>()).compare(value, other.value)
+    }
 }
