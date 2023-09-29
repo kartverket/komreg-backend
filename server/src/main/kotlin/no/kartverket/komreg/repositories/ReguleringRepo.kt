@@ -53,14 +53,17 @@ class ReguleringRepo(
 
     fun insertRegulering(regulering: Regulering): Boolean {
         val connection = DriverManager.getConnection(jdbcUrl, user, password)
+        val currentTime = java.sql.Timestamp(System.currentTimeMillis())
         val statement = connection.prepareStatement(
-            "INSERT INTO regulering (id, regulering, ikrafttredelsesdato, opprettet, endret, opprettetav) VALUES (?, ?::jsonb, ?, now(), now(), ?)",
+            "INSERT INTO regulering (id, regulering, ikrafttredelsesdato, opprettet, endret, opprettetav) VALUES (?, ?::jsonb, ?, ?, ?, ?)",
         )
 
         statement.setString(1, regulering.id)
         statement.setString(2, Json.encodeToString(regulering))
         statement.setDate(3, Date.valueOf(regulering.dato.toJavaLocalDate()))
-        statement.setString(4, "system")
+        statement.setTimestamp(4, currentTime)
+        statement.setTimestamp(5, currentTime)
+        statement.setString(6, "system")
 
         val affectedRows = statement.executeUpdate()
 
