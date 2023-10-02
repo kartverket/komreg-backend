@@ -26,7 +26,11 @@ private fun Long.splitToFylkesnummerOgLøpenummer() = this.toString()
     .chunked(2)
 
 fun Kommunenummer.verdi(): String {
-    val fylkesnummer = this.fylkesnummer.value.toString().padStart(2, '0')
-    val kommuneløpenummer = this.lopenummer.value.toString().padStart(2, '0')
+    val fylkesnummer = this.fylkesnummer.verdi()
+    val kommuneløpenummer = this.lopenummer.verdi()
     return "$fylkesnummer$kommuneløpenummer"
+}
+
+fun Kommunenummer.Lopenummer.verdi(): String {
+    return this.value.toString().padStart(2, '0')
 }

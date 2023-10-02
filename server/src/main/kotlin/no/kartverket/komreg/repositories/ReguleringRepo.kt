@@ -3,7 +3,7 @@ package no.kartverket.komreg.repositories
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import no.kartverket.komreg.routes.Fylkesdeling
+import no.kartverket.komreg.routes.EndringDTO
 import no.kartverket.komreg.routes.Regulering
 import java.sql.Date
 import java.sql.DriverManager
@@ -129,7 +129,7 @@ class ReguleringRepo(
         return affectedRows > 0
     }
 
-    fun getEndringFromRegulering(regId: String, endrId: String): Fylkesdeling? {
+    fun getEndringFromRegulering(regId: String, endrId: String): EndringDTO? {
         val connection = DriverManager.getConnection(jdbcUrl, user, password)
 
         val statement = connection.prepareStatement("SELECT regulering FROM regulering WHERE id = ?")
@@ -151,7 +151,7 @@ class ReguleringRepo(
         return null
     }
 
-    fun getAllEndringerFromRegulering(regId: String): List<Fylkesdeling>? {
+    fun getAllEndringerFromRegulering(regId: String): List<EndringDTO>? {
         val connection = DriverManager.getConnection(jdbcUrl, user, password)
 
         val statement = connection.prepareStatement("SELECT regulering FROM regulering WHERE id = ?")
@@ -173,7 +173,7 @@ class ReguleringRepo(
         return null
     }
 
-    fun addEndringToRegulering(regId: String, endring: Fylkesdeling): Boolean {
+    fun addEndringToRegulering(regId: String, endring: EndringDTO): Boolean {
         val connection = DriverManager.getConnection(jdbcUrl, user, password)
 
         val statement = connection.prepareStatement("SELECT regulering FROM regulering WHERE id = ?")
@@ -203,7 +203,7 @@ class ReguleringRepo(
         return false
     }
 
-    fun updateEndringOfRegulering(regId: String, endringId: String, updatedEndring: Fylkesdeling): Boolean {
+    fun updateEndringOfRegulering(regId: String, endringId: String, updatedEndring: EndringDTO): Boolean {
         val connection = DriverManager.getConnection(jdbcUrl, user, password)
 
         val statement = connection.prepareStatement("SELECT regulering FROM regulering WHERE id = ?")
