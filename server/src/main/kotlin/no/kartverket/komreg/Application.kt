@@ -81,6 +81,7 @@ fun Application.module() {
         allowHost("komreg.dev.skip.statkart.no", schemes = listOf("http", "https"))
         allowHost("komreg.test.skip.statkart.no", schemes = listOf("http", "https"))
         allowHeader(HttpHeaders.ContentType)
+        allowMethod(HttpMethod.Delete)
     }
 
     internalRoutes(metricsRegistry)
