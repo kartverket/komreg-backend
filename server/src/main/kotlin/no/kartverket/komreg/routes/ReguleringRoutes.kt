@@ -9,6 +9,7 @@ import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
+import no.kartverket.komreg.logger
 import no.kartverket.komreg.repositories.ReguleringRepo
 
 fun Application.reguleringRoutes(reguleringRepo: ReguleringRepo) {
@@ -49,6 +50,7 @@ fun Application.reguleringRoutes(reguleringRepo: ReguleringRepo) {
                     reguleringRepo.insertRegulering(regulering)
                     call.respond(HttpStatusCode.OK, "Regulering JSON received and saved successfully.")
                 } catch (e: Exception) {
+                    logger.error("ERROR: ${e.message}")
                     call.respond(HttpStatusCode.InternalServerError, "Failed to save Regulering.")
                 }
             }

@@ -67,12 +67,12 @@ data class Regulering(
                                     til = Fylkesnummer(transformasjon.fylkesnummer.til.toLong()),
                                 ),
                                 kommuneløpenummer = Endring.FraTil(
-                                    fra = Kommunenummer.Lopenummer(transformasjon.kommunenummer.fra.toByte()),
-                                    til = Kommunenummer.Lopenummer(transformasjon.kommunenummer.til.toByte()),
+                                    fra = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.fra.toByte()),
+                                    til = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.til.toByte()),
                                 ),
                                 kretsnummer = Endring.FraTil(
-                                    fra = Kretsnummer(transformasjon.kretsnummer.fra.toInt()),
-                                    til = Kretsnummer(transformasjon.kretsnummer.til.toInt()),
+                                    fra = Kretsnummer(transformasjon.kretsnummer.fra.toLong()),
+                                    til = Kretsnummer(transformasjon.kretsnummer.til.toLong()),
                                 ),
                             )
 
