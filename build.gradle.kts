@@ -37,6 +37,7 @@ subprojects {
         val javaVersion = JavaVersion.VERSION_11
 
         repositories {
+            mavenLocal()
             mavenCentral()
         }
 

@@ -34,3 +34,9 @@ data class Matrikkelenhetendring(
     val kommuneløpenummer: FraTil<Kommunenummer.Lopenummer>,
     val gårdsnummer: FraTil<Matrikkelnummer.Gardsnummer>,
 ) : Endring()
+
+data class Kretsendring(
+    override val fylkesnummer: FraTil<Fylkesnummer>,
+    val kommuneløpenummer: FraTil<Kommunenummer.Lopenummer>,
+    val kretsnummer: FraTil<Kretsnummer>,
+) : Endring()

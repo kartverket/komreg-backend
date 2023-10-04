@@ -29,6 +29,7 @@ data class Regulering(
                                 ),
                             )
                         }
+
                         is KommuneTransformasjonDTO -> {
                             Kommuneendring(
                                 fylkesnummer = Endring.FraTil(
@@ -41,6 +42,7 @@ data class Regulering(
                                 ),
                             )
                         }
+
                         is MatrikkelenhetTransformasjonDTO -> {
                             Matrikkelenhetendring(
                                 fylkesnummer = Endring.FraTil(
@@ -56,6 +58,24 @@ data class Regulering(
                                     til = Matrikkelnummer.Gardsnummer(transformasjon.gårdsnummer.til.toInt()),
                                 ),
                             )
+                        }
+
+                        is KretsTransformasjonDTO -> {
+                            Kretsendring(
+                                fylkesnummer = Endring.FraTil(
+                                    fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
+                                    til = Fylkesnummer(transformasjon.fylkesnummer.til.toLong()),
+                                ),
+                                kommuneløpenummer = Endring.FraTil(
+                                    fra = Kommunenummer.Lopenummer(transformasjon.kommunenummer.fra.toByte()),
+                                    til = Kommunenummer.Lopenummer(transformasjon.kommunenummer.til.toByte()),
+                                ),
+                                kretsnummer = Endring.FraTil(
+                                    fra = Kretsnummer(transformasjon.kretsnummer.fra.toInt()),
+                                    til = Kretsnummer(transformasjon.kretsnummer.til.toInt()),
+                                ),
+                            )
+
                         }
                     }
                 }
@@ -141,6 +161,14 @@ data class MatrikkelenhetTransformasjonDTO(
     override val fylkesnummer: FraTil,
     val kommunenummer: FraTil,
     val gårdsnummer: FraTil,
+) : TransformasjonDTO()
+
+@Serializable
+@SerialName("krets")
+data class KretsTransformasjonDTO(
+    override val fylkesnummer: FraTil,
+    val kommuneløpenummer: FraTil,
+    val kretsnummer: FraTil,
 ) : TransformasjonDTO()
 
 @Serializable

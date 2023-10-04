@@ -45,9 +45,10 @@ fun Application.reguleringRoutes(reguleringRepo: ReguleringRepo) {
             post {
                 val regulering: Regulering = call.receive()
 
-                if (reguleringRepo.insertRegulering(regulering)) {
+                try {
+                    reguleringRepo.insertRegulering(regulering)
                     call.respond(HttpStatusCode.OK, "Regulering JSON received and saved successfully.")
-                } else {
+                } catch (e: Exception) {
                     call.respond(HttpStatusCode.InternalServerError, "Failed to save Regulering.")
                 }
             }
