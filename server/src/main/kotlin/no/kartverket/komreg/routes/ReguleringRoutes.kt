@@ -47,7 +47,7 @@ fun Application.reguleringRoutes(reguleringRepo: ReguleringRepo, dataSource: Dat
         route("/reguleringer") {
             post {
                 val requestBody: String = call.receiveText()
-                val errors = ReguleringValidator.validateRegulering(requestBody)
+                val errors = ReguleringValidator.ensureValidRegulering(requestBody)
 
                 if (errors.isNotEmpty()) {
                     call.respond(HttpStatusCode.BadRequest, errors)

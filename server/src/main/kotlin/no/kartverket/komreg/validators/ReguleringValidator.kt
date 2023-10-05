@@ -6,7 +6,7 @@ import kotlinx.serialization.json.Json
 class ReguleringValidator {
 
     companion object {
-        fun validateRegulering(body: String): List<String> {
+        fun ensureValidRegulering(body: String): List<String> {
             val errors = mutableListOf<String>()
 
             try {
