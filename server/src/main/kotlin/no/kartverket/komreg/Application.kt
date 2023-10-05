@@ -1,5 +1,7 @@
 package no.kartverket.komreg
 
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 import io.github.cdimascio.dotenv.dotenv
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
@@ -85,8 +87,20 @@ fun Application.module() {
         allowMethod(HttpMethod.Put)
     }
 
+    // TODO: PoC for uthenting av fordelingsparametre for kommune
+    fun createKildeDataSource(): HikariDataSource {
+        val hikariConfig = HikariConfig()
+        hikariConfig.poolName = "db-connection"
+        hikariConfig.driverClassName = "oracle.jdbc.OracleDriver"
+        hikariConfig.jdbcUrl = env["DB_MATRIKKEL_JDBC_URL"]
+        hikariConfig.username = env["DB_MATRIKKEL_KILDE_USERNAME"]
+        hikariConfig.password = env["DB_MATRIKKEL_KILDE_PASSWORD"]
+        return HikariDataSource(hikariConfig)
+    }
+
+
     internalRoutes(metricsRegistry)
-    reguleringRoutes(reguleringsRepo)
+    reguleringRoutes(reguleringsRepo, createKildeDataSource())
     transformationRoutes(transformationRepo, kjoringRepo)
     grunndataRoutes()
 }
