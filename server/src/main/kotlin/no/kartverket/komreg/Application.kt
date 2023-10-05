@@ -98,8 +98,9 @@ fun Application.module() {
         return HikariDataSource(hikariConfig)
     }
 
+
     internalRoutes(metricsRegistry)
-    reguleringRoutes(reguleringsRepo)
+    reguleringRoutes(reguleringsRepo, createKildeDataSource())
     transformationRoutes(transformationRepo, kjoringRepo)
     grunndataRoutes()
 }
