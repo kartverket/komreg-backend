@@ -126,6 +126,35 @@ data class Regulering(
 }
 
 @Serializable
+data class Fordelingsparametre(
+    val gårdsnumre: List<String>,
+    val adresseparseller: List<Adresseparsell>,
+    val kretser: List<Krets>,
+    val teiger: List<Teig>,
+)
+
+@Serializable
+data class Adresseparsell(
+    val adressekode: String,
+    val adressenavn: String,
+)
+
+@Serializable
+data class Krets(
+    val kretsnummer: String,
+    val kretsnavn: String,
+    val type: String,
+)
+
+@Serializable
+data class Teig(
+    val id: String,
+    val koordinatsystemkodeid: Int,
+    val nord: Double,
+    val øst: Double,
+)
+
+@Serializable
 data class EndringDTO(
     val id: String,
     val navn: String,
