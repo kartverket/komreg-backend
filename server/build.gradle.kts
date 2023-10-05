@@ -7,9 +7,19 @@ plugins {
     application
 }
 
+configurations.all {
+    resolutionStrategy {
+        cacheChangingModulesFor(0, "seconds")
+    }
+}
+
 dependencies {
     implementation(project(":core-api"))
     implementation(project(":transformation"))
+
+    api("no.statkart.matrikkel:matrikkel-komreg:4.15-SNAPSHOT") {
+        isChanging = true
+    }
 
     implementation(libs.kotlin.reflect)
 
@@ -46,7 +56,7 @@ dependencies {
     implementation(libs.ktor.server.metrics.micrometer)
     implementation(libs.micrometer.registry.prometheus)
     implementation("org.postgresql:postgresql:42.6.0")
-    implementation("org.flywaydb:flyway-core:9.22.0")
+    implementation("org.flywaydb:flyway-core:9.22.1")
 
     testImplementation(kotlin("test"))
     testImplementation(libs.junit.jupiter.api)

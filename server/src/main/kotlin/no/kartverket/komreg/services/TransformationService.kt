@@ -1,4 +1,4 @@
-package no.kartverket.komreg.transformation
+package no.kartverket.komreg.services
 
 import com.typesafe.config.ConfigFactory
 import kotlinx.coroutines.CoroutineScope
@@ -14,12 +14,15 @@ import no.kartverket.komreg.core.KrAppBootContext
 import no.kartverket.komreg.core.domain.Fylkesdata
 import no.kartverket.komreg.core.domain.Kommunedata
 import no.kartverket.komreg.core.domain.PostadresseForOppretting
+import no.kartverket.komreg.integration.EntitySinkManager
+import no.kartverket.komreg.integration.EntitySourceManager
+import no.kartverket.komreg.integration.KommuneServiceManager
 import no.kartverket.komreg.integration.spi.Ident
 import no.kartverket.komreg.integration.spi.Transformation
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-
-val logger: Logger = LoggerFactory.getLogger(object {}::class.java)
+import no.kartverket.komreg.logger
+import no.kartverket.komreg.repositories.KjoringRepo
+import no.kartverket.komreg.repositories.TransformationRepo
+import no.kartverket.komreg.transformation.*
 
 @Serializable
 data class TransformationStatusForSource(
@@ -53,7 +56,7 @@ data class TransformationStatusForRegulering(
 
 val transformStatuses = mutableMapOf<String, TransformationStatusForRegulering>()
 
-fun transformEntities(input: Reguleringsinput) {
+fun transformEntities(input: Reguleringsinput, kjoringId: Int, transformationRepo: TransformationRepo, kjoringRepo: KjoringRepo) {
     logger.info("Starter transformasjon!")
     val transformStatus = TransformationStatusForRegulering().also { transformStatuses[input.id] = it }
     transformStatus.start()
@@ -68,7 +71,7 @@ fun transformEntities(input: Reguleringsinput) {
 
     printMemoryUsage()
 
-    runAndWriteTransformations(bootContext, transformStatus, input, entitySinks)
+    runAndWriteTransformations(bootContext, transformStatus, input, entitySinks, kjoringId, transformationRepo, kjoringRepo)
 }
 
 private fun printMemoryUsage() {
@@ -105,7 +108,6 @@ private suspend fun writeFylker(
                 Transformation(
                     id = kommuneService.idForFylke(fylke.fylkesnummer),
                     sourceEntity = null,
-                    transformationType = "NyttFylke",
                     transformedIdent = Ident(fylke.fylkesnummer),
                     resultObject = Fylkesdata(fylke.fylkesnavn.name),
                 ),
@@ -122,6 +124,8 @@ private suspend fun writeKommuner(
     bootContext: KrAppBootContext,
     input: Reguleringsinput,
     entitySinks: EntitySinkManager,
+    kjoringId: Int,
+    transformationRepo: TransformationRepo,
 ) {
     val kommuneService = KommuneServiceManager(bootContext).kommuneService
 
@@ -136,7 +140,6 @@ private suspend fun writeKommuner(
                 Transformation(
                     id = kommuneService.idForKommune(kommune.kommunenummer),
                     sourceEntity = null,
-                    transformationType = "NyKommune",
                     transformedIdent = Ident(kommune.kommunenummer.fylkesnummer, kommune.kommunenummer.lopenummer),
                     resultObject = Kommunedata(
                         navn = kommune.kommunenavn.name,
@@ -161,6 +164,7 @@ private suspend fun writeKommuner(
 
     logger.info("Starter tilbakeføring av kommuner")
     entitySinks.consume(transformedKommuner, input.ikrafttredelsesdato.toJavaLocalDate())
+    transformationRepo.writeTransformationsToDatabase(kjoringId, transformedKommuner.toList())
     logger.info("Fullført tilbakeføring av kommuner")
 }
 
@@ -169,6 +173,9 @@ private fun runAndWriteTransformations(
     transformStatus: TransformationStatusForRegulering,
     input: Reguleringsinput,
     entitySinks: EntitySinkManager,
+    kjoringId: Int,
+    transformationRepo: TransformationRepo,
+    kjoringRepo: KjoringRepo,
 ) {
     val sources = EntitySourceManager(bootContext).entitySources
 
@@ -178,7 +185,7 @@ private fun runAndWriteTransformations(
         }
 
         if (input.kommuner.isNotEmpty()) {
-            writeKommuner(bootContext, input, entitySinks)
+            writeKommuner(bootContext, input, entitySinks, kjoringId, transformationRepo)
         }
 
         sources.map {
@@ -200,14 +207,19 @@ private fun runAndWriteTransformations(
                     statusForSource.transformationFinished = Clock.System.now()
                 }
 
-            val newFlow: Flow<Transformation> = transformResult.toList().asFlow()
+            val transformResultList = transformResult.toList()
+            val newFlow: Flow<Transformation> = transformResultList.asFlow()
 
             logger.info("Starter tilbakeføring fra source: $type")
             entitySinks.consume(newFlow, input.ikrafttredelsesdato.toJavaLocalDate())
+
+            transformationRepo.writeTransformationsToDatabase(kjoringId, transformResultList)
+
             logger.info("Fullført tilbakeføring av source: $type")
             statusForSource.tilbakeføringFinished = Clock.System.now()
         }
         transformStatus.finish()
-        logger.info("Avsluttet transformasjon!")
+        kjoringRepo.updateKjoringEndTime(kjoringId)
+        logger.info("Avsluttet alle transformasjoner!")
     }
 }

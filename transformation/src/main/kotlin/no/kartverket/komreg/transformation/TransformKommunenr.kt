@@ -2,38 +2,71 @@ package no.kartverket.komreg.transformation
 
 import no.kartverket.komreg.core.domain.Fylkesnummer
 import no.kartverket.komreg.core.domain.Kommunenummer
+import no.kartverket.komreg.core.domain.Matrikkelnummer
 import no.kartverket.komreg.integration.spi.*
 
 fun transformerKommunenummer(input: Reguleringsinput, entity: Entity): Transformation? {
-    val newIdent = entity.ident.transformKommunenr(input)
+    val newIdent = entity.ident.transformerIdent(input)
     val newAssociatedIdents = entity.associatedIdents
-        ?.mapNotNull { it.transformKommunenr(input) }
+        ?.mapNotNull { it.transformerIdent(input) }
         ?.toSet()
 
     if (newIdent == entity.ident && newAssociatedIdents == entity.associatedIdents) return null
 
     return Transformation(
         id = entity.id,
-        transformationType = "ChangeKommunenummer",
         sourceEntity = entity,
         transformedIdent = newIdent,
         transformedAssociatedIdents = newAssociatedIdents?.ifEmpty { null },
     )
 }
 
-private fun Ident?.transformKommunenr(input: Reguleringsinput): Ident? {
+private fun Ident?.transformerIdent(input: Reguleringsinput): Ident? {
     if (this == null) return null
 
     val fylkesnummer = getOrNull<Fylkesnummer>()
-    val lopenummer = getOrNull<Kommunenummer.Lopenummer>()
+    val kommuneløpenummer = getOrNull<Kommunenummer.Lopenummer>()
+    val gårdsnummer = getOrNull<Matrikkelnummer.Gardsnummer>()
 
-    if (fylkesnummer == null || lopenummer == null) return this
+    if (fylkesnummer != null && kommuneløpenummer != null && gårdsnummer != null) {
+        input.endringer.matchGårdsnummer(fylkesnummer, kommuneløpenummer, gårdsnummer)?.let {
+            return this
+                .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til }
+                .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til }
+                .updateOrThrow { _: Matrikkelnummer.Gardsnummer -> it.gårdsnummer.til }
+        }
+    }
 
-    val newKommunenr = input.endringer
-        .find { it.fra.fylkesnummer == fylkesnummer && it.fra.lopenummer == lopenummer }
-        ?.til ?: return this
+    if (fylkesnummer != null && kommuneløpenummer != null) {
+        input.endringer.matchKommunenummer(fylkesnummer, kommuneløpenummer)?.let {
+            return this
+                .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til }
+                .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til }
+        }
+    }
+
+    if (fylkesnummer != null) {
+        input.endringer.matchFylkesnummer(fylkesnummer)?.let {
+            return this
+                .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til }
+        }
+    }
 
     return this
-        .updateOrThrow { _: Fylkesnummer -> newKommunenr.fylkesnummer }
-        .updateOrThrow { _: Kommunenummer.Lopenummer -> newKommunenr.lopenummer }
+}
+
+fun List<Endring>.matchFylkesnummer(fylkesnummer: Fylkesnummer): Fylkeendring? {
+    return this.find { it is Fylkeendring && it.fylkesnummer.fra == fylkesnummer } as Fylkeendring?
+}
+
+fun List<Endring>.matchKommunenummer(fylkesnummer: Fylkesnummer, lopenummer: Kommunenummer.Lopenummer): Kommuneendring? {
+    return this.find { it is Kommuneendring && it.fylkesnummer.fra == fylkesnummer && it.kommuneløpenummer.fra == lopenummer } as Kommuneendring?
+}
+
+fun List<Endring>.matchGårdsnummer(
+    fylkesnummer: Fylkesnummer,
+    lopenummer: Kommunenummer.Lopenummer,
+    gardsnummer: Matrikkelnummer.Gardsnummer,
+): Matrikkelenhetendring? {
+    return this.find { it is Matrikkelenhetendring && it.fylkesnummer.fra == fylkesnummer && it.kommuneløpenummer.fra == lopenummer && it.gårdsnummer.fra == gardsnummer } as Matrikkelenhetendring?
 }

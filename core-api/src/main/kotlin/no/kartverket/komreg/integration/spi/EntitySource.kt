@@ -1,23 +1,27 @@
 package no.kartverket.komreg.integration.spi
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.domain.Id
 import java.time.LocalDate
 
+interface Payload
+
+@Serializable
 data class Entity(
     val id: Id,
     val ident: Ident? = null,
     val associatedIdents: Set<Ident>? = null,
-    val sourceObject: Any? = null
+    val sourceObject: Payload? = null,
 )
 
+@Serializable
 data class Transformation(
     val id: Id,
     val sourceEntity: Entity?,
-    val transformationType: Any,
     val transformedIdent: Ident?,
     val transformedAssociatedIdents: Set<Ident>? = null,
-    val resultObject: Any? = null
+    val resultObject: Payload? = null,
 )
 
 interface EntitySource {

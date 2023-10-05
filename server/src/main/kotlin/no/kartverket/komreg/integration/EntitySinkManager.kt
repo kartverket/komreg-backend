@@ -1,7 +1,8 @@
-package no.kartverket.komreg.transformation
+package no.kartverket.komreg.integration
 
 import kotlinx.coroutines.flow.Flow
 import no.kartverket.komreg.core.KrAppBootContext
+import no.kartverket.komreg.featureToggle
 import no.kartverket.komreg.integration.spi.EntitySink
 import no.kartverket.komreg.integration.spi.EntitySinkFactory
 import no.kartverket.komreg.integration.spi.Transformation

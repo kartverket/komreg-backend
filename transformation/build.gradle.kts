@@ -8,21 +8,11 @@ tasks.test {
     useJUnitPlatform()
 }
 
-configurations.all {
-    resolutionStrategy {
-        cacheChangingModulesFor(0, "seconds")
-    }
-}
-
 dependencies {
     api(project(":core-api"))
 
-    implementation("com.oracle.database.jdbc:ojdbc11:23.2.0.0")
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.datetime)
-    implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
-
-    api("no.statkart.matrikkel:matrikkel-komreg:4.13-SNAPSHOT")
 
     api("com.google.guava:guava:32.1.2-jre")
     implementation(kotlin("reflect"))

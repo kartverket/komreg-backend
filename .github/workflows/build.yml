@@ -7,7 +7,7 @@ on:
 
 permissions:
   id-token: write
-  contents: "read"
+  contents: "write"
 
 env:
   registry: ghcr.io
@@ -39,7 +39,7 @@ jobs:
           GH_USERNAME: ${{ secrets.GH_USERNAME }}
           GH_PACKAGES_PAT: ${{ secrets.GH_PACKAGES_PAT }}
       - name: Login to Github Container Registry
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ${{ env.registry }}
           username: ${{ github.actor }}
@@ -53,7 +53,7 @@ jobs:
 
       - name: Build docker and push
         id: build
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: .
           push: true
@@ -75,7 +75,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "Run Pharos"
-        uses: kartverket/pharos@v0.1.3
+        uses: kartverket/pharos@v0.1.4
         with:
           image_url: ${{ needs.build.outputs.image_url}}
 
