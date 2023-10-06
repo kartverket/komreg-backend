@@ -9,7 +9,7 @@ import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
-import no.kartverket.komreg.common.validation.ReguleringValidator
+import no.kartverket.komreg.common.validation.SerializationValidator
 import no.kartverket.komreg.logger
 import no.kartverket.komreg.repositories.ReguleringRepo
 import javax.sql.DataSource
@@ -47,15 +47,17 @@ fun Application.reguleringRoutes(reguleringRepo: ReguleringRepo, dataSource: Dat
         route("/reguleringer") {
             post {
                 val requestBody: String = call.receiveText()
-                val errors = ReguleringValidator.ensureValidRegulering(requestBody)
+                val errors = SerializationValidator.ensureValid(requestBody, Regulering.serializer())
 
                 if (errors.isNotEmpty()) {
                     call.respond(HttpStatusCode.BadRequest, errors)
                     return@post
                 }
 
+                val regulering: Regulering = Json.decodeFromString(requestBody)
+
                 try {
-                    val regulering: Regulering = Json.decodeFromString(requestBody)
+
                     reguleringRepo.insertRegulering(regulering)
                     call.respond(HttpStatusCode.OK, "Regulering JSON received and saved successfully.")
                 } catch (e: Exception) {
