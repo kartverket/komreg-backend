@@ -1,19 +1,17 @@
 package no.kartverket.komreg.repositories
 
 import kotlinx.serialization.json.Json
-import no.kartverket.komreg.core.domain.*
+import no.kartverket.komreg.core.domain.Id
 import no.kartverket.komreg.integration.spi.Transformation
 import no.kartverket.komreg.logger
-import java.sql.DriverManager
+import javax.sql.DataSource
 
 class TransformationRepo(
-    private val jdbcUrl: String,
-    private val user: String,
-    private val password: String,
+    private val dataSource: DataSource,
     private val jsonSerializer: Json,
 ) {
     fun writeTransformationsToDatabase(kjoringId: Int, transformResultList: List<Transformation>) {
-        DriverManager.getConnection(jdbcUrl, user, password).use { connection ->
+        dataSource.connection.use { connection ->
             connection.prepareStatement(
                 "INSERT INTO transformasjon (transformasjonsid, kjoring, transformasjon, tid) VALUES (?::jsonb, ?, ?::jsonb, now())",
             ).use { statement ->

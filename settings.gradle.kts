@@ -108,6 +108,7 @@ dependencyResolutionManagement {
 
             library("postgresql", "org.postgresql:postgresql:42.6.0")
             library("flyway-core", "org.flywaydb:flyway-core:9.22.2")
+            library("hikari", "com.zaxxer:HikariCP:5.0.1")
 
             library(
                 "testcontainers-core",
