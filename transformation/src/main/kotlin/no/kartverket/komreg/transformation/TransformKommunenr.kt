@@ -2,6 +2,7 @@ package no.kartverket.komreg.transformation
 
 import no.kartverket.komreg.core.domain.Fylkesnummer
 import no.kartverket.komreg.core.domain.Kommunenummer
+import no.kartverket.komreg.core.domain.Kretsnummer
 import no.kartverket.komreg.core.domain.Matrikkelnummer
 import no.kartverket.komreg.integration.spi.*
 
@@ -27,6 +28,16 @@ private fun Ident?.transformerIdent(input: Reguleringsinput): Ident? {
     val fylkesnummer = getOrNull<Fylkesnummer>()
     val kommuneløpenummer = getOrNull<Kommunenummer.Lopenummer>()
     val gårdsnummer = getOrNull<Matrikkelnummer.Gardsnummer>()
+    val kretsnummer = getOrNull<Kretsnummer>()
+
+    if (fylkesnummer != null && kommuneløpenummer != null && kretsnummer != null) {
+        input.endringer.matchKretsnummer(fylkesnummer, kommuneløpenummer, kretsnummer)?.let {
+            return this
+                .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til }
+                .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til }
+                .updateOrThrow { _: Kretsnummer -> it.kretsnummer.til }
+        }
+    }
 
     if (fylkesnummer != null && kommuneløpenummer != null && gårdsnummer != null) {
         input.endringer.matchGårdsnummer(fylkesnummer, kommuneløpenummer, gårdsnummer)?.let {
@@ -69,4 +80,12 @@ fun List<Endring>.matchGårdsnummer(
     gardsnummer: Matrikkelnummer.Gardsnummer,
 ): Matrikkelenhetendring? {
     return this.find { it is Matrikkelenhetendring && it.fylkesnummer.fra == fylkesnummer && it.kommuneløpenummer.fra == lopenummer && it.gårdsnummer.fra == gardsnummer } as Matrikkelenhetendring?
+}
+
+fun List<Endring>.matchKretsnummer(
+    fylkesnummer: Fylkesnummer,
+    lopenummer: Kommunenummer.Lopenummer,
+    kretsnummer: Kretsnummer,
+): Kretsendring? {
+    return this.find { it is Kretsendring && it.fylkesnummer.fra == fylkesnummer && it.kommuneløpenummer.fra == lopenummer && it.kretsnummer.fra == kretsnummer } as Kretsendring?
 }

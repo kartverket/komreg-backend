@@ -19,7 +19,7 @@ import no.kartverket.komreg.validators.exceptions.MissingPathVariableException
 fun Application.transformationRoutes(
     transformationRepo: TransformationRepo,
     kjoringRepo: KjoringRepo,
-    reguleringRepo: ReguleringRepo
+    reguleringRepo: ReguleringRepo,
 ) {
     routing {
         route("/run/{regId}") {
@@ -28,9 +28,9 @@ fun Application.transformationRoutes(
                     val regId = call.parameters["regId"] ?: throw MissingPathVariableException("Missing regId")
 
                     val regulering = reguleringRepo.getReguleringById(regId)
-                        ?: throw NotFoundException("Fant ingen regulering for regId: ${regId}")
+                        ?: throw NotFoundException("Fant ingen regulering for regId: $regId")
 
-                    call.application.log.info("Starter transformasjon for regulering: ${regId}")
+                    call.application.log.info("Starter transformasjon for regulering: $regId")
 
                     val kjoringId = kjoringRepo.insertAndRetrieveKjoringId(regId)
                     if (kjoringId != null) {
