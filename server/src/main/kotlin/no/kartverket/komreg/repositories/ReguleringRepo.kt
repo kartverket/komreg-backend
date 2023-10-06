@@ -6,267 +6,258 @@ import kotlinx.serialization.json.Json
 import no.kartverket.komreg.routes.EndringDTO
 import no.kartverket.komreg.routes.Regulering
 import java.sql.Date
-import java.sql.DriverManager
+import javax.sql.DataSource
 
 class ReguleringRepo(
-    private val jdbcUrl: String,
-    private val user: String,
-    private val password: String,
+    private val dataSource: DataSource
 ) {
     fun getAllReguleringer(): List<Regulering> {
-        val connection = DriverManager.getConnection(jdbcUrl, user, password)
-        val statement = connection.prepareStatement("SELECT * FROM regulering")
-        val resultSet = statement.executeQuery()
+        dataSource.connection.use { connection ->
+            val statement = connection.prepareStatement("SELECT regulering FROM regulering")
+            val resultSet = statement.executeQuery()
 
-        val reguleringerList = mutableListOf<Regulering>()
+            val reguleringerList = mutableListOf<Regulering>()
 
-        while (resultSet.next()) {
-            val reguleringJson = resultSet.getString("regulering")
-            val regulering = Json.decodeFromString<Regulering>(reguleringJson)
-            reguleringerList.add(regulering)
+            while (resultSet.next()) {
+                val reguleringJson = resultSet.getString(1)
+                val regulering = Json.decodeFromString<Regulering>(reguleringJson)
+                reguleringerList.add(regulering)
+            }
+
+            statement.close()
+
+            return reguleringerList
         }
-
-        statement.close()
-        connection.close()
-
-        return reguleringerList
     }
 
     fun getReguleringById(id: String): Regulering? {
-        val connection = DriverManager.getConnection(jdbcUrl, user, password)
-        val statement = connection.prepareStatement("SELECT regulering FROM regulering WHERE id = ?")
-        statement.setString(1, id)
-        val resultSet = statement.executeQuery()
+        dataSource.connection.use { connection ->
+            val statement = connection.prepareStatement("SELECT regulering FROM regulering WHERE id = ?")
+            statement.setString(1, id)
+            val resultSet = statement.executeQuery()
 
-        val regulering: Regulering? = if (resultSet.next()) {
-            val reguleringJson = resultSet.getString("regulering")
-            Json.decodeFromString<Regulering>(reguleringJson)
-        } else {
-            null
+            val regulering: Regulering? = if (resultSet.next()) {
+                val reguleringJson = resultSet.getString(1)
+                Json.decodeFromString<Regulering>(reguleringJson)
+            } else {
+                null
+            }
+
+            statement.close()
+
+            return regulering
         }
-
-        statement.close()
-        connection.close()
-
-        return regulering
     }
 
     fun insertRegulering(regulering: Regulering): Boolean {
-        val connection = DriverManager.getConnection(jdbcUrl, user, password)
-        val currentTime = java.sql.Timestamp(System.currentTimeMillis())
-        val statement = connection.prepareStatement(
-            "INSERT INTO regulering (id, regulering, ikrafttredelsesdato, opprettet, endret, opprettetav) VALUES (?, ?::jsonb, ?, ?, ?, ?)",
-        )
+        dataSource.connection.use { connection ->
+            val currentTime = java.sql.Timestamp(System.currentTimeMillis())
+            val statement = connection.prepareStatement(
+                "INSERT INTO regulering (id, regulering, ikrafttredelsesdato, opprettet, endret, opprettetav) VALUES (?, ?::jsonb, ?, ?, ?, ?)",
+            )
 
-        statement.setString(1, regulering.id)
-        statement.setString(2, Json.encodeToString(regulering))
-        statement.setDate(3, Date.valueOf(regulering.dato.toJavaLocalDate()))
-        statement.setTimestamp(4, currentTime)
-        statement.setTimestamp(5, currentTime)
-        statement.setString(6, "system")
+            statement.setString(1, regulering.id)
+            statement.setString(2, Json.encodeToString(regulering))
+            statement.setDate(3, Date.valueOf(regulering.dato.toJavaLocalDate()))
+            statement.setTimestamp(4, currentTime)
+            statement.setTimestamp(5, currentTime)
+            statement.setString(6, "system")
 
-        val affectedRows = statement.executeUpdate()
+            val affectedRows = statement.executeUpdate()
 
-        statement.close()
-        connection.close()
+            statement.close()
 
-        return affectedRows > 0
+            return affectedRows > 0
+        }
     }
 
     fun updateRegulering(regulering: Regulering): Boolean {
-        val connection = DriverManager.getConnection(jdbcUrl, user, password)
+        dataSource.connection.use { connection ->
 
-        val checkStatement = connection.prepareStatement("SELECT count(id) FROM regulering WHERE id = ?")
-        checkStatement.setString(1, regulering.id)
-        val resultSet = checkStatement.executeQuery()
-        resultSet.next()
-        val count = resultSet.getInt(1)
-        checkStatement.close()
+            val checkStatement = connection.prepareStatement("SELECT count(id) FROM regulering WHERE id = ?")
+            checkStatement.setString(1, regulering.id)
+            val resultSet = checkStatement.executeQuery()
+            resultSet.next()
+            val count = resultSet.getInt(1)
+            checkStatement.close()
 
-        if (count == 0) {
-            connection.close()
-            return false
+            if (count == 0) {
+                return false
+            }
+
+            val updateStatement = connection.prepareStatement(
+                "UPDATE regulering SET regulering = ?::jsonb, ikrafttredelsesdato = ?, endret = now(), opprettetav = ? WHERE ID = ?",
+            )
+            updateStatement.setString(1, Json.encodeToString(regulering))
+            updateStatement.setDate(2, Date.valueOf(regulering.dato.toJavaLocalDate()))
+            updateStatement.setString(3, "system")
+            updateStatement.setString(4, regulering.id)
+
+            val affectedRows = updateStatement.executeUpdate()
+
+            updateStatement.close()
+
+            return affectedRows > 0
         }
-
-        val updateStatement = connection.prepareStatement(
-            "UPDATE regulering SET regulering = ?::jsonb, ikrafttredelsesdato = ?, endret = now(), opprettetav = ? WHERE ID = ?",
-        )
-        updateStatement.setString(1, Json.encodeToString(regulering))
-        updateStatement.setDate(2, Date.valueOf(regulering.dato.toJavaLocalDate()))
-        updateStatement.setString(3, "system")
-        updateStatement.setString(4, regulering.id)
-
-        val affectedRows = updateStatement.executeUpdate()
-
-        updateStatement.close()
-        connection.close()
-
-        return affectedRows > 0
     }
 
     fun deleteReguleringById(regId: String): Boolean {
-        val connection = DriverManager.getConnection(jdbcUrl, user, password)
+        dataSource.connection.use { connection ->
 
-        val checkStatement = connection.prepareStatement("SELECT count(id) FROM regulering WHERE id = ?")
-        checkStatement.setString(1, regId)
-        val resultSet = checkStatement.executeQuery()
-        resultSet.next()
-        val count = resultSet.getInt(1)
-        checkStatement.close()
+            val checkStatement = connection.prepareStatement("SELECT count(id) FROM regulering WHERE id = ?")
+            checkStatement.setString(1, regId)
+            val resultSet = checkStatement.executeQuery()
+            resultSet.next()
+            val count = resultSet.getInt(1)
+            checkStatement.close()
 
-        if (count == 0) {
-            connection.close()
-            return false
+            if (count == 0) {
+                return false
+            }
+
+            val deleteStatement = connection.prepareStatement("DELETE FROM regulering WHERE id = ?")
+            deleteStatement.setString(1, regId)
+            val affectedRows = deleteStatement.executeUpdate()
+
+            deleteStatement.close()
+
+            return affectedRows > 0
         }
-
-        val deleteStatement = connection.prepareStatement("DELETE FROM regulering WHERE id = ?")
-        deleteStatement.setString(1, regId)
-        val affectedRows = deleteStatement.executeUpdate()
-
-        deleteStatement.close()
-        connection.close()
-
-        return affectedRows > 0
     }
 
     fun getEndringFromRegulering(regId: String, endrId: String): EndringDTO? {
-        val connection = DriverManager.getConnection(jdbcUrl, user, password)
+        dataSource.connection.use { connection ->
 
-        val statement = connection.prepareStatement("SELECT regulering FROM regulering WHERE id = ?")
-        statement.setString(1, regId)
-        val resultSet = statement.executeQuery()
+            val statement = connection.prepareStatement("SELECT regulering FROM regulering WHERE id = ?")
+            statement.setString(1, regId)
+            val resultSet = statement.executeQuery()
 
-        if (resultSet.next()) {
-            val reguleringJson = resultSet.getString("regulering")
-            val regulering = Json.decodeFromString<Regulering>(reguleringJson)
+            if (resultSet.next()) {
+                val reguleringJson = resultSet.getString(1)
+                val regulering = Json.decodeFromString<Regulering>(reguleringJson)
+
+                statement.close()
+                connection.close()
+
+                return regulering.endringer.find { it.id == endrId }
+            }
 
             statement.close()
-            connection.close()
-
-            return regulering.endringer.find { it.id == endrId }
+            return null
         }
-
-        statement.close()
-        connection.close()
-        return null
     }
 
     fun getAllEndringerFromRegulering(regId: String): List<EndringDTO>? {
-        val connection = DriverManager.getConnection(jdbcUrl, user, password)
+        dataSource.connection.use { connection ->
 
-        val statement = connection.prepareStatement("SELECT regulering FROM regulering WHERE id = ?")
-        statement.setString(1, regId)
-        val resultSet = statement.executeQuery()
+            val statement = connection.prepareStatement("SELECT regulering FROM regulering WHERE id = ?")
+            statement.setString(1, regId)
+            val resultSet = statement.executeQuery()
 
-        if (resultSet.next()) {
-            val reguleringJson = resultSet.getString("regulering")
-            val regulering = Json.decodeFromString<Regulering>(reguleringJson)
+            if (resultSet.next()) {
+                val reguleringJson = resultSet.getString(1)
+                val regulering = Json.decodeFromString<Regulering>(reguleringJson)
+
+                statement.close()
+
+                return regulering.endringer
+            }
 
             statement.close()
-            connection.close()
-
-            return regulering.endringer
+            return null
         }
-
-        statement.close()
-        connection.close()
-        return null
     }
 
     fun addEndringToRegulering(regId: String, endring: EndringDTO): Boolean {
-        val connection = DriverManager.getConnection(jdbcUrl, user, password)
+        dataSource.connection.use { connection ->
+            val statement = connection.prepareStatement("SELECT regulering FROM regulering WHERE id = ?")
+            statement.setString(1, regId)
 
-        val statement = connection.prepareStatement("SELECT regulering FROM regulering WHERE id = ?")
-        statement.setString(1, regId)
+            val resultSet = statement.executeQuery()
+            if (resultSet.next()) {
+                val reguleringJson = resultSet.getString("regulering")
+                val regulering = Json.decodeFromString<Regulering>(reguleringJson)
 
-        val resultSet = statement.executeQuery()
-        if (resultSet.next()) {
-            val reguleringJson = resultSet.getString("regulering")
-            val regulering = Json.decodeFromString<Regulering>(reguleringJson)
+                val updatedEndringer = regulering.endringer + endring
+                val updatedRegulering = regulering.copy(endringer = updatedEndringer)
 
-            val updatedEndringer = regulering.endringer + endring
-            val updatedRegulering = regulering.copy(endringer = updatedEndringer)
+                val updateStatement =
+                    connection.prepareStatement("UPDATE regulering SET regulering = ?::jsonb WHERE ID = ?")
+                updateStatement.setString(1, Json.encodeToString(updatedRegulering))
+                updateStatement.setString(2, regId)
+                updateStatement.executeUpdate()
 
-            val updateStatement =
-                connection.prepareStatement("UPDATE regulering SET regulering = ?::jsonb WHERE ID = ?")
-            updateStatement.setString(1, Json.encodeToString(updatedRegulering))
-            updateStatement.setString(2, regId)
-            updateStatement.executeUpdate()
+                statement.close()
+                return true
+            }
 
             statement.close()
-            connection.close()
-            return true
+            return false
         }
-
-        statement.close()
-        connection.close()
-        return false
     }
 
     fun updateEndringOfRegulering(regId: String, endringId: String, updatedEndring: EndringDTO): Boolean {
-        val connection = DriverManager.getConnection(jdbcUrl, user, password)
+        dataSource.connection.use { connection ->
 
-        val statement = connection.prepareStatement("SELECT regulering FROM regulering WHERE id = ?")
-        statement.setString(1, regId)
+            val statement = connection.prepareStatement("SELECT regulering FROM regulering WHERE id = ?")
+            statement.setString(1, regId)
 
-        val resultSet = statement.executeQuery()
-        if (resultSet.next()) {
-            val reguleringJson = resultSet.getString("regulering")
-            val regulering = Json.decodeFromString<Regulering>(reguleringJson)
+            val resultSet = statement.executeQuery()
+            if (resultSet.next()) {
+                val reguleringJson = resultSet.getString("regulering")
+                val regulering = Json.decodeFromString<Regulering>(reguleringJson)
 
-            val endringIndex = regulering.endringer.indexOfFirst { it.id == endringId }
-            if (endringIndex != -1) {
-                val updatedEndringer = regulering.endringer.toMutableList()
-                updatedEndringer[endringIndex] = updatedEndring
-                val updatedRegulering = regulering.copy(endringer = updatedEndringer)
+                val endringIndex = regulering.endringer.indexOfFirst { it.id == endringId }
+                if (endringIndex != -1) {
+                    val updatedEndringer = regulering.endringer.toMutableList()
+                    updatedEndringer[endringIndex] = updatedEndring
+                    val updatedRegulering = regulering.copy(endringer = updatedEndringer)
 
-                val updateStatement =
-                    connection.prepareStatement("UPDATE regulering SET regulering = ?::jsonb WHERE ID = ?")
-                updateStatement.setString(1, Json.encodeToString(updatedRegulering))
-                updateStatement.setString(2, regId)
-                updateStatement.executeUpdate()
+                    val updateStatement =
+                        connection.prepareStatement("UPDATE regulering SET regulering = ?::jsonb WHERE ID = ?")
+                    updateStatement.setString(1, Json.encodeToString(updatedRegulering))
+                    updateStatement.setString(2, regId)
+                    updateStatement.executeUpdate()
 
-                statement.close()
-                connection.close()
-                return true
+                    statement.close()
+                    return true
+                }
             }
-        }
 
-        statement.close()
-        connection.close()
-        return false
+            statement.close()
+            return false
+        }
     }
 
     fun deleteEndringFromRegulering(regId: String, endringId: String): Boolean {
-        val connection = DriverManager.getConnection(jdbcUrl, user, password)
-        val statement = connection.prepareStatement("SELECT regulering FROM regulering WHERE id = ?")
-        statement.setString(1, regId)
+        dataSource.connection.use { connection ->
+            val statement = connection.prepareStatement("SELECT regulering FROM regulering WHERE id = ?")
+            statement.setString(1, regId)
 
-        val resultSet = statement.executeQuery()
-        if (resultSet.next()) {
-            val reguleringJson = resultSet.getString("regulering")
-            val regulering = Json.decodeFromString<Regulering>(reguleringJson)
+            val resultSet = statement.executeQuery()
+            if (resultSet.next()) {
+                val reguleringJson = resultSet.getString("regulering")
+                val regulering = Json.decodeFromString<Regulering>(reguleringJson)
 
-            val endringIndex = regulering.endringer.indexOfFirst { it.id == endringId }
-            if (endringIndex != -1) {
-                val updatedEndringer = regulering.endringer.toMutableList()
-                updatedEndringer.removeAt(endringIndex)
-                val updatedRegulering = regulering.copy(endringer = updatedEndringer)
+                val endringIndex = regulering.endringer.indexOfFirst { it.id == endringId }
+                if (endringIndex != -1) {
+                    val updatedEndringer = regulering.endringer.toMutableList()
+                    updatedEndringer.removeAt(endringIndex)
+                    val updatedRegulering = regulering.copy(endringer = updatedEndringer)
 
-                val updateStatement =
-                    connection.prepareStatement("UPDATE regulering SET regulering = ?::jsonb WHERE ID = ?")
-                updateStatement.setString(1, Json.encodeToString(updatedRegulering))
-                updateStatement.setString(2, regId)
-                updateStatement.executeUpdate()
+                    val updateStatement =
+                        connection.prepareStatement("UPDATE regulering SET regulering = ?::jsonb WHERE ID = ?")
+                    updateStatement.setString(1, Json.encodeToString(updatedRegulering))
+                    updateStatement.setString(2, regId)
+                    updateStatement.executeUpdate()
 
-                statement.close()
-                connection.close()
-                return true
+                    statement.close()
+                    return true
+                }
             }
-        }
 
-        statement.close()
-        connection.close()
-        return false
+            statement.close()
+            return false
+        }
     }
 }

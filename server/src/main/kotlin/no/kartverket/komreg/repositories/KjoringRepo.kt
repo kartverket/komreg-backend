@@ -1,16 +1,14 @@
 package no.kartverket.komreg.repositories
 
-import java.sql.DriverManager
 import java.sql.Statement
 import java.sql.Timestamp
+import javax.sql.DataSource
 
 class KjoringRepo(
-    private val jdbcUrl: String,
-    private val user: String,
-    private val password: String,
+    private val dataSource: DataSource
 ) {
     fun insertAndRetrieveKjoringId(reguleringId: String): Int? {
-        DriverManager.getConnection(jdbcUrl, user, password).use { connection ->
+        dataSource.connection.use { connection ->
             val insertStatement = connection.prepareStatement(
                 "INSERT INTO kjoring (regulering, start) VALUES (?, now())",
                 Statement.RETURN_GENERATED_KEYS,
@@ -28,7 +26,7 @@ class KjoringRepo(
     }
 
     fun updateKjoringEndTime(kjoringId: Int) {
-        DriverManager.getConnection(jdbcUrl, user, password).use { connection ->
+        dataSource.connection.use { connection ->
             val endTime = Timestamp(System.currentTimeMillis())
             val updateStatement = connection.prepareStatement(
                 "UPDATE kjoring SET slutt = ? WHERE id = ? AND slutt IS NULL",

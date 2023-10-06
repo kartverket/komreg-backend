@@ -1,5 +1,7 @@
 package no.kartverket.komreg.repositories
 
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
@@ -16,25 +18,32 @@ import no.kartverket.komreg.routes.Regulering
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.testcontainers.containers.PostgreSQLContainer
+import javax.sql.DataSource
 
 class TransformationRepoTest {
-    private inline fun withDatabase(block: (PostgreSQLContainer<*>) -> Unit) {
+    private inline fun withDatabase(block: (DataSource) -> Unit) {
         PostgreSQLContainer("postgres:16").use { database ->
             database.withDatabaseName("komreg-db")
                 .withUsername("komreg-db")
                 .withPassword("komreg-db")
                 .start()
             flyway(database)
-            block(database)
+
+            val hikariConfig = HikariConfig()
+            hikariConfig.poolName = "komreg-db-connection"
+            hikariConfig.jdbcUrl = database.getJdbcUrl()
+            hikariConfig.username = database.username
+            hikariConfig.password = database.password
+            hikariConfig.minimumIdle = 1
+
+            HikariDataSource(hikariConfig).use { pool ->
+                block(pool)
+            }
         }
     }
 
-    private fun initKjoring(database: PostgreSQLContainer<*>): Int {
-        val reguleringRepo = ReguleringRepo(
-            database.getJdbcUrl(),
-            database.username,
-            database.password
-        )
+    private fun initKjoring(dataSource: DataSource): Int {
+        val reguleringRepo = ReguleringRepo(dataSource)
         val ok = reguleringRepo.insertRegulering(
             Regulering(
                 "abc",
@@ -45,11 +54,7 @@ class TransformationRepoTest {
         )
         Assertions.assertTrue(ok, "Lagring av regulering")
 
-        val kjoringRepo = KjoringRepo(
-            database.getJdbcUrl(),
-            database.username,
-            database.password
-        )
+        val kjoringRepo = KjoringRepo(dataSource)
         return kjoringRepo.insertAndRetrieveKjoringId("abc")!!
     }
 
@@ -58,13 +63,11 @@ class TransformationRepoTest {
      */
     @Test
     fun write() {
-        withDatabase { database ->
-            val kjoringId = initKjoring(database)
+        withDatabase { dataSource ->
+            val kjoringId = initKjoring(dataSource)
 
             val repo = TransformationRepo(
-                database.getJdbcUrl(),
-                database.username,
-                database.password,
+                dataSource,
                 jsonSerializer()
             )
 

@@ -69,9 +69,20 @@ fun Application.module() {
         flyway.migrate()
     }
 
-    val reguleringsRepo = ReguleringRepo(komregJdbcUrl, komregDbUsername, komregDbPassword)
-    val transformationRepo = TransformationRepo(komregJdbcUrl, komregDbUsername, komregDbPassword, jsonSerializer())
-    val kjoringRepo = KjoringRepo(komregJdbcUrl, komregDbUsername, komregDbPassword)
+    val komregDbPool = run {
+        val hikariConfig = HikariConfig()
+        hikariConfig.poolName = "komreg-db-connection"
+        hikariConfig.jdbcUrl = komregJdbcUrl
+        hikariConfig.username = komregDbUsername
+        hikariConfig.password = komregDbPassword
+        hikariConfig.minimumIdle = 1
+        hikariConfig.keepaliveTime = 600000
+        HikariDataSource(hikariConfig)
+    }
+
+    val reguleringsRepo = ReguleringRepo(komregDbPool)
+    val kjoringRepo = KjoringRepo(komregDbPool)
+    val transformationRepo = TransformationRepo(komregDbPool, jsonSerializer())
 
     install(ContentNegotiation) {
         json()
