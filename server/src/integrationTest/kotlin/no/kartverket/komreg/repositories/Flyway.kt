@@ -5,6 +5,7 @@ import org.testcontainers.containers.PostgreSQLContainer
 
 fun flyway(database: PostgreSQLContainer<*>) {
     val flyway = Flyway.configure()
+        .loggers("slf4j")
         .schemas("komreg")
         .dataSource(
             database.getJdbcUrl(),
