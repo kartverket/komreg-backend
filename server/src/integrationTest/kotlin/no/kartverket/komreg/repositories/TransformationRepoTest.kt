@@ -2,6 +2,7 @@ package no.kartverket.komreg.repositories
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
@@ -62,7 +63,7 @@ class TransformationRepoTest {
      * Tester bare at lagringen ikke krasjer
      */
     @Test
-    fun write() {
+    fun writeAndRead() {
         withDatabase { dataSource ->
             val kjoringId = initKjoring(dataSource)
 
@@ -98,6 +99,13 @@ class TransformationRepoTest {
                     transformation
                 )
             )
+
+            val tFlow = repo.readTransformationFromDatabase(kjoringId)
+            val readTransformations = runBlocking { tFlow.toList() }
+            Assertions.assertEquals(1, readTransformations.size, "Number of transformations read")
+
+            val readTransformation = readTransformations.single()
+            Assertions.assertEquals(transformation, readTransformation, "Read transformation")
         }
     }
 }
