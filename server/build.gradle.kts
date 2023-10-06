@@ -89,6 +89,7 @@ dependencies {
     implementation(libs.micrometer.registry.prometheus)
     implementation(libs.postgresql)
     implementation(libs.flyway.core)
+    implementation(libs.hikari)
 
     testImplementation(kotlin("test"))
     testImplementation(libs.junit.jupiter.api)
@@ -104,10 +105,10 @@ dependencies {
     integrationTestImplementation(libs.testcontainers.postgresql)
     integrationTestImplementation(libs.postgresql)
     integrationTestImplementation(libs.flyway.core)
+    integrationTestImplementation(libs.hikari)
     integrationTestImplementation(project(":core-api"))
     integrationTestImplementation(libs.kotlinx.serialization.json)
 
     // TODO: For PoC på uthenting av fordelingsparametre for kommune
-    implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("com.oracle.database.jdbc:ojdbc11:23.2.0.0")
 }
