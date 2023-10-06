@@ -4,7 +4,7 @@ version = "1.0-SNAPSHOT"
 plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
-    application
+    `jvm-test-suite`
 }
 
 configurations.all {
@@ -13,6 +13,38 @@ configurations.all {
     }
 }
 
+@Suppress("UnstableApiUsage")
+testing {
+    suites {
+        withType<JvmTestSuite> {
+            useJUnitJupiter()
+        }
+
+        val integrationTest by registering(JvmTestSuite::class) {
+            testType.set(TestSuiteType.INTEGRATION_TEST)
+
+            dependencies {
+                implementation(project)
+            }
+
+            targets {
+                all {
+                    testTask.configure {
+                        shouldRunAfter(tasks.named("test"))
+                    }
+                }
+            }
+
+            tasks.named("check").configure {
+                dependsOn(sources.classesTaskName)
+            }
+        }
+    }
+}
+
+val integrationTestImplementation by configurations.getting
+
+@Suppress("UnstableApiUsage")
 dependencies {
     implementation(project(":core-api"))
     implementation(project(":transformation"))
@@ -55,8 +87,8 @@ dependencies {
 
     implementation(libs.ktor.server.metrics.micrometer)
     implementation(libs.micrometer.registry.prometheus)
-    implementation("org.postgresql:postgresql:42.6.0")
-    implementation("org.flywaydb:flyway-core:9.22.2")
+    implementation(libs.postgresql)
+    implementation(libs.flyway.core)
 
     testImplementation(kotlin("test"))
     testImplementation(libs.junit.jupiter.api)
@@ -68,15 +100,14 @@ dependencies {
     testImplementation(libs.hamcrest.library)
     testImplementation(libs.kotest.runner)
 
+    integrationTestImplementation(libs.testcontainers.core)
+    integrationTestImplementation(libs.testcontainers.postgresql)
+    integrationTestImplementation(libs.postgresql)
+    integrationTestImplementation(libs.flyway.core)
+    integrationTestImplementation(project(":core-api"))
+    integrationTestImplementation(libs.kotlinx.serialization.json)
+
     // TODO: For PoC på uthenting av fordelingsparametre for kommune
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("com.oracle.database.jdbc:ojdbc11:23.2.0.0")
-}
-
-tasks.test {
-    useJUnitPlatform()
-}
-
-application {
-    mainClass.set("MainKt")
 }
