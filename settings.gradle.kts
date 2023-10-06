@@ -34,6 +34,7 @@ dependencyResolutionManagement {
             version("hamcrest", "2.2")
             version("logback", "1.4.5")
             version("micrometer-prometheus", "1.10.3")
+            version("testcontainers", "1.19.1")
 
             library("kotlin-reflect", "org.jetbrains.kotlin", "kotlin-reflect").withoutVersion()
 
@@ -104,6 +105,20 @@ dependencyResolutionManagement {
                 "io.micrometer",
                 "micrometer-registry-prometheus",
             ).versionRef("micrometer-prometheus")
+
+            library("postgresql", "org.postgresql:postgresql:42.6.0")
+            library("flyway-core", "org.flywaydb:flyway-core:9.22.1")
+
+            library(
+                "testcontainers-core",
+                "org.testcontainers",
+                "testcontainers",
+            ).versionRef("testcontainers")
+            library(
+                "testcontainers-postgresql",
+                "org.testcontainers",
+                "postgresql",
+            ).versionRef("testcontainers")
         }
     }
 }
