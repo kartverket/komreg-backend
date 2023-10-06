@@ -1,4 +1,4 @@
-package no.kartverket.komreg.validators
+package no.kartverket.komreg.common.validation
 
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -11,8 +11,7 @@ class ReguleringValidator {
             val errors = mutableListOf<String>()
 
             try {
-                val json = Json { ignoreUnknownKeys = true }
-                json.decodeFromString<Regulering>(body)
+                Json.decodeFromString<Regulering>(body)
 
             } catch (e: SerializationException) {
                 errors.add("Invalid JSON format: ${e.message}")
