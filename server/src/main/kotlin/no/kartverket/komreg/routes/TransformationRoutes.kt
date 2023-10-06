@@ -42,9 +42,16 @@ fun Application.transformationRoutes(
                     } else {
                         call.respond(HttpStatusCode.InternalServerError, "Failed to insert into kjoring table.")
                     }
-                } catch (t: Throwable) {
+                } catch (t: Exception) {
                     call.application.log.error("Feil under serialisering", t)
-                    call.respond(HttpStatusCode.BadRequest)
+                    when (t) {
+                        is NotFoundException -> call.respond(
+                            HttpStatusCode.NotFound,
+                            "Not found exception: ${t.message}"
+                        )
+
+                        else -> call.respond(HttpStatusCode.InternalServerError, "Internal server error: ${t.message}")
+                    }
                 }
             }
         }
