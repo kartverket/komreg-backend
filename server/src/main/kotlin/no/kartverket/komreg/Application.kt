@@ -112,6 +112,6 @@ fun Application.module() {
 
     internalRoutes(metricsRegistry)
     reguleringRoutes(reguleringsRepo, createKildeDataSource())
-    transformationRoutes(transformationRepo, kjoringRepo)
+    transformationRoutes(transformationRepo, kjoringRepo, reguleringsRepo)
     grunndataRoutes()
 }

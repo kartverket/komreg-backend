@@ -59,6 +59,24 @@ data class Regulering(
                                 ),
                             )
                         }
+
+                        is KretsTransformasjonDTO -> {
+                            Kretsendring(
+                                fylkesnummer = Endring.FraTil(
+                                    fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
+                                    til = Fylkesnummer(transformasjon.fylkesnummer.til.toLong()),
+                                ),
+                                kommuneløpenummer = Endring.FraTil(
+                                    fra = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.fra.toByte()),
+                                    til = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.til.toByte()),
+                                ),
+                                kretsnummer = Endring.FraTil(
+                                    fra = Kretsnummer(transformasjon.kretsnummer.fra.toLong()),
+                                    til = Kretsnummer(transformasjon.kretsnummer.til.toLong()),
+                                ),
+                            )
+
+                        }
                     }
                 }
             },
@@ -172,6 +190,14 @@ data class MatrikkelenhetTransformasjonDTO(
     override val fylkesnummer: FraTil,
     val kommunenummer: FraTil,
     val gårdsnummer: FraTil,
+) : TransformasjonDTO()
+
+@Serializable
+@SerialName("krets")
+data class KretsTransformasjonDTO(
+    override val fylkesnummer: FraTil,
+    val kommuneløpenummer: FraTil,
+    val kretsnummer: FraTil,
 ) : TransformasjonDTO()
 
 @Serializable

@@ -2,6 +2,7 @@ package no.kartverket.komreg.routes
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
+import io.ktor.server.application.application
 import io.ktor.server.application.call
 import io.ktor.server.application.log
 import io.ktor.server.request.receive
@@ -44,11 +45,13 @@ fun Application.reguleringRoutes(reguleringRepo: ReguleringRepo, dataSource: Dat
         // Create new regulering
         route("/reguleringer") {
             post {
-                val regulering: Regulering = call.receive()
-
-                if (reguleringRepo.insertRegulering(regulering)) {
+                try {
+                    val requestBody = call.receiveText()
+                    val regulering: Regulering = Json.decodeFromString(Regulering.serializer(), requestBody)
+                    reguleringRepo.insertRegulering(regulering)
                     call.respond(HttpStatusCode.OK, "Regulering JSON received and saved successfully.")
-                } else {
+                } catch (e: Exception) {
+                    application.log.error("${e.message}")
                     call.respond(HttpStatusCode.InternalServerError, "Failed to save Regulering.")
                 }
             }
@@ -212,7 +215,7 @@ fun Application.reguleringRoutes(reguleringRepo: ReguleringRepo, dataSource: Dat
                     val teigStatement =
                         connection.prepareStatement(
                             "SELECT t.id AS id, koordinatsystemkodeid, nord, ost FROM teig t LEFT JOIN teigformatrikkelenhet tfm ON t.id = tfm.teigid\n" +
-                                    "    WHERE matrikkelenhetid IN (SELECT id FROM matrikkelenhet WHERE kommuneid = ? AND gardsnr = 0)",
+                                "    WHERE matrikkelenhetid IN (SELECT id FROM matrikkelenhet WHERE kommuneid = ? AND gardsnr = 0)",
                         )
                     teigStatement.setString(1, kommuneId)
                     val teigResultSet = teigStatement.executeQuery()
@@ -240,5 +243,3 @@ fun Application.reguleringRoutes(reguleringRepo: ReguleringRepo, dataSource: Dat
         }
     }
 }
-
-
