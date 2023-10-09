@@ -1,9 +1,6 @@
 package no.kartverket.komreg.transformation
 
-import no.kartverket.komreg.core.domain.Fylkesnummer
-import no.kartverket.komreg.core.domain.Kommunenummer
-import no.kartverket.komreg.core.domain.Kretsnummer
-import no.kartverket.komreg.core.domain.Matrikkelnummer
+import no.kartverket.komreg.core.domain.*
 import no.kartverket.komreg.integration.spi.*
 
 fun transformerKommunenummer(input: Reguleringsinput, entity: Entity): Transformation? {
@@ -29,6 +26,16 @@ private fun Ident?.transformerIdent(input: Reguleringsinput): Ident? {
     val kommuneløpenummer = getOrNull<Kommunenummer.Lopenummer>()
     val gårdsnummer = getOrNull<Matrikkelnummer.Gardsnummer>()
     val kretsnummer = getOrNull<Kretsnummer>()
+    val adressekode = getOrNull<Adressekode>()
+
+    if (fylkesnummer != null && kommuneløpenummer != null && adressekode != null) {
+        input.endringer.matchAdressekode(fylkesnummer, kommuneløpenummer, adressekode)?.let {
+            return this
+                .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til }
+                .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til }
+                .updateOrThrow { _: Adressekode -> it.adressekode.til }
+        }
+    }
 
     if (fylkesnummer != null && kommuneløpenummer != null && kretsnummer != null) {
         input.endringer.matchKretsnummer(fylkesnummer, kommuneløpenummer, kretsnummer)?.let {
@@ -88,4 +95,12 @@ fun List<Endring>.matchKretsnummer(
     kretsnummer: Kretsnummer,
 ): Kretsendring? {
     return this.find { it is Kretsendring && it.fylkesnummer.fra == fylkesnummer && it.kommuneløpenummer.fra == lopenummer && it.kretsnummer.fra == kretsnummer } as Kretsendring?
+}
+
+fun List<Endring>.matchAdressekode(
+    fylkesnummer: Fylkesnummer,
+    lopenummer: Kommunenummer.Lopenummer,
+    adressekode: Adressekode,
+): Vegendring? {
+    return this.find { it is Vegendring && it.fylkesnummer.fra == fylkesnummer && it.kommuneløpenummer.fra == lopenummer && it.adressekode.fra == adressekode } as Vegendring?
 }
