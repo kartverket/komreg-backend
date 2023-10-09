@@ -9,12 +9,12 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import no.kartverket.komreg.exceptions.MissingPathVariableException
 import no.kartverket.komreg.repositories.KjoringRepo
 import no.kartverket.komreg.repositories.ReguleringRepo
 import no.kartverket.komreg.repositories.TransformationRepo
 import no.kartverket.komreg.services.transformEntities
 import no.kartverket.komreg.services.transformStatuses
-import no.kartverket.komreg.validators.exceptions.MissingPathVariableException
 
 fun Application.transformationRoutes(
     transformationRepo: TransformationRepo,

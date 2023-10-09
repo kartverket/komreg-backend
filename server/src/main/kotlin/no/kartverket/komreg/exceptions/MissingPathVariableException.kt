@@ -1,3 +1,3 @@
-package no.kartverket.komreg.validators.exceptions
+package no.kartverket.komreg.exceptions
 
 class MissingPathVariableException(message: String) : Exception(message)

@@ -11,7 +11,6 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
 import no.kartverket.komreg.logger
 import no.kartverket.komreg.repositories.ReguleringRepo
-import no.kartverket.komreg.validators.ReguleringValidator
 import javax.sql.DataSource
 
 fun Application.reguleringRoutes(reguleringRepo: ReguleringRepo, dataSource: DataSource) {
@@ -46,16 +45,10 @@ fun Application.reguleringRoutes(reguleringRepo: ReguleringRepo, dataSource: Dat
         // Create new regulering
         route("/reguleringer") {
             post {
-                val requestBody: String = call.receiveText()
-                val errors = ReguleringValidator.ensureValidRegulering(requestBody)
-
-                if (errors.isNotEmpty()) {
-                    call.respond(HttpStatusCode.BadRequest, errors)
-                    return@post
-                }
 
                 try {
-                    val regulering: Regulering = Json.decodeFromString(requestBody)
+                    val requestBody = call.receiveText()
+                    val regulering: Regulering = Json.decodeFromString(Regulering.serializer(), requestBody)
                     reguleringRepo.insertRegulering(regulering)
                     call.respond(HttpStatusCode.OK, "Regulering JSON received and saved successfully.")
                 } catch (e: Exception) {
