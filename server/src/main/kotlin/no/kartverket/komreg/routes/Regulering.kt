@@ -75,7 +75,23 @@ data class Regulering(
                                     til = Kretsnummer(transformasjon.kretsnummer.til.toLong()),
                                 ),
                             )
+                        }
 
+                        is VegTransformasjonDTO -> {
+                            Vegendring(
+                                fylkesnummer = Endring.FraTil(
+                                    fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
+                                    til = Fylkesnummer(transformasjon.fylkesnummer.til.toLong()),
+                                ),
+                                kommuneløpenummer = Endring.FraTil(
+                                    fra = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.fra.toByte()),
+                                    til = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.til.toByte()),
+                                ),
+                                adressekode = Endring.FraTil(
+                                    fra = Adressekode(transformasjon.adressekode.fra.toInt()),
+                                    til = Adressekode(transformasjon.adressekode.til.toInt()),
+                                ),
+                            )
                         }
                     }
                 }
@@ -198,6 +214,14 @@ data class KretsTransformasjonDTO(
     override val fylkesnummer: FraTil,
     val kommuneløpenummer: FraTil,
     val kretsnummer: FraTil,
+) : TransformasjonDTO()
+
+@Serializable
+@SerialName("veg")
+data class VegTransformasjonDTO(
+    override val fylkesnummer: FraTil,
+    val kommuneløpenummer: FraTil,
+    val adressekode: FraTil,
 ) : TransformasjonDTO()
 
 @Serializable
