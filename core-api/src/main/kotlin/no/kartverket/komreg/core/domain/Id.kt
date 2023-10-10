@@ -12,7 +12,7 @@ interface IdType<V : @Contextual Any, Self : @Contextual Any> : Comparable<Self>
 
 @Serializable(IdSerializer::class)
 data class Id internal constructor(
-    internal val type: IdType<out Any, *>,
+    val type: IdType<out Any, *>,
     internal val value: Any,
 ) : Comparable<Id> {
     override fun compareTo(other: Id): Int {
