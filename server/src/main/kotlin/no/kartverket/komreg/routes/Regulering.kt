@@ -93,6 +93,22 @@ data class Regulering(
                                 ),
                             )
                         }
+                        is TeigTransformasjonDTO -> {
+                            Teigendring(
+                                fylkesnummer = Endring.FraTil(
+                                    fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
+                                    til = Fylkesnummer(transformasjon.fylkesnummer.til.toLong()),
+                                ),
+                                kommuneløpenummer = Endring.FraTil(
+                                    fra = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.fra.toByte()),
+                                    til = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.til.toByte()),
+                                ),
+                                teigId = Endring.FraTil(
+                                    fra = TeigId(transformasjon.teigId.fra.toLong()),
+                                    til = TeigId(transformasjon.teigId.til.toLong()),
+                                ),
+                            )
+                        }
                     }
                 }
             },
@@ -222,6 +238,14 @@ data class VegTransformasjonDTO(
     override val fylkesnummer: FraTil,
     val kommuneløpenummer: FraTil,
     val adressekode: FraTil,
+) : TransformasjonDTO()
+
+@Serializable
+@SerialName("teig")
+data class TeigTransformasjonDTO(
+    override val fylkesnummer: FraTil,
+    val kommuneløpenummer: FraTil,
+    val teigId: FraTil,
 ) : TransformasjonDTO()
 
 @Serializable
