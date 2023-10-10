@@ -26,7 +26,7 @@ Start applikasjonen ved å kjøre funksjonen `Application.main()` som ligger i `
 For å starte transformeringen kjør http-requesten som ligger under `http/local/runTransformation.http`.
 
 
-### Førstegangsoppsett av lokal transformasjonsdatabase:
+### Førstegangsoppsett av lokal komreg-database:
 
 1. Kopier `DB_KOMREG_JDBC_URL`, `DB_KOMREG_USERNAME` og `DB_KOMREG_PASSWORD` fra .env.template
 til din egen .env-fil.
@@ -49,7 +49,7 @@ Fyll også inn inn brukernavn og passord i vinduet der du legger til Data Source
 I schemas-fanen i samme vindu: velg å vise alle schemas i databasen.
 
 
-### Kjøring av lokal transformasjonsdatabase:
+### Kjøring av lokal komreg-database:
 
 1. Start Docker eller Colima (antar Colima):
 ```bash
@@ -66,4 +66,4 @@ docker ps -a
 docker start local-postgres
 ```
 
-Transformasjonsdatabasen skal nå være tilgjengelig.
+Komreg-databasen skal nå være tilgjengelig.
