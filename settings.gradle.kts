@@ -42,7 +42,7 @@ dependencyResolutionManagement {
             library("kotlinx-datetime", "org.jetbrains.kotlinx", "kotlinx-datetime").versionRef("kotlinx-datetime")
             library(
                 "kotlinx-collections-immutable-jvm",
-                "org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.5",
+                "org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.6",
             )
             library(
                 "kotlinx-coroutines-core",
