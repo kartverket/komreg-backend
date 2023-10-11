@@ -19,11 +19,11 @@ object TransformKommunenrTest : Spek({
             LocalDate.now().toKotlinLocalDate(),
             listOf(
                 Kommuneendring(
-                    fylkesnummer = Endring.FraTil(
+                    fylkesnummer = FraTil(
                         fra = Fylkesnummer(2),
                         til = Fylkesnummer(3),
                     ),
-                    kommuneløpenummer = Endring.FraTil(
+                    kommuneløpenummer = FraTil(
                         fra = Kommunenummer.Lopenummer(5),
                         til = Kommunenummer.Lopenummer(6),
                     ),
