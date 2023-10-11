@@ -67,7 +67,7 @@ dependencies {
     implementation(libs.arrow.fx.coroutines)
     implementation(libs.arrow.fx.stm)
 
-    implementation("com.oracle.database.jdbc:ojdbc11:23.2.0.0")
+    implementation("com.oracle.database.jdbc:ojdbc11:23.3.0.23.09")
     implementation("org.rocksdb:rocksdbjni:8.5.3")
 
     implementation(libs.ktor.server.core)
@@ -110,5 +110,5 @@ dependencies {
     integrationTestImplementation(libs.kotlinx.serialization.json)
 
     // TODO: For PoC på uthenting av fordelingsparametre for kommune
-    implementation("com.oracle.database.jdbc:ojdbc11:23.2.0.0")
+    implementation("com.oracle.database.jdbc:ojdbc11:23.3.0.23.09")
 }
