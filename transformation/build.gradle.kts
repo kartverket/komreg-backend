@@ -14,7 +14,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.datetime)
 
-    api("com.google.guava:guava:32.1.2-jre")
+    api("com.google.guava:guava:32.1.3-jre")
     implementation(kotlin("reflect"))
 
     // Testing
