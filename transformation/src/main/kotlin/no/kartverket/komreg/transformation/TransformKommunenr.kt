@@ -27,6 +27,16 @@ private fun Ident?.transformerIdent(input: Reguleringsinput): Ident? {
     val gårdsnummer = getOrNull<Matrikkelnummer.Gardsnummer>()
     val kretsnummer = getOrNull<Kretsnummer>()
     val adressekode = getOrNull<Adressekode>()
+    val teigId = getOrNull<TeigId>()
+
+    if (fylkesnummer != null && kommuneløpenummer != null && teigId != null) {
+        input.endringer.matchTeigId(fylkesnummer, kommuneløpenummer, teigId)?.let {
+            return this
+                .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til }
+                .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til }
+                .updateOrThrow { _: TeigId -> it.teigId.til }
+        }
+    }
 
     if (fylkesnummer != null && kommuneløpenummer != null && adressekode != null) {
         input.endringer.matchAdressekode(fylkesnummer, kommuneløpenummer, adressekode)?.let {
@@ -103,4 +113,12 @@ fun List<Endring>.matchAdressekode(
     adressekode: Adressekode,
 ): Vegendring? {
     return this.find { it is Vegendring && it.fylkesnummer.fra == fylkesnummer && it.kommuneløpenummer.fra == lopenummer && it.adressekode.fra == adressekode } as Vegendring?
+}
+
+fun List<Endring>.matchTeigId(
+    fylkesnummer: Fylkesnummer,
+    lopenummer: Kommunenummer.Lopenummer,
+    teigId: TeigId,
+): Teigendring? {
+    return this.find { it is Teigendring && it.fylkesnummer.fra == fylkesnummer && it.kommuneløpenummer.fra == lopenummer && it.teigId.fra == teigId } as Teigendring?
 }
