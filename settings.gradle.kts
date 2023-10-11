@@ -90,7 +90,7 @@ dependencyResolutionManagement {
             library("spek-runner-junit5", "org.spekframework.spek2", "spek-runner-junit5").versionRef("spek")
 
             library("kotest-runner", "io.kotest", "kotest-runner-junit5").versionRef("kotest")
-            library("kotest-extensions-arrow", "io.kotest.extensions:kotest-assertions-arrow:1.3.3")
+            library("kotest-extensions-arrow", "io.kotest.extensions:kotest-assertions-arrow:1.4.0")
 
 
             library("mockk", "io.mockk", "mockk").versionRef("mockk")
