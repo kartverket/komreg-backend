@@ -1,4 +1,4 @@
-FROM eclipse-temurin:17-alpine@sha256:4f6f61ededa179586bd6679bb23c448bad317ca352ee253b6359650923e86c9a
+FROM eclipse-temurin:21-alpine@sha256:0590276e28eadad32040b43c6564a991a3860049155be0c69e7d3632ead05f66
 RUN apk update && apk upgrade
 RUN apk --no-cache add libgcc libstdc++
 EXPOSE 8080:8080
