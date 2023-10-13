@@ -22,7 +22,7 @@ data class FraTil<out T>(
 
 data class ListFraTil<T>(
     val fra: T,
-    val tilList: List<T>,
+    val _tilList: List<T>,
 )
 
 data class Fylkeendring(
@@ -48,7 +48,7 @@ data class Kretsendring(
 
 data class Vegendring(
     override val fylkesnummer: FraTil<Fylkesnummer>,
-    val kommuneløpenummer: ListFraTil<Kommunenummer.Lopenummer>,
+    val kommuneløpenummer: FraTil<Kommunenummer.Lopenummer>,
     val adressekode: FraTil<Adressekode>,
 ) : Endring()
 

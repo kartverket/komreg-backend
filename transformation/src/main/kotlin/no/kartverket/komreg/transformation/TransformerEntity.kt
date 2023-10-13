@@ -3,8 +3,18 @@ package no.kartverket.komreg.transformation
 import no.kartverket.komreg.core.domain.*
 import no.kartverket.komreg.integration.spi.*
 
-fun transformerKommunenummer(input: Reguleringsinput, entity: Entity): Transformation? {
+fun transformerEntity(input: Reguleringsinput, entity: Entity): Transformation? {
+    // TODO: Her så må man klare om entityen matcher med reguleringsinputen. Hvis den matcher så må man finne ut av om den skal bli til en ting eller flere ting. Hvis ja, må man lage en transformation for hver ting.
+    // 1. Match entity med reguleringsinput
+    // 2. Skal den bli til en ting eller flere ting?
+    // 3. Lage en transformation for hver ting.
+
+    matchEntitetMotReguleringsInput(input, entity)
+
+    val id = entity.id.type
+
     val newIdent = entity.ident.transformerIdent(input)
+
     val newAssociatedIdents = entity.associatedIdents
         ?.mapNotNull { it.transformerIdent(input) }
         ?.toSet()
@@ -17,6 +27,9 @@ fun transformerKommunenummer(input: Reguleringsinput, entity: Entity): Transform
         transformedIdent = newIdent,
         transformedAssociatedIdents = newAssociatedIdents?.ifEmpty { null },
     )
+}
+
+fun matchEntitetMotReguleringsInput(input: Reguleringsinput, entity: Entity) {
 }
 
 private fun Ident?.transformerIdent(input: Reguleringsinput): Ident? {

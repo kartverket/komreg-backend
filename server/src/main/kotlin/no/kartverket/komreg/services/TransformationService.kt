@@ -22,7 +22,8 @@ import no.kartverket.komreg.integration.spi.Transformation
 import no.kartverket.komreg.logger
 import no.kartverket.komreg.repositories.KjoringRepo
 import no.kartverket.komreg.repositories.TransformationRepo
-import no.kartverket.komreg.transformation.*
+import no.kartverket.komreg.transformation.Reguleringsinput
+import no.kartverket.komreg.transformation.transformerEntity
 
 @Serializable
 data class TransformationStatusForSource(
@@ -198,7 +199,7 @@ private fun runAndWriteTransformations(
                     logger.info("Starter flow av type: $type")
                     statusForSource.firstTransformation = Clock.System.now()
                 }
-                .mapNotNull { entity -> transformerKommunenummer(input, entity) }
+                .mapNotNull { entity -> transformerEntity(input, entity) }
                 .onEach {
                     statusForSource.numberOfTransformations += 1
                 }
