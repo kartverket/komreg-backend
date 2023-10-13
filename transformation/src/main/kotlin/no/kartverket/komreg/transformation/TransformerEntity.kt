@@ -13,36 +13,33 @@ fun transformerEntity(input: Reguleringsinput, entity: Entity): Transformation? 
 
     val matchedEntity = matchEntitetMotReguleringsInput(input, entity)
 
-    if (matchedEntity) {
-        val logger: Logger = LoggerFactory.getLogger("TransformerEntity")
-        logger.info("Matched entity: $entity")
-    }
+    if (!matchedEntity) return null
+
+    val logger: Logger = LoggerFactory.getLogger("TransformerEntity")
+    logger.info("Matched entity: $entity")
 
     /* if (matchedEntity == null) return null
 
-    val fylkesnummer = matchedEntity.ident?.getOrNull<Fylkesnummer>()
-    val kommuneløpenummer = matchedEntity.ident?.getOrNull<Kommunenummer.Lopenummer>()
-    val adressekode = matchedEntity.ident?.getOrNull<Adressekode>()
 
-    if (input.endringer.matchAdressekode(fylkesnummer, kommuneløpenummer, adressekode).kommuneløpenummer.til.singleOrNull() != null) {
-    }
 
-    val id = entity.id.type
 
-    val newIdent = entity.ident.transformerIdent(input)
 
-    val newAssociatedIdents = entity.associatedIdents
-        ?.mapNotNull { it.transformerIdent(input) }
-        ?.toSet()
+val id = entity.id.type
 
-    if (newIdent == entity.ident && newAssociatedIdents == entity.associatedIdents) return null
+val newIdent = entity.ident.transformerIdent(input)
 
-    return Transformation(
-        id = entity.id,
-        sourceEntity = entity,
-        transformedIdent = newIdent,
-        transformedAssociatedIdents = newAssociatedIdents?.ifEmpty { null },
-    )
+val newAssociatedIdents = entity.associatedIdents
+    ?.mapNotNull { it.transformerIdent(input) }
+    ?.toSet()
+
+if (newIdent == entity.ident && newAssociatedIdents == entity.associatedIdents) return null
+
+return Transformation(
+    id = entity.id,
+    sourceEntity = entity,
+    transformedIdent = newIdent,
+    transformedAssociatedIdents = newAssociatedIdents?.ifEmpty { null },
+)
 
 }
 
@@ -55,10 +52,6 @@ fun matchEntitetMotReguleringsInput(input: Reguleringsinput, entity: Entity): Bo
     val fylkesnummer = entity.ident?.getOrNull<Fylkesnummer>()
     val kommuneløpenummer = entity.ident?.getOrNull<Kommunenummer.Lopenummer>()
     val adressekode = entity.ident?.getOrNull<Adressekode>()
-
-    if (adressekode != null) {
-        println("adressekodeJa: $entity")
-    }
 
     if (fylkesnummer != null && kommuneløpenummer != null && adressekode != null) {
         val vegendring = input.endringer.matchAdressekode(fylkesnummer, kommuneløpenummer, adressekode)
