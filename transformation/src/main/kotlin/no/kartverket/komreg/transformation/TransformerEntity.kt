@@ -2,6 +2,8 @@ package no.kartverket.komreg.transformation
 
 import no.kartverket.komreg.core.domain.*
 import no.kartverket.komreg.integration.spi.*
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 fun transformerEntity(input: Reguleringsinput, entity: Entity): Transformation? {
     // TODO: Her så må man klare om entityen matcher med reguleringsinputen. Hvis den matcher så må man finne ut av om den skal bli til en ting eller flere ting. Hvis ja, må man lage en transformation for hver ting.
@@ -9,7 +11,21 @@ fun transformerEntity(input: Reguleringsinput, entity: Entity): Transformation? 
     // 2. Skal den bli til en ting eller flere ting?
     // 3. Lage en transformation for hver ting.
 
-    matchEntitetMotReguleringsInput(input, entity)
+    val matchedEntity = matchEntitetMotReguleringsInput(input, entity)
+
+    if (matchedEntity) {
+        val logger: Logger = LoggerFactory.getLogger("TransformerEntity")
+        logger.info("Matched entity: $entity")
+    }
+
+    /* if (matchedEntity == null) return null
+
+    val fylkesnummer = matchedEntity.ident?.getOrNull<Fylkesnummer>()
+    val kommuneløpenummer = matchedEntity.ident?.getOrNull<Kommunenummer.Lopenummer>()
+    val adressekode = matchedEntity.ident?.getOrNull<Adressekode>()
+
+    if (input.endringer.matchAdressekode(fylkesnummer, kommuneløpenummer, adressekode).kommuneløpenummer.til.singleOrNull() != null) {
+    }
 
     val id = entity.id.type
 
@@ -27,12 +43,32 @@ fun transformerEntity(input: Reguleringsinput, entity: Entity): Transformation? 
         transformedIdent = newIdent,
         transformedAssociatedIdents = newAssociatedIdents?.ifEmpty { null },
     )
+
 }
 
-fun matchEntitetMotReguleringsInput(input: Reguleringsinput, entity: Entity) {
+*/
+
+    return null
 }
 
-private fun Ident?.transformerIdent(input: Reguleringsinput): Ident? {
+fun matchEntitetMotReguleringsInput(input: Reguleringsinput, entity: Entity): Boolean {
+    val fylkesnummer = entity.ident?.getOrNull<Fylkesnummer>()
+    val kommuneløpenummer = entity.ident?.getOrNull<Kommunenummer.Lopenummer>()
+    val adressekode = entity.ident?.getOrNull<Adressekode>()
+
+    if (adressekode != null) {
+        println("adressekodeJa: $entity")
+    }
+
+    if (fylkesnummer != null && kommuneløpenummer != null && adressekode != null) {
+        val vegendring = input.endringer.matchAdressekode(fylkesnummer, kommuneløpenummer, adressekode)
+        return vegendring != null
+    }
+
+    return false
+}
+
+/*private fun Ident?.transformerIdent(input: Reguleringsinput): Ident? {
     if (this == null) return null
 
     val fylkesnummer = getOrNull<Fylkesnummer>()
@@ -94,7 +130,7 @@ private fun Ident?.transformerIdent(input: Reguleringsinput): Ident? {
     }
 
     return this
-}
+}*/
 
 fun List<Endring>.matchFylkesnummer(fylkesnummer: Fylkesnummer): Fylkeendring? {
     return this.find { it is Fylkeendring && it.fylkesnummer.fra == fylkesnummer } as Fylkeendring?

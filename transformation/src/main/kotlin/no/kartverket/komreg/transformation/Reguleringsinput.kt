@@ -17,7 +17,7 @@ sealed class Endring {
 
 data class FraTil<out T>(
     val fra: T,
-    val til: T,
+    val til: List<T>,
 )
 
 data class ListFraTil<T>(

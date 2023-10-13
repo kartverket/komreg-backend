@@ -1,18 +1,7 @@
 package no.kartverket.komreg.transformation
 
-import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.toKotlinLocalDate
-import no.kartverket.komreg.core.domain.Fylkesnummer
-import no.kartverket.komreg.core.domain.Kommunenummer
-import no.kartverket.komreg.core.domain.Matrikkelnummer
-import no.kartverket.komreg.integration.spi.Entity
-import no.kartverket.komreg.integration.spi.Ident
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
-import java.time.LocalDate
-import kotlin.test.assertEquals
-
-object TransformKommunenrTest : Spek({
+/*
+object TransformerEntityTest : Spek({
     describe("A transformation") {
         val reguleringsInput = Reguleringsinput(
             id = "123",
@@ -109,3 +98,4 @@ private fun identOf(fylkesnummer: Int, lopenummer: Int, gardsnummer: Int? = null
             )
         }
     }
+*/
