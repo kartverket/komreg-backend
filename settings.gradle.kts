@@ -29,7 +29,7 @@ dependencyResolutionManagement {
             version("mockk", "1.13.2")
             version("junit", "5.9.0")
             version("spek", "2.0.19")
-            version("kotest", "5.6.2")
+            version("kotest", "5.7.2")
             version("ktor", "2.2.4")
             version("hamcrest", "2.2")
             version("logback", "1.4.5")
@@ -90,8 +90,7 @@ dependencyResolutionManagement {
             library("spek-runner-junit5", "org.spekframework.spek2", "spek-runner-junit5").versionRef("spek")
 
             library("kotest-runner", "io.kotest", "kotest-runner-junit5").versionRef("kotest")
-            library("kotest-extensions-arrow", "io.kotest.extensions:kotest-assertions-arrow:1.3.3")
-
+            library("kotest-extensions-arrow", "io.kotest.extensions:kotest-assertions-arrow:1.4.0")
 
             library("mockk", "io.mockk", "mockk").versionRef("mockk")
 
