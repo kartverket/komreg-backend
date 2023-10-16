@@ -37,8 +37,8 @@ data class Regulering(
                                     til = Fylkesnummer(transformasjon.fylkesnummer.til.toLong()),
                                 ),
                                 kommuneløpenummer = Endring.FraTil(
-                                    fra = Kommunenummer.Lopenummer(transformasjon.kommunenummer.fra.toByte()),
-                                    til = Kommunenummer.Lopenummer(transformasjon.kommunenummer.til.toByte()),
+                                    fra = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.fra.toByte()),
+                                    til = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.til.toByte()),
                                 ),
                             )
                         }
@@ -50,8 +50,8 @@ data class Regulering(
                                     til = Fylkesnummer(transformasjon.fylkesnummer.til.toLong()),
                                 ),
                                 kommuneløpenummer = Endring.FraTil(
-                                    fra = Kommunenummer.Lopenummer(transformasjon.kommunenummer.fra.toByte()),
-                                    til = Kommunenummer.Lopenummer(transformasjon.kommunenummer.til.toByte()),
+                                    fra = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.fra.toByte()),
+                                    til = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.til.toByte()),
                                 ),
                                 gårdsnummer = Endring.FraTil(
                                     fra = Matrikkelnummer.Gardsnummer(transformasjon.gårdsnummer.fra.toInt()),
@@ -213,14 +213,14 @@ data class FylkeTransformasjonDTO(
 @SerialName("kommune")
 data class KommuneTransformasjonDTO(
     override val fylkesnummer: FraTil,
-    val kommunenummer: FraTil,
+    val kommuneløpenummer: FraTil,
 ) : TransformasjonDTO()
 
 @Serializable
 @SerialName("matrikkelenhet")
 data class MatrikkelenhetTransformasjonDTO(
     override val fylkesnummer: FraTil,
-    val kommunenummer: FraTil,
+    val kommuneløpenummer: FraTil,
     val gårdsnummer: FraTil,
 ) : TransformasjonDTO()
 
