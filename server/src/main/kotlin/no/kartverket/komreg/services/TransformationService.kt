@@ -17,6 +17,7 @@ import no.kartverket.komreg.core.domain.PostadresseForOppretting
 import no.kartverket.komreg.integration.EntitySinkManager
 import no.kartverket.komreg.integration.EntitySourceManager
 import no.kartverket.komreg.integration.KommuneServiceManager
+import no.kartverket.komreg.integration.spi.IdGeneratorManager
 import no.kartverket.komreg.integration.spi.Ident
 import no.kartverket.komreg.integration.spi.Transformation
 import no.kartverket.komreg.logger
@@ -69,6 +70,7 @@ fun transformEntities(input: Reguleringsinput, kjoringId: Int, transformationRep
     }
 
     val entitySinks = EntitySinkManager(bootContext)
+    val idGeneratorManager = IdGeneratorManager(bootContext)
 
     printMemoryUsage()
 
@@ -177,9 +179,11 @@ private fun runAndWriteTransformations(
     kjoringId: Int,
     transformationRepo: TransformationRepo,
     kjoringRepo: KjoringRepo,
+
 ) {
     val sources = EntitySourceManager(bootContext).entitySources
 
+    val idGeneratorManager = IdGeneratorManager(bootContext)
     CoroutineScope(Dispatchers.IO).launch {
         if (input.fylker.isNotEmpty()) {
             writeFylker(bootContext, input, entitySinks)
@@ -199,7 +203,7 @@ private fun runAndWriteTransformations(
                     logger.info("Starter flow av type: $type")
                     statusForSource.firstTransformation = Clock.System.now()
                 }
-                .mapNotNull { entity -> transformerEntity(input, entity) }
+                .mapNotNull { entity -> transformerEntity(input, entity, idGeneratorManager) }
                 .onEach {
                     statusForSource.numberOfTransformations += 1
                 }

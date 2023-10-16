@@ -1,22 +1,54 @@
 package no.kartverket.komreg.transformation
-
 import no.kartverket.komreg.core.domain.*
 import no.kartverket.komreg.integration.spi.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-fun transformerEntity(input: Reguleringsinput, entity: Entity): Transformation? {
+fun transformerEntity(
+    input: Reguleringsinput,
+    entity: Entity,
+    idGeneratorManager: IdGeneratorManager,
+): Transformation? {
     // TODO: Her så må man klare om entityen matcher med reguleringsinputen. Hvis den matcher så må man finne ut av om den skal bli til en ting eller flere ting. Hvis ja, må man lage en transformation for hver ting.
     // 1. Match entity med reguleringsinput
     // 2. Skal den bli til en ting eller flere ting?
     // 3. Lage en transformation for hver ting.
 
-    val matchedEntity = matchEntitetMotReguleringsInput(input, entity)
-
-    if (!matchedEntity) return null
+    val transformations = mutableListOf<Transformation>()
 
     val logger: Logger = LoggerFactory.getLogger("TransformerEntity")
+    val matchedEntity = matchEntitetMotReguleringsInput(input, entity) ?: return null
+
+    val vegendringer = matchedEntity.kommuneløpenummer
+
+    transformations.add(
+        Transformation(
+            id = entity.id,
+            sourceEntity = entity,
+            transformedIdent = entity.ident,
+            transformedAssociatedIdents = entity.associatedIdents?.ifEmpty { null },
+        ),
+    )
+
+    logger.info("Entity type: ${entity.id.type}")
+    logger.info("Vegendringer til: ${vegendringer.til}")
+
+    if (vegendringer.til.size > 1) {
+        for (index in 1 until vegendringer.til.size) {
+            transformations.add(
+                Transformation(
+                    id = idGeneratorManager.idFor(entity.id.type),
+                    sourceEntity = entity,
+                    transformedIdent = entity.ident,
+                    transformedAssociatedIdents = entity.associatedIdents?.ifEmpty { null },
+                ),
+            )
+        }
+        logger.info("Transformation med flere til")
+    }
+
     logger.info("Matched entity: $entity")
+    logger.info("Transformations: $transformations")
 
     /* if (matchedEntity == null) return null
 
@@ -24,15 +56,7 @@ fun transformerEntity(input: Reguleringsinput, entity: Entity): Transformation? 
 
 
 
-val id = entity.id.type
 
-val newIdent = entity.ident.transformerIdent(input)
-
-val newAssociatedIdents = entity.associatedIdents
-    ?.mapNotNull { it.transformerIdent(input) }
-    ?.toSet()
-
-if (newIdent == entity.ident && newAssociatedIdents == entity.associatedIdents) return null
 
 return Transformation(
     id = entity.id,
@@ -44,24 +68,23 @@ return Transformation(
 }
 
 */
-
     return null
 }
 
-fun matchEntitetMotReguleringsInput(input: Reguleringsinput, entity: Entity): Boolean {
+fun matchEntitetMotReguleringsInput(input: Reguleringsinput, entity: Entity): Vegendring? {
     val fylkesnummer = entity.ident?.getOrNull<Fylkesnummer>()
     val kommuneløpenummer = entity.ident?.getOrNull<Kommunenummer.Lopenummer>()
     val adressekode = entity.ident?.getOrNull<Adressekode>()
 
     if (fylkesnummer != null && kommuneløpenummer != null && adressekode != null) {
         val vegendring = input.endringer.matchAdressekode(fylkesnummer, kommuneløpenummer, adressekode)
-        return vegendring != null
+        return vegendring
     }
 
-    return false
+    return null
 }
 
-/*private fun Ident?.transformerIdent(input: Reguleringsinput): Ident? {
+private fun Ident?.transformerIdent(input: Reguleringsinput): Ident? {
     if (this == null) return null
 
     val fylkesnummer = getOrNull<Fylkesnummer>()
@@ -123,7 +146,7 @@ fun matchEntitetMotReguleringsInput(input: Reguleringsinput, entity: Entity): Bo
     }
 
     return this
-}*/
+}
 
 fun List<Endring>.matchFylkesnummer(fylkesnummer: Fylkesnummer): Fylkeendring? {
     return this.find { it is Fylkeendring && it.fylkesnummer.fra == fylkesnummer } as Fylkeendring?
