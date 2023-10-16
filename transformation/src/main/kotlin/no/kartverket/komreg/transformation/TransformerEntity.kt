@@ -8,7 +8,7 @@ fun transformerEntity(
     input: Reguleringsinput,
     entity: Entity,
     idGeneratorManager: IdGeneratorManager,
-): Transformation? {
+): List<Transformation>? {
     // TODO: Her så må man klare om entityen matcher med reguleringsinputen. Hvis den matcher så må man finne ut av om den skal bli til en ting eller flere ting. Hvis ja, må man lage en transformation for hver ting.
     // 1. Match entity med reguleringsinput
     // 2. Skal den bli til en ting eller flere ting?
@@ -21,12 +21,20 @@ fun transformerEntity(
 
     val vegendringer = matchedEntity.kommuneløpenummer
 
+    val newIdent = entity.ident.transformerIdent(input, 0)
+
+    val newAssociatedIdents = entity.associatedIdents
+        ?.mapNotNull { it.transformerIdent(input, 0) }
+        ?.toSet()
+
+    if (newIdent == entity.ident && newAssociatedIdents == entity.associatedIdents) return null
+
     transformations.add(
         Transformation(
             id = entity.id,
             sourceEntity = entity,
-            transformedIdent = entity.ident,
-            transformedAssociatedIdents = entity.associatedIdents?.ifEmpty { null },
+            transformedIdent = newIdent,
+            transformedAssociatedIdents = newAssociatedIdents?.ifEmpty { null },
         ),
     )
 
@@ -35,12 +43,19 @@ fun transformerEntity(
 
     if (vegendringer.til.size > 1) {
         for (index in 1 until vegendringer.til.size) {
+            val newIdent2 = entity.ident.transformerIdent(input, index)
+
+            val newAssociatedIdents2 = entity.associatedIdents
+                ?.mapNotNull { it.transformerIdent(input, index) }
+                ?.toSet()
+
+            if (newIdent2 == entity.ident && newAssociatedIdents2 == entity.associatedIdents) return null
             transformations.add(
                 Transformation(
                     id = idGeneratorManager.idFor(entity.id.type),
                     sourceEntity = entity,
-                    transformedIdent = entity.ident,
-                    transformedAssociatedIdents = entity.associatedIdents?.ifEmpty { null },
+                    transformedIdent = newIdent2,
+                    transformedAssociatedIdents = newAssociatedIdents2?.ifEmpty { null },
                 ),
             )
         }
@@ -54,7 +69,15 @@ fun transformerEntity(
 
 
 
+val id = entity.id.type
 
+val newIdent = entity.ident.transformerIdent(input)
+
+val newAssociatedIdents = entity.associatedIdents
+    ?.mapNotNull { it.transformerIdent(input) }
+    ?.toSet()
+
+if (newIdent == entity.ident && newAssociatedIdents == entity.associatedIdents) return null
 
 
 
@@ -68,7 +91,7 @@ return Transformation(
 }
 
 */
-    return null
+    return transformations
 }
 
 fun matchEntitetMotReguleringsInput(input: Reguleringsinput, entity: Entity): Vegendring? {
@@ -84,7 +107,7 @@ fun matchEntitetMotReguleringsInput(input: Reguleringsinput, entity: Entity): Ve
     return null
 }
 
-private fun Ident?.transformerIdent(input: Reguleringsinput): Ident? {
+private fun Ident?.transformerIdent(input: Reguleringsinput, tilIndex: Int): Ident? {
     if (this == null) return null
 
     val fylkesnummer = getOrNull<Fylkesnummer>()
@@ -97,51 +120,51 @@ private fun Ident?.transformerIdent(input: Reguleringsinput): Ident? {
     if (fylkesnummer != null && kommuneløpenummer != null && teigId != null) {
         input.endringer.matchTeigId(fylkesnummer, kommuneløpenummer, teigId)?.let {
             return this
-                .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til }
-                .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til }
-                .updateOrThrow { _: TeigId -> it.teigId.til }
+                .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til.first() }
+                .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til[tilIndex] }
+                .updateOrThrow { _: TeigId -> it.teigId.til.first() }
         }
     }
 
     if (fylkesnummer != null && kommuneløpenummer != null && adressekode != null) {
         input.endringer.matchAdressekode(fylkesnummer, kommuneløpenummer, adressekode)?.let {
             return this
-                .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til }
-                .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til }
-                .updateOrThrow { _: Adressekode -> it.adressekode.til }
+                .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til.first() }
+                .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til[tilIndex] }
+                .updateOrThrow { _: Adressekode -> it.adressekode.til.first() }
         }
     }
 
     if (fylkesnummer != null && kommuneløpenummer != null && kretsnummer != null) {
         input.endringer.matchKretsnummer(fylkesnummer, kommuneløpenummer, kretsnummer)?.let {
             return this
-                .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til }
-                .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til }
-                .updateOrThrow { _: Kretsnummer -> it.kretsnummer.til }
+                .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til.first() }
+                .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til.first() }
+                .updateOrThrow { _: Kretsnummer -> it.kretsnummer.til.first() }
         }
     }
 
     if (fylkesnummer != null && kommuneløpenummer != null && gårdsnummer != null) {
         input.endringer.matchGårdsnummer(fylkesnummer, kommuneløpenummer, gårdsnummer)?.let {
             return this
-                .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til }
-                .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til }
-                .updateOrThrow { _: Matrikkelnummer.Gardsnummer -> it.gårdsnummer.til }
+                .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til[0] }
+                .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til.first() }
+                .updateOrThrow { _: Matrikkelnummer.Gardsnummer -> it.gårdsnummer.til.first() }
         }
     }
 
     if (fylkesnummer != null && kommuneløpenummer != null) {
         input.endringer.matchKommunenummer(fylkesnummer, kommuneløpenummer)?.let {
             return this
-                .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til }
-                .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til }
+                .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til.first() }
+                .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til.first() }
         }
     }
 
     if (fylkesnummer != null) {
         input.endringer.matchFylkesnummer(fylkesnummer)?.let {
             return this
-                .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til }
+                .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til.first() }
         }
     }
 
