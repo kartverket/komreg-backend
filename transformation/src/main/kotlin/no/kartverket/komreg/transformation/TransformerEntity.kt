@@ -38,9 +38,6 @@ fun transformerEntity(
         ),
     )
 
-    logger.info("Entity type: ${entity.id.type}")
-    logger.info("Vegendringer til: ${vegendringer.til}")
-
     if (vegendringer.til.size > 1) {
         for (index in 1 until vegendringer.til.size) {
             val newIdent2 = entity.ident.transformerIdent(input, index)
@@ -62,35 +59,6 @@ fun transformerEntity(
         logger.info("Transformation med flere til")
     }
 
-    logger.info("Matched entity: $entity")
-    logger.info("Transformations: $transformations")
-
-    /* if (matchedEntity == null) return null
-
-
-
-val id = entity.id.type
-
-val newIdent = entity.ident.transformerIdent(input)
-
-val newAssociatedIdents = entity.associatedIdents
-    ?.mapNotNull { it.transformerIdent(input) }
-    ?.toSet()
-
-if (newIdent == entity.ident && newAssociatedIdents == entity.associatedIdents) return null
-
-
-
-return Transformation(
-    id = entity.id,
-    sourceEntity = entity,
-    transformedIdent = newIdent,
-    transformedAssociatedIdents = newAssociatedIdents?.ifEmpty { null },
-)
-
-}
-
-*/
     return transformations
 }
 
@@ -107,7 +75,7 @@ fun matchEntitetMotReguleringsInput(input: Reguleringsinput, entity: Entity): Ve
     return null
 }
 
-private fun Ident?.transformerIdent(input: Reguleringsinput, tilIndex: Int): Ident? {
+private fun Ident?.transformerIdent(input: Reguleringsinput, index: Int): Ident? {
     if (this == null) return null
 
     val fylkesnummer = getOrNull<Fylkesnummer>()
@@ -121,7 +89,7 @@ private fun Ident?.transformerIdent(input: Reguleringsinput, tilIndex: Int): Ide
         input.endringer.matchTeigId(fylkesnummer, kommuneløpenummer, teigId)?.let {
             return this
                 .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til.first() }
-                .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til[tilIndex] }
+                .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til[index] }
                 .updateOrThrow { _: TeigId -> it.teigId.til.first() }
         }
     }
@@ -130,7 +98,7 @@ private fun Ident?.transformerIdent(input: Reguleringsinput, tilIndex: Int): Ide
         input.endringer.matchAdressekode(fylkesnummer, kommuneløpenummer, adressekode)?.let {
             return this
                 .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til.first() }
-                .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til[tilIndex] }
+                .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til[index] }
                 .updateOrThrow { _: Adressekode -> it.adressekode.til.first() }
         }
     }
