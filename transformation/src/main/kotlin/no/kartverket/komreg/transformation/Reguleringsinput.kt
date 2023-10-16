@@ -15,18 +15,9 @@ sealed class Endring {
     abstract val fylkesnummer: FraTil<Fylkesnummer>
 }
 
-fun FraTil<Kommunenummer.Lopenummer>.harFlereFraTil(fraTil: FraTil<Kommunenummer.Lopenummer>): Boolean {
-    return fraTil.til.size > 1
-}
-
 data class FraTil<out T>(
     val fra: T,
     val til: List<T>,
-)
-
-data class ListFraTil<T>(
-    val fra: T,
-    val _tilList: List<T>,
 )
 
 data class Fylkeendring(
