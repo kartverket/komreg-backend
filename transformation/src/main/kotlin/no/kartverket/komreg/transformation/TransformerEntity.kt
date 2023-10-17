@@ -1,8 +1,6 @@
 package no.kartverket.komreg.transformation
 import no.kartverket.komreg.core.domain.*
 import no.kartverket.komreg.integration.spi.*
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 fun transformerEntity(
     input: Reguleringsinput,
@@ -10,38 +8,39 @@ fun transformerEntity(
     idGeneratorManager: IdGeneratorManager,
 ): List<Transformation>? {
     val transformations = mutableListOf<Transformation>()
-    val logger: Logger = LoggerFactory.getLogger("TransformerEntity")
 
     val matchedEntity = matchEntitetMotReguleringsInput(input, entity) ?: return null
 
-    fun addTransformation(index: Int, entityId: Id = entity.id) {
-        val newIdent = entity.ident.transformerIdent(input, index)
-        val newAssociatedIdents = entity.associatedIdents
-            ?.mapNotNull { it.transformerIdent(input, index) }
-            ?.toSet()
-
-        if (newIdent != entity.ident && newAssociatedIdents != entity.associatedIdents) {
-            transformations.add(
-                Transformation(
-                    id = entityId,
-                    sourceEntity = entity,
-                    transformedIdent = newIdent,
-                    transformedAssociatedIdents = newAssociatedIdents?.ifEmpty { null },
-                ),
-            )
-        }
-    }
-
-    addTransformation(0)
+    transformations.add(opprettTransformation(entity, input, 0))
 
     if (matchedEntity is Vegendring && matchedEntity.kommuneløpenummer.til.size > 1) {
         for (index in 1 until matchedEntity.kommuneløpenummer.til.size) {
             val newId = idGeneratorManager.idFor(entity.id.type)
-            addTransformation(index, newId)
+            transformations.add(opprettTransformation(entity, input, index, newId))
         }
     }
 
     return transformations.ifEmpty { null }
+}
+
+private fun opprettTransformation(
+    entity: Entity,
+    input: Reguleringsinput,
+    index: Int,
+    entityId: Id = entity.id,
+): Transformation {
+    val newIdent = entity.ident.transformerIdent(input, index)
+
+    val newAssociatedIdents = entity.associatedIdents
+        ?.mapNotNull { it.transformerIdent(input, index) }
+        ?.toSet()
+
+    return Transformation(
+        id = entityId,
+        sourceEntity = entity,
+        transformedIdent = newIdent,
+        transformedAssociatedIdents = newAssociatedIdents?.ifEmpty { null },
+    )
 }
 
 fun matchEntitetMotReguleringsInput(input: Reguleringsinput, entity: Entity): Endring? {
