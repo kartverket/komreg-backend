@@ -53,8 +53,7 @@ fun matchEntitetMotReguleringsInput(input: Reguleringsinput, entity: Entity): En
     val gårdsnummer = entity.ident?.getOrNull<Matrikkelnummer.Gardsnummer>()
 
     if (fylkesnummer != null && kommuneløpenummer != null && adressekode != null) {
-        val vegendring = input.endringer.matchAdressekode(fylkesnummer, kommuneløpenummer, adressekode)
-        return vegendring
+        return input.endringer.matchAdressekode(fylkesnummer, kommuneløpenummer, adressekode)
     }
 
     if (fylkesnummer != null && kommuneløpenummer != null && teigId != null) {
