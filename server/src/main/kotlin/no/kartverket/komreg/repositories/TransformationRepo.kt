@@ -8,6 +8,7 @@ import kotlinx.serialization.json.Json
 import no.kartverket.komreg.core.domain.Id
 import no.kartverket.komreg.integration.spi.Transformation
 import no.kartverket.komreg.logger
+import java.sql.PreparedStatement
 import javax.sql.DataSource
 
 class TransformationRepo(
@@ -19,16 +20,23 @@ class TransformationRepo(
             connection.prepareStatement(
                 "INSERT INTO transformasjon (transformasjonsid, kjoring, transformasjon, tid) VALUES (?::jsonb, ?, ?::jsonb, now())",
             ).use { statement ->
-                logger.info("number of transformations: ${transformResultList.size}")
-                for (transformation in transformResultList) {
-                    statement.setString(1, jsonSerializer.encodeToString(Id.serializer(), transformation.id))
-                    statement.setInt(2, kjoringId)
-                    statement.setString(3, jsonSerializer.encodeToString(Transformation.serializer(), transformation))
-                    statement.addBatch()
+                logger.info("Number of transformations: ${transformResultList.size}")
+
+                transformResultList.chunked(100000) {
+                    writeChunk(kjoringId, statement, it)
                 }
-                statement.executeBatch()
             }
         }
+    }
+
+    private fun writeChunk(kjoringId: Int, statement: PreparedStatement, chunk: List<Transformation>) {
+        for (transformation in chunk) {
+            statement.setString(1, jsonSerializer.encodeToString(Id.serializer(), transformation.id))
+            statement.setInt(2, kjoringId)
+            statement.setString(3, jsonSerializer.encodeToString(Transformation.serializer(), transformation))
+            statement.addBatch()
+        }
+        statement.executeBatch()
     }
 
     fun readTransformationFromDatabase(kjoringId: Int): Flow<Transformation> {
