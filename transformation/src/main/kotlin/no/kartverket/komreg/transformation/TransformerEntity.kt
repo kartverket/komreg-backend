@@ -91,51 +91,51 @@ private fun Ident?.transformerIdent(input: Reguleringsinput, index: Int): Ident?
     if (fylkesnummer != null && kommuneløpenummer != null && teigId != null) {
         input.endringer.matchTeigId(fylkesnummer, kommuneløpenummer, teigId)?.let {
             return this
-                .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til.first() }
-                .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til[index] }
-                .updateOrThrow { _: TeigId -> it.teigId.til.first() }
+                .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til }
+                .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til }
+                .updateOrThrow { _: TeigId -> it.teigId.til }
         }
     }
 
     if (fylkesnummer != null && kommuneløpenummer != null && adressekode != null) {
         input.endringer.matchAdressekode(fylkesnummer, kommuneløpenummer, adressekode)?.let {
             return this
-                .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til.first() }
+                .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til }
                 .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til[index] }
-                .updateOrThrow { _: Adressekode -> it.adressekode.til.first() }
+                .updateOrThrow { _: Adressekode -> it.adressekode.til }
         }
     }
 
     if (fylkesnummer != null && kommuneløpenummer != null && kretsnummer != null) {
         input.endringer.matchKretsnummer(fylkesnummer, kommuneløpenummer, kretsnummer)?.let {
             return this
-                .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til.first() }
-                .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til.first() }
-                .updateOrThrow { _: Kretsnummer -> it.kretsnummer.til.first() }
+                .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til }
+                .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til }
+                .updateOrThrow { _: Kretsnummer -> it.kretsnummer.til }
         }
     }
 
     if (fylkesnummer != null && kommuneløpenummer != null && gårdsnummer != null) {
         input.endringer.matchGårdsnummer(fylkesnummer, kommuneløpenummer, gårdsnummer)?.let {
             return this
-                .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til[0] }
-                .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til.first() }
-                .updateOrThrow { _: Matrikkelnummer.Gardsnummer -> it.gårdsnummer.til.first() }
+                .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til }
+                .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til }
+                .updateOrThrow { _: Matrikkelnummer.Gardsnummer -> it.gårdsnummer.til }
         }
     }
 
     if (fylkesnummer != null && kommuneløpenummer != null) {
         input.endringer.matchKommunenummer(fylkesnummer, kommuneløpenummer)?.let {
             return this
-                .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til.first() }
-                .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til.first() }
+                .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til }
+                .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til }
         }
     }
 
     if (fylkesnummer != null) {
         input.endringer.matchFylkesnummer(fylkesnummer)?.let {
             return this
-                .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til.first() }
+                .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til }
         }
     }
 

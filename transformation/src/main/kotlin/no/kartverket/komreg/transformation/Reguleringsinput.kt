@@ -17,6 +17,11 @@ sealed class Endring {
 
 data class FraTil<out T>(
     val fra: T,
+    val til: T,
+)
+
+data class FraEnTilMange<out T>(
+    val fra: T,
     val til: List<T>,
 )
 
@@ -43,7 +48,7 @@ data class Kretsendring(
 
 data class Vegendring(
     override val fylkesnummer: FraTil<Fylkesnummer>,
-    val kommuneløpenummer: FraTil<Kommunenummer.Lopenummer>,
+    val kommuneløpenummer: FraEnTilMange<Kommunenummer.Lopenummer>,
     val adressekode: FraTil<Adressekode>,
 ) : Endring()
 
