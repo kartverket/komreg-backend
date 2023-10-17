@@ -212,13 +212,13 @@ private fun runAndWriteTransformations(
                     statusForSource.transformationFinished = Clock.System.now()
                 }
 
-            val transformResultList = transformResult.toList()
-            val newFlow: Flow<Transformation> = transformResultList.flatten().asFlow()
+            val transformResultList = transformResult.toList().flatten()
+            val newFlow: Flow<Transformation> = transformResultList.asFlow()
 
             logger.info("Starter tilbakeføring fra source: $type")
             entitySinks.consume(newFlow, input.ikrafttredelsesdato.toJavaLocalDate())
 
-            transformationRepo.writeTransformationsToDatabase(kjoringId, transformResultList.flatten())
+            transformationRepo.writeTransformationsToDatabase(kjoringId, transformResultList)
 
             logger.info("Fullført tilbakeføring av source: $type")
             statusForSource.tilbakeføringFinished = Clock.System.now()
