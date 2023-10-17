@@ -1,6 +1,8 @@
 package no.kartverket.komreg.transformation
 import no.kartverket.komreg.core.domain.*
 import no.kartverket.komreg.integration.spi.*
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 fun transformerEntity(
     input: Reguleringsinput,
@@ -8,8 +10,9 @@ fun transformerEntity(
     idGeneratorManager: IdGeneratorManager,
 ): List<Transformation>? {
     val transformations = mutableListOf<Transformation>()
-
+    val logger: Logger = LoggerFactory.getLogger("TransformEntity"::class.java)
     val matchedEntity = matchEntitetMotReguleringsInput(input, entity) ?: return null
+    logger.info("Matched entity: $matchedEntity")
 
     transformations.add(opprettTransformation(entity, input, 0))
 
@@ -44,37 +47,40 @@ private fun opprettTransformation(
 }
 
 fun matchEntitetMotReguleringsInput(input: Reguleringsinput, entity: Entity): Endring? {
-    val fylkesnummer = entity.ident?.getOrNull<Fylkesnummer>()
-    val kommuneløpenummer = entity.ident?.getOrNull<Kommunenummer.Lopenummer>()
-    val adressekode = entity.ident?.getOrNull<Adressekode>()
-    val teigId = entity.ident?.getOrNull<TeigId>()
-    val kretsnummer = entity.ident?.getOrNull<Kretsnummer>()
-    val gårdsnummer = entity.ident?.getOrNull<Matrikkelnummer.Gardsnummer>()
+    val identer = entity.associatedIdents?.toList().orEmpty().plus(entity.ident).filterNotNull()
 
-    if (fylkesnummer != null && kommuneløpenummer != null && adressekode != null) {
-        return input.endringer.matchAdressekode(fylkesnummer, kommuneløpenummer, adressekode)
+    for (ident in identer) {
+        val fylkesnummer = ident.getOrNull<Fylkesnummer>()
+        val kommuneløpenummer = ident.getOrNull<Kommunenummer.Lopenummer>()
+        val adressekode = ident.getOrNull<Adressekode>()
+        val teigId = ident.getOrNull<TeigId>()
+        val kretsnummer = ident.getOrNull<Kretsnummer>()
+        val gårdsnummer = ident.getOrNull<Matrikkelnummer.Gardsnummer>()
+
+        if (fylkesnummer != null && kommuneløpenummer != null && adressekode != null) {
+            input.endringer.matchAdressekode(fylkesnummer, kommuneløpenummer, adressekode)?.let { return it }
+        }
+
+        if (fylkesnummer != null && kommuneløpenummer != null && teigId != null) {
+            input.endringer.matchTeigId(fylkesnummer, kommuneløpenummer, teigId)?.let { return it }
+        }
+
+        if (fylkesnummer != null && kommuneløpenummer != null && kretsnummer != null) {
+            input.endringer.matchKretsnummer(fylkesnummer, kommuneløpenummer, kretsnummer)?.let { return it }
+        }
+
+        if (fylkesnummer != null && kommuneløpenummer != null && gårdsnummer != null) {
+            input.endringer.matchGårdsnummer(fylkesnummer, kommuneløpenummer, gårdsnummer)?.let { return it }
+        }
+
+        if (fylkesnummer != null && kommuneløpenummer != null) {
+            return input.endringer.matchKommunenummer(fylkesnummer, kommuneløpenummer)
+        }
+
+        if (fylkesnummer != null) {
+            return input.endringer.matchFylkesnummer(fylkesnummer)
+        }
     }
-
-    if (fylkesnummer != null && kommuneløpenummer != null && teigId != null) {
-        return input.endringer.matchTeigId(fylkesnummer, kommuneløpenummer, teigId)
-    }
-
-    if (fylkesnummer != null && kommuneløpenummer != null && kretsnummer != null) {
-        return input.endringer.matchKretsnummer(fylkesnummer, kommuneløpenummer, kretsnummer)
-    }
-
-    if (fylkesnummer != null && kommuneløpenummer != null && gårdsnummer != null) {
-        return input.endringer.matchGårdsnummer(fylkesnummer, kommuneløpenummer, gårdsnummer)
-    }
-
-    if (fylkesnummer != null && kommuneløpenummer != null) {
-        return input.endringer.matchKommunenummer(fylkesnummer, kommuneløpenummer)
-    }
-
-    if (fylkesnummer != null) {
-        return input.endringer.matchFylkesnummer(fylkesnummer)
-    }
-
     return null
 }
 
