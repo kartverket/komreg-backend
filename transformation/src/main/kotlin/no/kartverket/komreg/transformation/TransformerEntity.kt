@@ -11,7 +11,7 @@ fun transformerEntity(
     val matchedEntity = matchEntitetMotReguleringsInput(input, entity) ?: return null
 
     transformations.add(opprettTransformation(entity, input, 0))
-
+    // TODO - Håndterer kun vegendring da denne er den eneste som har flere kommunenummer, og bruker FraEnTilMange<Kommunenummer.Lopenummer> som type. Men i fremtiden vil dette også gjelde andre endringer
     if (matchedEntity is Vegendring && matchedEntity.kommuneløpenummer.til.size > 1) {
         for (index in 1 until matchedEntity.kommuneløpenummer.til.size) {
             val newId = idGeneratorManager.idFor(entity.id.type)
@@ -25,13 +25,13 @@ fun transformerEntity(
 private fun opprettTransformation(
     entity: Entity,
     input: Reguleringsinput,
-    index: Int,
+    tilIndex: Int,
     entityId: Id = entity.id,
 ): Transformation {
-    val newIdent = entity.ident.transformerIdent(input, index)
+    val newIdent = entity.ident.transformerIdent(input, tilIndex)
 
     val newAssociatedIdents = entity.associatedIdents
-        ?.mapNotNull { it.transformerIdent(input, index) }
+        ?.mapNotNull { it.transformerIdent(input, tilIndex) }
         ?.toSet()
 
     return Transformation(
@@ -52,6 +52,8 @@ fun matchEntitetMotReguleringsInput(input: Reguleringsinput, entity: Entity): En
         val teigId = ident.getOrNull<TeigId>()
         val kretsnummer = ident.getOrNull<Kretsnummer>()
         val gårdsnummer = ident.getOrNull<Matrikkelnummer.Gardsnummer>()
+
+        // Rekkefølgen på dette matchpatternet er viktig. Trakten går fra det mest spesifikke til det generelle caset som matcher i reguleringsinputtet. Dette bør gjøres på en tryggere måte senere.
 
         if (fylkesnummer != null && kommuneløpenummer != null && adressekode != null) {
             input.endringer.matchAdressekode(fylkesnummer, kommuneløpenummer, adressekode)?.let { return it }
@@ -80,7 +82,7 @@ fun matchEntitetMotReguleringsInput(input: Reguleringsinput, entity: Entity): En
     return null
 }
 
-private fun Ident?.transformerIdent(input: Reguleringsinput, index: Int): Ident? {
+private fun Ident?.transformerIdent(input: Reguleringsinput, tilIndex: Int): Ident? {
     if (this == null) return null
 
     val fylkesnummer = getOrNull<Fylkesnummer>()
@@ -103,7 +105,7 @@ private fun Ident?.transformerIdent(input: Reguleringsinput, index: Int): Ident?
         input.endringer.matchAdressekode(fylkesnummer, kommuneløpenummer, adressekode)?.let {
             return this
                 .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til }
-                .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til[index] }
+                .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til[tilIndex] }
                 .updateOrThrow { _: Adressekode -> it.adressekode.til }
         }
     }
