@@ -180,7 +180,7 @@ data class Krets(
 
 @Serializable
 data class Teig(
-    val id: String,
+    val teigId: String,
     val koordinatsystemkodeid: Int,
     val nord: Double,
     val øst: Double,

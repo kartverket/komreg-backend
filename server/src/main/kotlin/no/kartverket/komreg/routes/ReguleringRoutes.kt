@@ -222,7 +222,7 @@ fun Application.reguleringRoutes(reguleringRepo: ReguleringRepo, dataSource: Dat
                     while (teigResultSet.next()) {
                         teiger.add(
                             Teig(
-                                id = teigResultSet.getString("id"),
+                                teigId = teigResultSet.getString("id"),
                                 koordinatsystemkodeid = teigResultSet.getInt("koordinatsystemkodeid"),
                                 nord = teigResultSet.getDouble("nord"),
                                 øst = teigResultSet.getDouble("ost"),
