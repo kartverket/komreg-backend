@@ -1,27 +1,20 @@
 package no.kartverket.komreg.transformation
 
-import com.typesafe.config.ConfigFactory
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.toKotlinLocalDate
-import no.kartverket.komreg.core.KrAppBootContext
 import no.kartverket.komreg.core.domain.Fylkesnummer
 import no.kartverket.komreg.core.domain.Kommunenummer
 import no.kartverket.komreg.core.domain.Matrikkelnummer
 import no.kartverket.komreg.integration.spi.Entity
 import no.kartverket.komreg.integration.spi.IdGeneratorManager
 import no.kartverket.komreg.integration.spi.Ident
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class TransformEntityTest {
-
-    private val bootContext = object : KrAppBootContext {
-        override val config by lazy {
-            ConfigFactory.invalidateCaches()
-            ConfigFactory.load("properties.conf")
-        }
-    }
-
     private val reguleringsInput = Reguleringsinput(
         id = "123",
         LocalDate.now().toKotlinLocalDate(),
@@ -35,17 +28,23 @@ class TransformEntityTest {
                     fra = Kommunenummer.Lopenummer(5),
                     til = Kommunenummer.Lopenummer(6),
                 ),
-
             ),
         ),
         emptyList(),
         emptyList(),
     )
 
+    private val idGenerator = mockk<IdGeneratorManager>()
+
+    @BeforeEach
+    fun setup() {
+        every { idGenerator.idFor(any()) } returns dummyId(1)
+    }
+
     @Test
     fun `A transformation of idents should change kommunenr based on input`() {
         val entity = Entity(dummyId(123), identOf(2, 5))
-        val result = transformerEntity(reguleringsInput, entity, IdGeneratorManager(bootContext))
+        val result = transformerEntity(reguleringsInput, entity, idGenerator)
         val expected = identOf(3, 6)
         kotlin.test.assertEquals(expected, result?.single()?.transformedIdent)
     }
@@ -53,7 +52,7 @@ class TransformEntityTest {
     @Test
     fun `A transformation of idents should not transform entity when unmatched idents`() {
         val entity = Entity(dummyId(123), identOf(10, 50))
-        val result = transformerEntity(reguleringsInput, entity, IdGeneratorManager(bootContext))
+        val result = transformerEntity(reguleringsInput, entity, idGenerator)
         kotlin.test.assertEquals(null, result)
     }
 
@@ -66,7 +65,7 @@ class TransformEntityTest {
                 identOf(2, 5, 2),
             ),
         )
-        val result = transformerEntity(reguleringsInput, entity, IdGeneratorManager(bootContext))
+        val result = transformerEntity(reguleringsInput, entity, idGenerator)
         val expected = setOf(
             identOf(3, 6, 1),
             identOf(3, 6, 2),
@@ -84,7 +83,7 @@ class TransformEntityTest {
                 identOf(10, 15, 1),
             ),
         )
-        val result = transformerEntity(reguleringsInput, entity, IdGeneratorManager(bootContext))
+        val result = transformerEntity(reguleringsInput, entity, idGenerator)
         val expected = setOf(
             identOf(3, 6, 1),
             identOf(10, 15, 1),
