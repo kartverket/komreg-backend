@@ -13,12 +13,17 @@ data class Reguleringsinput(
 
 sealed class Endring {
     abstract val fylkesnummer: FraTil<Fylkesnummer>
-
-    data class FraTil<out T>(
-        val fra: T,
-        val til: T,
-    )
 }
+
+data class FraTil<out T>(
+    val fra: T,
+    val til: T,
+)
+
+data class FraEnTilMange<out T>(
+    val fra: T,
+    val til: List<T>,
+)
 
 data class Fylkeendring(
     override val fylkesnummer: FraTil<Fylkesnummer>,
@@ -43,12 +48,12 @@ data class Kretsendring(
 
 data class Vegendring(
     override val fylkesnummer: FraTil<Fylkesnummer>,
-    val kommuneløpenummer: FraTil<Kommunenummer.Lopenummer>,
+    val kommuneløpenummer: FraEnTilMange<Kommunenummer.Lopenummer>,
     val adressekode: FraTil<Adressekode>,
 ) : Endring()
 
 data class Teigendring(
     override val fylkesnummer: FraTil<Fylkesnummer>,
     val kommuneløpenummer: FraTil<Kommunenummer.Lopenummer>,
-    val teigId: FraTil<TeigId>
+    val teigId: FraTil<TeigId>,
 ) : Endring()
