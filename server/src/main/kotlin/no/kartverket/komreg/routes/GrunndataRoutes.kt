@@ -8,12 +8,14 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.KrAppBootContext
 import no.kartverket.komreg.core.domain.verdi
 import no.kartverket.komreg.integration.KommuneServiceManager
 import java.util.Base64
+import javax.sql.DataSource
 
-fun Application.grunndataRoutes() {
+fun Application.grunndataRoutes(dataSource: DataSource) {
     val bootContext = object : KrAppBootContext {
         override val config by lazy {
             ConfigFactory.invalidateCaches()
@@ -83,5 +85,159 @@ fun Application.grunndataRoutes() {
                 call.respond(kommuner)
             }
         }
+
+        route("/kommuner/{kommuneId}/fordelingsparametre") {
+            get {
+                val kommuneId = call.parameters["kommuneId"]
+                call.application.log.info("Henter fordelingsparametre for kommune $kommuneId")
+
+                // TODO: PoC for uthenting av fordelingsparametre for kommune
+                val gårdsnumre = mutableListOf<String>()
+                val adresseparseller = mutableListOf<Adresseparsell>()
+                val kretser = mutableListOf<Krets>()
+                val teiger = mutableListOf<Teig>()
+
+                dataSource.connection.use { connection ->
+                    val gårdsnummerStatement =
+                        connection.prepareStatement("SELECT DISTINCT gardsnr FROM matrikkelenhet WHERE kommuneid = ?")
+                    gårdsnummerStatement.setString(1, kommuneId)
+                    val gårdsnummerResultSet = gårdsnummerStatement.executeQuery()
+                    while (gårdsnummerResultSet.next()) {
+                        gårdsnumre.add(gårdsnummerResultSet.getString("gardsnr"))
+                    }
+
+                    val adresseparsellStatement =
+                        connection.prepareStatement("SELECT adressekode, adressenavn FROM veg WHERE kommuneid = ?")
+                    adresseparsellStatement.setString(1, kommuneId)
+                    val adresseparsellResultSet = adresseparsellStatement.executeQuery()
+                    while (adresseparsellResultSet.next()) {
+                        adresseparseller.add(
+                            Adresseparsell(
+                                adressekode = adresseparsellResultSet.getString("adressekode"),
+                                adressenavn = adresseparsellResultSet.getString("adressenavn"),
+                            ),
+                        )
+                    }
+
+                    val kretsStatement =
+                        connection.prepareStatement("SELECT kretsnavn, kretsnr, class FROM krets k LEFT JOIN kommunerforkrets kfk ON k.id = kfk.kretsid WHERE kfk.kommuneid = ?")
+                    kretsStatement.setString(1, kommuneId)
+                    val kretsResultSet = kretsStatement.executeQuery()
+                    while (kretsResultSet.next()) {
+                        kretser.add(
+                            Krets(
+                                kretsnummer = kretsResultSet.getString("kretsnr"),
+                                kretsnavn = kretsResultSet.getString("kretsnavn"),
+                                type = kretsResultSet.getString("class"),
+                            ),
+                        )
+                    }
+
+                    val teigStatement =
+                        connection.prepareStatement(
+                            "SELECT t.id AS id, koordinatsystemkodeid, nord, ost FROM teig t LEFT JOIN teigformatrikkelenhet tfm ON t.id = tfm.teigid\n" +
+                                "    WHERE matrikkelenhetid IN (SELECT id FROM matrikkelenhet WHERE kommuneid = ? AND gardsnr = 0)",
+                        )
+                    teigStatement.setString(1, kommuneId)
+                    val teigResultSet = teigStatement.executeQuery()
+                    while (teigResultSet.next()) {
+                        teiger.add(
+                            Teig(
+                                teigId = teigResultSet.getString("id"),
+                                koordinatsystemkodeid = teigResultSet.getInt("koordinatsystemkodeid"),
+                                nord = teigResultSet.getDouble("nord"),
+                                øst = teigResultSet.getDouble("ost"),
+                            ),
+                        )
+                    }
+                }
+
+                call.respond(
+                    Fordelingsparametre(
+                        gårdsnumre = gårdsnumre,
+                        adresseparseller = adresseparseller,
+                        kretser = kretser,
+                        teiger = teiger,
+                    ),
+                )
+            }
+        }
+
+        route("/kommuner/{kommuneId}/fordelingsparametre/veg/{adressekode}") {
+            get {
+                val kommuneId = call.parameters["kommuneId"]
+                val adressekode = call.parameters["adressekode"]
+                call.application.log.info("Henter fordelingsparametre for veg $adressekode i kommune $kommuneId")
+
+                // TODO: PoC for uthenting av fordelingsparametre for veg i kommune
+                val vegadresser = mutableListOf<Vegadresse>()
+
+                dataSource.connection.use { connection ->
+                    val vegadresseStatement =
+                        connection.prepareStatement("SELECT v.adressekode, v.adressenavn, a.nr, a.bokstav FROM adresse a LEFT JOIN veg v ON a.vegid = v.id WHERE v.kommuneid = ? AND v.adressekode = ?")
+                    vegadresseStatement.setString(1, kommuneId)
+                    vegadresseStatement.setString(2, adressekode)
+                    val vegadresseResultSet = vegadresseStatement.executeQuery()
+                    while (vegadresseResultSet.next()) {
+                        vegadresser.add(
+                            Vegadresse(
+                                adressekode = vegadresseResultSet.getString("adressekode"),
+                                adressenavn = vegadresseResultSet.getString("adressenavn"),
+                                nr = vegadresseResultSet.getString("nr"),
+                                bokstav = vegadresseResultSet.getString("bokstav"),
+                            ),
+                        )
+                    }
+                }
+
+                call.respond(
+                    FordelingsparametreVeg(
+                        vegadresser = vegadresser,
+                    ),
+                )
+            }
+        }
     }
 }
+
+@Serializable
+data class Fordelingsparametre(
+    val gårdsnumre: List<String>,
+    val adresseparseller: List<Adresseparsell>,
+    val kretser: List<Krets>,
+    val teiger: List<Teig>,
+)
+
+@Serializable
+data class FordelingsparametreVeg(
+    val vegadresser: List<Vegadresse>,
+)
+
+@Serializable
+data class Adresseparsell(
+    val adressekode: String,
+    val adressenavn: String,
+)
+
+@Serializable
+data class Krets(
+    val kretsnummer: String,
+    val kretsnavn: String,
+    val type: String,
+)
+
+@Serializable
+data class Teig(
+    val teigId: String,
+    val koordinatsystemkodeid: Int,
+    val nord: Double,
+    val øst: Double,
+)
+
+@Serializable
+data class Vegadresse(
+    val adressekode: String,
+    val adressenavn: String,
+    val nr: String,
+    val bokstav: String?,
+)
