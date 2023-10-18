@@ -1,8 +1,6 @@
 package no.kartverket.komreg.transformation
 import no.kartverket.komreg.core.domain.*
 import no.kartverket.komreg.integration.spi.*
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 fun transformerEntity(
     input: Reguleringsinput,
@@ -10,9 +8,7 @@ fun transformerEntity(
     idGeneratorManager: IdGeneratorManager,
 ): List<Transformation>? {
     val transformations = mutableListOf<Transformation>()
-    val logger: Logger = LoggerFactory.getLogger("TransformEntity"::class.java)
     val matchedEntity = matchEntitetMotReguleringsInput(input, entity) ?: return null
-    logger.info("Matched entity: $matchedEntity")
 
     transformations.add(opprettTransformation(entity, input, 0))
 
