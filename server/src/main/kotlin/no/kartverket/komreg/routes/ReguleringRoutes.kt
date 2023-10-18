@@ -199,7 +199,7 @@ fun Application.reguleringRoutes(reguleringRepo: ReguleringRepo, dataSource: Dat
                     }
 
                     val kretsStatement =
-                        connection.prepareStatement("SELECT kretsnavn, kretsnr, class FROM krets k LEFT JOIN kommunerforkrets kfk ON k.id = kfk.kretsid WHERE kfk.kommuneid = ?")
+                        connection.prepareStatement("SELECT kretsnavn, nvl(k.bispedomme, 0) * 1000000 + nvl(k.prosti, 0) * 10000 + nvl(k.prestegjeld, 0) * 100 + k.kretsnr AS kretsnr, class FROM krets k LEFT JOIN kommunerforkrets kfk ON k.id = kfk.kretsid WHERE kfk.kommuneid =  ?")
                     kretsStatement.setString(1, kommuneId)
                     val kretsResultSet = kretsStatement.executeQuery()
                     while (kretsResultSet.next()) {
