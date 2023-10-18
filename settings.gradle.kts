@@ -81,7 +81,7 @@ dependencyResolutionManagement {
             library("arrow-fx-coroutines", "io.arrow-kt", "arrow-fx-coroutines").withoutVersion()
             library("arrow-fx-stm", "io.arrow-kt", "arrow-fx-stm").withoutVersion()
 
-            library("typesafe-config", "com.typesafe:config:1.4.2")
+            library("typesafe-config", "com.typesafe:config:1.4.3")
 
             library("junit-jupiter-api", "org.junit.jupiter", "junit-jupiter-api").versionRef("junit")
             library("junit-jupiter-engine", "org.junit.jupiter", "junit-jupiter-engine").versionRef("junit")
