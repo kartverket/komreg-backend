@@ -17,12 +17,14 @@ import no.kartverket.komreg.core.domain.PostadresseForOppretting
 import no.kartverket.komreg.integration.EntitySinkManager
 import no.kartverket.komreg.integration.EntitySourceManager
 import no.kartverket.komreg.integration.KommuneServiceManager
+import no.kartverket.komreg.integration.spi.IdGeneratorManager
 import no.kartverket.komreg.integration.spi.Ident
 import no.kartverket.komreg.integration.spi.Transformation
 import no.kartverket.komreg.logger
 import no.kartverket.komreg.repositories.KjoringRepo
 import no.kartverket.komreg.repositories.TransformationRepo
-import no.kartverket.komreg.transformation.*
+import no.kartverket.komreg.transformation.Reguleringsinput
+import no.kartverket.komreg.transformation.transformerEntity
 
 @Serializable
 data class TransformationStatusForSource(
@@ -68,6 +70,7 @@ fun transformEntities(input: Reguleringsinput, kjoringId: Int, transformationRep
     }
 
     val entitySinks = EntitySinkManager(bootContext)
+    val idGeneratorManager = IdGeneratorManager(bootContext)
 
     printMemoryUsage()
 
@@ -176,9 +179,11 @@ private fun runAndWriteTransformations(
     kjoringId: Int,
     transformationRepo: TransformationRepo,
     kjoringRepo: KjoringRepo,
+
 ) {
     val sources = EntitySourceManager(bootContext).entitySources
 
+    val idGeneratorManager = IdGeneratorManager(bootContext)
     CoroutineScope(Dispatchers.IO).launch {
         if (input.fylker.isNotEmpty()) {
             writeFylker(bootContext, input, entitySinks)
@@ -198,7 +203,7 @@ private fun runAndWriteTransformations(
                     logger.info("Starter flow av type: $type")
                     statusForSource.firstTransformation = Clock.System.now()
                 }
-                .mapNotNull { entity -> transformerKommunenummer(input, entity) }
+                .mapNotNull { entity -> transformerEntity(input, entity, idGeneratorManager) }
                 .onEach {
                     statusForSource.numberOfTransformations += 1
                 }
@@ -207,7 +212,7 @@ private fun runAndWriteTransformations(
                     statusForSource.transformationFinished = Clock.System.now()
                 }
 
-            val transformResultList = transformResult.toList()
+            val transformResultList = transformResult.toList().flatten()
             val newFlow: Flow<Transformation> = transformResultList.asFlow()
 
             logger.info("Starter tilbakeføring fra source: $type")
