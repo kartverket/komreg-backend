@@ -1,5 +1,6 @@
 package no.kartverket.komreg.core.domain
 
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 import no.kartverket.komreg.integration.spi.Payload
 
@@ -15,6 +16,7 @@ data class Kommunedata(
     val godkjenteGardsnumre: String,
     val adresse: PostadresseForOppretting?,
     val standardRekvirentOrgnummer: String?,
+    val ikrafttredelsesdato: LocalDate,
     val kommunevapen: ByteArray?,
 ) : Payload {
     override fun equals(other: Any?): Boolean {
@@ -30,6 +32,7 @@ data class Kommunedata(
         if (godkjenteGardsnumre != other.godkjenteGardsnumre) return false
         if (adresse != other.adresse) return false
         if (standardRekvirentOrgnummer != other.standardRekvirentOrgnummer) return false
+        if (ikrafttredelsesdato != other.ikrafttredelsesdato) return false
         if (!kommunevapen.contentEquals(other.kommunevapen)) return false
 
         return true
