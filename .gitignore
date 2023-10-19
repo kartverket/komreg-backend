@@ -222,3 +222,6 @@ gradle-app.setting
 
 gradle.properties
 .env
+
+kommunedeling/fordelingsparametre.json
+kommunedeling/fordeling_input.json

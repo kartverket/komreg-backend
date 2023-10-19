@@ -1,77 +1,61 @@
 import json
 
 
-def load_input_file(filename):
-    with open(filename, 'r', encoding='utf-8') as f:
-        return json.load(f)
+def save_json(data, filename):
+    with open(filename, 'w', encoding='utf8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
 
 
-def save_output_file(data, filename):
-    with open(filename, 'w', encoding='utf-8') as f:
-        json.dump(data, f, indent=4, ensure_ascii=False)
+with open('fordelingsparametre.json', 'r', encoding='utf8') as f:
+    fordelingsparametre = json.load(f)
 
+with open('fordeling_input.json', 'r', encoding='utf8') as f:
+    fordeling_input = json.load(f)
 
-def create_transformasjon(type_name, id_field, obj, fylkesnummer, eksisterende_kommunenummer, kommune_til, is_list=False):
-    id_value = obj if isinstance(obj, str) else obj.get(id_field, '')
-    is_veg = type_name == "veg"
-    kommune_fra = eksisterende_kommunenummer
+transformasjoner = []
 
-    return {
-        "type": type_name,
-        "fylkesnummer": {
-            "fra": fylkesnummer,
-            "til": fylkesnummer
-        },
-        "kommuneløpenummer": {
-            "fra": kommune_fra,
-            "til": kommune_til if is_veg and is_list else kommune_til
-        },
-        id_field: {
-            "fra": str(id_value),
-            "til": str(id_value)
-        }
-    }
+eksisterende_kommuneløpenummer = fordeling_input['eksisterende_kommuneløpenummer']
+fylkesnummer = fordeling_input['fylkesnummer']
 
+for gårdsnummer in fordelingsparametre['gårdsnumre']:
+    til_value = fordeling_input['matrikkelenhet'].get(
+        gårdsnummer, eksisterende_kommuneløpenummer)
+    transformasjoner.append({
+        'type': 'matrikkelenhet',
+        'fylkesnummer': {'fra': fylkesnummer, 'til': fylkesnummer},
+        'kommuneløpenummer': {'fra': eksisterende_kommuneløpenummer, 'til': til_value},
+        'gårdsnummer': {'fra': gårdsnummer, 'til': gårdsnummer},
+    })
 
-def main():
-    input_data = load_input_file('fordelingsparametere.json')
-    fordeling_data = load_input_file('regulering_fordeling.json')
+for adresse in fordelingsparametre['adresseparseller']:
+    til_value = fordeling_input['veg'].get(
+        adresse['adressekode'], [eksisterende_kommuneløpenummer])
+    transformasjoner.append({
+        'type': 'veg',
+        'fylkesnummer': {'fra': fylkesnummer, 'til': fylkesnummer},
+        'kommuneløpenummer': {'fra': eksisterende_kommuneløpenummer, 'til': til_value},
+        'adressekode': {'fra': adresse['adressekode'], 'til': adresse['adressekode']},
+    })
 
-    fylkesnummer = fordeling_data['fylkesnummer']
-    kommune1 = fordeling_data['kommuneløpenummer1']
-    eksisterende_kommunenummer = fordeling_data['eksisterende_kommuneløpenummer']
+for krets in fordelingsparametre['kretser']:
+    til_value = fordeling_input['krets'].get(
+        krets['kretsnummer'], eksisterende_kommuneløpenummer)
+    nytt_kretsnummer = krets.get('nytt_kretsnummer', krets['kretsnummer'])
+    transformasjoner.append({
+        'type': 'krets',
+        'fylkesnummer': {'fra': fylkesnummer, 'til': fylkesnummer},
+        'kommuneløpenummer': {'fra': eksisterende_kommuneløpenummer, 'til': til_value},
+        'kretsnummer': {'fra': krets['kretsnummer'], 'til': nytt_kretsnummer},
+    })
 
-    transformasjoner = []
+for teig in fordelingsparametre['teiger']:
+    til_value = fordeling_input['teig'].get(
+        teig['teigId'], eksisterende_kommuneløpenummer)
+    transformasjoner.append({
+        'type': 'teig',
+        'fylkesnummer': {'fra': fylkesnummer, 'til': fylkesnummer},
+        'kommuneløpenummer': {'fra': eksisterende_kommuneløpenummer, 'til': til_value},
+        'teigId': {'fra': teig['teigId'], 'til': teig['teigId']},
+    })
 
-    input_keys = ["gårdsnumre", "adresseparseller", "kretser", "teiger"]
-    type_id_fields = [("matrikkelenhet", "gårdsnummer"), ("veg",
-                                                          "adressekode"), ("krets", "kretsnummer"), ("teig", "teigId")]
-
-    for input_key, (type_name, id_field) in zip(input_keys, type_id_fields):
-        items = input_data.get(input_key, [])
-
-        for obj in items:
-            id_value = obj if isinstance(obj, str) else obj.get(id_field, '')
-            kommune = fordeling_data.get(type_name, {}).get(
-                str(id_value), fylkesnummer + kommune1)
-            
-            is_list = False
-            if isinstance(kommune, list) and type_name == 'veg':
-                kommune_til = kommune
-                is_list = True
-            elif isinstance(kommune, list):
-                kommune_til = kommune[0]
-            else:
-                kommune_til = kommune
-
-            transformasjon = create_transformasjon(
-                type_name, id_field, obj, fylkesnummer, eksisterende_kommunenummer, kommune_til, is_list=is_list)
-            transformasjoner.append(transformasjon)
-
-    output_data = {"transformasjoner": transformasjoner}
-    save_output_file(output_data, 'output.json')
-    print("Resultat skrevet til output.json.")
-
-
-if __name__ == '__main__':
-    main()
+save_json({'transformasjoner': transformasjoner}, 'output.json')
