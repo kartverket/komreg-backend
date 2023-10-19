@@ -11,12 +11,10 @@ def save_output_file(data, filename):
         json.dump(data, f, indent=4, ensure_ascii=False)
 
 
-def create_transformasjon(type_name, id_field, obj, fylkesnummer, eksisterende_kommunenummer, kommune):
+def create_transformasjon(type_name, id_field, obj, fylkesnummer, eksisterende_kommunenummer, kommune_til, is_list=False):
     id_value = obj if isinstance(obj, str) else obj.get(id_field, '')
     is_veg = type_name == "veg"
-    kommune_fra = eksisterende_kommunenummer if not is_veg else [
-        eksisterende_kommunenummer]
-    kommune_til = kommune if not is_veg else kommune[2:]
+    kommune_fra = eksisterende_kommunenummer
 
     return {
         "type": type_name,
@@ -26,7 +24,7 @@ def create_transformasjon(type_name, id_field, obj, fylkesnummer, eksisterende_k
         },
         "kommuneløpenummer": {
             "fra": kommune_fra,
-            "til": kommune_til
+            "til": kommune_til if is_veg and is_list else kommune_til
         },
         id_field: {
             "fra": str(id_value),
@@ -36,8 +34,8 @@ def create_transformasjon(type_name, id_field, obj, fylkesnummer, eksisterende_k
 
 
 def main():
-    input_data = load_input_file('input.json')
-    fordeling_data = load_input_file('fordeling_input.json')
+    input_data = load_input_file('fordelingsparametere.json')
+    fordeling_data = load_input_file('regulering_fordeling.json')
 
     fylkesnummer = fordeling_data['fylkesnummer']
     kommune1 = fordeling_data['kommuneløpenummer1']
@@ -56,11 +54,18 @@ def main():
             id_value = obj if isinstance(obj, str) else obj.get(id_field, '')
             kommune = fordeling_data.get(type_name, {}).get(
                 str(id_value), fylkesnummer + kommune1)
-            if isinstance(kommune, list):
-                kommune = kommune[0]  # or handle lists as needed
+            
+            is_list = False
+            if isinstance(kommune, list) and type_name == 'veg':
+                kommune_til = kommune
+                is_list = True
+            elif isinstance(kommune, list):
+                kommune_til = kommune[0]
+            else:
+                kommune_til = kommune
 
             transformasjon = create_transformasjon(
-                type_name, id_field, obj, fylkesnummer, eksisterende_kommunenummer, kommune)
+                type_name, id_field, obj, fylkesnummer, eksisterende_kommunenummer, kommune_til, is_list=is_list)
             transformasjoner.append(transformasjon)
 
     output_data = {"transformasjoner": transformasjoner}
