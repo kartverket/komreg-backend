@@ -106,6 +106,23 @@ class TransformEntityTest {
     }
 
     @Test
+    fun `A transformation of associated idents should only change matching idents (non-matching ident first)`() {
+        val entity = Entity(
+            dummyId(123),
+            associatedIdents = setOf(
+                identOfMatrikkelenhet(10, 15, 1),
+                identOfMatrikkelenhet(2, 5, 1),
+            ),
+        )
+        val result = transformerEntity(reguleringsInput, entity, idGenerator)
+        val expected = setOf(
+            identOfMatrikkelenhet(10, 15, 1),
+            identOfMatrikkelenhet(3, 6, 1),
+        )
+        assertEquals(expected, result?.single()?.transformedAssociatedIdents)
+    }
+
+    @Test
     fun `A transformation of idents should change when multiple idents matches`() {
         val entity = Entity(dummyId(123), identOfVeg(2, 5, 2600))
         val result = transformerEntity(reguleringsInput, entity, idGenerator)

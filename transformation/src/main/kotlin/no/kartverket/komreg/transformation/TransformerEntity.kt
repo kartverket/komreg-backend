@@ -72,11 +72,11 @@ fun matchEntitetMotReguleringsInput(input: Reguleringsinput, entity: Entity): En
         }
 
         if (fylkesnummer != null && kommuneløpenummer != null) {
-            return input.endringer.matchKommunenummer(fylkesnummer, kommuneløpenummer)
+            input.endringer.matchKommunenummer(fylkesnummer, kommuneløpenummer)?.let { return it }
         }
 
         if (fylkesnummer != null) {
-            return input.endringer.matchFylkesnummer(fylkesnummer)
+            input.endringer.matchFylkesnummer(fylkesnummer)?.let { return it }
         }
     }
     return null
