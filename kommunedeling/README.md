@@ -9,5 +9,7 @@ fordelingsparametre, skal kretsnummer endres.
 ## Bruk
 
 Scriptet trenger en input.json som inneholder fordelingsparametrene til den gamle kommunen.
-Det trenger også en fordeling_input.json som sier til hvilken kommune hvert objekt skal til (default er kommune 1,
+
+Det trenger også en fordeling_input.json som sier hvilken kommune hvert objekt skal til (default er kommune 1,
 så man trenger egentlig ikke spesifisere mer enn det som skal til kommune 2)
+
