@@ -1,0 +1,96 @@
+{
+    "gårdsnumre": [
+        "0",
+        "1",
+        "2",
+        "33",
+        "64",
+        "101",
+        "409",
+        "2029",
+        "10000"
+    ],
+    "adresseparseller": [
+        {
+            "adressekode": "1120",
+            "adressenavn": "FYRVEGEN"
+        },
+        {
+            "adressekode": "99988",
+            "adressenavn": "Kartverksvegen"
+        },
+        {
+            "adressekode": "99989",
+            "adressenavn": "Weidemanns vei"
+        },
+        {
+            "adressekode": "99991",
+            "adressenavn": "Kursvegen"
+        },
+        {
+            "adressekode": "1040",
+            "adressenavn": "BJØRKVEIEN"
+        }
+    ],
+    "kretser": [
+        {
+            "kretsnummer": "111",
+            "kretsnavn": "FENESET",
+            "type": "Grunnkrets"
+        },
+        {
+            "kretsnummer": "110",
+            "kretsnavn": "LØDINGEN",
+            "type": "Grunnkrets"
+        },
+        {
+            "kretsnummer": "10060701",
+            "kretsnavn": "Lødingen",
+            "type": "Kirkesogn"
+        },
+        {
+            "kretsnummer": "3",
+            "kretsnavn": "LØDINGEN",
+            "type": "KommunalKrets"
+        },
+        {
+            "kretsnummer": "2",
+            "kretsnavn": "VESTBYGDA",
+            "type": "KommunalKrets"
+        },
+        {
+            "kretsnummer": "2",
+            "kretsnavn": "VESTBYGD",
+            "type": "Valgkrets"
+        },
+        {
+            "kretsnummer": "1",
+            "kretsnavn": "LØDINGEN",
+            "type": "Valgkrets"
+        },
+        {
+            "kretsnummer": "8410",
+            "kretsnavn": "LØDINGEN",
+            "type": "Postnummeromrade"
+        },
+        {
+            "kretsnummer": "112",
+            "kretsnavn": "NES-ØYGÅRDEN",
+            "type": "Grunnkrets"
+        }
+    ],
+    "teiger": [
+        {
+            "teigId": "180295568",
+            "koordinatsystemkodeid": 11,
+            "nord": 7584187.57,
+            "øst": 509747.76
+        },
+        {
+            "teigId": "180442264",
+            "koordinatsystemkodeid": 11,
+            "nord": 7589995.23,
+            "øst": 540841.95
+        }
+    ]
+}
