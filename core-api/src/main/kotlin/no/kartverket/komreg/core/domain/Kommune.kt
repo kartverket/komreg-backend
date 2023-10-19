@@ -21,6 +21,7 @@ data class Kommune(
             kommunenummer: Long,
             kommunenavn: String,
             gyldigTilDato: LocalDate?,
+            konverteringsstatus: String?,
             koordinatsystem: Koordinatsystem,
             senterpunkt: Koordinat,
             nedsattKonsesjonsgrense: Boolean,

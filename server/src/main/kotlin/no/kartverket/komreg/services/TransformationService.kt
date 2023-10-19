@@ -159,6 +159,7 @@ private suspend fun writeKommuner(
                         },
                         standardRekvirentOrgnummer = kommune.standardRekvirent?.orgnummer,
                         kommunevapen = kommune.kommunevapen,
+                        ikrafttredelsesdato = input.ikrafttredelsesdato,
                     ),
                 ),
             )
