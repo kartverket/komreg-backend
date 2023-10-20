@@ -120,15 +120,19 @@ fun Application.grunndataRoutes(dataSource: DataSource) {
                     }
 
                     val kretsStatement =
-                        connection.prepareStatement("SELECT kretsnavn, kretsnr, class FROM krets k LEFT JOIN kommunerforkrets kfk ON k.id = kfk.kretsid WHERE kfk.kommuneid = ?")
+                        connection.prepareStatement(
+                            "SELECT kr.kretsnavn, ko.kodeverdi, " +
+                                "nvl(kr.bispedomme, 0) * 1000000 + nvl(kr.prosti, 0) * 10000 + nvl(kr.prestegjeld, 0) * 100 + kr.kretsnr AS kretsnummer " +
+                                "FROM krets kr JOIN kommunerforkrets kfk ON kfk.kretsid = kr.id JOIN kode ko ON ko.id = kr.kretstypekodeid WHERE kfk.kommuneid = ?",
+                        )
                     kretsStatement.setString(1, kommuneId)
                     val kretsResultSet = kretsStatement.executeQuery()
                     while (kretsResultSet.next()) {
                         kretser.add(
                             Krets(
-                                kretsnummer = kretsResultSet.getString("kretsnr"),
+                                kretsnummer = kretsResultSet.getString("kretsnummer"),
+                                kretstype = kretsResultSet.getString("kodeverdi"),
                                 kretsnavn = kretsResultSet.getString("kretsnavn"),
-                                type = kretsResultSet.getString("class"),
                             ),
                         )
                     }
@@ -222,8 +226,8 @@ data class Adresseparsell(
 @Serializable
 data class Krets(
     val kretsnummer: String,
+    val kretstype: String,
     val kretsnavn: String,
-    val type: String,
 )
 
 @Serializable
