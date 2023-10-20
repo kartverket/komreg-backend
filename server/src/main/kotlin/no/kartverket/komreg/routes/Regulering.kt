@@ -109,6 +109,30 @@ data class Regulering(
                                 ),
                             )
                         }
+                        is AdresseTransformasjonDTO -> {
+                            Adresseendring(
+                                fylkesnummer = FraTil(
+                                    fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
+                                    til = Fylkesnummer(transformasjon.fylkesnummer.til.toLong()),
+                                ),
+                                kommuneløpenummer = FraTil(
+                                    fra = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.fra.toByte()),
+                                    til = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.til.toByte()),
+                                ),
+                                adressekode = FraTil(
+                                    fra = Adressekode(transformasjon.adressekode.fra.toInt()),
+                                    til = Adressekode(transformasjon.adressekode.til.toInt()),
+                                ),
+                                adressenummer = FraTil(
+                                    fra = Adressenummernummer(transformasjon.adressenummer.fra.toShort()),
+                                    til = Adressenummernummer(transformasjon.adressenummer.til.toShort()),
+                                ),
+                                adressenummerbokstav = FraTil(
+                                    fra = Adressenummerbokstav(transformasjon.adressenummerbokstav.fra.singleOrNull()),
+                                    til = Adressenummerbokstav(transformasjon.adressenummerbokstav.til.singleOrNull()),
+                                ),
+                            )
+                        }
                     }
                 }
             },
@@ -246,6 +270,16 @@ data class TeigTransformasjonDTO(
     override val fylkesnummer: FraTilDTO,
     val kommuneløpenummer: FraTilDTO,
     val teigId: FraTilDTO,
+) : TransformasjonDTO()
+
+@Serializable
+@SerialName("adresse")
+data class AdresseTransformasjonDTO(
+    override val fylkesnummer: FraTilDTO,
+    val kommuneløpenummer: FraTilDTO,
+    val adressekode: FraTilDTO,
+    val adressenummer: FraTilDTO,
+    val adressenummerbokstav: FraTilDTO,
 ) : TransformasjonDTO()
 
 @Serializable

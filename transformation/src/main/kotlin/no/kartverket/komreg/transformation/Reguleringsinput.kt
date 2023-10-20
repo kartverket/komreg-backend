@@ -57,3 +57,11 @@ data class Teigendring(
     val kommuneløpenummer: FraTil<Kommunenummer.Lopenummer>,
     val teigId: FraTil<TeigId>,
 ) : Endring()
+
+data class Adresseendring(
+    override val fylkesnummer: FraTil<Fylkesnummer>,
+    val kommuneløpenummer: FraTil<Kommunenummer.Lopenummer>,
+    val adressekode: FraTil<Adressekode>,
+    val adressenummer: FraTil<Adressenummernummer>,
+    val adressenummerbokstav: FraTil<Adressenummerbokstav>,
+) : Endring()
