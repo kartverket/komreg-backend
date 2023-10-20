@@ -58,7 +58,7 @@ fun matchEntitetMotReguleringsInput(input: Reguleringsinput, entity: Entity): En
         // Rekkefølgen på dette matchpatternet er viktig. Trakten går fra det mest spesifikke til det generelle caset som matcher i reguleringsinputtet. Dette bør gjøres på en tryggere måte senere.
 
         if (fylkesnummer != null && kommuneløpenummer != null && adressekode != null && adressenummer != null) {
-            input.endringer.matchAdresse(fylkesnummer, kommuneløpenummer, adressekode, adressenummer, adressenummerbokstav)?.let { return it }
+            input.endringer.matchVegadresse(fylkesnummer, kommuneløpenummer, adressekode, adressenummer, adressenummerbokstav)?.let { return it }
         }
 
         if (fylkesnummer != null && kommuneløpenummer != null && adressekode != null) {
@@ -110,7 +110,7 @@ private fun Ident?.transformerIdent(input: Reguleringsinput, tilIndex: Int): Ide
     }
 
     if (fylkesnummer != null && kommuneløpenummer != null && adressekode != null && adressenummer != null && adressenummerbokstav != null) {
-        input.endringer.matchAdresse(fylkesnummer, kommuneløpenummer, adressekode, adressenummer, adressenummerbokstav)?.let {
+        input.endringer.matchVegadresse(fylkesnummer, kommuneløpenummer, adressekode, adressenummer, adressenummerbokstav)?.let {
             return this
                 .updateOrThrow { _: Fylkesnummer -> it.fylkesnummer.til }
                 .updateOrThrow { _: Kommunenummer.Lopenummer -> it.kommuneløpenummer.til }
@@ -197,14 +197,14 @@ fun List<Endring>.matchAdressekode(
     return this.find { it is Vegendring && it.fylkesnummer.fra == fylkesnummer && it.kommuneløpenummer.fra == lopenummer && it.adressekode.fra == adressekode } as Vegendring?
 }
 
-fun List<Endring>.matchAdresse(
+fun List<Endring>.matchVegadresse(
     fylkesnummer: Fylkesnummer,
     lopenummer: Kommunenummer.Lopenummer,
     adressekode: Adressekode,
     adressenummer: Adressenummernummer,
     adressenummerbokstav: Adressenummerbokstav?,
-): Adresseendring? {
-    return this.find { it is Adresseendring && it.fylkesnummer.fra == fylkesnummer && it.kommuneløpenummer.fra == lopenummer && it.adressekode.fra == adressekode && it.adressenummer.fra == adressenummer && it.adressenummerbokstav.fra == adressenummerbokstav } as Adresseendring?
+): Vegadresseendring? {
+    return this.find { it is Vegadresseendring && it.fylkesnummer.fra == fylkesnummer && it.kommuneløpenummer.fra == lopenummer && it.adressekode.fra == adressekode && it.adressenummer.fra == adressenummer && it.adressenummerbokstav.fra == adressenummerbokstav } as Vegadresseendring?
 }
 
 fun List<Endring>.matchTeigId(

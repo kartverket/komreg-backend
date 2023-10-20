@@ -109,8 +109,8 @@ data class Regulering(
                                 ),
                             )
                         }
-                        is AdresseTransformasjonDTO -> {
-                            Adresseendring(
+                        is VegadresseTransformasjonDTO -> {
+                            Vegadresseendring(
                                 fylkesnummer = FraTil(
                                     fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
                                     til = Fylkesnummer(transformasjon.fylkesnummer.til.toLong()),
@@ -273,8 +273,8 @@ data class TeigTransformasjonDTO(
 ) : TransformasjonDTO()
 
 @Serializable
-@SerialName("adresse")
-data class AdresseTransformasjonDTO(
+@SerialName("vegadresse")
+data class VegadresseTransformasjonDTO(
     override val fylkesnummer: FraTilDTO,
     val kommuneløpenummer: FraTilDTO,
     val adressekode: FraTilDTO,
