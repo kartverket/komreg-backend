@@ -5,22 +5,18 @@ import no.kartverket.komreg.core.domain.IdType
 import no.kartverket.komreg.integration.spi.*
 import java.util.*
 
-class IdentTransformer(vararg mappings: Pair<Ident, Mapping>) {
-    private val map = mapOf(
-        *(
-            mappings.onEach { m ->
-                val sourceType = m.first.type
-                m.second.checkIdentType(sourceType)
-            }
-            ),
-    )
+class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
+    private val map = mappings.onEach { m ->
+        val sourceType = m.first.type
+        m.second.checkIdentType(sourceType)
+    }.toMap()
 
     suspend fun transform(
         entity: Entity,
-        idProvider: (String, IdType<*, *>) -> Id,
+        idProvider: (IdType<*, *>, Any?) -> Id,
     ): List<Transformation>? {
         val primaryTransform = entity.ident?.transformIdent()
-        val transformedAssociatedIdents = entity.associatedIdents?.flatMap { it ->
+        val transformedAssociatedIdents = entity.associatedIdents?.flatMap {
             it.transformIdent().map { it.first }
         }?.toSet()
 
@@ -56,11 +52,8 @@ class IdentTransformer(vararg mappings: Pair<Ident, Mapping>) {
 
                 else -> {
                     primaryTransform.mapIndexed { index, transform ->
-                        val id = if (index == 0) {
-                            entity.id
-                        } else {
-                            idProvider(transform.first.toString(), entity.id.type)
-                        }
+                        val id = if (index == 0) entity.id
+                        else idProvider(entity.id.type, transform.first)
                         Transformation(
                             id = id,
                             sourceEntity = entity,
@@ -103,11 +96,8 @@ class IdentTransformer(vararg mappings: Pair<Ident, Mapping>) {
             .groupByTo(TreeMap()) { it.second.size }
             .lastEntry()
             ?.let { (_, mappingMatches) ->
-                if (mappingMatches.size > 1) {
-                    throw RuntimeException("More than one match")
-                } else {
-                    mappingMatches.singleOrNull() // Kan vel aldri bli null, men samma det...
-                }
+                if (mappingMatches.size > 1) throw RuntimeException("More than one match")
+                else mappingMatches.singleOrNull() // Kan vel aldri bli null, men samma det...
             }
             ?.let { (mapping, matches) ->
                 when (val target = mapping.value) {
@@ -141,29 +131,22 @@ class IdentTransformer(vararg mappings: Pair<Ident, Mapping>) {
                     is Mapping.Split -> if (matches.size == type.size) {
                         // Perfect match: Split it
                         target.into.map { (targetIdent, payload) ->
-                            if (targetIdent == Ident.Empty) {
-                                targetIdent to payload
-                            } else {
-                                matches.foldIndexed(this) { targetIndex, transformedIdent, match ->
-                                    val typeIndex = match.first
-                                    transformedIdent.updateOrThrow(typeIndex) { targetIdent.getOrThrow(targetIndex) }
-                                } to payload
-                            }
+                            if (targetIdent == Ident.Empty) targetIdent to payload
+                            else matches.foldIndexed(this) { targetIndex, transformedIdent, match ->
+                                val typeIndex = match.first
+                                transformedIdent.updateOrThrow(typeIndex) { targetIdent.getOrThrow(targetIndex) }
+                            } to payload
                         }
                     } else {
                         // Imperfect match: Unresolved
                         val matchedIndicies = matches.map { it.first }.toSet()
                         val preserveTypes = type.types.mapIndexedNotNull { index, kType ->
-                            if (matchedIndicies.contains(index)) {
-                                null
-                            } else {
-                                index to kType
-                            }
+                            if (matchedIndicies.contains(index)) null
+                            else index to kType
                         }
                         listOf(
-                            if (preserveTypes.isEmpty()) {
-                                Ident.Empty to null
-                            } else {
+                            if (preserveTypes.isEmpty()) Ident.Empty to null
+                            else {
                                 val newType = identTypeFromKotlinTypes(
                                     preserveTypes.first().second,
                                     *preserveTypes.drop(1).map { it.second }.toTypedArray(),
@@ -173,11 +156,15 @@ class IdentTransformer(vararg mappings: Pair<Ident, Mapping>) {
                                     *preserveTypes.map { getOrThrow(it.first) }
                                         .toTypedArray(),
                                 ) to null
-                            },
+                            }
                         )
                     }
                 }
             } ?: listOf(this to null)
+    }
+
+    companion object {
+        operator fun invoke(vararg mappings: Pair<Ident, Mapping>) = IdentTransformer(listOf(*mappings))
     }
 
     sealed interface Mapping {

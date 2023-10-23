@@ -200,9 +200,7 @@ private fun runAndWriteTransformations(
                     statusForSource.firstTransformation = Clock.System.now()
                 }
                 .mapNotNull { entity ->
-                    identTransformer.transform(entity) { _, type ->
-                        idGeneratorManager.idFor(type)
-                    }
+                    identTransformer.transform(entity, idGeneratorManager::idFor)
                 }
                 .onEach {
                     statusForSource.numberOfTransformations += 1

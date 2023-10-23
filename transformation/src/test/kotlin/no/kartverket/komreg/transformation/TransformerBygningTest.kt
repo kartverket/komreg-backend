@@ -1,106 +1,287 @@
 package no.kartverket.komreg.transformation
 
-import io.mockk.every
+import assertk.all
+import assertk.assertThat
+import assertk.assertions.*
+import io.kotest.core.spec.style.FunSpec
 import io.mockk.mockk
-import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 import no.kartverket.komreg.core.domain.*
 import no.kartverket.komreg.integration.spi.Entity
-import no.kartverket.komreg.integration.spi.IdGeneratorManager
-import no.kartverket.komreg.integration.spi.Ident
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import kotlin.test.assertEquals
+import no.kartverket.komreg.integration.spi.KommuneService
+import no.kartverket.komreg.integration.spi.Transformation
+import no.kartverket.komreg.integration.spi.invoke
 
-class TransformerBygningTest {
-    private val mapping = listOf(
-        identOfMatrikkelenhet(2, 5, 1) to IdentTransformer.Mapping.Replace(
-            identOfMatrikkelenhet(2, 6, 1)
-        ),
-        identOfKommune(2, 5) to IdentTransformer.Mapping.Split(
+class TransformerBygningTest : FunSpec({
+    fun bygningId(idValue: Long) = Id(TestIdType.Foo, idValue) // Faktisk id-type er irrelevant
+
+    test("Flytt hel kommune") {
+        val idGeneratorManager = mockIdGenerator()
+        val kommuneService = mockk<KommuneService>()
+
+        val bygningIdentType = getBygningIdentType()
+        val matrikkelenhetIdentType = getMatrikkelenhetIdentType()
+
+        val byggSource = mockSource(
+            Entity(
+                id = bygningId(1),
+                ident = bygningIdentType(
+                    Fylkesnummer(12),
+                    Kommunenummer.Lopenummer(34),
+                    Bygningsnummer(1)
+                )
+            ),
+            Entity(
+                id = bygningId(2),
+                ident = bygningIdentType(
+                    Fylkesnummer(12),
+                    Kommunenummer.Lopenummer(34),
+                    Bygningsnummer(2)
+                ),
+                associatedIdents = setOf(
+                    matrikkelenhetIdentType(
+                        Fylkesnummer(12),
+                        Kommunenummer.Lopenummer(34),
+                        Matrikkelnummer.Gardsnummer(1),
+                        Matrikkelnummer.Bruksnummer(1),
+                        Matrikkelnummer.Festenummer(0),
+                        Matrikkelnummer.Seksjonsnummer(0)
+                    )
+                )
+            ),
+        )
+
+        val sink = MockSink()
+
+        transform(
+            1,
+            Reguleringsinput(
+                "abc",
+                Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                listOf(
+                    Kommuneendring(
+                        FraTil(Fylkesnummer(12), Fylkesnummer(13)),
+                        FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(24)))
+                    )
+                ),
+                emptyList(),
+                listOf(
+                    Kommune(
+                        Kommunenummer(1324),
+                        Kommunenavn("Ny kommune"),
+                        null,
+                        Koordinatsystem.UTM32,
+                        Koordinat(0.0, 0.0),
+                        false,
+                        "",
+                        null,
+                        null,
+                        null
+                    )
+                )
+            ),
+            listOf(byggSource),
+            emptyList(),
+            listOf(sink),
+            idGeneratorManager,
+            kommuneService,
+            TestStorage()
+        )
+
+        assertThat(sink::transformations).all {
+            hasSize(2)
+            index(0).all {
+                prop(Transformation::id).isEqualTo(bygningId(1))
+                prop(Transformation::transformedIdent).isEqualTo(
+                    bygningIdentType(
+                        Fylkesnummer(13),
+                        Kommunenummer.Lopenummer(24),
+                        Bygningsnummer(1)
+                    )
+                )
+                prop(Transformation::transformedAssociatedIdents).isNull()
+                prop(Transformation::resultObject).isNull()
+            }
+            index(1).all {
+                prop(Transformation::id).isEqualTo(bygningId(2))
+                prop(Transformation::transformedIdent).isEqualTo(
+                    bygningIdentType(
+                        Fylkesnummer(13),
+                        Kommunenummer.Lopenummer(24),
+                        Bygningsnummer(2)
+                    )
+                )
+                prop(Transformation::transformedAssociatedIdents).isNotNull()
+                    .containsOnly(
+                        matrikkelenhetIdentType(
+                            Fylkesnummer(13),
+                            Kommunenummer.Lopenummer(24),
+                            Matrikkelnummer.Gardsnummer(1),
+                            Matrikkelnummer.Bruksnummer(1),
+                            Matrikkelnummer.Festenummer(0),
+                            Matrikkelnummer.Seksjonsnummer(0)
+                        )
+                    )
+                prop(Transformation::resultObject).isNull()
+            }
+        }
+    }
+
+    context("Splitt kommune") {
+        val idGeneratorManager = mockIdGenerator()
+        val kommuneService = mockk<KommuneService>()
+
+        val bygningIdentType = getBygningIdentType()
+        val matrikkelenhetIdentType = getMatrikkelenhetIdentType()
+
+        val input = Reguleringsinput(
+            "abc",
+            Clock.System.todayIn(TimeZone.currentSystemDefault()),
             listOf(
-                identOfKommune(2, 7) to null,
-                identOfKommune(2, 8) to null
-            )
-        ),
-    )
-    private val identTransformer = IdentTransformer(*mapping.toTypedArray())
-    private val idGenerator = mockk<IdGeneratorManager>()
-
-    @BeforeEach
-    fun setup() {
-        every { idGenerator.idFor(any()) } returns dummyId(1)
-    }
-
-    @Test
-    fun `Transformasjon av bygning skal fjerne kommune- og fylkesdata for identen`() {
-        val entity = Entity(
-            id = dummyId(123),
-            ident = identOfBygning(2, 5, 123456789),
-            associatedIdents = setOf(
-                identOfMatrikkelenhet(2, 5, 1),
+                Kommuneendring(
+                    FraTil(Fylkesnummer(12), Fylkesnummer(13)),
+                    FraEnTilMange(
+                        Kommunenummer.Lopenummer(34),
+                        listOf(Kommunenummer.Lopenummer(24), Kommunenummer.Lopenummer(25))
+                    )
+                ),
+                Matrikkelenhetendring(
+                    FraTil(Fylkesnummer(12), Fylkesnummer(13)),
+                    FraTil(Kommunenummer.Lopenummer(34), Kommunenummer.Lopenummer(24)),
+                    FraTil(Matrikkelnummer.Gardsnummer(1), Matrikkelnummer.Gardsnummer(1))
+                )
             ),
+            emptyList(),
+            listOf(
+                Kommune(
+                    Kommunenummer(1324),
+                    Kommunenavn("Ny kommune 1"),
+                    null,
+                    Koordinatsystem.UTM32,
+                    Koordinat(0.0, 0.0),
+                    false,
+                    "",
+                    null,
+                    null,
+                    null
+                ),
+                Kommune(
+                    Kommunenummer(1325),
+                    Kommunenavn("Ny kommune 2"),
+                    null,
+                    Koordinatsystem.UTM32,
+                    Koordinat(0.0, 0.0),
+                    false,
+                    "",
+                    null,
+                    null,
+                    null
+                )
+            )
         )
 
-        runBlocking {
-            val result = identTransformer.transform(entity) { _, type ->
-                idGenerator.idFor(type)
+        val unresolvedBygningIdentType = getUnresolvedBygningIdentType()
+
+        test("Bygning uten koblinger er tvetydig") {
+            val byggSource = mockSource(
+                Entity(
+                    id = bygningId(1),
+                    ident = bygningIdentType(
+                        Fylkesnummer(12),
+                        Kommunenummer.Lopenummer(34),
+                        Bygningsnummer(1)
+                    )
+                ),
+            )
+
+            val sink = MockSink()
+
+            transform(
+                1,
+                input,
+                listOf(byggSource),
+                emptyList(),
+                listOf(sink),
+                idGeneratorManager,
+                kommuneService,
+                TestStorage()
+            )
+
+            assertThat(sink::transformations).all {
+                hasSize(1)
+                index(0).all {
+                    prop(Transformation::id).isEqualTo(bygningId(1))
+                    prop(Transformation::transformedIdent).isEqualTo(
+                        unresolvedBygningIdentType(
+                            Bygningsnummer(1)
+                        )
+                    )
+                    prop(Transformation::transformedAssociatedIdents).isNull()
+                    prop(Transformation::resultObject).isNull()
+                }
             }
-            val expectedIdent = identOfBygningUtenFylkeOgKommune(123456789)
-            val expectedAssociatedIdents = setOf(identOfMatrikkelenhet(2, 6, 1))
-            assertEquals(expectedIdent, result?.single()?.transformedIdent)
-            assertEquals(expectedAssociatedIdents, result?.single()?.transformedAssociatedIdents)
         }
-    }
 
-    @Test
-    fun `Transformasjon skal beholde identer uten endringer`() {
-        val entity = Entity(
-            id = dummyId(123),
-            ident = identOfBygning(2, 5, 123456789),
-            associatedIdents = setOf(
-                identOfMatrikkelenhet(2, 5, 1),
-                identOfMatrikkelenhet(2, 10, 1),
-            ),
-        )
+        test("Bygning med kobling får entydig kobling") {
+            val byggSource = mockSource(
+                Entity(
+                    id = bygningId(2),
+                    ident = bygningIdentType(
+                        Fylkesnummer(12),
+                        Kommunenummer.Lopenummer(34),
+                        Bygningsnummer(2)
+                    ),
+                    associatedIdents = setOf(
+                        matrikkelenhetIdentType(
+                            Fylkesnummer(12),
+                            Kommunenummer.Lopenummer(34),
+                            Matrikkelnummer.Gardsnummer(1),
+                            Matrikkelnummer.Bruksnummer(1),
+                            Matrikkelnummer.Festenummer(0),
+                            Matrikkelnummer.Seksjonsnummer(0)
+                        )
+                    )
+                ),
+            )
 
-        runBlocking {
-            val result = identTransformer.transform(entity) { _, type ->
-                idGenerator.idFor(type)
+            val sink = MockSink()
+
+            transform(
+                1,
+                input,
+                listOf(byggSource),
+                emptyList(),
+                listOf(sink),
+                idGeneratorManager,
+                kommuneService,
+                TestStorage()
+            )
+
+            assertThat(sink::transformations).all {
+                hasSize(1)
+                index(0).all {
+                    prop(Transformation::id).isEqualTo(bygningId(2))
+                    prop(Transformation::transformedIdent).isEqualTo(
+                        unresolvedBygningIdentType(
+                            Bygningsnummer(2)
+                        )
+                    )
+                    prop(Transformation::transformedAssociatedIdents).isNotNull()
+                        .containsOnly(
+                            matrikkelenhetIdentType(
+                                Fylkesnummer(13),
+                                Kommunenummer.Lopenummer(24),
+                                Matrikkelnummer.Gardsnummer(1),
+                                Matrikkelnummer.Bruksnummer(1),
+                                Matrikkelnummer.Festenummer(0),
+                                Matrikkelnummer.Seksjonsnummer(0)
+                            )
+                        )
+                    prop(Transformation::resultObject).isNull()
+                }
             }
-            val expectedIdent = identOfBygningUtenFylkeOgKommune(123456789)
-            val expectedAssociatedIdents = setOf(
-                identOfMatrikkelenhet(2, 6, 1),
-                identOfMatrikkelenhet(2, 10, 1),
-            )
-            assertEquals(expectedIdent, result?.single()?.transformedIdent)
-            assertEquals(expectedAssociatedIdents, result?.single()?.transformedAssociatedIdents)
         }
     }
-
-    private fun identOfMatrikkelenhet(fylkesnummer: Int, lopenummer: Int, gardsnummer: Int) =
-        runBlocking {
-            Ident(
-                Fylkesnummer(fylkesnummer.toLong()),
-                Kommunenummer.Lopenummer(lopenummer.toByte()),
-                Matrikkelnummer.Gardsnummer(gardsnummer),
-            )
-        }
-
-    private fun identOfBygning(fylkesnummer: Long, lopenummer: Int, bygningsnummer: Long) =
-        runBlocking {
-            Ident(
-                Fylkesnummer(fylkesnummer),
-                Kommunenummer.Lopenummer(lopenummer.toByte()),
-                Bygningsnummer(bygningsnummer),
-            )
-        }
-
-    private fun identOfBygningUtenFylkeOgKommune(bygningsnummer: Long) =
-        runBlocking {
-            Ident(Bygningsnummer(bygningsnummer))
-        }
-
-    private fun identOfKommune(fylkesnummer: Int, lopenummer: Int) = runBlocking {
-        Ident(Fylkesnummer(fylkesnummer.toLong()), Kommunenummer.Lopenummer(lopenummer.toByte()))
-    }
-}
+})

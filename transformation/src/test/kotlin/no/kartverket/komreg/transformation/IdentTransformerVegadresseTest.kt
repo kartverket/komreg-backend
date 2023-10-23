@@ -13,7 +13,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class TransformVegadresseTest {
+class IdentTransformerVegadresseTest {
     private val ikrafttredelsesdato = LocalDate.now().toKotlinLocalDate()
 
     private val reguleringsInput = Reguleringsinput(
@@ -50,7 +50,7 @@ class TransformVegadresseTest {
 
     @BeforeEach
     fun setup() {
-        every { idGenerator.idFor(any()) } returns dummyId(1)
+        every { idGenerator.idFor(any(), any()) } returns dummyId(1)
     }
 
     @Test
@@ -60,9 +60,7 @@ class TransformVegadresseTest {
             identOfVegadresse(2, 5, 2600, 10),
         )
         runBlocking {
-            val result = identTransformer.transform(entity) { _, type ->
-                idGenerator.idFor(type)
-            }
+            val result = identTransformer.transform(entity, idGenerator::idFor)
             val expected1 = identOfVegadresse(3, 6, 2600, 10)
             assertEquals(1, result!!.size)
             assertEquals(expected1, result[0].transformedIdent)

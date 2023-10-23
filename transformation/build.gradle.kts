@@ -21,11 +21,8 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation(libs.junit.jupiter.api)
     testRuntimeOnly(libs.junit.jupiter.engine)
-    testImplementation(libs.spek.dsl.jvm)
-    testRuntimeOnly(libs.spek.runner.junit5)
     testImplementation(libs.mockk)
-    testImplementation(libs.hamcrest)
-    testImplementation(libs.hamcrest.library)
+    testImplementation(libs.assertk)
     testImplementation(libs.kotest.runner)
     testImplementation(libs.kotest.extensions.arrow)
 
