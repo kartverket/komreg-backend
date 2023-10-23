@@ -1,0 +1,20 @@
+{
+  "transformasjoner": {
+    "fylkesnummer": "11",
+    "kommuneløpenummer1": "61",
+    "kommuneløpenummer2": "62",
+    "ekisterende_kommuneløpenummer": "51",
+    "matrikkelenhet": {
+      "32": "12"
+    },
+    "veg": {
+      "1009": "11"
+    },
+    "krets": {
+      "1": "12"
+    },
+    "teig": {
+      "51214046": ""
+    }
+  }
+}

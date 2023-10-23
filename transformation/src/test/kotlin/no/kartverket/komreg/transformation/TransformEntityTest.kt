@@ -127,7 +127,39 @@ class TransformEntityTest {
         val entity = Entity(dummyId(123), identOfVeg(2, 5, 2600))
         val result = transformerEntity(reguleringsInput, entity, idGenerator)
         val expected = listOf(identOfVeg(3, 6, 2600), identOfVeg(3, 7, 2600))
-        kotlin.test.assertEquals(expected, result?.map { it.transformedIdent })
+        assertEquals(expected, result?.map { it.transformedIdent })
+    }
+
+    @Test
+    fun `A transformation of idents should change when regulering has single kommunenummer for vegendring`() {
+        val vegendringMedEnTilKomunne = Vegendring(
+            fylkesnummer = FraTil(
+                fra = Fylkesnummer(2),
+                til = Fylkesnummer(3),
+            ),
+            kommuneløpenummer = FraEnTilMange(
+                fra = Kommunenummer.Lopenummer(5),
+                til = listOf(
+                    Kommunenummer.Lopenummer(6),
+                ),
+            ),
+            adressekode = FraTil(
+                fra = Adressekode(2600),
+                til = Adressekode(2600),
+            ),
+        )
+
+        val nyRegInput = reguleringsInput.copy(
+            endringer = reguleringsInput.endringer.map { endring ->
+                if (endring is Vegendring) vegendringMedEnTilKomunne else endring
+            },
+        )
+
+        val entity = Entity(dummyId(123), identOfVeg(2, 5, 2600))
+        val result = transformerEntity(nyRegInput, entity, idGenerator)
+        val expected = listOf(identOfVeg(3, 6, 2600))
+
+        assertEquals(expected, result?.map { it.transformedIdent })
     }
 }
 
