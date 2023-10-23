@@ -22,13 +22,13 @@
         {
             "kretsnummer": "111",
             "kretsnavn": "FENESET",
-            "type": "Grunnkrets"
+            "kretstype": "G"
         },
         {
             "kretsnummer": "7777",
             "nytt_kretsnummer": "8888",
             "kretsnavn": "Lødingen",
-            "type": "Kirkesogn"
+            "kretstype": "K"
         }
     ],
     "teiger": [

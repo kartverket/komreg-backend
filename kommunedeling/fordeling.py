@@ -42,6 +42,7 @@ for krets in fordelingsparametre['kretser']:
         'fylkesnummer': {'fra': fylkesnummer, 'til': fylkesnummer},
         'kommuneløpenummer': {'fra': eksisterende_kommuneløpenummer, 'til': til_value},
         'kretsnummer': {'fra': krets['kretsnummer'], 'til': nytt_kretsnummer},
+        'kretstype': {'fra': krets['kretstype'], 'til': krets['kretstype']},
     })
 
 for teig in fordelingsparametre['teiger']:

@@ -1,21 +1,21 @@
 {
     "fylkesnummer": "11",
-    "kommuneløpenummer1" : "22",
-    "kommuneløpenummer2" : "33",
+    "kommuneløpenummer1" : "33",
+    "kommuneløpenummer2" : "44",
     "eksisterende_kommuneløpenummer": "22",
     "matrikkelenhet": {
-        "0": "22",
-        "2090": "33"
+        "0": "33",
+        "2029": "44"
     },
     "veg": {
-        "1120": ["33"],
-        "99988": ["22", "33"],
-        "2222": ["22"]
+        "1120": ["44"],
+        "99988": ["33", "44"],
+        "2222": ["33"]
     },
     "krets": {
-        "111": "33"
+        "111": "44"
     },
     "teig": {
-        "180295568": "33"
+        "180295568": "44"
     }
 }
