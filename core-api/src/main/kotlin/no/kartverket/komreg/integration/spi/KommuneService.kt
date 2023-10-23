@@ -15,6 +15,7 @@ interface KommuneService {
     /**
      * Bestemmer hvilken id som skal brukes for en ny kommune med gitt kommunenummer.
      */
+    @Deprecated("Nytt opplegg bruker IdGenereator")
     fun idForKommune(kommunenummer: Kommunenummer): Id
 
     /**

@@ -73,7 +73,7 @@ class TransformEntityTest {
 
     @BeforeEach
     fun setup() {
-        every { idGenerator.idFor(any()) } returns dummyId(1)
+        every { idGenerator.idFor(any(), any()) } returns dummyId(1)
     }
 
     @Test
@@ -83,9 +83,7 @@ class TransformEntityTest {
             identOfKommune(2, 5),
         )
         runBlocking {
-            val result = identTransformer.transform(entity) { _, type ->
-                idGenerator.idFor(type)
-            }
+            val result = identTransformer.transform(entity, idGenerator::idFor)
             val expected = identOfKommune(3, 6)
 
             assertEquals(null, result!![0].resultObject)
@@ -101,9 +99,7 @@ class TransformEntityTest {
             identOfKommune(10, 50),
         )
         runBlocking {
-            val result = identTransformer.transform(entity) { _, type ->
-                idGenerator.idFor(type)
-            }
+            val result = identTransformer.transform(entity, idGenerator::idFor)
             assertEquals(null, result)
         }
     }
@@ -118,9 +114,7 @@ class TransformEntityTest {
             ),
         )
         runBlocking {
-            val result = identTransformer.transform(entity) { _, type ->
-                idGenerator.idFor(type)
-            }
+            val result = identTransformer.transform(entity, idGenerator::idFor)
             val expected = setOf(
                 identOfMatrikkelenhet(3, 6, 1),
                 identOfMatrikkelenhet(3, 6, 2),
@@ -139,9 +133,7 @@ class TransformEntityTest {
             ),
         )
         runBlocking {
-            val result = identTransformer.transform(entity) { _, type ->
-                idGenerator.idFor(type)
-            }
+            val result = identTransformer.transform(entity, idGenerator::idFor)
             val expected = setOf(
                 identOfMatrikkelenhet(3, 6, 1),
                 identOfMatrikkelenhet(10, 15, 1),
@@ -160,9 +152,7 @@ class TransformEntityTest {
             ),
         )
         runBlocking {
-            val result = identTransformer.transform(entity) { _, type ->
-                idGenerator.idFor(type)
-            }
+            val result = identTransformer.transform(entity, idGenerator::idFor)
             val expected = setOf(
                 identOfMatrikkelenhet(10, 15, 1),
                 identOfMatrikkelenhet(3, 6, 1),
@@ -185,4 +175,3 @@ private fun identOfMatrikkelenhet(fylkesnummer: Int, lopenummer: Int, gardsnumme
 private fun identOfKommune(fylkesnummer: Int, lopenummer: Int) = runBlocking {
     Ident(Fylkesnummer(fylkesnummer.toLong()), Kommunenummer.Lopenummer(lopenummer.toByte()))
 }
-
