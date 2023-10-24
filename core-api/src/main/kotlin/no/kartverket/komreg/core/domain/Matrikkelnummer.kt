@@ -1,8 +1,10 @@
 package no.kartverket.komreg.core.domain
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
+@SerialName("Matrikkelnummer")
 data class Matrikkelnummer(
     val kommunenummer: Kommunenummer,
     val gardsnummer: Gardsnummer,
@@ -11,21 +13,25 @@ data class Matrikkelnummer(
     val seksjonsnummer: Seksjonsnummer?,
 ) {
     @Serializable
+    @SerialName("Gardsnummer")
     data class Gardsnummer(val value: Int) : Comparable<Gardsnummer> {
         override fun compareTo(other: Gardsnummer): Int = value.compareTo(other.value)
     }
 
     @Serializable
+    @SerialName("Bruksnummer")
     data class Bruksnummer(val value: Short) : Comparable<Bruksnummer> {
         override fun compareTo(other: Bruksnummer): Int = value.compareTo(other.value)
     }
 
     @Serializable
+    @SerialName("Festenummer")
     data class Festenummer(val value: Short) : Comparable<Festenummer> {
         override fun compareTo(other: Festenummer): Int = value.compareTo(other.value)
     }
 
     @Serializable
+    @SerialName("Seksjonsnummer")
     data class Seksjonsnummer(val value: Short) : Comparable<Seksjonsnummer> {
         override fun compareTo(other: Seksjonsnummer): Int = value.compareTo(other.value)
     }

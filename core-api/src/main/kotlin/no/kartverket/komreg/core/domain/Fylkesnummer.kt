@@ -1,8 +1,10 @@
 package no.kartverket.komreg.core.domain
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
+@SerialName("Fylkesnummer")
 data class Fylkesnummer(val value: Long) : Comparable<Fylkesnummer> {
     override fun compareTo(other: Fylkesnummer): Int = value.compareTo(other.value)
 }

@@ -35,6 +35,7 @@ fun jsonSerializer() = Json {
             subclass(Matrikkelnummer.Bruksnummer::class, Matrikkelnummer.Bruksnummer.serializer())
             subclass(Matrikkelnummer.Festenummer::class, Matrikkelnummer.Festenummer.serializer())
             subclass(Matrikkelnummer.Seksjonsnummer::class, Matrikkelnummer.Seksjonsnummer.serializer())
+            subclass(TeigId::class, TeigId.serializer())
             subclass(Bygningsnummer::class, Bygningsnummer.serializer())
             subclass(Kretstype::class, Kretstype.serializer())
             subclass(Kretsnummer::class, Kretsnummer.serializer())

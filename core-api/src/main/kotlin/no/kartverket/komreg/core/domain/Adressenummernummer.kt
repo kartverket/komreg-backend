@@ -1,8 +1,10 @@
 package no.kartverket.komreg.core.domain
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
+@SerialName("Adressenummernummer")
 data class Adressenummernummer(
     val value: Short
 ) : Comparable<Adressenummernummer> {

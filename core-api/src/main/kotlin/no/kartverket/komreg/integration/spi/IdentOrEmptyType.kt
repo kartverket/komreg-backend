@@ -16,6 +16,7 @@ import kotlinx.serialization.encoding.CompositeDecoder
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.encoding.decodeStructure
+import kotlinx.serialization.serializer
 import no.kartverket.komreg.core.util.kotlin.typeClosure
 import no.kartverket.komreg.integration.spi.Ident.Empty.appendWith
 import java.lang.ref.ReferenceQueue
@@ -24,7 +25,6 @@ import java.util.TreeMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.full.starProjectedType
-import kotlin.reflect.jvm.javaType
 import kotlin.reflect.typeOf
 
 /**
@@ -408,11 +408,8 @@ class IdentTypeSerializer : KSerializer<IdentOrEmptyType<*>> {
     override fun serialize(encoder: Encoder, value: IdentOrEmptyType<*>) {
         encoder.beginCollection(descriptor, value.size).apply {
             value.types.forEachIndexed { index, element ->
-                val javaType = element.javaType
-                if (javaType !is Class<*>) {
-                    throw IllegalArgumentException("Can not serialize Ident with non-Class types")
-                }
-                encodeSerializableElement(descriptor, index, elementSerializer, element.javaType.typeName)
+                val serializer = encoder.serializersModule.serializer(element)
+                encodeSerializableElement(descriptor, index, elementSerializer, serializer.descriptor.serialName)
             }
         }.endStructure(descriptor)
     }
@@ -424,8 +421,10 @@ class IdentTypeSerializer : KSerializer<IdentOrEmptyType<*>> {
                 val index = decodeElementIndex(descriptor)
                 if (index == CompositeDecoder.DECODE_DONE) break
                 val typeString = decodeSerializableElement(descriptor, index, elementSerializer)
-                val c = Class.forName(typeString)
-                val type = c.kotlin.starProjectedType
+                val strategy = decoder.serializersModule
+                    .getPolymorphic(Comparable::class, serializedClassName = typeString)!!
+                val clazz = strategy.javaClass.enclosingClass // Virker kun for automatisk genererte serializers, men det er det vi har (så langt)
+                val type = clazz.kotlin.starProjectedType
                 types.add(type)
             }
             types

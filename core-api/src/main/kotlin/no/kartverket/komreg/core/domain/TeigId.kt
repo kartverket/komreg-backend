@@ -1,5 +1,6 @@
 package no.kartverket.komreg.core.domain
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
@@ -8,6 +9,7 @@ import kotlinx.serialization.Serializable
  * splittinger og grensejusteringer.
  */
 @Serializable
+@SerialName("TeigId")
 data class TeigId(val id: Long) : Comparable<TeigId> {
     override fun compareTo(other: TeigId): Int {
         return id.compareTo(other.id)
