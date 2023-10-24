@@ -99,7 +99,7 @@ fun Application.grunndataRoutes(dataSource: DataSource) {
 
                 dataSource.connection.use { connection ->
                     val gårdsnummerStatement =
-                        connection.prepareStatement("SELECT DISTINCT gardsnr FROM matrikkelenhet WHERE kommuneid = ?")
+                        connection.prepareStatement("SELECT DISTINCT gardsnr FROM matrikkelenhet WHERE kommuneid = ? and gardsnr != 0")
                     gårdsnummerStatement.setString(1, kommuneId)
                     val gårdsnummerResultSet = gårdsnummerStatement.executeQuery()
                     while (gårdsnummerResultSet.next()) {
