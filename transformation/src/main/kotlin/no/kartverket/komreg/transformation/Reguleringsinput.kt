@@ -44,6 +44,7 @@ data class Kretsendring(
     override val fylkesnummer: FraTil<Fylkesnummer>,
     val kommuneløpenummer: FraTil<Kommunenummer.Lopenummer>,
     val kretsnummer: FraTil<Kretsnummer>,
+    val kretstype: FraTil<Kretstype>,
 ) : Endring()
 
 data class Vegendring(

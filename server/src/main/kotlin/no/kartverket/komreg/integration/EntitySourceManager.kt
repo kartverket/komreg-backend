@@ -25,9 +25,9 @@ class EntitySourceManager(bootContext: KrAppBootContext) {
 
         isLocal = System.getenv("environment") == "local" || System.getenv("environment") == null
 
-        if (isLocal) {
+        /*if (isLocal) {
             entitySources = entitySources.reversed()
-        }
+        }*/
 
         entitySources.forEach {
             logger.info("EntitySource: ${it.id} - $it")

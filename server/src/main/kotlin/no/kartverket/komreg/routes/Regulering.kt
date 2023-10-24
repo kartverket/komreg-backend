@@ -74,6 +74,10 @@ data class Regulering(
                                     fra = Kretsnummer(transformasjon.kretsnummer.fra.toLong()),
                                     til = Kretsnummer(transformasjon.kretsnummer.til.toLong()),
                                 ),
+                                kretstype = FraTil(
+                                    fra = Kretstype(transformasjon.kretstype.fra),
+                                    til = Kretstype(transformasjon.kretstype.til),
+                                ),
                             )
                         }
 
@@ -225,6 +229,7 @@ data class KretsTransformasjonDTO(
     override val fylkesnummer: FraTilDTO,
     val kommuneløpenummer: FraTilDTO,
     val kretsnummer: FraTilDTO,
+    val kretstype: FraTilDTO,
 ) : TransformasjonDTO()
 
 @Serializable
