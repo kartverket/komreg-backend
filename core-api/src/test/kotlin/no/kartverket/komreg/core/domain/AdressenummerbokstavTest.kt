@@ -39,7 +39,7 @@ class AdressenummerbokstavTest : AnnotationSpec() {
         val json = json.encodeToString(Ident.serializer(), ident)
 
         assertEquals(
-            """{"type":["no.kartverket.komreg.core.domain.Adressenummerbokstav"],"values":[{"type":"no.kartverket.komreg.core.domain.Adressenummerbokstav","value":null}]}""",
+            """{"type":["Adressenummerbokstav"],"values":[{"type":"Adressenummerbokstav","value":null}]}""",
             json
         )
 
