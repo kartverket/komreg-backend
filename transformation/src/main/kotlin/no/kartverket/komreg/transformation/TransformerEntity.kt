@@ -1,9 +1,10 @@
 package no.kartverket.komreg.transformation
 
+import kotlinx.coroutines.runBlocking
 import no.kartverket.komreg.core.domain.*
 import no.kartverket.komreg.integration.spi.*
 
-suspend fun transformerEntity(
+fun transformerEntity(
     input: Reguleringsinput,
     entity: Entity,
     idGeneratorManager: IdGeneratorManager,
@@ -25,16 +26,23 @@ suspend fun transformerEntity(
     return transformations.ifEmpty { null }
 }
 
-private suspend fun opprettTransformation(
+private fun opprettTransformation(
     entity: Entity,
     input: Reguleringsinput,
     tilIndex: Int,
     entityId: Id = entity.id,
 ): Transformation {
-    val newIdent = entity.ident.transformerIdent(input, tilIndex)
+    var newIdent = entity.ident.transformerIdent(input, tilIndex)
     val newAssociatedIdents = entity.associatedIdents
         ?.mapNotNull { it.transformerIdent(input, tilIndex) }
         ?.toSet()
+
+    // Spesialhåndtering av at Sefrakminner som skal transformeres ikke kan ha kommunetilknytning i ident
+    // TODO: Dette burde håndteres på en bedre måte
+    val entityType = entity.id.type::class.qualifiedName!!
+    if (entityType.contains("Sefrakminne")) {
+        newIdent = Ident.Empty
+    }
 
     return Transformation(
         id = entityId,
@@ -97,7 +105,7 @@ fun matchEntitetMotReguleringsInput(input: Reguleringsinput, entity: Entity): En
     return null
 }
 
-private suspend fun Ident?.transformerIdent(input: Reguleringsinput, tilIndex: Int): Ident? {
+private fun Ident?.transformerIdent(input: Reguleringsinput, tilIndex: Int): Ident? {
     if (this == null) return null
 
     val fylkesnummer = getOrNull<Fylkesnummer>()
@@ -110,6 +118,9 @@ private suspend fun Ident?.transformerIdent(input: Reguleringsinput, tilIndex: I
     val adressenummerbokstav = getOrNull<Adressenummerbokstav>()
     val teigId = getOrNull<TeigId>()
     val bygningsnummer = getOrNull<Bygningsnummer>()
+
+
+    //val sefrakObjektnummer = toArray().find { it.toString().contains("SefrakObjektnummer") } TODO: Dette burde vært via en kjent type som over
 
     if (fylkesnummer != null && kommuneløpenummer != null && teigId != null) {
         input.endringer.matchTeigId(fylkesnummer, kommuneløpenummer, teigId)?.let {
@@ -180,17 +191,20 @@ private suspend fun Ident?.transformerIdent(input: Reguleringsinput, tilIndex: I
     }
 
     if (fylkesnummer != null && kommuneløpenummer != null && bygningsnummer != null) {
-        val EmptyBygningIdent = getEmptyBygningIdentType()
-        return EmptyBygningIdent(bygningsnummer)
-        // return Ident.Empty.updateOrThrow { _: Bygningsnummer -> bygningsnummer }
+        return bygningidentUtenKommune(bygningsnummer)
     }
+
+    /*if (fylkesnummer != null && kommuneløpenummer != null && sefrakObjektnummer != null) {
+        return Ident.Empty
+    }*/
 
     return this
 }
 
-typealias EmptyBygningIdentType = IdentType1<Bygningsnummer>
-
-suspend fun getEmptyBygningIdentType(): EmptyBygningIdentType = identTypeOf1()
+private fun bygningidentUtenKommune(bygningsnummer: Bygningsnummer) =
+    runBlocking {
+        Ident(bygningsnummer)
+    }
 
 fun List<Endring>.matchFylkesnummer(fylkesnummer: Fylkesnummer): Fylkeendring? {
     return this.find { it is Fylkeendring && it.fylkesnummer.fra == fylkesnummer } as Fylkeendring?
