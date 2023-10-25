@@ -39,7 +39,7 @@ private fun opprettTransformation(
 
     // Spesialhåndtering av at Sefrakminner som skal transformeres ikke kan ha kommunetilknytning i ident
     // TODO: Dette burde håndteres på en bedre måte
-    val entityType = entity.id.type::class.qualifiedName!!
+    val entityType = entity.id.type.toString()
     if (entityType.contains("Sefrakminne")) {
         newIdent = Ident.Empty
     }
@@ -119,8 +119,7 @@ private fun Ident?.transformerIdent(input: Reguleringsinput, tilIndex: Int): Ide
     val teigId = getOrNull<TeigId>()
     val bygningsnummer = getOrNull<Bygningsnummer>()
 
-
-    //val sefrakObjektnummer = toArray().find { it.toString().contains("SefrakObjektnummer") } TODO: Dette burde vært via en kjent type som over
+    // val sefrakObjektnummer = toArray().find { it.toString().contains("SefrakObjektnummer") } TODO: Dette burde vært via en kjent type som over
 
     if (fylkesnummer != null && kommuneløpenummer != null && teigId != null) {
         input.endringer.matchTeigId(fylkesnummer, kommuneløpenummer, teigId)?.let {
