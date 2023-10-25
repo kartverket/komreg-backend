@@ -248,33 +248,56 @@ private fun reguleringsinputToMappings(reguleringsinput: Reguleringsinput): List
     return runBlocking {
         reguleringsinput.endringer.map { endring ->
             when (endring) {
-                is Fylkeendring -> Ident(endring.fylkesnummer.fra) to Ident(endring.fylkesnummer.til)
-                is Kommuneendring -> Ident(endring.fylkesnummer.fra, endring.kommuneløpenummer.fra) to Ident(
-                    endring.fylkesnummer.til,
-                    endring.kommuneløpenummer.til,
-                )
+                is Fylkeendring -> Ident(endring.fylkesnummer.fra) to endring.fylkesnummer.til?.let { Ident(it) }
+                is Kommuneendring -> Ident(
+                    endring.fylkesnummer.fra,
+                    endring.kommuneløpenummer.fra,
+                ) to
+                    endring.fylkesnummer.til?.let { fnr ->
+                        endring.kommuneløpenummer.til?.let { knr ->
+                            Ident(
+                                fnr,
+                                knr,
+                            )
+                        }
+                    }
 
                 is Matrikkelenhetendring -> Ident(
                     endring.fylkesnummer.fra,
                     endring.kommuneløpenummer.fra,
                     endring.gårdsnummer.fra,
-                ) to Ident(
-                    endring.fylkesnummer.til,
-                    endring.kommuneløpenummer.til,
-                    endring.gårdsnummer.til,
-                )
+                ) to endring.fylkesnummer.til?.let { fnr ->
+                    endring.kommuneløpenummer.til?.let { knr ->
+                        endring.gårdsnummer.til?.let { gnr ->
+                            Ident(
+                                fnr,
+                                knr,
+                                gnr,
+                            )
+                        }
+                    }
+                }
 
                 is Kretsendring -> Ident(
                     endring.fylkesnummer.fra,
                     endring.kommuneløpenummer.fra,
                     endring.kretsnummer.fra,
                     endring.kretstype.fra,
-                ) to Ident(
-                    endring.fylkesnummer.til,
-                    endring.kommuneløpenummer.til,
-                    endring.kretsnummer.til,
-                    endring.kretstype.til,
-                )
+                ) to endring.fylkesnummer.til?.let { fnr ->
+                    endring.kommuneløpenummer.til?.let { knr ->
+                        endring.kretsnummer.til?.let { krnr ->
+                            endring.kretstype.til?.let { kst ->
+                                Ident(
+                                    fnr,
+                                    knr,
+                                    krnr,
+                                    kst,
+                                )
+                            }
+                        }
+                    }
+                }
+
                 /*is Vegendring -> Ident(
                     endring.fylkesnummer.fra,
                     endring.kommuneløpenummer.fra,
@@ -284,15 +307,22 @@ private fun reguleringsinputToMappings(reguleringsinput: Reguleringsinput): List
                     endring.kommuneløpenummer.til,
                     endring.adressekode.til,
                 )*/
+
                 is Teigendring -> Ident(
                     endring.fylkesnummer.fra,
                     endring.kommuneløpenummer.fra,
                     endring.teigId.fra,
-                ) to Ident(
-                    endring.fylkesnummer.til,
-                    endring.kommuneløpenummer.til,
-                    endring.teigId.til,
-                )
+                ) to endring.fylkesnummer.til?.let { fnr ->
+                    endring.kommuneløpenummer.til?.let { knr ->
+                        endring.teigId.til?.let { teigId ->
+                            Ident(
+                                fnr,
+                                knr,
+                                teigId,
+                            )
+                        }
+                    }
+                }
 
                 is Vegadresseendring -> Ident(
                     endring.fylkesnummer.fra,
@@ -300,13 +330,23 @@ private fun reguleringsinputToMappings(reguleringsinput: Reguleringsinput): List
                     endring.adressekode.fra,
                     endring.adressenummer.fra,
                     endring.adressenummerbokstav.fra,
-                ) to Ident(
-                    endring.fylkesnummer.til,
-                    endring.kommuneløpenummer.til,
-                    endring.adressekode.til,
-                    endring.adressenummer.til,
-                    endring.adressenummerbokstav.til,
-                )
+                ) to endring.fylkesnummer.til?.let { fnr ->
+                    endring.kommuneløpenummer.til?.let { knr ->
+                        endring.adressekode.til?.let { ak ->
+                            endring.adressenummer.til?.let { an ->
+                                endring.adressenummerbokstav.til?.let { anb ->
+                                    Ident(
+                                        fnr,
+                                        knr,
+                                        ak,
+                                        an,
+                                        anb,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
 
                 else -> throw RuntimeException("Ukjent endringstype: ${endring::class.simpleName}")
             }

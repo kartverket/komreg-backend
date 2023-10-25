@@ -1,3 +1,4 @@
+/*
 package no.kartverket.komreg.transformation
 
 import kotlinx.coroutines.runBlocking
@@ -19,12 +20,14 @@ fun transformerEntity(
 
     // TODO - Håndterer kun vegendring da denne er den eneste som har flere kommunenummer, og bruker FraEnTilMange<Kommunenummer.Lopenummer> som type.
     //  Men i fremtiden vil dette også kunne gjelde andre endringer
-    /*if (matchedEntity is Vegendring && matchedEntity.kommuneløpenummer.til.size > 1) {
+    */
+/*if (matchedEntity is Vegendring && matchedEntity.kommuneløpenummer.til.size > 1) {
         for (index in 1 until matchedEntity.kommuneløpenummer.til.size) {
             val newId = idGeneratorManager.idFor(entity.id.type)
             transformations.add(opprettTransformation(entity, input, index, newId))
         }
-    }*/
+    }*//*
+
 
     return transformations.ifEmpty { null }
 }
@@ -196,9 +199,11 @@ private fun Ident?.transformerIdent(input: Reguleringsinput, tilIndex: Int): Ide
         return bygningidentUtenKommune(bygningsnummer)
     }
 
-    /*if (fylkesnummer != null && kommuneløpenummer != null && sefrakObjektnummer != null) {
+    */
+/*if (fylkesnummer != null && kommuneløpenummer != null && sefrakObjektnummer != null) {
         return Ident.Empty
-    }*/
+    }*//*
+
 
     return this
 }
@@ -261,3 +266,4 @@ fun List<Endring>.matchTeigId(
 ): Teigendring? {
     return this.find { it is Teigendring && it.fylkesnummer.fra == fylkesnummer && it.kommuneløpenummer.fra == lopenummer && it.teigId.fra == teigId } as Teigendring?
 }
+*/
