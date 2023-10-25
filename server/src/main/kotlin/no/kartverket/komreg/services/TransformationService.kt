@@ -1,11 +1,8 @@
 package no.kartverket.komreg.services
 
 import com.typesafe.config.ConfigFactory
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.toJavaLocalDate
@@ -23,8 +20,8 @@ import no.kartverket.komreg.integration.spi.Transformation
 import no.kartverket.komreg.logger
 import no.kartverket.komreg.repositories.KjoringRepo
 import no.kartverket.komreg.repositories.TransformationRepo
-import no.kartverket.komreg.transformation.Reguleringsinput
-import no.kartverket.komreg.transformation.transformerEntity
+import no.kartverket.komreg.transformation.*
+import java.lang.RuntimeException
 
 @Serializable
 data class TransformationStatusForSource(
@@ -58,7 +55,12 @@ data class TransformationStatusForRegulering(
 
 val transformStatuses = mutableMapOf<String, TransformationStatusForRegulering>()
 
-fun transformEntities(input: Reguleringsinput, kjoringId: Int, transformationRepo: TransformationRepo, kjoringRepo: KjoringRepo) {
+fun transformEntities(
+    input: Reguleringsinput,
+    kjoringId: Int,
+    transformationRepo: TransformationRepo,
+    kjoringRepo: KjoringRepo,
+) {
     logger.info("Starter transformasjon!")
     val transformStatus = TransformationStatusForRegulering().also { transformStatuses[input.id] = it }
     transformStatus.start()
@@ -74,7 +76,15 @@ fun transformEntities(input: Reguleringsinput, kjoringId: Int, transformationRep
 
     printMemoryUsage()
 
-    runAndWriteTransformations(bootContext, transformStatus, input, entitySinks, kjoringId, transformationRepo, kjoringRepo)
+    runAndWriteTransformations(
+        bootContext,
+        transformStatus,
+        input,
+        entitySinks,
+        kjoringId,
+        transformationRepo,
+        kjoringRepo,
+    )
 }
 
 private fun printMemoryUsage() {
@@ -185,6 +195,9 @@ private fun runAndWriteTransformations(
     val sources = EntitySourceManager(bootContext).entitySources
 
     val idGeneratorManager = IdGeneratorManager(bootContext)
+    val mappings = reguleringsinputToMappings(input)
+    val identTransformer = IdentTransformer(*mappings.toTypedArray())
+
     CoroutineScope(Dispatchers.IO).launch {
         if (input.fylker.isNotEmpty()) {
             writeFylker(bootContext, input, entitySinks)
@@ -199,12 +212,13 @@ private fun runAndWriteTransformations(
             val type = it.id
             val statusForSource = TransformationStatusForSource(source = type)
             transformStatus.addSourceStatus(statusForSource)
+
             val transformResult = flow
                 .onStart {
                     logger.info("Starter flow av type: $type")
                     statusForSource.firstTransformation = Clock.System.now()
                 }
-                .mapNotNull { entity -> transformerEntity(input, entity, idGeneratorManager) }
+                .mapNotNull { entity -> identTransformer.transform(entity, idGeneratorManager) }
                 .onEach {
                     statusForSource.numberOfTransformations += 1
                 }
@@ -227,5 +241,75 @@ private fun runAndWriteTransformations(
         transformStatus.finish()
         kjoringRepo.updateKjoringEndTime(kjoringId)
         logger.info("Avsluttet alle transformasjoner!")
+    }
+}
+
+private fun reguleringsinputToMappings(reguleringsinput: Reguleringsinput): List<Pair<Ident, Ident?>> {
+    return runBlocking {
+        reguleringsinput.endringer.map { endring ->
+            when (endring) {
+                is Fylkeendring -> Ident(endring.fylkesnummer.fra) to Ident(endring.fylkesnummer.til)
+                is Kommuneendring -> Ident(endring.fylkesnummer.fra, endring.kommuneløpenummer.fra) to Ident(
+                    endring.fylkesnummer.til,
+                    endring.kommuneløpenummer.til,
+                )
+
+                is Matrikkelenhetendring -> Ident(
+                    endring.fylkesnummer.fra,
+                    endring.kommuneløpenummer.fra,
+                    endring.gårdsnummer.fra,
+                ) to Ident(
+                    endring.fylkesnummer.til,
+                    endring.kommuneløpenummer.til,
+                    endring.gårdsnummer.til,
+                )
+
+                is Kretsendring -> Ident(
+                    endring.fylkesnummer.fra,
+                    endring.kommuneløpenummer.fra,
+                    endring.kretsnummer.fra,
+                    endring.kretstype.fra,
+                ) to Ident(
+                    endring.fylkesnummer.til,
+                    endring.kommuneløpenummer.til,
+                    endring.kretsnummer.til,
+                    endring.kretstype.til,
+                )
+                /*is Vegendring -> Ident(
+                    endring.fylkesnummer.fra,
+                    endring.kommuneløpenummer.fra,
+                    endring.adressekode.fra,
+                ) to Ident(
+                    endring.fylkesnummer.til,
+                    endring.kommuneløpenummer.til,
+                    endring.adressekode.til,
+                )*/
+                is Teigendring -> Ident(
+                    endring.fylkesnummer.fra,
+                    endring.kommuneløpenummer.fra,
+                    endring.teigId.fra,
+                ) to Ident(
+                    endring.fylkesnummer.til,
+                    endring.kommuneløpenummer.til,
+                    endring.teigId.til,
+                )
+
+                is Vegadresseendring -> Ident(
+                    endring.fylkesnummer.fra,
+                    endring.kommuneløpenummer.fra,
+                    endring.adressekode.fra,
+                    endring.adressenummer.fra,
+                    endring.adressenummerbokstav.fra,
+                ) to Ident(
+                    endring.fylkesnummer.til,
+                    endring.kommuneløpenummer.til,
+                    endring.adressekode.til,
+                    endring.adressenummer.til,
+                    endring.adressenummerbokstav.til,
+                )
+
+                else -> throw RuntimeException("Ukjent endringstype: ${endring::class.simpleName}")
+            }
+        }
     }
 }

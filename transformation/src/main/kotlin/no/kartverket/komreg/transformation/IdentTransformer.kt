@@ -17,7 +17,6 @@ class IdentTransformer(vararg mappings: Pair<Ident, Ident?>) {
     )
 
     suspend fun transform(
-        @Suppress("UNUSED_PARAMETER") unused: Any?,
         entity: Entity,
         idGeneratorManager: IdGeneratorManager,
     ): List<Transformation>? {
@@ -41,9 +40,9 @@ class IdentTransformer(vararg mappings: Pair<Ident, Ident?>) {
     private suspend fun Ident.transformIdent(): Ident {
         return map.map { mapping ->
             val source = mapping.key
-            val matches = source.type.types.map { componentType ->
+            val matches = source.type.types.mapNotNull { componentType ->
                 type.bottomTypes[componentType]?.let { it to getOrThrow(it) }
-            }.filterNotNull()
+            }
             if (matches.map { it.second } == source.toArray().toList()) {
                 mapping to matches
             } else {

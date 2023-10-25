@@ -12,16 +12,19 @@ fun transformerEntity(
     val transformations = mutableListOf<Transformation>()
     val matchedEntity = matchEntitetMotReguleringsInput(input, entity) ?: return null
 
+    // TODO: Bygge mappings fra input
+    // TODO: Kalle på IdentTransformer.transform
+
     transformations.add(opprettTransformation(entity, input, 0))
 
     // TODO - Håndterer kun vegendring da denne er den eneste som har flere kommunenummer, og bruker FraEnTilMange<Kommunenummer.Lopenummer> som type.
     //  Men i fremtiden vil dette også kunne gjelde andre endringer
-    if (matchedEntity is Vegendring && matchedEntity.kommuneløpenummer.til.size > 1) {
+    /*if (matchedEntity is Vegendring && matchedEntity.kommuneløpenummer.til.size > 1) {
         for (index in 1 until matchedEntity.kommuneløpenummer.til.size) {
             val newId = idGeneratorManager.idFor(entity.id.type)
             transformations.add(opprettTransformation(entity, input, index, newId))
         }
-    }
+    }*/
 
     return transformations.ifEmpty { null }
 }
