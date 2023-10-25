@@ -1,0 +1,95 @@
+package no.kartverket.komreg.transformation
+
+import io.mockk.every
+import io.mockk.mockk
+import kotlinx.coroutines.runBlocking
+import no.kartverket.komreg.core.domain.*
+import no.kartverket.komreg.integration.spi.Entity
+import no.kartverket.komreg.integration.spi.IdGeneratorManager
+import no.kartverket.komreg.integration.spi.Ident
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+
+class TransformerBygningTest {
+    private val mapping = listOf(
+        identOfMatrikkelenhet(2, 5, 1) to identOfMatrikkelenhet(2, 6, 1),
+        identOfKommune(2, 5) to null,
+    )
+    private val identTransformer = IdentTransformer(*mapping.toTypedArray())
+    private val idGenerator = mockk<IdGeneratorManager>()
+
+    @BeforeEach
+    fun setup() {
+        every { idGenerator.idFor(any()) } returns dummyId(1)
+    }
+
+    @Test
+    fun `A transformation with a bygningsident should be cleared`() {
+        val entity = Entity(
+            id = dummyId(123),
+            ident = identOfBygning(2, 5, 123456789),
+            associatedIdents = setOf(
+                identOfMatrikkelenhet(2, 5, 1),
+            ),
+        )
+
+        runBlocking {
+            val result = identTransformer.transform(entity, idGenerator)
+            val expectedIdent = identOfBygningUtenFylkeOgKommune(123456789)
+            val expectedAssociatedIdents = setOf(identOfMatrikkelenhet(2, 6, 1))
+            assertEquals(expectedIdent, result?.single()?.transformedIdent)
+            assertEquals(expectedAssociatedIdents, result?.single()?.transformedAssociatedIdents)
+        }
+    }
+
+    @Test
+    fun `A transformation should keep non-changed idents`() {
+        val entity = Entity(
+            id = dummyId(123),
+            ident = identOfBygning(2, 5, 123456789),
+            associatedIdents = setOf(
+                identOfMatrikkelenhet(2, 5, 1),
+                identOfMatrikkelenhet(2, 10, 1),
+            ),
+        )
+
+        runBlocking {
+            val result = identTransformer.transform(entity, idGenerator)
+            val expectedIdent = identOfBygningUtenFylkeOgKommune(123456789)
+            val expectedAssociatedIdents = setOf(
+                identOfMatrikkelenhet(2, 6, 1),
+                identOfMatrikkelenhet(2, 10, 1),
+            )
+            assertEquals(expectedIdent, result?.single()?.transformedIdent)
+            assertEquals(expectedAssociatedIdents, result?.single()?.transformedAssociatedIdents)
+        }
+    }
+
+    private fun identOfMatrikkelenhet(fylkesnummer: Int, lopenummer: Int, gardsnummer: Int) =
+        runBlocking {
+            Ident(
+                Fylkesnummer(fylkesnummer.toLong()),
+                Kommunenummer.Lopenummer(lopenummer.toByte()),
+                Matrikkelnummer.Gardsnummer(gardsnummer),
+            )
+        }
+
+    private fun identOfBygning(fylkesnummer: Long, lopenummer: Int, bygningsnummer: Long) =
+        runBlocking {
+            Ident(
+                Fylkesnummer(fylkesnummer),
+                Kommunenummer.Lopenummer(lopenummer.toByte()),
+                Bygningsnummer(bygningsnummer),
+            )
+        }
+
+    private fun identOfBygningUtenFylkeOgKommune(bygningsnummer: Long) =
+        runBlocking {
+            Ident(Bygningsnummer(bygningsnummer))
+        }
+
+    private fun identOfKommune(fylkesnummer: Int, lopenummer: Int) = runBlocking {
+        Ident(Fylkesnummer(fylkesnummer.toLong()), Kommunenummer.Lopenummer(lopenummer.toByte()))
+    }
+}
