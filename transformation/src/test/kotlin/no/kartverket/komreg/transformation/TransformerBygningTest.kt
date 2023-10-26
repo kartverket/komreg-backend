@@ -13,8 +13,15 @@ import kotlin.test.assertEquals
 
 class TransformerBygningTest {
     private val mapping = listOf(
-        identOfMatrikkelenhet(2, 5, 1) to identOfMatrikkelenhet(2, 6, 1),
-        identOfKommune(2, 5) to null,
+        identOfMatrikkelenhet(2, 5, 1) to IdentTransformer.Mapping.Replace(
+            identOfMatrikkelenhet(2, 6, 1)
+        ),
+        identOfKommune(2, 5) to IdentTransformer.Mapping.Split(
+            listOf(
+                identOfKommune(2, 7) to null,
+                identOfKommune(2, 8) to null
+            )
+        ),
     )
     private val identTransformer = IdentTransformer(*mapping.toTypedArray())
     private val idGenerator = mockk<IdGeneratorManager>()
@@ -35,7 +42,9 @@ class TransformerBygningTest {
         )
 
         runBlocking {
-            val result = identTransformer.transform(entity, idGenerator)
+            val result = identTransformer.transform(entity) { _, type ->
+                idGenerator.idFor(type)
+            }
             val expectedIdent = identOfBygningUtenFylkeOgKommune(123456789)
             val expectedAssociatedIdents = setOf(identOfMatrikkelenhet(2, 6, 1))
             assertEquals(expectedIdent, result?.single()?.transformedIdent)
@@ -55,7 +64,9 @@ class TransformerBygningTest {
         )
 
         runBlocking {
-            val result = identTransformer.transform(entity, idGenerator)
+            val result = identTransformer.transform(entity) { _, type ->
+                idGenerator.idFor(type)
+            }
             val expectedIdent = identOfBygningUtenFylkeOgKommune(123456789)
             val expectedAssociatedIdents = setOf(
                 identOfMatrikkelenhet(2, 6, 1),
