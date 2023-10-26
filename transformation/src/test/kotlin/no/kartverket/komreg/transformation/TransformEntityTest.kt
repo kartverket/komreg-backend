@@ -12,6 +12,8 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class TransformEntityTest {
+    private val ikrafttredelsesdato = LocalDate.now().toKotlinLocalDate()
+
     private val dummyKommune = Kommune(
         kommunenummer = Kommunenummer(
             Fylkesnummer(3),
@@ -30,7 +32,7 @@ class TransformEntityTest {
 
     private val reguleringsInput = Reguleringsinput(
         id = "123",
-        ikrafttredelsesdato = LocalDate.now().toKotlinLocalDate(),
+        ikrafttredelsesdato = ikrafttredelsesdato,
         endringer = listOf(
             Kommuneendring(
                 fylkesnummer = FraTil(
@@ -78,16 +80,16 @@ class TransformEntityTest {
     fun `Flytting av kommune skal returnere to transformations, en for utgått og en ny`() {
         val entity = Entity(
             dummyId(123),
-            identOfKommune(2, 5)
+            identOfKommune(2, 5),
         )
         runBlocking {
             val result = identTransformer.transform(entity) { _, type ->
                 idGenerator.idFor(type)
             }
             val expected = identOfKommune(3, 6)
-            // TODO Sjekk på payload/resultObject
+
             assertEquals(null, result!![0].resultObject)
-            assertEquals(dummyKommune, result[1].resultObject)
+            assertEquals(dummyKommune.tilKommunedata(ikrafttredelsesdato), result[1].resultObject)
             assertEquals(expected, result[1].transformedIdent)
         }
     }
@@ -96,7 +98,7 @@ class TransformEntityTest {
     fun `A transformation of idents should not transform entity when unmatched idents`() {
         val entity = Entity(
             dummyId(123),
-            identOfKommune(10, 50)
+            identOfKommune(10, 50),
         )
         runBlocking {
             val result = identTransformer.transform(entity) { _, type ->
@@ -173,7 +175,7 @@ class TransformEntityTest {
     fun `A transformation of idents should change when multiple idents matches`() {
         val entity = Entity(
             dummyId(123),
-            identOfVeg(2, 5, 2600)
+            identOfVeg(2, 5, 2600),
         )
         runBlocking {
             val result = identTransformer.transform(entity) { _, type ->
