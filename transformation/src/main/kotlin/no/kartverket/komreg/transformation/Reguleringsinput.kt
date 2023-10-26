@@ -95,6 +95,24 @@ fun Reguleringsinput.toMappings(): List<Pair<Ident, IdentTransformer.Mapping>> {
                                 endring.fylkesnummer.til,
                                 endring.kommuneløpenummer.til.single()
                             )
+                        }?.let { kommune ->
+                            Kommunedata(
+                                navn = kommune.kommunenavn.name,
+                                koordinatsystem = kommune.koordinatsystem,
+                                senterpunkt = kommune.senterpunkt,
+                                nedsattKonsesjonsgrense = kommune.nedsattKonsesjonsgrense,
+                                godkjenteGardsnumre = kommune.godkjenteGardsnumre,
+                                adresse = kommune.adresse?.let {
+                                    PostadresseForOppretting(
+                                        adresselinje1 = it.adresselinje1?.trim()?.ifEmpty { null },
+                                        adresselinje2 = it.adresselinje2?.trim()?.ifEmpty { null },
+                                        postnummer = it.postnummer,
+                                    )
+                                },
+                                standardRekvirentOrgnummer = kommune.standardRekvirent?.orgnummer,
+                                kommunevapen = kommune.kommunevapen,
+                                ikrafttredelsesdato = ikrafttredelsesdato,
+                            )
                         }, // TODO: legg til kommuneinnstillinger
                     )
                 } else {
@@ -107,6 +125,24 @@ fun Reguleringsinput.toMappings(): List<Pair<Ident, IdentTransformer.Mapping>> {
                                 it.kommunenummer == Kommunenummer(
                                     endring.fylkesnummer.til,
                                     lopenummer
+                                )
+                            }?.let { kommune ->
+                                Kommunedata(
+                                    navn = kommune.kommunenavn.name,
+                                    koordinatsystem = kommune.koordinatsystem,
+                                    senterpunkt = kommune.senterpunkt,
+                                    nedsattKonsesjonsgrense = kommune.nedsattKonsesjonsgrense,
+                                    godkjenteGardsnumre = kommune.godkjenteGardsnumre,
+                                    adresse = kommune.adresse?.let {
+                                        PostadresseForOppretting(
+                                            adresselinje1 = it.adresselinje1?.trim()?.ifEmpty { null },
+                                            adresselinje2 = it.adresselinje2?.trim()?.ifEmpty { null },
+                                            postnummer = it.postnummer,
+                                        )
+                                    },
+                                    standardRekvirentOrgnummer = kommune.standardRekvirent?.orgnummer,
+                                    kommunevapen = kommune.kommunevapen,
+                                    ikrafttredelsesdato = ikrafttredelsesdato,
                                 )
                             }
                         },
