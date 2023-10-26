@@ -21,7 +21,6 @@ import no.kartverket.komreg.logger
 import no.kartverket.komreg.repositories.KjoringRepo
 import no.kartverket.komreg.repositories.TransformationRepo
 import no.kartverket.komreg.transformation.*
-import java.lang.RuntimeException
 
 @Serializable
 data class TransformationStatusForSource(
@@ -195,7 +194,7 @@ private fun runAndWriteTransformations(
     val sources = EntitySourceManager(bootContext).entitySources
 
     val idGeneratorManager = IdGeneratorManager(bootContext)
-    val mappings = reguleringsinputToMappings(input)
+    val mappings = input.toMappings()
     val identTransformer = IdentTransformer(*mappings.toTypedArray())
 
     CoroutineScope(Dispatchers.IO).launch {
@@ -241,115 +240,5 @@ private fun runAndWriteTransformations(
         transformStatus.finish()
         kjoringRepo.updateKjoringEndTime(kjoringId)
         logger.info("Avsluttet alle transformasjoner!")
-    }
-}
-
-private fun reguleringsinputToMappings(reguleringsinput: Reguleringsinput): List<Pair<Ident, Ident?>> {
-    return runBlocking {
-        reguleringsinput.endringer.map { endring ->
-            when (endring) {
-                is Fylkeendring -> Ident(endring.fylkesnummer.fra) to endring.fylkesnummer.til?.let { Ident(it) }
-                is Kommuneendring -> Ident(
-                    endring.fylkesnummer.fra,
-                    endring.kommuneløpenummer.fra,
-                ) to
-                    endring.fylkesnummer.til?.let { fnr ->
-                        endring.kommuneløpenummer.til?.let { knr ->
-                            Ident(
-                                fnr,
-                                knr,
-                            )
-                        }
-                    }
-
-                is Matrikkelenhetendring -> Ident(
-                    endring.fylkesnummer.fra,
-                    endring.kommuneløpenummer.fra,
-                    endring.gårdsnummer.fra,
-                ) to endring.fylkesnummer.til?.let { fnr ->
-                    endring.kommuneløpenummer.til?.let { knr ->
-                        endring.gårdsnummer.til?.let { gnr ->
-                            Ident(
-                                fnr,
-                                knr,
-                                gnr,
-                            )
-                        }
-                    }
-                }
-
-                is Kretsendring -> Ident(
-                    endring.fylkesnummer.fra,
-                    endring.kommuneløpenummer.fra,
-                    endring.kretsnummer.fra,
-                    endring.kretstype.fra,
-                ) to endring.fylkesnummer.til?.let { fnr ->
-                    endring.kommuneløpenummer.til?.let { knr ->
-                        endring.kretsnummer.til?.let { krnr ->
-                            endring.kretstype.til?.let { kst ->
-                                Ident(
-                                    fnr,
-                                    knr,
-                                    krnr,
-                                    kst,
-                                )
-                            }
-                        }
-                    }
-                }
-
-                /*is Vegendring -> Ident(
-                    endring.fylkesnummer.fra,
-                    endring.kommuneløpenummer.fra,
-                    endring.adressekode.fra,
-                ) to Ident(
-                    endring.fylkesnummer.til,
-                    endring.kommuneløpenummer.til,
-                    endring.adressekode.til,
-                )*/
-
-                is Teigendring -> Ident(
-                    endring.fylkesnummer.fra,
-                    endring.kommuneløpenummer.fra,
-                    endring.teigId.fra,
-                ) to endring.fylkesnummer.til?.let { fnr ->
-                    endring.kommuneløpenummer.til?.let { knr ->
-                        endring.teigId.til?.let { teigId ->
-                            Ident(
-                                fnr,
-                                knr,
-                                teigId,
-                            )
-                        }
-                    }
-                }
-
-                is Vegadresseendring -> Ident(
-                    endring.fylkesnummer.fra,
-                    endring.kommuneløpenummer.fra,
-                    endring.adressekode.fra,
-                    endring.adressenummer.fra,
-                    endring.adressenummerbokstav.fra,
-                ) to endring.fylkesnummer.til?.let { fnr ->
-                    endring.kommuneløpenummer.til?.let { knr ->
-                        endring.adressekode.til?.let { ak ->
-                            endring.adressenummer.til?.let { an ->
-                                endring.adressenummerbokstav.til?.let { anb ->
-                                    Ident(
-                                        fnr,
-                                        knr,
-                                        ak,
-                                        an,
-                                        anb,
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                else -> throw RuntimeException("Ukjent endringstype: ${endring::class.simpleName}")
-            }
-        }
     }
 }
