@@ -92,3 +92,22 @@ enum class Koordinatsystem {
     UTM35,
     UKJENT,
 }
+
+fun Kommune.tilKommunedata(ikrafttredelsesdato: LocalDate): Kommunedata =
+    Kommunedata(
+        navn = kommunenavn.name,
+        koordinatsystem = koordinatsystem,
+        senterpunkt = senterpunkt,
+        nedsattKonsesjonsgrense = nedsattKonsesjonsgrense,
+        godkjenteGardsnumre = godkjenteGardsnumre,
+        adresse = adresse?.let {
+            PostadresseForOppretting(
+                adresselinje1 = it.adresselinje1?.trim()?.ifEmpty { null },
+                adresselinje2 = it.adresselinje2?.trim()?.ifEmpty { null },
+                postnummer = it.postnummer,
+            )
+        },
+        standardRekvirentOrgnummer = standardRekvirent?.orgnummer,
+        kommunevapen = kommunevapen,
+        ikrafttredelsesdato = ikrafttredelsesdato,
+    )

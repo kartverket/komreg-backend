@@ -8,9 +8,7 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.KrAppBootContext
-import no.kartverket.komreg.core.domain.Fylkesdata
-import no.kartverket.komreg.core.domain.Kommunedata
-import no.kartverket.komreg.core.domain.PostadresseForOppretting
+import no.kartverket.komreg.core.domain.*
 import no.kartverket.komreg.integration.EntitySinkManager
 import no.kartverket.komreg.integration.EntitySourceManager
 import no.kartverket.komreg.integration.KommuneServiceManager
@@ -71,7 +69,6 @@ fun transformEntities(
     }
 
     val entitySinks = EntitySinkManager(bootContext)
-    val idGeneratorManager = IdGeneratorManager(bootContext)
 
     printMemoryUsage()
 
@@ -153,23 +150,7 @@ private suspend fun writeKommuner(
                     id = kommuneService.idForKommune(kommune.kommunenummer),
                     sourceEntity = null,
                     transformedIdent = Ident(kommune.kommunenummer.fylkesnummer, kommune.kommunenummer.lopenummer),
-                    resultObject = Kommunedata(
-                        navn = kommune.kommunenavn.name,
-                        koordinatsystem = kommune.koordinatsystem,
-                        senterpunkt = kommune.senterpunkt,
-                        nedsattKonsesjonsgrense = kommune.nedsattKonsesjonsgrense,
-                        godkjenteGardsnumre = kommune.godkjenteGardsnumre,
-                        adresse = kommune.adresse?.let {
-                            PostadresseForOppretting(
-                                adresselinje1 = it.adresselinje1?.trim()?.ifEmpty { null },
-                                adresselinje2 = it.adresselinje2?.trim()?.ifEmpty { null },
-                                postnummer = it.postnummer,
-                            )
-                        },
-                        standardRekvirentOrgnummer = kommune.standardRekvirent?.orgnummer,
-                        kommunevapen = kommune.kommunevapen,
-                        ikrafttredelsesdato = input.ikrafttredelsesdato,
-                    ),
+                    resultObject = kommune.tilKommunedata(input.ikrafttredelsesdato),
                 ),
             )
         }
@@ -198,13 +179,14 @@ private fun runAndWriteTransformations(
     val identTransformer = IdentTransformer(*mappings.toTypedArray())
 
     CoroutineScope(Dispatchers.IO).launch {
-        if (input.fylker.isNotEmpty()) {
+        // TODO: Fylker må vel også inn via mappings?
+        /*if (input.fylker.isNotEmpty()) {
             writeFylker(bootContext, input, entitySinks)
         }
 
         if (input.kommuner.isNotEmpty()) {
             writeKommuner(bootContext, input, entitySinks, kjoringId, transformationRepo)
-        }
+        }*/
 
         sources.map {
             val flow = it.entityFlow

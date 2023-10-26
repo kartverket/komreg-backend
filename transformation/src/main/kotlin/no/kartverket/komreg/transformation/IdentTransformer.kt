@@ -8,11 +8,11 @@ import java.util.*
 class IdentTransformer(vararg mappings: Pair<Ident, Mapping>) {
     private val map = mapOf(
         *(
-                mappings.onEach { m ->
-                    val sourceType = m.first.type
-                    m.second.checkIdentType(sourceType)
-                }
-                ),
+            mappings.onEach { m ->
+                val sourceType = m.first.type
+                m.second.checkIdentType(sourceType)
+            }
+            ),
     )
 
     suspend fun transform(
@@ -38,7 +38,7 @@ class IdentTransformer(vararg mappings: Pair<Ident, Mapping>) {
                 }
 
                 1 -> {
-                    val transform = primaryTransform.get(0)
+                    val transform = primaryTransform[0]
                     return if (transform.first != entity.ident || transformedAssociatedIdents != entity.associatedIdents) {
                         listOf(
                             Transformation(
@@ -110,8 +110,7 @@ class IdentTransformer(vararg mappings: Pair<Ident, Mapping>) {
                 }
             }
             ?.let { (mapping, matches) ->
-                val target = mapping.value
-                when (target) {
+                when (val target = mapping.value) {
                     is Mapping.Simple -> listOf(
                         matches.foldIndexed(this) { targetIndex, transformedIdent, match ->
                             val typeIndex = match.first
