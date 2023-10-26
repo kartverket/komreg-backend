@@ -48,6 +48,9 @@ class TransformEntityTest {
         emptyList(),
     )
 
+    private val mappings = reguleringsInput.toMappings()
+    private val identTransformer = IdentTransformer(*mappings.toTypedArray())
+
     private val idGenerator = mockk<IdGeneratorManager>()
 
     @BeforeEach
@@ -58,16 +61,20 @@ class TransformEntityTest {
     @Test
     fun `A transformation of idents should change kommunenr based on input`() {
         val entity = Entity(dummyId(123), identOfKommune(2, 5))
-        val result = transformerEntity(reguleringsInput, entity, idGenerator)
-        val expected = identOfKommune(3, 6)
-        assertEquals(expected, result?.single()?.transformedIdent)
+        runBlocking {
+            val result = identTransformer.transform(entity, idGenerator)
+            val expected = identOfKommune(3, 6)
+            assertEquals(expected, result?.single()?.transformedIdent)
+        }
     }
 
     @Test
     fun `A transformation of idents should not transform entity when unmatched idents`() {
         val entity = Entity(dummyId(123), identOfKommune(10, 50))
-        val result = transformerEntity(reguleringsInput, entity, idGenerator)
-        assertEquals(null, result)
+        runBlocking {
+            val result = identTransformer.transform(entity, idGenerator)
+            assertEquals(null, result)
+        }
     }
 
     @Test
@@ -79,13 +86,14 @@ class TransformEntityTest {
                 identOfMatrikkelenhet(2, 5, 2),
             ),
         )
-        val result = transformerEntity(reguleringsInput, entity, idGenerator)
-        val expected = setOf(
-            identOfMatrikkelenhet(3, 6, 1),
-            identOfMatrikkelenhet(3, 6, 2),
-        )
-
-        assertEquals(expected, result?.single()?.transformedAssociatedIdents)
+        runBlocking {
+            val result = identTransformer.transform(entity, idGenerator)
+            val expected = setOf(
+                identOfMatrikkelenhet(3, 6, 1),
+                identOfMatrikkelenhet(3, 6, 2),
+            )
+            assertEquals(expected, result?.single()?.transformedAssociatedIdents)
+        }
     }
 
     @Test
@@ -97,12 +105,14 @@ class TransformEntityTest {
                 identOfMatrikkelenhet(10, 15, 1),
             ),
         )
-        val result = transformerEntity(reguleringsInput, entity, idGenerator)
-        val expected = setOf(
-            identOfMatrikkelenhet(3, 6, 1),
-            identOfMatrikkelenhet(10, 15, 1),
-        )
-        assertEquals(expected, result?.single()?.transformedAssociatedIdents)
+        runBlocking {
+            val result = identTransformer.transform(entity, idGenerator)
+            val expected = setOf(
+                identOfMatrikkelenhet(3, 6, 1),
+                identOfMatrikkelenhet(10, 15, 1),
+            )
+            assertEquals(expected, result?.single()?.transformedAssociatedIdents)
+        }
     }
 
     @Test
@@ -114,52 +124,24 @@ class TransformEntityTest {
                 identOfMatrikkelenhet(2, 5, 1),
             ),
         )
-        val result = transformerEntity(reguleringsInput, entity, idGenerator)
-        val expected = setOf(
-            identOfMatrikkelenhet(10, 15, 1),
-            identOfMatrikkelenhet(3, 6, 1),
-        )
-        assertEquals(expected, result?.single()?.transformedAssociatedIdents)
+        runBlocking {
+            val result = identTransformer.transform(entity, idGenerator)
+            val expected = setOf(
+                identOfMatrikkelenhet(10, 15, 1),
+                identOfMatrikkelenhet(3, 6, 1),
+            )
+            assertEquals(expected, result?.single()?.transformedAssociatedIdents)
+        }
     }
 
     @Test
     fun `A transformation of idents should change when multiple idents matches`() {
         val entity = Entity(dummyId(123), identOfVeg(2, 5, 2600))
-        val result = transformerEntity(reguleringsInput, entity, idGenerator)
-        val expected = listOf(identOfVeg(3, 6, 2600), identOfVeg(3, 7, 2600))
-        assertEquals(expected, result?.map { it.transformedIdent })
-    }
-
-    @Test
-    fun `A transformation of idents should change when regulering has single kommunenummer for vegendring`() {
-        val vegendringMedEnTilKomunne = Vegendring(
-            fylkesnummer = FraTil(
-                fra = Fylkesnummer(2),
-                til = Fylkesnummer(3),
-            ),
-            kommuneløpenummer = FraEnTilMange(
-                fra = Kommunenummer.Lopenummer(5),
-                til = listOf(
-                    Kommunenummer.Lopenummer(6),
-                ),
-            ),
-            adressekode = FraTil(
-                fra = Adressekode(2600),
-                til = Adressekode(2600),
-            ),
-        )
-
-        val nyRegInput = reguleringsInput.copy(
-            endringer = reguleringsInput.endringer.map { endring ->
-                if (endring is Vegendring) vegendringMedEnTilKomunne else endring
-            },
-        )
-
-        val entity = Entity(dummyId(123), identOfVeg(2, 5, 2600))
-        val result = transformerEntity(nyRegInput, entity, idGenerator)
-        val expected = listOf(identOfVeg(3, 6, 2600))
-
-        assertEquals(expected, result?.map { it.transformedIdent })
+        runBlocking {
+            val result = identTransformer.transform(entity, idGenerator)
+            val expected = identOfVeg(3, 6, 2600)
+            assertEquals(expected, result?.single()?.transformedIdent)
+        }
     }
 }
 

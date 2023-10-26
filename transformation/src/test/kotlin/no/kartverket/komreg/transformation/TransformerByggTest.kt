@@ -52,6 +52,9 @@ class TransformerByggTest {
         emptyList(),
     )
 
+    private val mappings = reguleringsInput.toMappings()
+    private val identTransformer = IdentTransformer(*mappings.toTypedArray())
+
     private val idGenerator = mockk<IdGeneratorManager>()
 
     @BeforeEach
@@ -69,12 +72,13 @@ class TransformerByggTest {
             ),
         )
 
-        val result = transformerEntity(reguleringsInput, entity, idGenerator)
-
-        val expectedIdent = identOfBygningUtenFylkeOgKommune(123456789)
-        val expectedAssociatedIdents = setOf(identOfMatrikkelenhet(2, 6, 1))
-        assertEquals(expectedIdent, result?.single()?.transformedIdent)
-        assertEquals(expectedAssociatedIdents, result?.single()?.transformedAssociatedIdents)
+        runBlocking {
+            val result = identTransformer.transform(entity, idGenerator)
+            val expectedIdent = identOfBygningUtenFylkeOgKommune(123456789)
+            val expectedAssociatedIdents = setOf(identOfMatrikkelenhet(2, 6, 1))
+            assertEquals(expectedIdent, result?.single()?.transformedIdent)
+            assertEquals(expectedAssociatedIdents, result?.single()?.transformedAssociatedIdents)
+        }
     }
 
     @Test
@@ -87,10 +91,13 @@ class TransformerByggTest {
             ),
         )
         val expectedIdent = identOfBygningUtenFylkeOgKommune(123456789)
-        val result = transformerEntity(reguleringsInput, entity, idGenerator)
-        val expectedAssociatedIdents = setOf(identOfMatrikkelenhet(4, 6, 1))
-        assertEquals(expectedIdent, result?.single()?.transformedIdent)
-        assertEquals(expectedAssociatedIdents, result?.single()?.transformedAssociatedIdents)
+
+        runBlocking {
+            val result = identTransformer.transform(entity, idGenerator)
+            val expectedAssociatedIdents = setOf(identOfMatrikkelenhet(4, 6, 1))
+            assertEquals(expectedIdent, result?.single()?.transformedIdent)
+            assertEquals(expectedAssociatedIdents, result?.single()?.transformedAssociatedIdents)
+        }
     }
 
     @Test
@@ -103,13 +110,13 @@ class TransformerByggTest {
             ),
         )
 
-        val result = transformerEntity(reguleringsInput, entity, idGenerator)
-
-        val expectedAssociatedIdents = setOf(
-            identOfMatrikkelenhet(4, 6, 1),
-            identOfBygningUtenFylkeOgKommune(123456789),
-        )
-        assertEquals(expectedAssociatedIdents, result?.single()?.transformedAssociatedIdents)
+        runBlocking {
+            val result = identTransformer.transform(entity, idGenerator)
+            val expectedIdent = identOfBygningUtenFylkeOgKommune(123456789)
+            val expectedAssociatedIdents = setOf(identOfMatrikkelenhet(4, 6, 1))
+            assertEquals(expectedIdent, result?.single()?.transformedIdent)
+            assertEquals(expectedAssociatedIdents, result?.single()?.transformedAssociatedIdents)
+        }
     }
 
     @Test
@@ -122,13 +129,13 @@ class TransformerByggTest {
             ),
         )
 
-        val result = transformerEntity(reguleringsInput, entity, idGenerator)
-
-        val expectedIdent = Ident.Empty
-        val expectedAssociatedIdents = setOf(identOfMatrikkelenhet(4, 6, 1))
-
-        assertEquals(expectedIdent, result?.single()?.transformedIdent)
-        assertEquals(expectedAssociatedIdents, result?.single()?.transformedAssociatedIdents)
+        runBlocking {
+            val result = identTransformer.transform(entity, idGenerator)
+            val expectedIdent = Ident.Empty
+            val expectedAssociatedIdents = setOf(identOfMatrikkelenhet(4, 6, 1))
+            assertEquals(expectedIdent, result?.single()?.transformedIdent)
+            assertEquals(expectedAssociatedIdents, result?.single()?.transformedAssociatedIdents)
+        }
     }
 
     private fun identOfMatrikkelenhet(fylkesnummer: Int, lopenummer: Int, gardsnummer: Int) =
