@@ -1,43 +1,93 @@
 package no.kartverket.komreg.transformation
 
+import no.kartverket.komreg.core.domain.Id
+import no.kartverket.komreg.core.domain.IdType
 import no.kartverket.komreg.integration.spi.*
-import java.util.TreeMap
+import java.util.*
 
-class IdentTransformer(vararg mappings: Pair<Ident, Ident?>) {
+class IdentTransformer(vararg mappings: Pair<Ident, Mapping>) {
     private val map = mapOf(
         *(
-            mappings.onEach { mapping ->
-                val sourceType = mapping.first.type
-                val targetType = mapping.second?.type
-                if (targetType != null && targetType != sourceType) {
-                    throw IllegalArgumentException("$targetType != $sourceType")
+                mappings.onEach { m ->
+                    val sourceType = m.first.type
+                    m.second.checkIdentType(sourceType)
                 }
-            }
-            ),
+                ),
     )
 
     suspend fun transform(
         entity: Entity,
-        idGeneratorManager: IdGeneratorManager,
+        idProvider: (String, IdType<*, *>) -> Id,
     ): List<Transformation>? {
-        val transformedIdent = entity.ident?.transformIdent()
-        val transformedIdents = entity.associatedIdents?.map { it.transformIdent() }?.toSet()
+        val primaryTransform = entity.ident?.transformIdent()
+        val transformedAssociatedIdents = entity.associatedIdents?.flatMap { it ->
+            it.transformIdent().map { it.first }
+        }?.toSet()
 
-        return if (transformedIdent != entity.ident || transformedIdents != entity.associatedIdents) {
-            listOf(
-                Transformation(
-                    id = entity.id,
-                    sourceEntity = entity,
-                    transformedIdent = transformedIdent,
-                    transformedAssociatedIdents = transformedIdents,
-                ),
-            )
+        return if (primaryTransform != null) {
+            when (primaryTransform.size) {
+                0 -> {
+                    listOf(
+                        Transformation(
+                            id = entity.id,
+                            sourceEntity = entity,
+                            transformedIdent = null,
+                            transformedAssociatedIdents = transformedAssociatedIdents,
+                        ),
+                    )
+                }
+
+                1 -> {
+                    val transform = primaryTransform.get(0)
+                    return if (transform.first != entity.ident || transformedAssociatedIdents != entity.associatedIdents) {
+                        listOf(
+                            Transformation(
+                                id = entity.id,
+                                sourceEntity = entity,
+                                transformedIdent = transform.first,
+                                transformedAssociatedIdents = transformedAssociatedIdents,
+                                resultObject = transform.second,
+                            ),
+                        )
+                    } else {
+                        null
+                    }
+                }
+
+                else -> {
+                    primaryTransform.mapIndexed { index, transform ->
+                        val id = if (index == 0) {
+                            entity.id
+                        } else {
+                            idProvider(transform.first.toString(), entity.id.type)
+                        }
+                        Transformation(
+                            id = id,
+                            sourceEntity = entity,
+                            transformedIdent = transform.first,
+                            transformedAssociatedIdents = transformedAssociatedIdents,
+                            resultObject = transform.second,
+                        )
+                    }
+                }
+            }
         } else {
-            null
+            if (entity.ident != null || transformedAssociatedIdents != entity.associatedIdents) {
+                listOf(
+                    Transformation(
+                        id = entity.id,
+                        sourceEntity = entity,
+                        transformedIdent = null,
+                        transformedAssociatedIdents = transformedAssociatedIdents,
+                    ),
+                )
+            } else {
+                null
+            }
         }
     }
 
-    private suspend fun Ident.transformIdent(): Ident {
+    private suspend fun Ident.transformIdent(): List<Pair<Ident, Payload?>> {
         return map.map { mapping ->
             val source = mapping.key
             val matches = source.type.types.mapNotNull { componentType ->
@@ -61,34 +111,105 @@ class IdentTransformer(vararg mappings: Pair<Ident, Ident?>) {
             }
             ?.let { (mapping, matches) ->
                 val target = mapping.value
-                if (target == null) {
-                    val matchedIndicies = matches.map { it.first }.toSet()
-                    val preserveTypes = type.types.mapIndexedNotNull { index, kType ->
-                        if (matchedIndicies.contains(index)) {
-                            null
+                when (target) {
+                    is Mapping.Simple -> listOf(
+                        matches.foldIndexed(this) { targetIndex, transformedIdent, match ->
+                            val typeIndex = match.first
+                            transformedIdent.updateOrThrow(typeIndex) { target.ident.getOrThrow(targetIndex) }
+                        } to target.payload,
+                    )
+
+                    is Mapping.Replace -> {
+                        val result = matches.foldIndexed(this) { targetIndex, transformedIdent, match ->
+                            val typeIndex = match.first
+                            transformedIdent.updateOrThrow(typeIndex) { target.ident.getOrThrow(targetIndex) }
+                        }
+
+                        if (matches.size == type.size) {
+                            // Perfect match: Replace it
+                            listOf(
+                                result to null,
+                                result to target.payload,
+                            )
                         } else {
-                            index to kType
+                            // Imperfect match: Transform
+                            listOf(
+                                result to null,
+                            )
                         }
                     }
-                    if (preserveTypes.isEmpty()) {
-                        Ident.Empty
+
+                    is Mapping.Split -> if (matches.size == type.size) {
+                        // Perfect match: Split it
+                        target.into.map { (targetIdent, payload) ->
+                            if (targetIdent == Ident.Empty) {
+                                targetIdent to payload
+                            } else {
+                                matches.foldIndexed(this) { targetIndex, transformedIdent, match ->
+                                    val typeIndex = match.first
+                                    transformedIdent.updateOrThrow(typeIndex) { targetIdent.getOrThrow(targetIndex) }
+                                } to payload
+                            }
+                        }
                     } else {
-                        val newType = identTypeFromKotlinTypes(
-                            preserveTypes.first().second,
-                            *preserveTypes.drop(1).map { it.second }.toTypedArray(),
+                        // Imperfect match: Unresolved
+                        val matchedIndicies = matches.map { it.first }.toSet()
+                        val preserveTypes = type.types.mapIndexedNotNull { index, kType ->
+                            if (matchedIndicies.contains(index)) {
+                                null
+                            } else {
+                                index to kType
+                            }
+                        }
+                        listOf(
+                            if (preserveTypes.isEmpty()) {
+                                Ident.Empty to null
+                            } else {
+                                val newType = identTypeFromKotlinTypes(
+                                    preserveTypes.first().second,
+                                    *preserveTypes.drop(1).map { it.second }.toTypedArray(),
+                                )
+                                identWithTypeOrThrow(
+                                    newType,
+                                    *preserveTypes.map { getOrThrow(it.first) }
+                                        .toTypedArray(),
+                                ) to null
+                            },
                         )
-                        identWithTypeOrThrow(
-                            newType,
-                            *preserveTypes.map { getOrThrow(it.first) }
-                                .toTypedArray(),
-                        )
-                    }
-                } else {
-                    matches.foldIndexed(this) { targetIndex, transformedIdent, match ->
-                        val typeIndex = match.first
-                        transformedIdent.updateOrThrow(typeIndex) { target.getOrThrow(targetIndex) }
                     }
                 }
-            } ?: this
+            } ?: listOf(this to null)
+    }
+
+    sealed interface Mapping {
+        fun checkIdentType(identType: IdentOrEmptyType<*>)
+
+        data class Simple(var ident: Ident, var payload: Payload? = null) : Mapping {
+            override fun checkIdentType(identType: IdentOrEmptyType<*>) {
+                if (identType != ident.type) {
+                    throw IllegalArgumentException("${ident.type} != $identType")
+                }
+            }
+        }
+
+        data class Replace(var ident: Ident, var payload: Payload? = null) : Mapping {
+            override fun checkIdentType(identType: IdentOrEmptyType<*>) {
+                if (identType != ident.type) {
+                    throw IllegalArgumentException("${ident.type} != $identType")
+                }
+            }
+        }
+
+        data class Split(var into: List<Pair<Ident, Payload?>>) : Mapping {
+            override fun checkIdentType(identType: IdentOrEmptyType<*>) {
+                val type = into.map { it.first.type }
+                    .filter { it.size > 0 }
+                    .distinct()
+                    .single()
+                if (identType != type) {
+                    throw IllegalArgumentException("$type != $identType")
+                }
+            }
+        }
     }
 }

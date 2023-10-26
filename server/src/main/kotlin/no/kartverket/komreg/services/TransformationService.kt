@@ -217,7 +217,11 @@ private fun runAndWriteTransformations(
                     logger.info("Starter flow av type: $type")
                     statusForSource.firstTransformation = Clock.System.now()
                 }
-                .mapNotNull { entity -> identTransformer.transform(entity, idGeneratorManager) }
+                .mapNotNull { entity ->
+                    identTransformer.transform(entity) { _, type ->
+                        idGeneratorManager.idFor(type)
+                    }
+                }
                 .onEach {
                     statusForSource.numberOfTransformations += 1
                 }

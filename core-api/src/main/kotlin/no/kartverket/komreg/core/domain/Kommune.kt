@@ -2,6 +2,7 @@ package no.kartverket.komreg.core.domain
 
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
+import no.kartverket.komreg.integration.spi.Payload
 
 @Serializable
 data class Kommune(
@@ -15,7 +16,7 @@ data class Kommune(
     val adresse: Postadresse?,
     val standardRekvirent: StandardRekvirent?,
     val kommunevapen: ByteArray?, // TODO: Tilbakeføring har ingen håndtering av at denne kan være null. Sette påkrevd?
-) {
+) : Payload {
     companion object {
         operator fun invoke(
             kommunenummer: Long,

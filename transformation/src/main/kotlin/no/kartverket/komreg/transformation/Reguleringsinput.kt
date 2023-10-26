@@ -4,7 +4,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDate
 import no.kartverket.komreg.core.domain.*
 import no.kartverket.komreg.integration.spi.Ident
-import java.lang.RuntimeException
 
 data class Reguleringsinput(
     val id: String,
@@ -20,7 +19,7 @@ sealed class Endring {
 
 data class FraTil<out T>(
     val fra: T,
-    val til: T?,
+    val til: T,
 )
 
 data class FraEnTilMange<out T>(
@@ -34,7 +33,7 @@ data class Fylkeendring(
 
 data class Kommuneendring(
     override val fylkesnummer: FraTil<Fylkesnummer>,
-    val kommuneløpenummer: FraTil<Kommunenummer.Lopenummer>,
+    val kommuneløpenummer: FraEnTilMange<Kommunenummer.Lopenummer>,
 ) : Endring()
 
 data class Matrikkelenhetendring(
@@ -70,85 +69,111 @@ data class Vegadresseendring(
     val adressenummerbokstav: FraTil<Adressenummerbokstav>,
 ) : Endring()
 
-fun Reguleringsinput.toMappings(): List<Pair<Ident, Ident?>> {
+fun Reguleringsinput.toMappings(): List<Pair<Ident, IdentTransformer.Mapping>> {
     return runBlocking {
         endringer.map { endring ->
             when (endring) {
-                is Fylkeendring -> Ident(endring.fylkesnummer.fra) to endring.fylkesnummer.til?.let { Ident(it) }
+                is Fylkeendring -> Ident(
+                    endring.fylkesnummer.fra,
+                ) to IdentTransformer.Mapping.Replace(
+                    Ident(
+                        endring.fylkesnummer.til,
+                    ),
+                )
+
                 is Kommuneendring -> Ident(
                     endring.fylkesnummer.fra,
                     endring.kommuneløpenummer.fra,
-                ) to
-                    endring.fylkesnummer.til?.let { fnr ->
-                        endring.kommuneløpenummer.til?.let { knr ->
-                            Ident(
-                                fnr,
-                                knr,
+                ) to if (endring.kommuneløpenummer.til.size == 1) {
+                    IdentTransformer.Mapping.Replace(
+                        Ident(
+                            endring.fylkesnummer.til,
+                            endring.kommuneløpenummer.til.single(),
+                        ),
+                        kommuner.find {
+                            it.kommunenummer == Kommunenummer(
+                                endring.fylkesnummer.til,
+                                endring.kommuneløpenummer.til.single()
                             )
-                        }
-                    }
+                        }, // TODO: legg til kommuneinnstillinger
+                    )
+                } else {
+                    IdentTransformer.Mapping.Split(
+                        endring.kommuneløpenummer.til.map { lopenummer ->
+                            Ident(
+                                endring.fylkesnummer.til,
+                                lopenummer,
+                            ) to kommuner.find {
+                                it.kommunenummer == Kommunenummer(
+                                    endring.fylkesnummer.til,
+                                    lopenummer
+                                )
+                            }
+                        },
+                    )
+                }
 
                 is Matrikkelenhetendring -> Ident(
                     endring.fylkesnummer.fra,
                     endring.kommuneløpenummer.fra,
                     endring.gårdsnummer.fra,
-                ) to endring.fylkesnummer.til?.let { fnr ->
-                    endring.kommuneløpenummer.til?.let { knr ->
-                        endring.gårdsnummer.til?.let { gnr ->
-                            Ident(
-                                fnr,
-                                knr,
-                                gnr,
-                            )
-                        }
-                    }
-                }
+                ) to IdentTransformer.Mapping.Replace(
+                    Ident(
+                        endring.fylkesnummer.til,
+                        endring.kommuneløpenummer.til,
+                        endring.gårdsnummer.til,
+                    ),
+                )
 
                 is Kretsendring -> Ident(
                     endring.fylkesnummer.fra,
                     endring.kommuneløpenummer.fra,
                     endring.kretsnummer.fra,
                     endring.kretstype.fra,
-                ) to endring.fylkesnummer.til?.let { fnr ->
-                    endring.kommuneløpenummer.til?.let { knr ->
-                        endring.kretsnummer.til?.let { krnr ->
-                            endring.kretstype.til?.let { kst ->
-                                Ident(
-                                    fnr,
-                                    knr,
-                                    krnr,
-                                    kst,
-                                )
-                            }
-                        }
-                    }
-                }
+                ) to IdentTransformer.Mapping.Replace(
+                    Ident(
+                        endring.fylkesnummer.til,
+                        endring.kommuneløpenummer.til,
+                        endring.kretsnummer.til,
+                        endring.kretstype.til,
+                    ),
+                )
 
-                /*is Vegendring -> Ident(
+                is Vegendring -> Ident(
                     endring.fylkesnummer.fra,
                     endring.kommuneløpenummer.fra,
                     endring.adressekode.fra,
-                ) to Ident(
-                    endring.fylkesnummer.til,
-                    endring.kommuneløpenummer.til,
-                    endring.adressekode.til,
-                )*/
+                ) to if (endring.kommuneløpenummer.til.size == 1) {
+                    IdentTransformer.Mapping.Replace(
+                        Ident(
+                            endring.fylkesnummer.til,
+                            endring.kommuneløpenummer.til.single(),
+                            endring.adressekode.til,
+                        ),
+                    )
+                } else {
+                    IdentTransformer.Mapping.Split(
+                        endring.kommuneløpenummer.til.map {
+                            Ident(
+                                endring.fylkesnummer.til,
+                                it,
+                                endring.adressekode.til,
+                            ) to null
+                        },
+                    )
+                }
 
                 is Teigendring -> Ident(
                     endring.fylkesnummer.fra,
                     endring.kommuneløpenummer.fra,
                     endring.teigId.fra,
-                ) to endring.fylkesnummer.til?.let { fnr ->
-                    endring.kommuneløpenummer.til?.let { knr ->
-                        endring.teigId.til?.let { teigId ->
-                            Ident(
-                                fnr,
-                                knr,
-                                teigId,
-                            )
-                        }
-                    }
-                }
+                ) to IdentTransformer.Mapping.Replace(
+                    Ident(
+                        endring.fylkesnummer.til,
+                        endring.kommuneløpenummer.til,
+                        endring.teigId.til,
+                    ),
+                )
 
                 is Vegadresseendring -> Ident(
                     endring.fylkesnummer.fra,
@@ -156,25 +181,15 @@ fun Reguleringsinput.toMappings(): List<Pair<Ident, Ident?>> {
                     endring.adressekode.fra,
                     endring.adressenummer.fra,
                     endring.adressenummerbokstav.fra,
-                ) to endring.fylkesnummer.til?.let { fnr ->
-                    endring.kommuneløpenummer.til?.let { knr ->
-                        endring.adressekode.til?.let { ak ->
-                            endring.adressenummer.til?.let { an ->
-                                endring.adressenummerbokstav.til?.let { anb ->
-                                    Ident(
-                                        fnr,
-                                        knr,
-                                        ak,
-                                        an,
-                                        anb,
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                else -> throw RuntimeException("Ukjent endringstype: ${endring::class.simpleName}")
+                ) to IdentTransformer.Mapping.Replace(
+                    Ident(
+                        endring.fylkesnummer.til,
+                        endring.kommuneløpenummer.til,
+                        endring.adressekode.til,
+                        endring.adressenummer.til,
+                        endring.adressenummerbokstav.til,
+                    ),
+                )
             }
         }
     }
