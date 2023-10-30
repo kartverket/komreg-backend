@@ -4,33 +4,19 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.toKotlinLocalDate
-import no.kartverket.komreg.core.domain.*
+import no.kartverket.komreg.core.domain.Adressekode
+import no.kartverket.komreg.core.domain.Fylkesnummer
+import no.kartverket.komreg.core.domain.Kommunenummer
 import no.kartverket.komreg.integration.spi.Entity
 import no.kartverket.komreg.integration.spi.IdGeneratorManager
 import no.kartverket.komreg.integration.spi.Ident
-import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class TransformVegTest {
     private val ikrafttredelsesdato = LocalDate.now().toKotlinLocalDate()
-
-    private val dummyKommune = Kommune(
-        kommunenummer = Kommunenummer(
-            Fylkesnummer(3),
-            Kommunenummer.Lopenummer(6),
-        ),
-        kommunenavn = Kommunenavn("Dummy"),
-        koordinatsystem = Koordinatsystem.UTM32,
-        senterpunkt = Koordinat(123.0, 456.0),
-        nedsattKonsesjonsgrense = false,
-        godkjenteGardsnumre = "1,2,3",
-        gyldigTilDato = null,
-        adresse = null,
-        standardRekvirent = null,
-        kommunevapen = null,
-    )
 
     private val reguleringsInput = Reguleringsinput(
         id = "123",
@@ -80,7 +66,7 @@ class TransformVegTest {
                 ),
             ),
         ),
-        kommuner = listOf(dummyKommune),
+        kommuner = emptyList(),
         fylker = emptyList(),
     )
 
@@ -105,8 +91,8 @@ class TransformVegTest {
                 idGenerator.idFor(type)
             }
             val expected1 = identOfVeg(3, 6, 2500)
-            Assertions.assertEquals(expected1, result!![0].transformedIdent)
-            Assertions.assertEquals(1, result.size)
+            assertEquals(1, result!!.size)
+            assertEquals(expected1, result[0].transformedIdent)
         }
     }
 
@@ -122,8 +108,8 @@ class TransformVegTest {
             }
             val expected1 = identOfVeg(3, 6, 2600)
             val expected2 = identOfVeg(3, 7, 2600)
-            Assertions.assertEquals(expected1, result!![0].transformedIdent)
-            Assertions.assertEquals(expected2, result[1].transformedIdent)
+            assertEquals(expected1, result!![0].transformedIdent)
+            assertEquals(expected2, result[1].transformedIdent)
         }
     }
 }
