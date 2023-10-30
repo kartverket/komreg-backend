@@ -117,7 +117,7 @@ fun Reguleringsinput.toMappings(): List<Pair<Ident, IdentTransformer.Mapping>> {
                     endring.fylkesnummer.fra,
                     endring.kommuneløpenummer.fra,
                     endring.gårdsnummer.fra,
-                ) to IdentTransformer.Mapping.Replace(
+                ) to IdentTransformer.Mapping.Simple(
                     Ident(
                         endring.fylkesnummer.til,
                         endring.kommuneløpenummer.til,
@@ -130,7 +130,7 @@ fun Reguleringsinput.toMappings(): List<Pair<Ident, IdentTransformer.Mapping>> {
                     endring.kommuneløpenummer.fra,
                     endring.kretsnummer.fra,
                     endring.kretstype.fra,
-                ) to IdentTransformer.Mapping.Replace(
+                ) to IdentTransformer.Mapping.Simple(
                     Ident(
                         endring.fylkesnummer.til,
                         endring.kommuneløpenummer.til,
@@ -144,7 +144,7 @@ fun Reguleringsinput.toMappings(): List<Pair<Ident, IdentTransformer.Mapping>> {
                     endring.kommuneløpenummer.fra,
                     endring.adressekode.fra,
                 ) to if (endring.kommuneløpenummer.til.size == 1) {
-                    IdentTransformer.Mapping.Replace(
+                    IdentTransformer.Mapping.Simple(
                         Ident(
                             endring.fylkesnummer.til,
                             endring.kommuneløpenummer.til.single(),
@@ -167,7 +167,7 @@ fun Reguleringsinput.toMappings(): List<Pair<Ident, IdentTransformer.Mapping>> {
                     endring.fylkesnummer.fra,
                     endring.kommuneløpenummer.fra,
                     endring.teigId.fra,
-                ) to IdentTransformer.Mapping.Replace(
+                ) to IdentTransformer.Mapping.Simple(
                     Ident(
                         endring.fylkesnummer.til,
                         endring.kommuneløpenummer.til,
@@ -181,7 +181,7 @@ fun Reguleringsinput.toMappings(): List<Pair<Ident, IdentTransformer.Mapping>> {
                     endring.adressekode.fra,
                     endring.adressenummer.fra,
                     endring.adressenummerbokstav.fra,
-                ) to IdentTransformer.Mapping.Replace(
+                ) to IdentTransformer.Mapping.Simple(
                     Ident(
                         endring.fylkesnummer.til,
                         endring.kommuneløpenummer.til,

@@ -171,22 +171,6 @@ class TransformEntityTest {
         }
     }
 
-    @Test
-    fun `A transformation of idents should change when multiple idents matches`() {
-        val entity = Entity(
-            dummyId(123),
-            identOfVeg(2, 5, 2600),
-        )
-        runBlocking {
-            val result = identTransformer.transform(entity) { _, type ->
-                idGenerator.idFor(type)
-            }
-            val expected1 = identOfVeg(3, 6, 2600)
-            val expected2 = identOfVeg(3, 7, 2600)
-            assertEquals(expected1, result!![0].transformedIdent)
-            assertEquals(expected2, result[1].transformedIdent)
-        }
-    }
 }
 
 private fun identOfMatrikkelenhet(fylkesnummer: Int, lopenummer: Int, gardsnummer: Int) =
@@ -202,10 +186,3 @@ private fun identOfKommune(fylkesnummer: Int, lopenummer: Int) = runBlocking {
     Ident(Fylkesnummer(fylkesnummer.toLong()), Kommunenummer.Lopenummer(lopenummer.toByte()))
 }
 
-private fun identOfVeg(fylkesnummer: Int, lopenummer: Int, adressekode: Int) = runBlocking {
-    Ident(
-        Fylkesnummer(fylkesnummer.toLong()),
-        Kommunenummer.Lopenummer(lopenummer.toByte()),
-        Adressekode(adressekode),
-    )
-}

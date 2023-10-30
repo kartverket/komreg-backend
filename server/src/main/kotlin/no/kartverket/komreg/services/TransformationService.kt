@@ -182,11 +182,11 @@ private fun runAndWriteTransformations(
         // TODO: Fylker må vel også inn via mappings?
         /*if (input.fylker.isNotEmpty()) {
             writeFylker(bootContext, input, entitySinks)
-        }
+        }*/
 
         if (input.kommuner.isNotEmpty()) {
             writeKommuner(bootContext, input, entitySinks, kjoringId, transformationRepo)
-        }*/
+        }
 
         sources.map {
             val flow = it.entityFlow
