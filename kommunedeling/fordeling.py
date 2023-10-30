@@ -12,6 +12,18 @@ with open('fordeling_input.json', 'r', encoding='utf8') as f:
 
 transformasjoner = []
 
+transformasjoner.append({
+    "type": "kommune",
+    "fylkesnummer": {
+        "fra": fordeling_input["fylkesnummer"],
+        "til": fordeling_input["fylkesnummer"]
+    },
+    "kommuneløpenummer": {
+        "fra": fordeling_input["eksisterende_kommuneløpenummer"],
+        "til": [fordeling_input["kommuneløpenummer1"], fordeling_input["kommuneløpenummer2"]]
+    }
+})
+
 eksisterende_kommuneløpenummer = fordeling_input['eksisterende_kommuneløpenummer']
 kommune1 = fordeling_input['kommuneløpenummer1']
 fylkesnummer = fordeling_input['fylkesnummer']
@@ -27,6 +39,8 @@ for gårdsnummer in fordelingsparametre['gårdsnumre']:
 
 for adresse in fordelingsparametre['adresseparseller']:
     til_value = fordeling_input['veg'].get(adresse['adressekode'], [kommune1])
+    if not isinstance(til_value, list):
+        til_value = [til_value]
     transformasjoner.append({
         'type': 'veg',
         'fylkesnummer': {'fra': fylkesnummer, 'til': fylkesnummer},
