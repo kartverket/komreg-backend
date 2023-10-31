@@ -37,10 +37,6 @@ class TransformVegadresseTest {
                     fra = Adressenummernummer(10),
                     til = Adressenummernummer(10),
                 ),
-                adressenummerbokstav = FraTil(
-                    fra = Adressenummerbokstav('A'),
-                    til = Adressenummerbokstav('A'),
-                ),
             ),
         ),
         kommuner = emptyList(),
@@ -61,13 +57,13 @@ class TransformVegadresseTest {
     fun `A transformation of idents should change when a single ident matches`() {
         val entity = Entity(
             dummyId(123),
-            identOfVegadresse(2, 5, 2600, 10, 'A'),
+            identOfVegadresse(2, 5, 2600, 10),
         )
         runBlocking {
             val result = identTransformer.transform(entity) { _, type ->
                 idGenerator.idFor(type)
             }
-            val expected1 = identOfVegadresse(3, 6, 2600, 10, 'A')
+            val expected1 = identOfVegadresse(3, 6, 2600, 10)
             assertEquals(1, result!!.size)
             assertEquals(expected1, result[0].transformedIdent)
         }
@@ -79,7 +75,6 @@ private fun identOfVegadresse(
     lopenummer: Int,
     adressekode: Int,
     adressenummer: Short,
-    adressebokstav: Char,
 ) =
     runBlocking {
         Ident(
@@ -87,6 +82,5 @@ private fun identOfVegadresse(
             Kommunenummer.Lopenummer(lopenummer.toByte()),
             Adressekode(adressekode),
             Adressenummernummer(adressenummer),
-            Adressenummerbokstav(adressebokstav),
         )
     }
