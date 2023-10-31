@@ -81,7 +81,7 @@ class TransformVegTest {
     }
 
     @Test
-    fun `A transformation of idents should change when a single ident matches`() {
+    fun `Transformasjon av identer skal endres dersom en enkel ident matcher`() {
         val entity = Entity(
             dummyId(123),
             identOfVeg(2, 5, 2500),
@@ -97,7 +97,7 @@ class TransformVegTest {
     }
 
     @Test
-    fun `A transformation of idents should change when multiple idents matches`() {
+    fun `Transformasjon av identer skal endres dersom flere identer matcher`() {
         val entity = Entity(
             dummyId(123),
             identOfVeg(2, 5, 2600),

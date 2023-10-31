@@ -77,7 +77,7 @@ class TransformEntityTest {
     }
 
     @Test
-    fun `Flytting av kommune skal returnere to transformations, en for utgått og en ny`() {
+    fun `Flytting av kommune skal returnere to transformasjoner, en for utgått og en for opprettelse av ny kommune`() {
         val entity = Entity(
             dummyId(123),
             identOfKommune(2, 5),
@@ -95,7 +95,7 @@ class TransformEntityTest {
     }
 
     @Test
-    fun `A transformation of idents should not transform entity when unmatched idents`() {
+    fun `Transformasjon av identer skal ikke transformere entiteten når ingen av dens identer matcher`() {
         val entity = Entity(
             dummyId(123),
             identOfKommune(10, 50),
@@ -109,7 +109,7 @@ class TransformEntityTest {
     }
 
     @Test
-    fun `A transformation of associated idents should change all matching idents`() {
+    fun `Transformasjon av assosierte identer skal endre alle identer den finner en match på`() {
         val entity = Entity(
             dummyId(123),
             associatedIdents = setOf(
@@ -130,7 +130,7 @@ class TransformEntityTest {
     }
 
     @Test
-    fun `A transformation of associated idents should only change matching idents`() {
+    fun `Transformasjon av assosierte identer skal kun endre de identene den får match på, inneholder ident uten match`() {
         val entity = Entity(
             dummyId(123),
             associatedIdents = setOf(
@@ -151,7 +151,7 @@ class TransformEntityTest {
     }
 
     @Test
-    fun `A transformation of associated idents should only change matching idents (non-matching ident first)`() {
+    fun `Transformasjon av assosierte identer skal kun endre de identene den får match på, motsatt rekkefølge på ident uten match`() {
         val entity = Entity(
             dummyId(123),
             associatedIdents = setOf(

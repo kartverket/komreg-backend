@@ -32,7 +32,7 @@ class TransformerBygningTest {
     }
 
     @Test
-    fun `A transformation with a bygningsident should be cleared`() {
+    fun `Transformasjon av bygning skal fjerne kommune- og fylkesdata for identen`() {
         val entity = Entity(
             id = dummyId(123),
             ident = identOfBygning(2, 5, 123456789),
@@ -53,7 +53,7 @@ class TransformerBygningTest {
     }
 
     @Test
-    fun `A transformation should keep non-changed idents`() {
+    fun `Transformasjon skal beholde identer uten endringer`() {
         val entity = Entity(
             id = dummyId(123),
             ident = identOfBygning(2, 5, 123456789),

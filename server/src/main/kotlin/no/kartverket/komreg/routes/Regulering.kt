@@ -135,10 +135,6 @@ data class Regulering(
                                     fra = Adressenummernummer(transformasjon.adressenummer.fra.toShort()),
                                     til = Adressenummernummer(transformasjon.adressenummer.til.toShort()),
                                 ),
-                                adressenummerbokstav = FraTil(
-                                    fra = Adressenummerbokstav(transformasjon.adressenummerbokstav.fra.single()),
-                                    til = Adressenummerbokstav(transformasjon.adressenummerbokstav.til.single()),
-                                ),
                             )
                         }
                     }
@@ -259,7 +255,6 @@ data class VegadresseTransformasjonDTO(
     val kommuneløpenummer: FraTilDTO,
     val adressekode: FraTilDTO,
     val adressenummer: FraTilDTO,
-    val adressenummerbokstav: FraTilDTO,
 ) : TransformasjonDTO()
 
 @Serializable

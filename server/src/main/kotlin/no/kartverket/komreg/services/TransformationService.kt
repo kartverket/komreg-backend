@@ -179,10 +179,10 @@ private fun runAndWriteTransformations(
     val identTransformer = IdentTransformer(*mappings.toTypedArray())
 
     CoroutineScope(Dispatchers.IO).launch {
-        // TODO: Fylker må vel også inn via mappings?
-        /*if (input.fylker.isNotEmpty()) {
+        // TODO: Skal opprettelse av fylker og kommuner skje her? Eller via vanlige transformasjoner?
+        if (input.fylker.isNotEmpty()) {
             writeFylker(bootContext, input, entitySinks)
-        }*/
+        }
 
         if (input.kommuner.isNotEmpty()) {
             writeKommuner(bootContext, input, entitySinks, kjoringId, transformationRepo)

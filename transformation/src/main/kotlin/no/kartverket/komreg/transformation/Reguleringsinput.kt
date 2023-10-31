@@ -66,7 +66,6 @@ data class Vegadresseendring(
     val kommuneløpenummer: FraTil<Kommunenummer.Lopenummer>,
     val adressekode: FraTil<Adressekode>,
     val adressenummer: FraTil<Adressenummernummer>,
-    val adressenummerbokstav: FraTil<Adressenummerbokstav>,
 ) : Endring()
 
 fun Reguleringsinput.toMappings(): List<Pair<Ident, IdentTransformer.Mapping>> {
@@ -180,14 +179,12 @@ fun Reguleringsinput.toMappings(): List<Pair<Ident, IdentTransformer.Mapping>> {
                     endring.kommuneløpenummer.fra,
                     endring.adressekode.fra,
                     endring.adressenummer.fra,
-                    endring.adressenummerbokstav.fra,
                 ) to IdentTransformer.Mapping.Simple(
                     Ident(
                         endring.fylkesnummer.til,
                         endring.kommuneløpenummer.til,
                         endring.adressekode.til,
                         endring.adressenummer.til,
-                        endring.adressenummerbokstav.til,
                     ),
                 )
             }
