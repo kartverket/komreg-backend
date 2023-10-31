@@ -23,6 +23,7 @@ data class Regulering(
                     when (transformasjon) {
                         is FylkeTransformasjonDTO -> {
                             Fylkeendring(
+                                // TODO: FraEnTilMange for fylkesdeling for å støtte utgående fylker ++
                                 fylkesnummer = FraTil(
                                     fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
                                     til = Fylkesnummer(
