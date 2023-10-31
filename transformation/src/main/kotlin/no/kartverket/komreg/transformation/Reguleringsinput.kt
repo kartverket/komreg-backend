@@ -1,7 +1,9 @@
 package no.kartverket.komreg.transformation
 
+import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDate
 import no.kartverket.komreg.core.domain.*
+import no.kartverket.komreg.integration.spi.Ident
 
 data class Reguleringsinput(
     val id: String,
@@ -31,7 +33,7 @@ data class Fylkeendring(
 
 data class Kommuneendring(
     override val fylkesnummer: FraTil<Fylkesnummer>,
-    val kommuneløpenummer: FraTil<Kommunenummer.Lopenummer>,
+    val kommuneløpenummer: FraEnTilMange<Kommunenummer.Lopenummer>,
 ) : Endring()
 
 data class Matrikkelenhetendring(
@@ -44,6 +46,7 @@ data class Kretsendring(
     override val fylkesnummer: FraTil<Fylkesnummer>,
     val kommuneløpenummer: FraTil<Kommunenummer.Lopenummer>,
     val kretsnummer: FraTil<Kretsnummer>,
+    val kretstype: FraTil<Kretstype>,
 ) : Endring()
 
 data class Vegendring(
@@ -63,5 +66,128 @@ data class Vegadresseendring(
     val kommuneløpenummer: FraTil<Kommunenummer.Lopenummer>,
     val adressekode: FraTil<Adressekode>,
     val adressenummer: FraTil<Adressenummernummer>,
-    val adressenummerbokstav: FraTil<Adressenummerbokstav>,
 ) : Endring()
+
+fun Reguleringsinput.toMappings(): List<Pair<Ident, IdentTransformer.Mapping>> {
+    return runBlocking {
+        endringer.map { endring ->
+            when (endring) {
+                is Fylkeendring -> Ident(
+                    endring.fylkesnummer.fra,
+                ) to IdentTransformer.Mapping.Replace(
+                    Ident(
+                        endring.fylkesnummer.til,
+                    ),
+                )
+
+                is Kommuneendring -> Ident(
+                    endring.fylkesnummer.fra,
+                    endring.kommuneløpenummer.fra,
+                ) to if (endring.kommuneløpenummer.til.size == 1) {
+                    IdentTransformer.Mapping.Replace(
+                        Ident(
+                            endring.fylkesnummer.til,
+                            endring.kommuneløpenummer.til.single(),
+                        ),
+                        kommuner.find {
+                            it.kommunenummer == Kommunenummer(
+                                endring.fylkesnummer.til,
+                                endring.kommuneløpenummer.til.single(),
+                            )
+                        }?.tilKommunedata(ikrafttredelsesdato), // TODO: Hva gjør vi hvis ingen kommune?
+                    )
+                } else {
+                    IdentTransformer.Mapping.Split(
+                        endring.kommuneløpenummer.til.map { kommuneløpenummerTil ->
+                            Ident(
+                                endring.fylkesnummer.til,
+                                kommuneløpenummerTil,
+                            ) to kommuner.find {
+                                it.kommunenummer == Kommunenummer(
+                                    endring.fylkesnummer.til,
+                                    kommuneløpenummerTil,
+                                )
+                            }?.tilKommunedata(ikrafttredelsesdato) // TODO: Hva gjør vi hvis ingen kommune?
+                        },
+                    )
+                }
+
+                is Matrikkelenhetendring -> Ident(
+                    endring.fylkesnummer.fra,
+                    endring.kommuneløpenummer.fra,
+                    endring.gårdsnummer.fra,
+                ) to IdentTransformer.Mapping.Simple(
+                    Ident(
+                        endring.fylkesnummer.til,
+                        endring.kommuneløpenummer.til,
+                        endring.gårdsnummer.til,
+                    ),
+                )
+
+                is Kretsendring -> Ident(
+                    endring.fylkesnummer.fra,
+                    endring.kommuneløpenummer.fra,
+                    endring.kretsnummer.fra,
+                    endring.kretstype.fra,
+                ) to IdentTransformer.Mapping.Simple(
+                    Ident(
+                        endring.fylkesnummer.til,
+                        endring.kommuneløpenummer.til,
+                        endring.kretsnummer.til,
+                        endring.kretstype.til,
+                    ),
+                )
+
+                is Vegendring -> Ident(
+                    endring.fylkesnummer.fra,
+                    endring.kommuneløpenummer.fra,
+                    endring.adressekode.fra,
+                ) to if (endring.kommuneløpenummer.til.size == 1) {
+                    IdentTransformer.Mapping.Simple(
+                        Ident(
+                            endring.fylkesnummer.til,
+                            endring.kommuneløpenummer.til.single(),
+                            endring.adressekode.til,
+                        ),
+                    )
+                } else {
+                    IdentTransformer.Mapping.Split(
+                        endring.kommuneløpenummer.til.map {
+                            Ident(
+                                endring.fylkesnummer.til,
+                                it,
+                                endring.adressekode.til,
+                            ) to null
+                        },
+                    )
+                }
+
+                is Teigendring -> Ident(
+                    endring.fylkesnummer.fra,
+                    endring.kommuneløpenummer.fra,
+                    endring.teigId.fra,
+                ) to IdentTransformer.Mapping.Simple(
+                    Ident(
+                        endring.fylkesnummer.til,
+                        endring.kommuneløpenummer.til,
+                        endring.teigId.til,
+                    ),
+                )
+
+                is Vegadresseendring -> Ident(
+                    endring.fylkesnummer.fra,
+                    endring.kommuneløpenummer.fra,
+                    endring.adressekode.fra,
+                    endring.adressenummer.fra,
+                ) to IdentTransformer.Mapping.Simple(
+                    Ident(
+                        endring.fylkesnummer.til,
+                        endring.kommuneløpenummer.til,
+                        endring.adressekode.til,
+                        endring.adressenummer.til,
+                    ),
+                )
+            }
+        }
+    }
+}

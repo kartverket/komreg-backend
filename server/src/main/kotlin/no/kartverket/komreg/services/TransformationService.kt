@@ -1,19 +1,14 @@
 package no.kartverket.komreg.services
 
 import com.typesafe.config.ConfigFactory
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.KrAppBootContext
-import no.kartverket.komreg.core.domain.Fylkesdata
-import no.kartverket.komreg.core.domain.Kommunedata
-import no.kartverket.komreg.core.domain.PostadresseForOppretting
+import no.kartverket.komreg.core.domain.*
 import no.kartverket.komreg.integration.EntitySinkManager
 import no.kartverket.komreg.integration.EntitySourceManager
 import no.kartverket.komreg.integration.KommuneServiceManager
@@ -23,8 +18,7 @@ import no.kartverket.komreg.integration.spi.Transformation
 import no.kartverket.komreg.logger
 import no.kartverket.komreg.repositories.KjoringRepo
 import no.kartverket.komreg.repositories.TransformationRepo
-import no.kartverket.komreg.transformation.Reguleringsinput
-import no.kartverket.komreg.transformation.transformerEntity
+import no.kartverket.komreg.transformation.*
 
 @Serializable
 data class TransformationStatusForSource(
@@ -58,7 +52,12 @@ data class TransformationStatusForRegulering(
 
 val transformStatuses = mutableMapOf<String, TransformationStatusForRegulering>()
 
-fun transformEntities(input: Reguleringsinput, kjoringId: Int, transformationRepo: TransformationRepo, kjoringRepo: KjoringRepo) {
+fun transformEntities(
+    input: Reguleringsinput,
+    kjoringId: Int,
+    transformationRepo: TransformationRepo,
+    kjoringRepo: KjoringRepo,
+) {
     logger.info("Starter transformasjon!")
     val transformStatus = TransformationStatusForRegulering().also { transformStatuses[input.id] = it }
     transformStatus.start()
@@ -70,11 +69,18 @@ fun transformEntities(input: Reguleringsinput, kjoringId: Int, transformationRep
     }
 
     val entitySinks = EntitySinkManager(bootContext)
-    val idGeneratorManager = IdGeneratorManager(bootContext)
 
     printMemoryUsage()
 
-    runAndWriteTransformations(bootContext, transformStatus, input, entitySinks, kjoringId, transformationRepo, kjoringRepo)
+    runAndWriteTransformations(
+        bootContext,
+        transformStatus,
+        input,
+        entitySinks,
+        kjoringId,
+        transformationRepo,
+        kjoringRepo,
+    )
 }
 
 private fun printMemoryUsage() {
@@ -144,23 +150,7 @@ private suspend fun writeKommuner(
                     id = kommuneService.idForKommune(kommune.kommunenummer),
                     sourceEntity = null,
                     transformedIdent = Ident(kommune.kommunenummer.fylkesnummer, kommune.kommunenummer.lopenummer),
-                    resultObject = Kommunedata(
-                        navn = kommune.kommunenavn.name,
-                        koordinatsystem = kommune.koordinatsystem,
-                        senterpunkt = kommune.senterpunkt,
-                        nedsattKonsesjonsgrense = kommune.nedsattKonsesjonsgrense,
-                        godkjenteGardsnumre = kommune.godkjenteGardsnumre,
-                        adresse = kommune.adresse?.let {
-                            PostadresseForOppretting(
-                                adresselinje1 = it.adresselinje1?.trim()?.ifEmpty { null },
-                                adresselinje2 = it.adresselinje2?.trim()?.ifEmpty { null },
-                                postnummer = it.postnummer,
-                            )
-                        },
-                        standardRekvirentOrgnummer = kommune.standardRekvirent?.orgnummer,
-                        kommunevapen = kommune.kommunevapen,
-                        ikrafttredelsesdato = input.ikrafttredelsesdato,
-                    ),
+                    resultObject = kommune.tilKommunedata(input.ikrafttredelsesdato),
                 ),
             )
         }
@@ -185,7 +175,11 @@ private fun runAndWriteTransformations(
     val sources = EntitySourceManager(bootContext).entitySources
 
     val idGeneratorManager = IdGeneratorManager(bootContext)
+    val mappings = input.toMappings()
+    val identTransformer = IdentTransformer(*mappings.toTypedArray())
+
     CoroutineScope(Dispatchers.IO).launch {
+        // TODO: Skal opprettelse av fylker og kommuner skje her? Eller via vanlige transformasjoner?
         if (input.fylker.isNotEmpty()) {
             writeFylker(bootContext, input, entitySinks)
         }
@@ -199,12 +193,17 @@ private fun runAndWriteTransformations(
             val type = it.id
             val statusForSource = TransformationStatusForSource(source = type)
             transformStatus.addSourceStatus(statusForSource)
+
             val transformResult = flow
                 .onStart {
                     logger.info("Starter flow av type: $type")
                     statusForSource.firstTransformation = Clock.System.now()
                 }
-                .mapNotNull { entity -> transformerEntity(input, entity, idGeneratorManager) }
+                .mapNotNull { entity ->
+                    identTransformer.transform(entity) { _, type ->
+                        idGeneratorManager.idFor(type)
+                    }
+                }
                 .onEach {
                     statusForSource.numberOfTransformations += 1
                 }
