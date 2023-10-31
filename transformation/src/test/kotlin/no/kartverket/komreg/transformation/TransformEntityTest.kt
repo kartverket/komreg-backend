@@ -19,7 +19,7 @@ class TransformEntityTest {
             Fylkesnummer(3),
             Kommunenummer.Lopenummer(6),
         ),
-        kommunenavn = Kommunenavn("Dummy"),
+        kommunenavn = Kommunenavn("DUMMY"),
         koordinatsystem = Koordinatsystem.UTM32,
         senterpunkt = Koordinat(123.0, 456.0),
         nedsattKonsesjonsgrense = false,
@@ -170,7 +170,6 @@ class TransformEntityTest {
             assertEquals(expected, result?.single()?.transformedAssociatedIdents)
         }
     }
-
 }
 
 private fun identOfMatrikkelenhet(fylkesnummer: Int, lopenummer: Int, gardsnummer: Int) =
@@ -185,4 +184,3 @@ private fun identOfMatrikkelenhet(fylkesnummer: Int, lopenummer: Int, gardsnumme
 private fun identOfKommune(fylkesnummer: Int, lopenummer: Int) = runBlocking {
     Ident(Fylkesnummer(fylkesnummer.toLong()), Kommunenummer.Lopenummer(lopenummer.toByte()))
 }
-
