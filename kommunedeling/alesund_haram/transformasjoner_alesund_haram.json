@@ -1,6 +1,20 @@
 {
     "transformasjoner": [
-        {
+      {
+        "type": "kommune",
+        "fylkesnummer": {
+          "fra": "15",
+          "til": "15"
+        },
+        "kommuneløpenummer": {
+          "fra": "07",
+          "til": [
+            "08",
+            "80"
+          ]
+        }
+      },
+      {
             "type": "matrikkelenhet",
             "fylkesnummer": {
                 "fra": "15",
@@ -25384,6 +25398,7 @@
             "kommuneløpenummer": {
                 "fra": "07",
                 "til": [
+                    "08",
                     "80"
                 ]
             },
@@ -64071,6 +64086,348 @@
                 "fra": "6290000534",
                 "til": "6290000534"
             }
+        },
+      {
+        "type": "vegadresse",
+        "fylkesnummer": {
+          "fra": "15",
+          "til": "15"
+        },
+        "kommuneløpenummer": {
+          "fra": "07",
+          "til": "08"
+        },
+        "adressekode": {
+          "fra": "53000",
+          "til": "53000"
+        },
+        "adressenummer": {
+          "fra": "669",
+          "til": "669"
         }
+      },
+      {
+        "type": "vegadresse",
+        "fylkesnummer": {
+          "fra": "15",
+          "til": "15"
+        },
+        "kommuneløpenummer": {
+          "fra": "07",
+          "til": "08"
+        },
+        "adressekode": {
+          "fra": "53000",
+          "til": "53000"
+        },
+        "adressenummer": {
+          "fra": "675",
+          "til": "675"
+        }
+      },
+      {
+        "type": "vegadresse",
+        "fylkesnummer": {
+          "fra": "15",
+          "til": "15"
+        },
+        "kommuneløpenummer": {
+          "fra": "07",
+          "til": "08"
+        },
+        "adressekode": {
+          "fra": "53000",
+          "til": "53000"
+        },
+        "adressenummer": {
+          "fra": "677",
+          "til": "677"
+        }
+      },
+      {
+        "type": "vegadresse",
+        "fylkesnummer": {
+          "fra": "15",
+          "til": "15"
+        },
+        "kommuneløpenummer": {
+          "fra": "07",
+          "til": "80"
+        },
+        "adressekode": {
+          "fra": "53000",
+          "til": "53000"
+        },
+        "adressenummer": {
+          "fra": "73",
+          "til": "73"
+        }
+      },
+      {
+        "type": "vegadresse",
+        "fylkesnummer": {
+          "fra": "15",
+          "til": "15"
+        },
+        "kommuneløpenummer": {
+          "fra": "07",
+          "til": "80"
+        },
+        "adressekode": {
+          "fra": "53000",
+          "til": "53000"
+        },
+        "adressenummer": {
+          "fra": "76",
+          "til": "76"
+        }
+      },
+      {
+        "type": "vegadresse",
+        "fylkesnummer": {
+          "fra": "15",
+          "til": "15"
+        },
+        "kommuneløpenummer": {
+          "fra": "07",
+          "til": "80"
+        },
+        "adressekode": {
+          "fra": "53000",
+          "til": "53000"
+        },
+        "adressenummer": {
+          "fra": "745",
+          "til": "745"
+        }
+      },
+      {
+        "type": "vegadresse",
+        "fylkesnummer": {
+          "fra": "15",
+          "til": "15"
+        },
+        "kommuneløpenummer": {
+          "fra": "07",
+          "til": "80"
+        },
+        "adressekode": {
+          "fra": "53000",
+          "til": "53000"
+        },
+        "adressenummer": {
+          "fra": "78",
+          "til": "78"
+        }
+      },
+      {
+        "type": "vegadresse",
+        "fylkesnummer": {
+          "fra": "15",
+          "til": "15"
+        },
+        "kommuneløpenummer": {
+          "fra": "07",
+          "til": "80"
+        },
+        "adressekode": {
+          "fra": "53000",
+          "til": "53000"
+        },
+        "adressenummer": {
+          "fra": "440",
+          "til": "440"
+        }
+      },
+      {
+        "type": "vegadresse",
+        "fylkesnummer": {
+          "fra": "15",
+          "til": "15"
+        },
+        "kommuneløpenummer": {
+          "fra": "07",
+          "til": "80"
+        },
+        "adressekode": {
+          "fra": "53000",
+          "til": "53000"
+        },
+        "adressenummer": {
+          "fra": "391",
+          "til": "391"
+        }
+      },
+      {
+        "type": "vegadresse",
+        "fylkesnummer": {
+          "fra": "15",
+          "til": "15"
+        },
+        "kommuneløpenummer": {
+          "fra": "07",
+          "til": "80"
+        },
+        "adressekode": {
+          "fra": "53000",
+          "til": "53000"
+        },
+        "adressenummer": {
+          "fra": "416",
+          "til": "416"
+        }
+      },
+      {
+        "type": "vegadresse",
+        "fylkesnummer": {
+          "fra": "15",
+          "til": "15"
+        },
+        "kommuneløpenummer": {
+          "fra": "07",
+          "til": "80"
+        },
+        "adressekode": {
+          "fra": "53000",
+          "til": "53000"
+        },
+        "adressenummer": {
+          "fra": "414",
+          "til": "414"
+        }
+      },
+      {
+        "type": "vegadresse",
+        "fylkesnummer": {
+          "fra": "15",
+          "til": "15"
+        },
+        "kommuneløpenummer": {
+          "fra": "07",
+          "til": "80"
+        },
+        "adressekode": {
+          "fra": "53000",
+          "til": "53000"
+        },
+        "adressenummer": {
+          "fra": "406",
+          "til": "406"
+        }
+      },
+      {
+        "type": "vegadresse",
+        "fylkesnummer": {
+          "fra": "15",
+          "til": "15"
+        },
+        "kommuneløpenummer": {
+          "fra": "07",
+          "til": "80"
+        },
+        "adressekode": {
+          "fra": "53000",
+          "til": "53000"
+        },
+        "adressenummer": {
+          "fra": "362",
+          "til": "362"
+        }
+      },
+      {
+        "type": "vegadresse",
+        "fylkesnummer": {
+          "fra": "15",
+          "til": "15"
+        },
+        "kommuneløpenummer": {
+          "fra": "07",
+          "til": "80"
+        },
+        "adressekode": {
+          "fra": "53000",
+          "til": "53000"
+        },
+        "adressenummer": {
+          "fra": "75",
+          "til": "75"
+        }
+      },
+      {
+        "type": "vegadresse",
+        "fylkesnummer": {
+          "fra": "15",
+          "til": "15"
+        },
+        "kommuneløpenummer": {
+          "fra": "07",
+          "til": "80"
+        },
+        "adressekode": {
+          "fra": "53000",
+          "til": "53000"
+        },
+        "adressenummer": {
+          "fra": "388",
+          "til": "388"
+        }
+      },
+      {
+        "type": "vegadresse",
+        "fylkesnummer": {
+          "fra": "15",
+          "til": "15"
+        },
+        "kommuneløpenummer": {
+          "fra": "07",
+          "til": "80"
+        },
+        "adressekode": {
+          "fra": "53000",
+          "til": "53000"
+        },
+        "adressenummer": {
+          "fra": "148",
+          "til": "148"
+        }
+      },
+      {
+        "type": "vegadresse",
+        "fylkesnummer": {
+          "fra": "15",
+          "til": "15"
+        },
+        "kommuneløpenummer": {
+          "fra": "07",
+          "til": "80"
+        },
+        "adressekode": {
+          "fra": "53000",
+          "til": "53000"
+        },
+        "adressenummer": {
+          "fra": "146",
+          "til": "146"
+        }
+      },
+      {
+        "type": "vegadresse",
+        "fylkesnummer": {
+          "fra": "15",
+          "til": "15"
+        },
+        "kommuneløpenummer": {
+          "fra": "07",
+          "til": "80"
+        },
+        "adressekode": {
+          "fra": "53000",
+          "til": "53000"
+        },
+        "adressenummer": {
+          "fra": "405",
+          "til": "405"
+        }
+      }
     ]
 }
