@@ -95,7 +95,7 @@ enum class Koordinatsystem {
 
 fun Kommune.tilKommunedata(ikrafttredelsesdato: LocalDate): Kommunedata =
     Kommunedata(
-        navn = kommunenavn.name,
+        navn = kommunenavn.name.uppercase(),
         koordinatsystem = koordinatsystem,
         senterpunkt = senterpunkt,
         nedsattKonsesjonsgrense = nedsattKonsesjonsgrense,
