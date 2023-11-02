@@ -1,15 +1,40 @@
 package no.kartverket.komreg.transformation
 
+import no.kartverket.komreg.core.domain.Fylkesnummer
 import no.kartverket.komreg.core.domain.Id
 import no.kartverket.komreg.core.domain.IdType
+import no.kartverket.komreg.core.domain.Kommunenummer
 import no.kartverket.komreg.integration.spi.*
 import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
-    private val map = mappings.onEach { m ->
-        val sourceType = m.first.type
-        m.second.checkIdentType(sourceType)
-    }.toMap()
+    private val kommuneviseRegler: Map<Kommunenummer, List<Pair<Ident, Mapping>>>
+    private val andreRegler: List<Pair<Ident, Mapping>>
+
+    init {
+        val kRegler = HashMap<Kommunenummer, ArrayList<Pair<Ident, Mapping>>>()
+        val aRegler = ArrayList<Pair<Ident, Mapping>>()
+
+        mappings.forEach { m ->
+            val sourceType = m.first.type
+            m.second.checkIdentType(sourceType)
+
+            val fylkesnummer = m.first.getOrNull<Fylkesnummer>()
+            val kommunelopenummer = m.first.getOrNull<Kommunenummer.Lopenummer>()
+
+            if (fylkesnummer != null && kommunelopenummer != null) {
+                kRegler.computeIfAbsent(Kommunenummer(fylkesnummer, kommunelopenummer)) { ArrayList() }
+                    .add(m)
+            } else {
+                aRegler.add(m)
+            }
+        }
+
+        kommuneviseRegler = kRegler
+        andreRegler = aRegler
+    }
 
     suspend fun transform(
         entity: Entity,
@@ -81,8 +106,19 @@ class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
     }
 
     private suspend fun Ident.transformIdent(): List<Pair<Ident, Payload?>> {
-        return map.map { mapping ->
-            val source = mapping.key
+        val fylkesnummer = getOrNull<Fylkesnummer>()
+        val kommunelopenummer = getOrNull<Kommunenummer.Lopenummer>()
+        val mappings = if (fylkesnummer != null && kommunelopenummer != null) kommuneviseRegler.getOrElse(
+            Kommunenummer(
+                fylkesnummer,
+                kommunelopenummer
+            ),
+            ::emptyList
+        )
+        else andreRegler
+
+        return mappings.map { mapping ->
+            val source = mapping.first
             val matches = source.type.types.mapNotNull { componentType ->
                 type.bottomTypes[componentType]?.let { it to getOrThrow(it) }
             }
@@ -100,7 +136,7 @@ class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
                 else mappingMatches.singleOrNull() // Kan vel aldri bli null, men samma det...
             }
             ?.let { (mapping, matches) ->
-                when (val target = mapping.value) {
+                when (val target = mapping.second) {
                     is Mapping.Simple -> listOf(
                         matches.foldIndexed(this) { targetIndex, transformedIdent, match ->
                             val typeIndex = match.first
