@@ -118,7 +118,7 @@ private suspend fun writeFylker(
                     id = kommuneService.idForFylke(fylke.fylkesnummer),
                     sourceEntity = null,
                     transformedIdent = Ident(fylke.fylkesnummer),
-                    resultObject = Fylkesdata(fylke.fylkesnavn.name),
+                    resultObject = Fylkesdata(fylke.fylkesnavn.name.uppercase()),
                 ),
             )
         }
