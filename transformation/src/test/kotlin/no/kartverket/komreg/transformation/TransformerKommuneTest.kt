@@ -72,7 +72,7 @@ class TransformerKommuneTest : FunSpec({
                     .isNotNull()
                     .isInstanceOf(Kommunedata::class)
                     .all {
-                        prop(Kommunedata::navn).isEqualTo("Ny kommune")
+                        prop(Kommunedata::navn).isEqualTo("NY KOMMUNE")
                         prop(Kommunedata::koordinatsystem).isEqualTo(Koordinatsystem.UTM32)
                         prop(Kommunedata::senterpunkt).isEqualTo(Koordinat(569682.0, 6670739.0))
                         prop(Kommunedata::godkjenteGardsnumre).isEqualTo("1-10")
@@ -165,7 +165,7 @@ class TransformerKommuneTest : FunSpec({
                     .isNotNull()
                     .isInstanceOf(Kommunedata::class)
                     .all {
-                        prop(Kommunedata::navn).isEqualTo("Ny kommune 1")
+                        prop(Kommunedata::navn).isEqualTo("NY KOMMUNE 1")
                         prop(Kommunedata::koordinatsystem).isEqualTo(Koordinatsystem.UTM32)
                         prop(Kommunedata::senterpunkt).isEqualTo(Koordinat(569682.0, 6670739.0))
                         prop(Kommunedata::godkjenteGardsnumre).isEqualTo("1-10")
@@ -179,7 +179,7 @@ class TransformerKommuneTest : FunSpec({
                     .isNotNull()
                     .isInstanceOf(Kommunedata::class)
                     .all {
-                        prop(Kommunedata::navn).isEqualTo("Ny kommune 2")
+                        prop(Kommunedata::navn).isEqualTo("NY KOMMUNE 2")
                         prop(Kommunedata::koordinatsystem).isEqualTo(Koordinatsystem.UTM32)
                         prop(Kommunedata::senterpunkt).isEqualTo(Koordinat(569682.0, 6671739.0))
                         prop(Kommunedata::godkjenteGardsnumre).isEqualTo("11-20")
