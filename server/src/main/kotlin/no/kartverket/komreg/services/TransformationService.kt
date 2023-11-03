@@ -1,14 +1,17 @@
 package no.kartverket.komreg.services
 
 import com.typesafe.config.ConfigFactory
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.KrAppBootContext
-import no.kartverket.komreg.core.domain.*
+import no.kartverket.komreg.core.domain.Fylkesdata
 import no.kartverket.komreg.integration.EntitySinkManager
 import no.kartverket.komreg.integration.EntitySourceManager
 import no.kartverket.komreg.integration.KommuneServiceManager
@@ -18,7 +21,9 @@ import no.kartverket.komreg.integration.spi.Transformation
 import no.kartverket.komreg.logger
 import no.kartverket.komreg.repositories.KjoringRepo
 import no.kartverket.komreg.repositories.TransformationRepo
-import no.kartverket.komreg.transformation.*
+import no.kartverket.komreg.transformation.IdentTransformer
+import no.kartverket.komreg.transformation.Reguleringsinput
+import no.kartverket.komreg.transformation.toMappings
 
 @Serializable
 data class TransformationStatusForSource(
@@ -129,39 +134,6 @@ private suspend fun writeFylker(
     logger.info("Fullført tilbakeføring av fylker")
 }
 
-private suspend fun writeKommuner(
-    bootContext: KrAppBootContext,
-    input: Reguleringsinput,
-    entitySinks: EntitySinkManager,
-    kjoringId: Int,
-    transformationRepo: TransformationRepo,
-) {
-    val kommuneService = KommuneServiceManager(bootContext).kommuneService
-
-    logger.info("Følgende kommuner skal opprettes:")
-    input.kommuner.forEach { kommune ->
-        logger.info("Kommune: ${kommune.kommunenummer} ${kommune.kommunenavn}")
-    }
-
-    val transformedKommuner = flow {
-        input.kommuner.forEach { kommune ->
-            emit(
-                Transformation(
-                    id = kommuneService.idForKommune(kommune.kommunenummer),
-                    sourceEntity = null,
-                    transformedIdent = Ident(kommune.kommunenummer.fylkesnummer, kommune.kommunenummer.lopenummer),
-                    resultObject = kommune.tilKommunedata(input.ikrafttredelsesdato),
-                ),
-            )
-        }
-    }
-
-    logger.info("Starter tilbakeføring av kommuner")
-    entitySinks.consume(transformedKommuner, input.ikrafttredelsesdato.toJavaLocalDate())
-    transformationRepo.writeTransformationsToDatabase(kjoringId, transformedKommuner.toList())
-    logger.info("Fullført tilbakeføring av kommuner")
-}
-
 private fun runAndWriteTransformations(
     bootContext: KrAppBootContext,
     transformStatus: TransformationStatusForRegulering,
@@ -182,10 +154,6 @@ private fun runAndWriteTransformations(
         // TODO: Skal opprettelse av fylker og kommuner skje her? Eller via vanlige transformasjoner?
         if (input.fylker.isNotEmpty()) {
             writeFylker(bootContext, input, entitySinks)
-        }
-
-        if (input.kommuner.isNotEmpty()) {
-            writeKommuner(bootContext, input, entitySinks, kjoringId, transformationRepo)
         }
 
         sources.map {
