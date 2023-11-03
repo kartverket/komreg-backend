@@ -1,14 +1,17 @@
 package no.kartverket.komreg.services
 
 import com.typesafe.config.ConfigFactory
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.KrAppBootContext
-import no.kartverket.komreg.core.domain.*
+import no.kartverket.komreg.core.domain.Fylkesdata
 import no.kartverket.komreg.integration.EntitySinkManager
 import no.kartverket.komreg.integration.EntitySourceManager
 import no.kartverket.komreg.integration.KommuneServiceManager
@@ -18,7 +21,9 @@ import no.kartverket.komreg.integration.spi.Transformation
 import no.kartverket.komreg.logger
 import no.kartverket.komreg.repositories.KjoringRepo
 import no.kartverket.komreg.repositories.TransformationRepo
-import no.kartverket.komreg.transformation.*
+import no.kartverket.komreg.transformation.IdentTransformer
+import no.kartverket.komreg.transformation.Reguleringsinput
+import no.kartverket.komreg.transformation.toMappings
 
 @Serializable
 data class TransformationStatusForSource(
@@ -166,9 +171,6 @@ private fun runAndWriteTransformations(
                     identTransformer.transform(entity, idGeneratorManager::idFor)
                 }
                 .onEach {
-                    if (statusForSource.numberOfTransformations % 1000 == 0) {
-                        logger.info("Har transformert ${statusForSource.numberOfTransformations} av type $type")
-                    }
                     statusForSource.numberOfTransformations += 1
                 }
                 .onCompletion {
