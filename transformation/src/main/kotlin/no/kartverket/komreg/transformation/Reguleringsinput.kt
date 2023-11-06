@@ -99,7 +99,7 @@ fun Reguleringsinput.toMappings(): List<Pair<Ident, IdentTransformer.Mapping>> {
                 } else {
                     IdentTransformer.Mapping.Split(
                         listOf(
-                            Ident.Empty to null, // Ikke sett ny kommune-kobling
+                            Ident.Empty to null, // For å sette gammel kommune utgått
                         ) +
                             endring.kommuneløpenummer.til.map { kommuneløpenummerTil ->
                                 Ident(
