@@ -44,6 +44,16 @@ class TransformEntityTest {
                     til = listOf(Kommunenummer.Lopenummer(6)),
                 ),
             ),
+            Kommuneendring(
+                fylkesnummer = FraTil(
+                    fra = Fylkesnummer(5),
+                    til = Fylkesnummer(5),
+                ),
+                kommuneløpenummer = FraEnTilMange(
+                    fra = Kommunenummer.Lopenummer(5),
+                    til = listOf(Kommunenummer.Lopenummer(7), Kommunenummer.Lopenummer(8)),
+                ),
+            ),
             Vegendring(
                 fylkesnummer = FraTil(
                     fra = Fylkesnummer(2),
@@ -89,6 +99,25 @@ class TransformEntityTest {
             assertEquals(null, result!![0].resultObject)
             assertEquals(dummyKommune.tilKommunedata(ikrafttredelsesdato), result[1].resultObject)
             assertEquals(expected, result[1].transformedIdent)
+        }
+    }
+
+    @Test
+    fun `Splitting av kommune skal returnere tre transformasjoner`() {
+        val entity = Entity(
+            dummyId(123),
+            identOfKommune(5, 5),
+        )
+        runBlocking {
+            val result = identTransformer.transform(entity, idGenerator::idFor)
+
+            val expected = identOfKommune(5, 7)
+            val expected2 = identOfKommune(5, 8)
+
+            assertEquals(3, result!!.size)
+            assertEquals(null, result[0].resultObject)
+            assertEquals(expected, result[1].transformedIdent)
+            assertEquals(expected2, result[2].transformedIdent)
         }
     }
 
@@ -160,7 +189,6 @@ class TransformEntityTest {
             assertEquals(expected, result?.single()?.transformedAssociatedIdents)
         }
     }
-
 }
 
 private fun identOfMatrikkelenhet(fylkesnummer: Int, lopenummer: Int, gardsnummer: Int) =
