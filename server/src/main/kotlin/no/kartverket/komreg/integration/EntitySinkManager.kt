@@ -36,9 +36,7 @@ class EntitySinkManager(private val bootContext: KrAppBootContext) {
             enabled = {
                 entitySinks.forEach { sink ->
                     val (_, time) = measureTimedValue {
-                        transformations.collect {
-                            logger.info("Lokal stub ${sink.id} konsumerer transformasjon: $it")
-                        }
+                        transformations.collect {}
                     }
                     if (time.inWholeSeconds > 5) {
                         logger.info("Mottaker ${sink.id} tok ${time.inWholeMilliseconds}ms")

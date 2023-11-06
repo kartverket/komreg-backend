@@ -98,17 +98,20 @@ fun Reguleringsinput.toMappings(): List<Pair<Ident, IdentTransformer.Mapping>> {
                     )
                 } else {
                     IdentTransformer.Mapping.Split(
-                        endring.kommuneløpenummer.til.map { kommuneløpenummerTil ->
-                            Ident(
-                                endring.fylkesnummer.til,
-                                kommuneløpenummerTil,
-                            ) to kommuner.find {
-                                it.kommunenummer == Kommunenummer(
+                        listOf(
+                            Ident.Empty to null, // Ikke sett ny kommune-kobling
+                        ) +
+                            endring.kommuneløpenummer.til.map { kommuneløpenummerTil ->
+                                Ident(
                                     endring.fylkesnummer.til,
                                     kommuneløpenummerTil,
-                                )
-                            }?.tilKommunedata(ikrafttredelsesdato) // TODO: Hva gjør vi hvis ingen kommune?
-                        },
+                                ) to kommuner.find {
+                                    it.kommunenummer == Kommunenummer(
+                                        endring.fylkesnummer.til,
+                                        kommuneløpenummerTil,
+                                    )
+                                }?.tilKommunedata(ikrafttredelsesdato) // TODO: Hva gjør vi hvis ingen kommune?
+                            },
                     )
                 }
 

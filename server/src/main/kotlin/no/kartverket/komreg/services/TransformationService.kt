@@ -12,6 +12,7 @@ import kotlinx.datetime.toJavaLocalDate
 import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.KrAppBootContext
 import no.kartverket.komreg.core.domain.Fylkesdata
+import no.kartverket.komreg.core.domain.tilKommunedata
 import no.kartverket.komreg.integration.EntitySinkManager
 import no.kartverket.komreg.integration.EntitySourceManager
 import no.kartverket.komreg.integration.KommuneServiceManager
@@ -132,6 +133,39 @@ private suspend fun writeFylker(
     logger.info("Starter tilbakeføring av fylker")
     entitySinks.consume(transformedFylker, input.ikrafttredelsesdato.toJavaLocalDate())
     logger.info("Fullført tilbakeføring av fylker")
+}
+
+private suspend fun writeKommuner(
+    bootContext: KrAppBootContext,
+    input: Reguleringsinput,
+    entitySinks: EntitySinkManager,
+    kjoringId: Int,
+    transformationRepo: TransformationRepo,
+) {
+    val kommuneService = KommuneServiceManager(bootContext).kommuneService
+
+    logger.info("Følgende kommuner skal opprettes:")
+    input.kommuner.forEach { kommune ->
+        logger.info("Kommune: ${kommune.kommunenummer} ${kommune.kommunenavn}")
+    }
+
+    val transformedKommuner = flow {
+        input.kommuner.forEach { kommune ->
+            emit(
+                Transformation(
+                    id = kommuneService.idForKommune(kommune.kommunenummer),
+                    sourceEntity = null,
+                    transformedIdent = Ident(kommune.kommunenummer.fylkesnummer, kommune.kommunenummer.lopenummer),
+                    resultObject = kommune.tilKommunedata(input.ikrafttredelsesdato),
+                ),
+            )
+        }
+    }
+
+    logger.info("Starter tilbakeføring av kommuner")
+    entitySinks.consume(transformedKommuner, input.ikrafttredelsesdato.toJavaLocalDate())
+    transformationRepo.writeTransformationsToDatabase(kjoringId, transformedKommuner.toList())
+    logger.info("Fullført tilbakeføring av kommuner")
 }
 
 private fun runAndWriteTransformations(
