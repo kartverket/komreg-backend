@@ -30080,25 +30080,6 @@
                 "til": "08"
             },
             "kretsnummer": {
-                "fra": "8040601",
-                "til": "8040601"
-            },
-            "kretstype": {
-                "fra": "K",
-                "til": "K"
-            }
-        },
-        {
-            "type": "krets",
-            "fylkesnummer": {
-                "fra": "15",
-                "til": "15"
-            },
-            "kommuneløpenummer": {
-                "fra": "07",
-                "til": "08"
-            },
-            "kretsnummer": {
                 "fra": "8040402",
                 "til": "8040402"
             },
@@ -32176,6 +32157,25 @@
             "kretstype": {
                 "fra": "G",
                 "til": "G"
+            }
+        },
+        {
+            "type": "krets",
+            "fylkesnummer": {
+                "fra": "15",
+                "til": "15"
+            },
+            "kommuneløpenummer": {
+                "fra": "07",
+                "til": "80"
+            },
+            "kretsnummer": {
+                "fra": "8040601",
+                "til": "8040601"
+            },
+            "kretstype": {
+                "fra": "K",
+                "til": "K"
             }
         },
         {
