@@ -1,4 +1,5 @@
 import json
+from typing import List
 
 
 def createRegulering(grunndata, fordeling_input, reguleringNavn):
@@ -46,16 +47,34 @@ def createRegulering(grunndata, fordeling_input, reguleringNavn):
             'adressekode': {'fra': adresse['adressekode'], 'til': adresse['adressekode']},
         })
 
+    
+    alleredeFordelteKretser = [item['fra'] for sublist in fordeling_input['krets'].values() for item in sublist]
+
     for krets in grunndata['kretser']:
-        til_value = fordeling_input['krets'].get(krets['kretsnummer'], kommune1)
-        nytt_kretsnummer = krets.get('nytt_kretsnummer', krets['kretsnummer'])
-        transformasjoner.append({
-            'type': 'krets',
-            'fylkesnummer': {'fra': fylkesnummer, 'til': fylkesnummer},
-            'kommuneløpenummer': {'fra': eksisterende_kommuneløpenummer, 'til': til_value},
-            'kretsnummer': {'fra': krets['kretsnummer'], 'til': nytt_kretsnummer},
-            'kretstype': {'fra': krets['kretstype'], 'til': krets['kretstype']},
-        })
+      
+        if krets["kretsnummer"] not in alleredeFordelteKretser:
+            transformasjoner.append({
+                'type': 'krets',
+                'fylkesnummer': {'fra': fordeling_input["fylkesnummer"], 'til': fordeling_input["fylkesnummer"]},
+                'kommuneløpenummer': {'fra': fordeling_input["eksisterende_kommuneløpenummer"], 'til': kommune1},
+                'kretsnummer': {'fra': krets['kretsnummer'], 'til': krets['kretsnummer']},
+                'kretstype': {'fra': krets['kretstype'], 'til': krets['kretstype']},
+                })
+
+
+
+    for kommunelopenummer in fordeling_input['krets'].keys():
+            if (len(fordeling_input['krets'][kommunelopenummer]) > 0 and isinstance(fordeling_input['krets'][kommunelopenummer], List)):
+                for fordelingsKrets in fordeling_input['krets'][kommunelopenummer]:
+                    
+                    transformasjoner.append({
+                        'type': 'krets',
+                        'fylkesnummer': {'fra': fordeling_input["fylkesnummer"], 'til': fordeling_input["fylkesnummer"]},
+                        'kommuneløpenummer': {'fra': fordeling_input["eksisterende_kommuneløpenummer"], 'til': kommunelopenummer},
+                        'kretsnummer': {'fra': fordelingsKrets['fra'], 'til': fordelingsKrets['til']},
+                        'kretstype': {'fra': fordelingsKrets['kretstype'], 'til': fordelingsKrets['kretstype']},
+                        })
+    
 
     for teig in grunndata['teiger']:
         til_value = fordeling_input['teig'].get(teig['teigId'], kommune1)

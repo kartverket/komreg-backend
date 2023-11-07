@@ -46,7 +46,10 @@ dev = 'https://komreg-backend.dev.skip.statkart.no/'
 local = 'http://localhost:8080'
 test = 'https://komreg-backend.test.skip.statkart.no/'
 
-with open('alesund_haram/fordeling_input_alesund_haram.json', 'r', encoding='utf8') as f:
+# Path til fordelingsinput
+fordelingsInputPath = 'alesund_haram/fordeling_input_alesund_haram.json'
+
+with open(fordelingsInputPath, 'r', encoding='utf8') as f:
     fordeling_input = json.load(f)
 
 # Kommunenummeret til kommunen du skal hente fordelingsparametere for
@@ -55,5 +58,4 @@ nyKommune1 = fordeling_input["fylkesnummer"] + fordeling_input["kommuneløpenumm
 nyKommune2 = fordeling_input["fylkesnummer"] + fordeling_input["kommuneløpenummer2"]
 
 createRegulering(fordeling_input=fordeling_input, grunndata=createGrunndataTilFordeling(local, kommunenr), reguleringNavn = kommunenr + "->" + nyKommune1 + "_" + nyKommune2 + "_regulering")
-
 
