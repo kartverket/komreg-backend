@@ -86,23 +86,19 @@ def createRegulering(grunndata, fordeling_input, reguleringNavn):
         })
 
     if (fordeling_input['vegadresse']):
-
-        
-        
+ 
         for adressekode in fordeling_input["vegadresse"].keys():
-            foo: dict = {}
-            
-            #print("adressekode " + adressekode)
-            foo["type"] = "vegadresse"
-            foo["fylkesnummer"] = {"fra": fylkesnummer, "til": fylkesnummer}
+            adressekodeDict: dict = {}
+            adressekodeDict["type"] = "vegadresse"
+            adressekodeDict["fylkesnummer"] = {"fra": fylkesnummer, "til": fylkesnummer}
             
             for kommunelopenummer in fordeling_input["vegadresse"][adressekode]:
-                foo["komuneløpenummer"] = {"fra": eksisterende_kommuneløpenummer, "til": kommunelopenummer}
-                foo["adressekode"] = {"fra": adressekode, "til": adressekode}
+                adressekodeDict["kommuneløpenummer"] = {"fra": eksisterende_kommuneløpenummer, "til": kommunelopenummer}
+                adressekodeDict["adressekode"] = {"fra": adressekode, "til": adressekode}
                 
                 if (len(fordeling_input["vegadresse"][adressekode][kommunelopenummer]) > 1):
                     for adressenummer in fordeling_input["vegadresse"][adressekode][kommunelopenummer]:
-                        foo["adressenummer"] = {"fra": adressenummer, "til": adressenummer}
-                        transformasjoner.append(dict(foo))
+                        adressekodeDict["adressenummer"] = {"fra": adressenummer, "til": adressenummer}
+                        transformasjoner.append(dict(adressekodeDict))
     
     save_json({'transformasjoner': transformasjoner}, reguleringNavn + '.json')
