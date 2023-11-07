@@ -41,10 +41,12 @@ def createGrunndataTilFordeling(envUrl: str, kommunenr: str, vegadresser: List[s
     return grunndata
 
 
-#Miljø du vil hente grunndata fra
-dev = 'https://komreg-backend.dev.skip.statkart.no/'
-local = 'http://localhost:8080'
-test = 'https://komreg-backend.test.skip.statkart.no/'
+#Tilgjengelige miljøer
+dev = {"url" :'https://komreg-backend.dev.skip.statkart.no/', "env": "dev"}
+local = {"url": 'http://localhost:8080', "env": "local"}
+test = {"url": 'https://komreg-backend.test.skip.statkart.no/', "env": "test"}
+
+
 
 # Path til fordelingsinput
 fordelingsInputPath = 'alesund_haram/fordeling_input_alesund_haram.json'
@@ -57,5 +59,8 @@ kommunenr = fordeling_input["fylkesnummer"] + fordeling_input["eksisterende_komm
 nyKommune1 = fordeling_input["fylkesnummer"] + fordeling_input["kommuneløpenummer1"]
 nyKommune2 = fordeling_input["fylkesnummer"] + fordeling_input["kommuneløpenummer2"]
 
-createRegulering(fordeling_input=fordeling_input, grunndata=createGrunndataTilFordeling(local, kommunenr), reguleringNavn = kommunenr + "->" + nyKommune1 + "_" + nyKommune2 + "_regulering")
+# Setter hvilket miljø du vil hente grunndata fra
+valgtEnv = test
+
+createRegulering(fordeling_input=fordeling_input, grunndata=createGrunndataTilFordeling(valgtEnv["url"], kommunenr), reguleringNavn = kommunenr + "->" + nyKommune1 + "_" + nyKommune2 + "_" + valgtEnv["env"] + "_regulering")
 
