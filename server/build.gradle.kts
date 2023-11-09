@@ -10,7 +10,6 @@ plugins {
 configurations.all {
     resolutionStrategy {
         cacheChangingModulesFor(0, "seconds")
-        force("io.netty:netty-codec-http2:4.1.100.Final")
     }
 }
 
@@ -53,6 +52,7 @@ dependencies {
     api("no.statkart.matrikkel:matrikkel-komreg:4.15-SNAPSHOT") {
         isChanging = true
     }
+    implementation("io.netty:netty-codec-http2:4.1.100.Final")
 
     implementation(libs.kotlin.reflect)
 
