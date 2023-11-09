@@ -4,13 +4,11 @@ import assertk.all
 import assertk.assertThat
 import assertk.assertions.*
 import io.kotest.core.spec.style.FunSpec
-import io.mockk.mockk
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 import no.kartverket.komreg.core.domain.*
 import no.kartverket.komreg.integration.spi.Entity
-import no.kartverket.komreg.integration.spi.KommuneService
 import no.kartverket.komreg.integration.spi.Transformation
 import no.kartverket.komreg.integration.spi.invoke
 
@@ -21,7 +19,6 @@ class TransformerVegadresserTest : FunSpec({
 
     test("Ignorer uinvolverte") {
         val idGeneratorManager = mockIdGenerator()
-        val kommuneService = mockk<KommuneService>()
 
         val adresseparsellIdentType = getAdresseparsellIdentType()
 
@@ -61,6 +58,7 @@ class TransformerVegadresserTest : FunSpec({
                 emptyList(),
                 emptyList(),
             ),
+            emptyList(),
             listOf(vegSource),
             emptyList(),
             listOf(sink),
@@ -74,7 +72,6 @@ class TransformerVegadresserTest : FunSpec({
 
     test("Flytt hel adresseparsell") {
         val idGeneratorManager = mockIdGenerator()
-        val kommuneService = mockk<KommuneService>()
 
         val adresseparsellIdentType = getAdresseparsellIdentType()
         val vegadresseIdentType = getVegadresseIdentType()
@@ -127,6 +124,7 @@ class TransformerVegadresserTest : FunSpec({
                 emptyList(),
                 emptyList(),
             ),
+            emptyList(),
             listOf(vegSource, vegadresseSource),
             emptyList(),
             listOf(sink),
@@ -179,8 +177,6 @@ class TransformerVegadresserTest : FunSpec({
     }
 
     context("Splitt adresseparsell") {
-        val kommuneService = mockk<KommuneService>()
-
         val adresseparsellIdentType = getAdresseparsellIdentType()
         val vegadresseIdentType = getVegadresseIdentType()
 
@@ -239,6 +235,7 @@ class TransformerVegadresserTest : FunSpec({
                     emptyList(),
                     emptyList(),
                 ),
+                emptyList(),
                 listOf(vegSource, vegadresseSource),
                 emptyList(),
                 listOf(sink),
@@ -325,6 +322,7 @@ class TransformerVegadresserTest : FunSpec({
                     emptyList(),
                     emptyList(),
                 ),
+                emptyList(),
                 listOf(vegSource, vegadresseSource),
                 emptyList(),
                 listOf(sink),

@@ -17,11 +17,11 @@ class TestStorage : Storage {
         return transformations.asFlow()
     }
 
-    override fun createTilbakeføringsstatusForKjoring(kjoringId: Int, entitySinks: List<EntitySink>) {
+    override fun createTilbakeforingsstatusForKjoring(kjoringId: Int, entitySinks: List<EntitySink>) {
         return
     }
 
-    override fun setTilbakeføringsStatusForSink(
+    override fun setTilbakeforingsStatusForSink(
         sink: EntitySink,
         status: String,
         kjoringId: Int,
@@ -30,15 +30,15 @@ class TestStorage : Storage {
         return
     }
 
-    override fun hentIkkeStartedeTilbakeføringerForNyeEntiteter(kjoringId: Int): List<String> {
+    override fun hentIkkeStartedeTilbakeforingerForNyeEntiteter(kjoringId: Int): List<String> {
         return listOf(mockSink.id)
     }
 
-    override fun hentIkkeStartedeTilbakeføringerForErstattendeEntiteter(kjoringId: Int): List<String> {
+    override fun hentIkkeStartedeTilbakeforingerForErstattendeEntiteter(kjoringId: Int): List<String> {
         return listOf(mockSink.id)
     }
 
-    override fun setStatusForKjøring(kjoringId: Int, status: String) {
+    override fun setStatusForKjoring(kjoringId: Int, status: String) {
         return
     }
 }
