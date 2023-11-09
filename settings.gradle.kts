@@ -30,7 +30,7 @@ dependencyResolutionManagement {
             version("junit", "5.9.0")
             version("spek", "2.0.19")
             version("kotest", "5.7.2")
-            version("ktor", "2.2.4")
+            version("ktor", "2.3.5")
             version("hamcrest", "2.2")
             version("logback", "1.4.5")
             version("micrometer-prometheus", "1.10.3")
