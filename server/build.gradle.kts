@@ -10,6 +10,7 @@ plugins {
 configurations.all {
     resolutionStrategy {
         cacheChangingModulesFor(0, "seconds")
+        force("io.netty:netty-codec-http2:4.1.100.Final")
     }
 }
 
