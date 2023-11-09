@@ -61,6 +61,7 @@ class TransformerVegadresserTest : FunSpec({
                 emptyList(),
                 emptyList()
             ),
+            emptyList(),
             listOf(vegSource),
             emptyList(),
             listOf(sink),
@@ -127,6 +128,7 @@ class TransformerVegadresserTest : FunSpec({
                 emptyList(),
                 emptyList()
             ),
+            emptyList(),
             listOf(vegSource, vegadresseSource),
             emptyList(),
             listOf(sink),
@@ -233,6 +235,7 @@ class TransformerVegadresserTest : FunSpec({
                     emptyList(),
                     emptyList()
                 ),
+                emptyList(),
                 listOf(vegSource, vegadresseSource),
                 emptyList(),
                 listOf(sink),
@@ -319,6 +322,7 @@ class TransformerVegadresserTest : FunSpec({
                     emptyList(),
                     emptyList()
                 ),
+                emptyList(),
                 listOf(vegSource, vegadresseSource),
                 emptyList(),
                 listOf(sink),

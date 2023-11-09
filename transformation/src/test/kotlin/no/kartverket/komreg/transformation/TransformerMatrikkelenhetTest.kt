@@ -74,6 +74,7 @@ class TransformerMatrikkelenhetTest : FunSpec({
                     )
                 )
             ),
+            emptyList(),
             listOf(source),
             emptyList(),
             listOf(sink),
@@ -200,6 +201,7 @@ class TransformerMatrikkelenhetTest : FunSpec({
                     emptyList(),
                     nyeKommuner
                 ),
+                emptyList(),
                 listOf(source),
                 emptyList(),
                 listOf(sink),
@@ -261,6 +263,7 @@ class TransformerMatrikkelenhetTest : FunSpec({
                     emptyList(),
                     nyeKommuner
                 ),
+                emptyList(),
                 listOf(source),
                 emptyList(),
                 listOf(sink),

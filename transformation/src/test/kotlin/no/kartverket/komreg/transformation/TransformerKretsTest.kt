@@ -73,6 +73,7 @@ class TransformerKretsTest : FunSpec({
                     )
                 )
             ),
+            emptyList(),
             listOf(source),
             emptyList(),
             listOf(sink),
@@ -170,6 +171,7 @@ class TransformerKretsTest : FunSpec({
                     )
                 )
             ),
+            emptyList(),
             listOf(source),
             emptyList(),
             listOf(sink),

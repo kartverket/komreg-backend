@@ -79,6 +79,7 @@ class TransformerTeigTest : FunSpec({
                     )
                 )
             ),
+            emptyList(),
             listOf(source),
             emptyList(),
             listOf(sink),
@@ -207,6 +208,7 @@ class TransformerTeigTest : FunSpec({
                     )
                 )
             ),
+            emptyList(),
             listOf(source),
             emptyList(),
             listOf(sink),

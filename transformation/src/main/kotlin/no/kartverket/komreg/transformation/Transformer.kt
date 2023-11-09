@@ -15,6 +15,7 @@ interface Storage {
 suspend fun transform(
     kjoringId: Int,
     input: Reguleringsinput,
+    lifeCycleHandlers: List<LifeCycleHandler>,
     entitySources: List<EntitySource>,
     entityProcessors: List<EntityProcessor>,
     entitySinks: List<EntitySink>,
@@ -22,61 +23,87 @@ suspend fun transform(
     kommuneService: KommuneService,
     storage: Storage,
 ) {
-    // TODO: Fjern når Fylkeendring får FraEnTilMange
-    if (input.fylker.isNotEmpty()) {
-        val fylkeFlow = createFylker(input, kommuneService)
-        storage.writeTransformationsToDatabase(kjoringId, fylkeFlow.toList())
-    }
+    var t: Throwable? = null
 
-    val transformer = IdentTransformer(mapInput(input))
+    try {
+        lifeCycleHandlers.forEach { it.beforeRun() }
 
-    entitySources.forEach { entitySource ->
-        val flow = entitySource.entityFlow
-        val transformResult = flow
-            .mapNotNull { entity ->
-                val result = transformer.transform(entity, idGeneratorManager::idFor)
-                result
-            }
-
-        val transformResultFlow = transformResult.transform { list ->
-            list.forEach { emit(it) }
+        // TODO: Fjern når Fylkeendring får FraEnTilMange
+        if (input.fylker.isNotEmpty()) {
+            val fylkeFlow = createFylker(input, kommuneService)
+            storage.writeTransformationsToDatabase(kjoringId, fylkeFlow.toList())
         }
-        transformResultFlow.chunked(10000)
-            .collect { chunk ->
-                storage.writeTransformationsToDatabase(kjoringId, chunk)
+
+        val transformer = IdentTransformer(mapInput(input))
+
+        entitySources.forEach { entitySource ->
+            val flow = entitySource.entityFlow
+            val transformResult = flow
+                .mapNotNull { entity ->
+                    val result = transformer.transform(entity, idGeneratorManager::idFor)
+                    result
+                }
+
+            val transformResultFlow = transformResult.transform { list ->
+                list.forEach { emit(it) }
             }
-    }
+            transformResultFlow.chunked(10000)
+                .collect { chunk ->
+                    storage.writeTransformationsToDatabase(kjoringId, chunk)
+                }
+        }
 
-    entityProcessors.forEach { processor ->
-        storage.readTransformationsFromDatabase(kjoringId)
-            .collect { processor.consume(it) }
-        val result = processor.produce()
-        storage.writeTransformationsToDatabase(kjoringId, result.toList())
-    }
+        entityProcessors.forEach { processor ->
+            storage.readTransformationsFromDatabase(kjoringId)
+                .collect { processor.consume(it) }
+            val result = processor.produce()
+            storage.writeTransformationsToDatabase(kjoringId, result.toList())
+        }
 
-    val transformations = storage.readTransformationsFromDatabase(kjoringId)
+        val transformations = storage.readTransformationsFromDatabase(kjoringId)
 
-    // Kjør ut alle nyopprettinger
-    entitySinks.forEach { sink ->
-        sink.consumeTransformations(
-            transformations.filter {
-                val sourceEntity = it.sourceEntity
-                sourceEntity == null || sourceEntity.id != it.id
-            },
-            input.ikrafttredelsesdato.toJavaLocalDate()
-        )
-    }
+        // Kjør ut alle nyopprettinger
+        entitySinks.forEach { sink ->
+            sink.consumeTransformations(
+                transformations.filter {
+                    val sourceEntity = it.sourceEntity
+                    sourceEntity == null || sourceEntity.id != it.id
+                },
+                input.ikrafttredelsesdato.toJavaLocalDate()
+            )
+        }
 
-    // Kjør ut resten
-    // TODO: Hva med "slettinger"
-    entitySinks.forEach { sink ->
-        sink.consumeTransformations(
-            transformations.filter {
-                val sourceEntity = it.sourceEntity
-                sourceEntity != null && sourceEntity.id == it.id
-            },
-            input.ikrafttredelsesdato.toJavaLocalDate()
-        )
+        // Kjør ut resten
+        // TODO: Hva med "slettinger"
+        entitySinks.forEach { sink ->
+            sink.consumeTransformations(
+                transformations.filter {
+                    val sourceEntity = it.sourceEntity
+                    sourceEntity != null && sourceEntity.id == it.id
+                },
+                input.ikrafttredelsesdato.toJavaLocalDate()
+            )
+        }
+    } catch (tt: Throwable) {
+        t = tt
+        throw tt
+    } finally {
+        val tt = lifeCycleHandlers.asReversed().fold(t) { tt, it ->
+            try {
+                it.afterRun(tt == null)
+                tt
+            } catch (t2: Throwable) {
+                if (tt != null) {
+                    tt.addSuppressed(t2)
+                    tt
+                } else {
+                    t2
+                }
+            }
+        }
+        if (tt != null && tt !== t) {
+            throw tt
+        }
     }
 }
 

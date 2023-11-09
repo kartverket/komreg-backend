@@ -54,6 +54,7 @@ class TransformerKommuneTest : FunSpec({
                     )
                 )
             ),
+            emptyList(),
             listOf(source),
             emptyList(),
             listOf(sink),
@@ -147,6 +148,7 @@ class TransformerKommuneTest : FunSpec({
                     ),
                 )
             ),
+            emptyList(),
             listOf(source),
             emptyList(),
             listOf(sink),

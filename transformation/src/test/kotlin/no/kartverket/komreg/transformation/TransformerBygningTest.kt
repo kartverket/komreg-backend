@@ -82,6 +82,7 @@ class TransformerBygningTest : FunSpec({
                     )
                 )
             ),
+            emptyList(),
             listOf(byggSource),
             emptyList(),
             listOf(sink),
@@ -201,6 +202,7 @@ class TransformerBygningTest : FunSpec({
             transform(
                 1,
                 input,
+                emptyList(),
                 listOf(byggSource),
                 emptyList(),
                 listOf(sink),
@@ -251,6 +253,7 @@ class TransformerBygningTest : FunSpec({
             transform(
                 1,
                 input,
+                emptyList(),
                 listOf(byggSource),
                 emptyList(),
                 listOf(sink),
