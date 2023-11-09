@@ -12,6 +12,7 @@ import no.kartverket.komreg.featureToggle
 import no.kartverket.komreg.integration.EntityProcessorManager
 import no.kartverket.komreg.integration.EntitySinkManager
 import no.kartverket.komreg.integration.EntitySourceManager
+import no.kartverket.komreg.integration.LifeCycleHandlerManager
 import no.kartverket.komreg.integration.spi.IdGeneratorManager
 import no.kartverket.komreg.logger
 import no.kartverket.komreg.repositories.KjoringRepo
@@ -21,6 +22,7 @@ import no.kartverket.komreg.transformation.Reguleringsinput
 import no.kartverket.komreg.transformation.Storage
 import no.kartverket.komreg.transformation.transform
 
+@Suppress("LocalVariableName", "NonAsciiCharacters")
 fun transformEntities(
     input: Reguleringsinput,
     kjoringId: Int,
@@ -68,6 +70,7 @@ private fun printMemoryUsage() {
     }
 }
 
+@Suppress("LocalVariableName", "NonAsciiCharacters")
 private fun runAndWriteTransformations(
     bootContext: KrAppBootContext,
     input: Reguleringsinput,
@@ -78,12 +81,13 @@ private fun runAndWriteTransformations(
     tilbakeføringsstatusRepo: TilbakeføringsstatusRepo,
 
 ) {
+    val skalTilbakefores = !bootContext.config.featureToggle("feature.disable_sink")
+
+    val lifeCycleHandlers = LifeCycleHandlerManager(bootContext).lifeCycleHandlers
     val sources = EntitySourceManager(bootContext).entitySources
     val processors = EntityProcessorManager(bootContext).entityProcessors
 
     val idGeneratorManager = IdGeneratorManager(bootContext)
-
-    val skalTilbakefores = !bootContext.config.featureToggle("feature.disable_sink")
 
     val mdc = CoroutineMDC(
         mapOf(
@@ -103,6 +107,7 @@ private fun runAndWriteTransformations(
             transform(
                 kjoringId,
                 input,
+                lifeCycleHandlers,
                 sources,
                 processors,
                 entitySinks.entitySinks,

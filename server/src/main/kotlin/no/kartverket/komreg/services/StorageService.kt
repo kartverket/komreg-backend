@@ -6,6 +6,7 @@ import no.kartverket.komreg.integration.spi.Transformation
 import no.kartverket.komreg.repositories.*
 import no.kartverket.komreg.transformation.Storage
 
+@Suppress("PrivatePropertyName", "NonAsciiCharacters")
 class StorageService(
     private val transformationRepo: TransformationRepo,
     private val tilbakeføringsstatusRepo: TilbakeføringsstatusRepo,
@@ -19,11 +20,11 @@ class StorageService(
         return transformationRepo.readTransformationFromDatabase(kjoringId)
     }
 
-    override fun createTilbakeføringsstatusForKjoring(kjoringId: Int, entitySinks: List<EntitySink>) {
+    override fun createTilbakeforingsstatusForKjoring(kjoringId: Int, entitySinks: List<EntitySink>) {
         tilbakeføringsstatusRepo.createTilbakeføringsstatusForKjoring(kjoringId, entitySinks)
     }
 
-    override fun setTilbakeføringsStatusForSink(
+    override fun setTilbakeforingsStatusForSink(
         sink: EntitySink,
         status: String,
         kjoringId: Int,
@@ -37,15 +38,15 @@ class StorageService(
         )
     }
 
-    override fun hentIkkeStartedeTilbakeføringerForNyeEntiteter(kjoringId: Int): List<String> {
+    override fun hentIkkeStartedeTilbakeforingerForNyeEntiteter(kjoringId: Int): List<String> {
         return tilbakeføringsstatusRepo.hentIkkeStartedeTilbakeføringerForNyeEntiteter(kjoringId)
     }
 
-    override fun hentIkkeStartedeTilbakeføringerForErstattendeEntiteter(kjoringId: Int): List<String> {
+    override fun hentIkkeStartedeTilbakeforingerForErstattendeEntiteter(kjoringId: Int): List<String> {
         return tilbakeføringsstatusRepo.hentIkkeStartedeTilbakeføringerForErstattendeEntiteter(kjoringId)
     }
 
-    override fun setStatusForKjøring(kjoringId: Int, status: String) {
+    override fun setStatusForKjoring(kjoringId: Int, status: String) {
         kjoringRepo.setStatusForKjøring(kjoringId, Kjoringstatus.valueOf(status))
     }
 }

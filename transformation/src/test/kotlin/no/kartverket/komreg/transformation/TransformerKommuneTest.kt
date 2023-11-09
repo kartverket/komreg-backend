@@ -4,7 +4,6 @@ import assertk.all
 import assertk.assertThat
 import assertk.assertions.*
 import io.kotest.core.spec.style.FunSpec
-import io.mockk.mockk
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
@@ -14,7 +13,6 @@ import no.kartverket.komreg.integration.spi.*
 class TransformerKommuneTest : FunSpec({
     test("Flytt kommune mellom fylker") {
         val idGeneratorManager = mockIdGenerator()
-        val kommuneService = mockk<KommuneService>()
 
         val kommuneIdentType = getKommuneIdentType()
 
@@ -54,6 +52,7 @@ class TransformerKommuneTest : FunSpec({
                     ),
                 ),
             ),
+            emptyList(),
             listOf(source),
             emptyList(),
             listOf(sink),
@@ -89,7 +88,6 @@ class TransformerKommuneTest : FunSpec({
 
     test("Splitt kommune") {
         val idGeneratorManager = mockIdGenerator()
-        val kommuneService = mockk<KommuneService>()
 
         val kommuneIdentType = identTypeOf2<Fylkesnummer, Kommunenummer.Lopenummer>()
 
@@ -147,6 +145,7 @@ class TransformerKommuneTest : FunSpec({
                     ),
                 ),
             ),
+            emptyList(),
             listOf(source),
             emptyList(),
             listOf(sink),

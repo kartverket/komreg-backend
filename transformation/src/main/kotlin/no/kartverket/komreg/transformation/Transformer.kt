@@ -14,19 +14,20 @@ interface Storage {
 
     fun readTransformationsFromDatabase(kjoringId: Int): Flow<Transformation>
 
-    fun createTilbakeføringsstatusForKjoring(kjoringId: Int, entitySinks: List<EntitySink>)
+    fun createTilbakeforingsstatusForKjoring(kjoringId: Int, entitySinks: List<EntitySink>)
 
-    fun setTilbakeføringsStatusForSink(sink: EntitySink, status: String, kjoringId: Int, erOppretting: Boolean)
-    fun hentIkkeStartedeTilbakeføringerForNyeEntiteter(kjoringId: Int): List<String>
+    fun setTilbakeforingsStatusForSink(sink: EntitySink, status: String, kjoringId: Int, erOppretting: Boolean)
+    fun hentIkkeStartedeTilbakeforingerForNyeEntiteter(kjoringId: Int): List<String>
 
-    fun hentIkkeStartedeTilbakeføringerForErstattendeEntiteter(kjoringId: Int): List<String>
+    fun hentIkkeStartedeTilbakeforingerForErstattendeEntiteter(kjoringId: Int): List<String>
 
-    fun setStatusForKjøring(kjoringId: Int, status: String)
+    fun setStatusForKjoring(kjoringId: Int, status: String)
 }
 
 suspend fun transform(
     kjoringId: Int,
     input: Reguleringsinput,
+    lifeCycleHandlers: List<LifeCycleHandler>,
     entitySources: List<EntitySource>,
     entityProcessors: List<EntityProcessor>,
     entitySinks: List<EntitySink>,
@@ -36,11 +37,13 @@ suspend fun transform(
 ) {
     val transformer = IdentTransformer(mapInput(input))
 
-    val gjenværendeSinkerForNyeEntiteter = storage.hentIkkeStartedeTilbakeføringerForNyeEntiteter(kjoringId)
-    val gjenværendeSinkerForErstattendeEntiteter =
-        storage.hentIkkeStartedeTilbakeføringerForErstattendeEntiteter(kjoringId)
+    val gjenvarendeSinkerForNyeEntiteter = storage.hentIkkeStartedeTilbakeforingerForNyeEntiteter(kjoringId)
+    val gjenvarendeSinkerForErstattendeEntiteter =
+        storage.hentIkkeStartedeTilbakeforingerForErstattendeEntiteter(kjoringId)
 
-    if (gjenværendeSinkerForNyeEntiteter.isNotEmpty() && gjenværendeSinkerForErstattendeEntiteter.isNotEmpty()) {
+    if (gjenvarendeSinkerForNyeEntiteter.isNotEmpty() && gjenvarendeSinkerForErstattendeEntiteter.isNotEmpty()) {
+        lifeCycleHandlers.forEach { it.beforeRun(!skalTilbakefores) }
+
         entitySources.forEach { entitySource ->
             val flow = entitySource.entityFlow
 
@@ -72,13 +75,13 @@ suspend fun transform(
 
     if (skalTilbakefores) {
         // Kjør ut alle nyopprettinger
-        storage.setStatusForKjøring(kjoringId, "STARTET_TILBAKEFØRING")
+        storage.setStatusForKjoring(kjoringId, "STARTET_TILBAKEFØRING")
 
         entitySinks.forEach { sink ->
 
-            if (gjenværendeSinkerForNyeEntiteter.contains(sink.id)) {
+            if (gjenvarendeSinkerForNyeEntiteter.contains(sink.id)) {
                 try {
-                    storage.setTilbakeføringsStatusForSink(sink, "TILBAKEFØRER", kjoringId, erOppretting = true)
+                    storage.setTilbakeforingsStatusForSink(sink, "TILBAKEFØRER", kjoringId, erOppretting = true)
                     sink.consumeTransformations(
                         transformations.filter {
                             val sourceEntity = it.sourceEntity
@@ -87,10 +90,10 @@ suspend fun transform(
                         input.ikrafttredelsesdato.toJavaLocalDate(),
 
                     )
-                    storage.setTilbakeføringsStatusForSink(sink, "FERDIG", kjoringId, erOppretting = true)
+                    storage.setTilbakeforingsStatusForSink(sink, "FERDIG", kjoringId, erOppretting = true)
                 } catch (e: Exception) {
-                    storage.setTilbakeføringsStatusForSink(sink, "FEILET", kjoringId, erOppretting = true)
-                    storage.setStatusForKjøring(kjoringId, "TILBAKEFØRING_FEILET")
+                    storage.setTilbakeforingsStatusForSink(sink, "FEILET", kjoringId, erOppretting = true)
+                    storage.setStatusForKjoring(kjoringId, "TILBAKEFØRING_FEILET")
                     throw e
                 }
             }
@@ -99,9 +102,9 @@ suspend fun transform(
         // Kjør ut resten
         // TODO: Hva med "slettinger"
         entitySinks.forEach { sink ->
-            if (gjenværendeSinkerForErstattendeEntiteter.contains(sink.id)) {
+            if (gjenvarendeSinkerForErstattendeEntiteter.contains(sink.id)) {
                 try {
-                    storage.setTilbakeføringsStatusForSink(sink, "TILBAKEFØRER", kjoringId, erOppretting = false)
+                    storage.setTilbakeforingsStatusForSink(sink, "TILBAKEFØRER", kjoringId, erOppretting = false)
                     sink.consumeTransformations(
                         transformations.filter {
                             val sourceEntity = it.sourceEntity
@@ -109,19 +112,19 @@ suspend fun transform(
                         },
                         input.ikrafttredelsesdato.toJavaLocalDate(),
                     )
-                    storage.setTilbakeføringsStatusForSink(sink, "FERDIG", kjoringId, erOppretting = false)
+                    storage.setTilbakeforingsStatusForSink(sink, "FERDIG", kjoringId, erOppretting = false)
                 } catch (e: Exception) {
-                    storage.setTilbakeføringsStatusForSink(sink, "FEILET", kjoringId, erOppretting = false)
-                    storage.setStatusForKjøring(kjoringId, "TILBAKEFØRING_FEILET")
+                    storage.setTilbakeforingsStatusForSink(sink, "FEILET", kjoringId, erOppretting = false)
+                    storage.setStatusForKjoring(kjoringId, "TILBAKEFØRING_FEILET")
                     throw e
                 }
             }
         }
 
-        storage.setStatusForKjøring(kjoringId, "FULLFØRT_TILBAKEFØRING")
+        storage.setStatusForKjoring(kjoringId, "FULLFØRT_TILBAKEFØRING")
     } else {
         transformations.collect()
-        storage.setStatusForKjøring(kjoringId, "IKKE_TILBAKEFØRT")
+        storage.setStatusForKjoring(kjoringId, "IKKE_TILBAKEFØRT")
     }
 
     entitySinks
@@ -143,6 +146,8 @@ suspend fun transform(
                     }
                 }
         }
+
+    lifeCycleHandlers.forEach { it.afterRun(!skalTilbakefores) }
 }
 
 suspend fun mapInput(input: Reguleringsinput): List<Pair<Ident, IdentTransformer.Mapping>> {
@@ -312,26 +317,6 @@ suspend fun mapKretsendring(kretsendring: Kretsendring): Pair<Ident, IdentTransf
             kretsendring.kretsnummer.til,
         ),
     )
-}
-
-private suspend fun createFylker(
-    input: Reguleringsinput,
-    kommuneService: KommuneService,
-): Flow<Transformation> {
-    val fylkeIdentType = identTypeOf1<Fylkesnummer>()
-
-    return flow {
-        input.fylker.forEach { fylke ->
-            emit(
-                Transformation(
-                    id = kommuneService.idForFylke(fylke.fylkesnummer),
-                    sourceEntity = null,
-                    transformedIdent = fylkeIdentType(fylke.fylkesnummer),
-                    resultObject = Fylkesdata(fylke.fylkesnavn.name),
-                ),
-            )
-        }
-    }
 }
 
 fun <T> Flow<T>.chunked(size: Int): Flow<List<T>> = flow {
