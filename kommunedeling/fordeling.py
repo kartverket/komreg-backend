@@ -2,11 +2,7 @@ import json
 from typing import List
 
 
-def createRegulering(grunndata, fordeling_input, reguleringNavn):
-
-    def save_json(data, filename):
-        with open(filename, 'w', encoding='utf8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=4)
+def createRegulering(grunndata, fordeling_input):
 
 
     transformasjoner = []
@@ -101,4 +97,5 @@ def createRegulering(grunndata, fordeling_input, reguleringNavn):
                         adressekodeDict["adressenummer"] = {"fra": adressenummer, "til": adressenummer}
                         transformasjoner.append(dict(adressekodeDict))
     
-    save_json({'transformasjoner': transformasjoner}, reguleringNavn + '.json')
+
+    return transformasjoner

@@ -1,0 +1,104 @@
+[
+  {
+    "navn": "ÅLESUND",
+    "fylkesnummer": "15",
+    "kommunenummer": "08",
+    "gyldigTilDato": null,
+    "koordinatsystem": "UTM32",
+    "senterpunkt": {
+      "x": 353608.0,
+      "y": 6930083.0
+    },
+    "nedsattKonsesjonsgrense": false,
+    "godkjenteGardsnumre": [
+      {
+        "fra": 1,
+        "til": 56
+      },
+      {
+        "fra": 117,
+        "til": 123
+      },
+      {
+        "fra": 131,
+        "til": 164
+      },
+      {
+        "fra": 190,
+        "til": 190
+      },
+      {
+        "fra": 200,
+        "til": 201
+      },
+      {
+        "fra": 502,
+        "til": 569
+      },
+      {
+        "fra": 670,
+        "til": 709
+      },
+      {
+        "fra": 803,
+        "til": 816
+      }
+    ],
+    "adresse": {
+      "adresselinje1": null,
+      "adresselinje2": "v/Per Anders Aure, Serviceboks 21",
+      "postnummer": "6025",
+      "poststed": "ÅLESUND"
+    },
+    "standardRekvirent": {
+      "orgnummer": "920415288",
+      "navn": "ÅLESUND KOMMUNE"
+    },
+    "kommunevapen": "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"
+  },
+  {
+    "navn": "HARAM",
+    "fylkesnummer": "15",
+    "kommunenummer": "80",
+    "gyldigTilDato": null,
+    "koordinatsystem": "UTM32",
+    "senterpunkt": {
+      "x": 368905.0,
+      "y": 6943357.0
+    },
+    "nedsattKonsesjonsgrense": false,
+    "godkjenteGardsnumre": [
+      {
+        "fra": 303,
+        "til": 329
+      },
+      {
+        "fra": 370,
+        "til": 387
+      },
+      {
+        "fra": 389,
+        "til": 411
+      },
+      {
+        "fra": 416,
+        "til": 416
+      },
+      {
+        "fra": 465,
+        "til": 481
+      }
+    ],
+    "adresse": {
+      "adresselinje1": null,
+      "adresselinje2": "v/Bente Klokk",
+      "postnummer": "6270",
+      "poststed": "BRATTVÅG"
+    },
+    "standardRekvirent": {
+      "orgnummer": "964980810",
+      "navn": "HARAM KOMMUNE"
+    },
+    "kommunevapen": "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"
+  }
+]
