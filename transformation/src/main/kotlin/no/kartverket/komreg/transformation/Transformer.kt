@@ -32,6 +32,7 @@ suspend fun transform(
 
     entitySources.forEach { entitySource ->
         val flow = entitySource.entityFlow
+
         val transformResult = flow
             .mapNotNull { entity ->
                 val result = transformer.transform(entity, idGeneratorManager::idFor)
@@ -63,7 +64,7 @@ suspend fun transform(
                 val sourceEntity = it.sourceEntity
                 sourceEntity == null || sourceEntity.id != it.id
             },
-            input.ikrafttredelsesdato.toJavaLocalDate()
+            input.ikrafttredelsesdato.toJavaLocalDate(),
         )
     }
 
@@ -75,7 +76,7 @@ suspend fun transform(
                 val sourceEntity = it.sourceEntity
                 sourceEntity != null && sourceEntity.id == it.id
             },
-            input.ikrafttredelsesdato.toJavaLocalDate()
+            input.ikrafttredelsesdato.toJavaLocalDate(),
         )
     }
 }
@@ -99,7 +100,7 @@ private suspend fun mapInput(input: Reguleringsinput): List<Pair<Ident, IdentTra
 private suspend fun mapKommuneendring(
     kommuneendring: Kommuneendring,
     kommuneMap: Map<Kommunenummer, Kommune>,
-    ikrafttredelsesdato: LocalDate
+    ikrafttredelsesdato: LocalDate,
 ): Pair<Ident, IdentTransformer.Mapping> {
     val kommuneIdentType: IdentType2<Fylkesnummer, Kommunenummer.Lopenummer> = identTypeOf2()
 
@@ -116,13 +117,13 @@ private suspend fun mapKommuneendring(
         val t = til[0]
         IdentTransformer.Mapping.Replace(
             t.first,
-            t.second
+            t.second,
         )
     } else {
         IdentTransformer.Mapping.Split(
             listOf(
                 Ident.Empty to null, // Ikke sett ny kommune-kobling
-            ) + til
+            ) + til,
         )
     }
 }
@@ -133,13 +134,13 @@ suspend fun mapMatrikkelenhetendring(matrikkelenhetendring: Matrikkelenhetendrin
     return gardsnummerIdentType(
         matrikkelenhetendring.fylkesnummer.fra,
         matrikkelenhetendring.kommuneløpenummer.fra,
-        matrikkelenhetendring.gårdsnummer.fra
+        matrikkelenhetendring.gårdsnummer.fra,
     ) to IdentTransformer.Mapping.Simple(
         gardsnummerIdentType(
             matrikkelenhetendring.fylkesnummer.til,
             matrikkelenhetendring.kommuneløpenummer.til,
-            matrikkelenhetendring.gårdsnummer.til
-        )
+            matrikkelenhetendring.gårdsnummer.til,
+        ),
     )
 }
 
@@ -149,13 +150,13 @@ suspend fun mapTeig(teigendring: Teigendring): Pair<Ident, IdentTransformer.Mapp
     return teigIdentType(
         teigendring.fylkesnummer.fra,
         teigendring.kommuneløpenummer.fra,
-        teigendring.teigId.fra
+        teigendring.teigId.fra,
     ) to IdentTransformer.Mapping.Simple(
         teigIdentType(
             teigendring.fylkesnummer.til,
             teigendring.kommuneløpenummer.til,
-            teigendring.teigId.til
-        )
+            teigendring.teigId.til,
+        ),
     )
 }
 
@@ -166,19 +167,19 @@ suspend fun mapVegendring(vegendring: Vegendring): Pair<Ident, IdentTransformer.
         adresseparsellIdentType(
             vegendring.fylkesnummer.til,
             tilKnln,
-            vegendring.adressekode.til
+            vegendring.adressekode.til,
         ) to null
     }
 
     return adresseparsellIdentType(
         vegendring.fylkesnummer.fra,
         vegendring.kommuneløpenummer.fra,
-        vegendring.adressekode.fra
+        vegendring.adressekode.fra,
     ) to if (til.size == 1) {
         val t = til[0]
         IdentTransformer.Mapping.Simple(
             t.first,
-            t.second
+            t.second,
         )
     } else {
         IdentTransformer.Mapping.Split(til)
@@ -199,7 +200,7 @@ suspend fun mapVegadresseendring(vegadresseendring: Vegadresseendring): Pair<Ide
             vegadresseendring.kommuneløpenummer.til,
             vegadresseendring.adressekode.til,
             vegadresseendring.adressenummer.til,
-        )
+        ),
     )
 }
 
@@ -217,7 +218,7 @@ suspend fun mapKretsendring(kretsendring: Kretsendring): Pair<Ident, IdentTransf
             kretsendring.kommuneløpenummer.til,
             kretsendring.kretstype.til,
             kretsendring.kretsnummer.til,
-        )
+        ),
     )
 }
 

@@ -16,7 +16,7 @@ class EntitySinkManager(private val bootContext: KrAppBootContext) {
 
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
-    private val entitySinks: List<EntitySink>
+    val entitySinks: List<EntitySink>
 
     init {
         val services = ServiceLoader.load(EntitySinkFactory::class.java)
