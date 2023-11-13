@@ -4,7 +4,7 @@ import com.typesafe.config.ConfigFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -21,9 +21,9 @@ import no.kartverket.komreg.integration.spi.Transformation
 import no.kartverket.komreg.logger
 import no.kartverket.komreg.repositories.KjoringRepo
 import no.kartverket.komreg.repositories.TransformationRepo
-import no.kartverket.komreg.transformation.IdentTransformer
 import no.kartverket.komreg.transformation.Reguleringsinput
-import no.kartverket.komreg.transformation.toMappings
+import no.kartverket.komreg.transformation.Storage
+import no.kartverket.komreg.transformation.transform
 
 @Serializable
 data class TransformationStatusForSource(
@@ -83,7 +83,7 @@ fun transformEntities(
         input,
         entitySinks,
         kjoringId,
-        transformationRepo,
+        StorageService(transformationRepo),
         kjoringRepo,
     )
 }
@@ -140,55 +140,26 @@ private fun runAndWriteTransformations(
     input: Reguleringsinput,
     entitySinks: EntitySinkManager,
     kjoringId: Int,
-    transformationRepo: TransformationRepo,
+    storage: Storage,
     kjoringRepo: KjoringRepo,
 
 ) {
     val sources = EntitySourceManager(bootContext).entitySources
 
     val idGeneratorManager = IdGeneratorManager(bootContext)
-    val mappings = input.toMappings()
-    val identTransformer = IdentTransformer(*mappings.toTypedArray())
 
     CoroutineScope(Dispatchers.IO).launch {
-        // TODO: Skal opprettelse av fylker og kommuner skje her? Eller via vanlige transformasjoner?
-        if (input.fylker.isNotEmpty()) {
-            writeFylker(bootContext, input, entitySinks)
-        }
+        transform(
+            kjoringId,
+            input,
+            sources,
+            emptyList(),
+            entitySinks.entitySinks,
+            idGeneratorManager,
+            KommuneServiceManager(bootContext).kommuneService,
+            storage,
+        )
 
-        sources.map {
-            val flow = it.entityFlow
-            val type = it.id
-            val statusForSource = TransformationStatusForSource(source = type)
-            transformStatus.addSourceStatus(statusForSource)
-
-            val transformResult = flow
-                .onStart {
-                    logger.info("Starter flow av type: $type")
-                    statusForSource.firstTransformation = Clock.System.now()
-                }
-                .mapNotNull { entity ->
-                    identTransformer.transform(entity, idGeneratorManager::idFor)
-                }
-                .onEach {
-                    statusForSource.numberOfTransformations += 1
-                }
-                .onCompletion {
-                    logger.info("Fullført transformasjoner for flow av type $type")
-                    statusForSource.transformationFinished = Clock.System.now()
-                }
-
-            val transformResultList = transformResult.toList().flatten()
-            val newFlow: Flow<Transformation> = transformResultList.asFlow()
-
-            logger.info("Starter tilbakeføring fra source: $type")
-            entitySinks.consume(newFlow, input.ikrafttredelsesdato.toJavaLocalDate())
-
-            transformationRepo.writeTransformationsToDatabase(kjoringId, transformResultList)
-
-            logger.info("Fullført tilbakeføring av source: $type")
-            statusForSource.tilbakeføringFinished = Clock.System.now()
-        }
         transformStatus.finish()
         kjoringRepo.updateKjoringEndTime(kjoringId)
         logger.info("Avsluttet alle transformasjoner!")

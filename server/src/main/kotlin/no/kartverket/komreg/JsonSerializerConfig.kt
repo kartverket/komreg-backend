@@ -21,6 +21,7 @@ fun jsonSerializer() = Json {
         }
         polymorphic(Payload::class) {
             subclass(Kommunedata::class)
+            subclass(Fylkesdata::class)
 
             registerSerializationList.forEach {
                 with(it) {
