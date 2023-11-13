@@ -115,4 +115,4 @@ transformasjoner = createRegulering(fordeling_input=fordeling_input, grunndata=c
 
 
 
-save_json({"nyeKommuner": nyeKommuner, "transformasjoner": transformasjoner}, kommunenr + "->" + nyKommune1 + "_" + nyKommune2 + "_" + valgtEnv["env"] + "_regulering.json")
+save_json({"nyeKommuner": nyeKommuner, "transformasjoner": transformasjoner}, kommunenr + "_til_" + nyKommune1 + "_" + nyKommune2 + "_" + valgtEnv["env"] + "_regulering.json")
