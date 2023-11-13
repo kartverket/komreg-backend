@@ -4,7 +4,7 @@ import com.typesafe.config.ConfigFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -83,7 +83,7 @@ fun transformEntities(
         input,
         entitySinks,
         kjoringId,
-        storage = StorageService(transformationRepo),
+        StorageService(transformationRepo),
         kjoringRepo,
     )
 }
@@ -149,11 +149,6 @@ private fun runAndWriteTransformations(
     val idGeneratorManager = IdGeneratorManager(bootContext)
 
     CoroutineScope(Dispatchers.IO).launch {
-        // TODO: Skal opprettelse av fylker og kommuner skje her? Eller via vanlige transformasjoner?
-        if (input.fylker.isNotEmpty()) {
-            writeFylker(bootContext, input, entitySinks)
-        }
-
         transform(
             kjoringId,
             input,
