@@ -5,7 +5,7 @@ import java.sql.Timestamp
 import javax.sql.DataSource
 
 class KjoringRepo(
-    private val dataSource: DataSource
+    private val dataSource: DataSource,
 ) {
     fun insertAndRetrieveKjoringId(reguleringId: String): Int? {
         dataSource.connection.use { connection ->
@@ -34,6 +34,14 @@ class KjoringRepo(
             updateStatement.setTimestamp(1, endTime)
             updateStatement.setInt(2, kjoringId)
             updateStatement.executeUpdate()
+        }
+    }
+
+    fun setLastSuccessfullSink(kjoringId: Int) {
+        dataSource.connection.use {
+            val updateStatement = connection.prepareStatement(
+                "UPDATE kjoring SET ",
+            )
         }
     }
 }

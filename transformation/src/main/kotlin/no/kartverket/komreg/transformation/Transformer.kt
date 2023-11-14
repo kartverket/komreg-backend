@@ -58,6 +58,7 @@ suspend fun transform(
 
     val transformations = storage.readTransformationsFromDatabase(kjoringId)
 
+
     if (skalTilbakefores) {
         // Kjør ut alle nyopprettinger
         entitySinks.forEach { sink ->
@@ -68,6 +69,8 @@ suspend fun transform(
                 },
                 input.ikrafttredelsesdato.toJavaLocalDate(),
             )
+            kjoringsrepo.updateConfigForKjoring(kjoringId, sink.id, true, false)
+            configrepo.addConfig("sink", true, false)
         }
 
         // Kjør ut resten
@@ -81,7 +84,7 @@ suspend fun transform(
                 input.ikrafttredelsesdato.toJavaLocalDate(),
             )
         }
-    } else {
+    } else
         transformations.collect()
     }
 }
