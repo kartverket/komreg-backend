@@ -21,6 +21,7 @@ suspend fun transform(
     idGeneratorManager: IdGeneratorManager,
     kommuneService: KommuneService,
     storage: Storage,
+    tilbakeforing: Boolean,
 ) {
     // TODO: Fjern når Fylkeendring får FraEnTilMange
     if (input.fylker.isNotEmpty()) {
@@ -57,27 +58,33 @@ suspend fun transform(
 
     val transformations = storage.readTransformationsFromDatabase(kjoringId)
 
-    // Kjør ut alle nyopprettinger
-    entitySinks.forEach { sink ->
-        sink.consumeTransformations(
-            transformations.filter {
-                val sourceEntity = it.sourceEntity
-                sourceEntity == null || sourceEntity.id != it.id
-            },
-            input.ikrafttredelsesdato.toJavaLocalDate(),
-        )
-    }
+    when (tilbakeforing) {
+        true -> {
+            // Kjør ut alle nyopprettinger
+            entitySinks.forEach { sink ->
+                sink.consumeTransformations(
+                    transformations.filter {
+                        val sourceEntity = it.sourceEntity
+                        sourceEntity == null || sourceEntity.id != it.id
+                    },
+                    input.ikrafttredelsesdato.toJavaLocalDate(),
+                )
+            }
 
-    // Kjør ut resten
-    // TODO: Hva med "slettinger"
-    entitySinks.forEach { sink ->
-        sink.consumeTransformations(
-            transformations.filter {
-                val sourceEntity = it.sourceEntity
-                sourceEntity != null && sourceEntity.id == it.id
-            },
-            input.ikrafttredelsesdato.toJavaLocalDate(),
-        )
+            // Kjør ut resten
+            // TODO: Hva med "slettinger"
+            entitySinks.forEach { sink ->
+                sink.consumeTransformations(
+                    transformations.filter {
+                        val sourceEntity = it.sourceEntity
+                        sourceEntity != null && sourceEntity.id == it.id
+                    },
+                    input.ikrafttredelsesdato.toJavaLocalDate(),
+                )
+            }
+        }
+
+        false -> transformations.collect()
     }
 }
 
