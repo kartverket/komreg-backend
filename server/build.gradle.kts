@@ -52,7 +52,7 @@ dependencies {
     api("no.statkart.matrikkel:matrikkel-komreg:4.15-SNAPSHOT") {
         isChanging = true
     }
-    implementation("io.netty:netty-codec-http2:4.1.100.Final")
+    implementation("io.netty:netty-codec-http2:4.1.101.Final")
 
     implementation(libs.kotlin.reflect)
 
