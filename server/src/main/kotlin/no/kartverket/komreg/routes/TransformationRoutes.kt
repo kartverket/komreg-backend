@@ -10,15 +10,16 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.kartverket.komreg.exceptions.MissingPathVariableException
-import no.kartverket.komreg.repositories.KjoringRepo
-import no.kartverket.komreg.repositories.ReguleringRepo
-import no.kartverket.komreg.repositories.TransformationRepo
+import no.kartverket.komreg.exceptions.ReguleringAlreadyFinishedException
+import no.kartverket.komreg.repositories.*
 import no.kartverket.komreg.services.transformEntities
+import java.sql.SQLException
 
 fun Application.transformationRoutes(
     transformationRepo: TransformationRepo,
     kjoringRepo: KjoringRepo,
     reguleringRepo: ReguleringRepo,
+    tilbakeføringsstatusRepo: TilbakeføringsstatusRepo,
 ) {
     routing {
         route("/run/{regId}") {
@@ -29,17 +30,42 @@ fun Application.transformationRoutes(
                     val regulering = reguleringRepo.getReguleringById(regId)
                         ?: throw NotFoundException("Fant ingen regulering for regId: $regId")
 
+                    kjoringRepo.getStatusForKjoringMedReguleringsId(regId).any { it.status === Kjoringstatus.FERDIG }
+                        .also { if (it) throw ReguleringAlreadyFinishedException(regId) }
+
                     call.application.log.info("Starter transformasjon for regulering: $regId")
 
-                    val kjoringId = kjoringRepo.insertAndRetrieveKjoringId(regId)
-                    if (kjoringId != null) {
+                    val kjoringsomskalgjenopptas = kjoringRepo.finnStoppetKjøringForRegulering(regId)
+
+                    if (kjoringsomskalgjenopptas != null) {
+                        transformEntities(
+                            regulering.toReguleringsinput(),
+                            kjoringsomskalgjenopptas.id,
+                            transformationRepo,
+                            kjoringRepo,
+                            tilbakeføringsstatusRepo,
+                        )
+                        call.application.log.info("Gjenopptar kjøring med id: ${kjoringsomskalgjenopptas.id}, og regId: $regId")
+
+                        call.respond(
+                            HttpStatusCode.OK,
+                            "Gjenopptar kjøring med id: ${kjoringsomskalgjenopptas.id}, og regId: $regId",
+                        )
+                    } else {
+                        val kjoringId = kjoringRepo.insertAndRetrieveKjoringId(regId)
+                            ?: throw SQLException("Kunne ikke opprette kjøring for regId: $regId")
                         val reguleringsinput = regulering.toReguleringsinput()
 
-                        transformEntities(reguleringsinput, kjoringId, transformationRepo, kjoringRepo)
+                        transformEntities(
+                            reguleringsinput,
+                            kjoringId,
+                            transformationRepo,
+                            kjoringRepo,
+                            tilbakeføringsstatusRepo,
+                        )
 
-                        call.respond("OK")
-                    } else {
-                        call.respond(HttpStatusCode.InternalServerError, "Failed to insert into kjoring table.")
+                        call.application.log.info("Starter ny kjøring med id: $kjoringId, og regId: $regId")
+                        call.respond(HttpStatusCode.OK, "Starter ny kjøring med id: $kjoringId, og regId: $regId")
                     }
                 } catch (t: Exception) {
                     call.application.log.error("Feil under serialisering", t)
@@ -47,6 +73,16 @@ fun Application.transformationRoutes(
                         is NotFoundException -> call.respond(
                             HttpStatusCode.NotFound,
                             "Not found exception: ${t.message}",
+                        )
+
+                        is SQLException -> call.respond(
+                            HttpStatusCode.InternalServerError,
+                            "SQL exception: ${t.message}",
+                        )
+
+                        is ReguleringAlreadyFinishedException -> call.respond(
+                            HttpStatusCode.Conflict,
+                            "${t::class.simpleName}: ${t.message}",
                         )
 
                         else -> call.respond(HttpStatusCode.InternalServerError, "Internal server error: ${t.message}")

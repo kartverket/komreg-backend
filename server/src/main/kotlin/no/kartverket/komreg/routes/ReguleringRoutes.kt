@@ -5,7 +5,6 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.application
 import io.ktor.server.application.call
 import io.ktor.server.application.log
-import io.ktor.server.request.receive
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
 import io.ktor.server.routing.*
@@ -52,19 +51,6 @@ fun Application.reguleringRoutes(reguleringRepo: ReguleringRepo) {
                 } catch (e: Exception) {
                     application.log.error("${e.message}")
                     call.respond(HttpStatusCode.InternalServerError, "Failed to save Regulering.")
-                }
-            }
-        }
-
-        // Modify (replace) existing regulering
-        route("/reguleringer") {
-            put {
-                val regulering: Regulering = call.receive()
-
-                if (reguleringRepo.updateRegulering(regulering)) {
-                    call.respond(HttpStatusCode.OK, "Regulering with ID ${regulering.id} updated successfully.")
-                } else {
-                    call.respond(HttpStatusCode.NotFound, "Regulering with ID ${regulering.id} not found.")
                 }
             }
         }
