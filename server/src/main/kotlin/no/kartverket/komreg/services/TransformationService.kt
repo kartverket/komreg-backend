@@ -76,6 +76,8 @@ private fun runAndWriteTransformations(
 
     val idGeneratorManager = IdGeneratorManager(bootContext)
 
+    val tilbakeforing = !bootContext.config.featureToggle("feature.disable_sink")
+
     CoroutineScope(Dispatchers.IO).launch {
         transform(
             kjoringId,
@@ -86,7 +88,7 @@ private fun runAndWriteTransformations(
             idGeneratorManager,
             KommuneServiceManager(bootContext).kommuneService,
             storage,
-            !bootContext.config.featureToggle("feature.disable_sink"),
+            tilbakeforing,
         )
 
         kjoringRepo.updateKjoringEndTime(kjoringId)
