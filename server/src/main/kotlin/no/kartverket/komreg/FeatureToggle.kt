@@ -6,15 +6,10 @@ import org.slf4j.LoggerFactory
 
 private val featureToggleLogger: Logger = LoggerFactory.getLogger({}::class.java)
 
-suspend fun Config.featureToggle(
+fun Config.featureToggle(
     feature: String,
-    enabled: suspend () -> Unit,
-    disabled: suspend () -> Unit = {},
-) {
+): Boolean {
     val isFeatureEnabled = this.getBoolean(feature)
     featureToggleLogger.debug("FeatureToggle invoked: $feature = $isFeatureEnabled")
-    when (isFeatureEnabled) {
-        true -> enabled()
-        false -> disabled()
-    }
+    return isFeatureEnabled
 }

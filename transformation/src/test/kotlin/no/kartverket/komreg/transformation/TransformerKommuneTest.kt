@@ -21,8 +21,8 @@ class TransformerKommuneTest : FunSpec({
         val source = mockSource(
             Entity(
                 id = Id(TestIdType.Kommune, 1234),
-                ident = kommuneIdentType(Fylkesnummer(12), Kommunenummer.Lopenummer(34))
-            )
+                ident = kommuneIdentType(Fylkesnummer(12), Kommunenummer.Lopenummer(34)),
+            ),
         )
 
         val sink = MockSink()
@@ -35,8 +35,8 @@ class TransformerKommuneTest : FunSpec({
                 listOf(
                     Kommuneendring(
                         FraTil(Fylkesnummer(12), Fylkesnummer(13)),
-                        FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(35)))
-                    )
+                        FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(35))),
+                    ),
                 ),
                 emptyList(),
                 listOf(
@@ -50,16 +50,17 @@ class TransformerKommuneTest : FunSpec({
                         "1-10",
                         null,
                         null,
-                        null
-                    )
-                )
+                        null,
+                    ),
+                ),
             ),
             listOf(source),
             emptyList(),
             listOf(sink),
             idGeneratorManager,
             kommuneService,
-            TestStorage()
+            TestStorage(),
+            true,
         )
 
         assertThat(sink::transformations).apply {
@@ -96,8 +97,8 @@ class TransformerKommuneTest : FunSpec({
         val source = mockSource(
             Entity(
                 id = Id(TestIdType.Kommune, 1234),
-                ident = kommuneIdentType(Fylkesnummer(12), Kommunenummer.Lopenummer(34))
-            )
+                ident = kommuneIdentType(Fylkesnummer(12), Kommunenummer.Lopenummer(34)),
+            ),
         )
 
         val sink = MockSink()
@@ -115,9 +116,9 @@ class TransformerKommuneTest : FunSpec({
                             listOf(
                                 Kommunenummer.Lopenummer(35),
                                 Kommunenummer.Lopenummer(36),
-                            )
-                        )
-                    )
+                            ),
+                        ),
+                    ),
                 ),
                 emptyList(),
                 listOf(
@@ -131,7 +132,7 @@ class TransformerKommuneTest : FunSpec({
                         "1-10",
                         null,
                         null,
-                        null
+                        null,
                     ),
                     Kommune(
                         Kommunenummer(1236),
@@ -143,16 +144,17 @@ class TransformerKommuneTest : FunSpec({
                         "11-20",
                         null,
                         null,
-                        null
+                        null,
                     ),
-                )
+                ),
             ),
             listOf(source),
             emptyList(),
             listOf(sink),
             idGeneratorManager,
             kommuneService,
-            TestStorage()
+            TestStorage(),
+            true,
         )
 
         assertThat(sink::transformations).apply {

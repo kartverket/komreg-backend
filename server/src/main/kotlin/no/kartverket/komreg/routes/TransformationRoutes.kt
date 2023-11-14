@@ -14,7 +14,6 @@ import no.kartverket.komreg.repositories.KjoringRepo
 import no.kartverket.komreg.repositories.ReguleringRepo
 import no.kartverket.komreg.repositories.TransformationRepo
 import no.kartverket.komreg.services.transformEntities
-import no.kartverket.komreg.services.transformStatuses
 
 fun Application.transformationRoutes(
     transformationRepo: TransformationRepo,
@@ -47,18 +46,12 @@ fun Application.transformationRoutes(
                     when (t) {
                         is NotFoundException -> call.respond(
                             HttpStatusCode.NotFound,
-                            "Not found exception: ${t.message}"
+                            "Not found exception: ${t.message}",
                         )
 
                         else -> call.respond(HttpStatusCode.InternalServerError, "Internal server error: ${t.message}")
                     }
                 }
-            }
-        }
-
-        route("/transform/status") {
-            get {
-                call.respond(transformStatuses)
             }
         }
     }

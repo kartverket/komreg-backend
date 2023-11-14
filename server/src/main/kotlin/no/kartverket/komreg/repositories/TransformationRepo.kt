@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.serialization.json.Json
 import no.kartverket.komreg.core.domain.Id
 import no.kartverket.komreg.integration.spi.Transformation
-import no.kartverket.komreg.logger
 import java.sql.PreparedStatement
 import javax.sql.DataSource
 
@@ -20,8 +19,6 @@ class TransformationRepo(
             connection.prepareStatement(
                 "INSERT INTO transformasjon (transformasjonsid, kjoring, transformasjon, tid) VALUES (?::jsonb, ?, ?::jsonb, now())",
             ).use { statement ->
-                logger.info("Number of transformations: ${transformResultList.size}")
-
                 transformResultList.chunked(100000) {
                     writeChunk(kjoringId, statement, it)
                 }

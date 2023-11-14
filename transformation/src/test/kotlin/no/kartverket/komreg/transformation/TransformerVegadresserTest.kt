@@ -31,16 +31,16 @@ class TransformerVegadresserTest : FunSpec({
                 ident = adresseparsellIdentType(
                     Fylkesnummer(12),
                     Kommunenummer.Lopenummer(34),
-                    Adressekode(10100)
-                )
+                    Adressekode(10100),
+                ),
             ),
             Entity(
                 id = vegId(2),
                 ident = adresseparsellIdentType(
                     Fylkesnummer(56),
                     Kommunenummer.Lopenummer(78),
-                    Adressekode(10100)
-                )
+                    Adressekode(10100),
+                ),
             ),
         )
 
@@ -55,18 +55,19 @@ class TransformerVegadresserTest : FunSpec({
                     Vegendring(
                         FraTil(Fylkesnummer(12), Fylkesnummer(12)),
                         FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(35))),
-                        FraTil(Adressekode(10100), Adressekode(20100))
-                    )
+                        FraTil(Adressekode(10100), Adressekode(20100)),
+                    ),
                 ),
                 emptyList(),
-                emptyList()
+                emptyList(),
             ),
             listOf(vegSource),
             emptyList(),
             listOf(sink),
             idGeneratorManager,
             kommuneService,
-            TestStorage()
+            TestStorage(),
+            true,
         )
 
         assertThat(sink::transformations).single().prop(Transformation::id).isEqualTo(vegId(1))
@@ -85,9 +86,9 @@ class TransformerVegadresserTest : FunSpec({
                 ident = adresseparsellIdentType(
                     Fylkesnummer(12),
                     Kommunenummer.Lopenummer(34),
-                    Adressekode(10100)
-                )
-            )
+                    Adressekode(10100),
+                ),
+            ),
         )
         val vegadresseSource = mockSource(
             Entity(
@@ -96,8 +97,8 @@ class TransformerVegadresserTest : FunSpec({
                     Fylkesnummer(12),
                     Kommunenummer.Lopenummer(34),
                     Adressekode(10100),
-                    Adressenummernummer(1)
-                )
+                    Adressenummernummer(1),
+                ),
             ),
             Entity(
                 id = vegadresseId(11),
@@ -105,8 +106,8 @@ class TransformerVegadresserTest : FunSpec({
                     Fylkesnummer(12),
                     Kommunenummer.Lopenummer(34),
                     Adressekode(10100),
-                    Adressenummernummer(2)
-                )
+                    Adressenummernummer(2),
+                ),
             ),
         )
 
@@ -121,51 +122,58 @@ class TransformerVegadresserTest : FunSpec({
                     Vegendring(
                         FraTil(Fylkesnummer(12), Fylkesnummer(12)),
                         FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(35))),
-                        FraTil(Adressekode(10100), Adressekode(20100))
-                    )
+                        FraTil(Adressekode(10100), Adressekode(20100)),
+                    ),
                 ),
                 emptyList(),
-                emptyList()
+                emptyList(),
             ),
             listOf(vegSource, vegadresseSource),
             emptyList(),
             listOf(sink),
             idGeneratorManager,
             kommuneService,
-            TestStorage()
+            TestStorage(),
+            true,
         )
 
         assertThat(sink::transformations).all {
             hasSize(3)
             index(0).all {
                 prop(Transformation::id).isEqualTo(vegId(1))
-                prop(Transformation::transformedIdent).isEqualTo(adresseparsellIdentType(
-                    Fylkesnummer(12),
-                    Kommunenummer.Lopenummer(35),
-                    Adressekode(20100)
-                ))
+                prop(Transformation::transformedIdent).isEqualTo(
+                    adresseparsellIdentType(
+                        Fylkesnummer(12),
+                        Kommunenummer.Lopenummer(35),
+                        Adressekode(20100),
+                    ),
+                )
                 prop(Transformation::transformedAssociatedIdents).isNull()
                 prop(Transformation::resultObject).isNull()
             }
             index(1).all {
                 prop(Transformation::id).isEqualTo(vegadresseId(10))
-                prop(Transformation::transformedIdent).isEqualTo(vegadresseIdentType(
-                    Fylkesnummer(12),
-                    Kommunenummer.Lopenummer(35),
-                    Adressekode(20100),
-                    Adressenummernummer(1)
-                ))
+                prop(Transformation::transformedIdent).isEqualTo(
+                    vegadresseIdentType(
+                        Fylkesnummer(12),
+                        Kommunenummer.Lopenummer(35),
+                        Adressekode(20100),
+                        Adressenummernummer(1),
+                    ),
+                )
                 prop(Transformation::transformedAssociatedIdents).isNull()
                 prop(Transformation::resultObject).isNull()
             }
             index(2).all {
                 prop(Transformation::id).isEqualTo(vegadresseId(11))
-                prop(Transformation::transformedIdent).isEqualTo(vegadresseIdentType(
-                    Fylkesnummer(12),
-                    Kommunenummer.Lopenummer(35),
-                    Adressekode(20100),
-                    Adressenummernummer(2)
-                ))
+                prop(Transformation::transformedIdent).isEqualTo(
+                    vegadresseIdentType(
+                        Fylkesnummer(12),
+                        Kommunenummer.Lopenummer(35),
+                        Adressekode(20100),
+                        Adressenummernummer(2),
+                    ),
+                )
                 prop(Transformation::transformedAssociatedIdents).isNull()
                 prop(Transformation::resultObject).isNull()
             }
@@ -184,9 +192,9 @@ class TransformerVegadresserTest : FunSpec({
                 ident = adresseparsellIdentType(
                     Fylkesnummer(12),
                     Kommunenummer.Lopenummer(34),
-                    Adressekode(10100)
-                )
-            )
+                    Adressekode(10100),
+                ),
+            ),
         )
         val vegadresseSource = mockSource(
             Entity(
@@ -195,8 +203,8 @@ class TransformerVegadresserTest : FunSpec({
                     Fylkesnummer(12),
                     Kommunenummer.Lopenummer(34),
                     Adressekode(10100),
-                    Adressenummernummer(1)
-                )
+                    Adressenummernummer(1),
+                ),
             ),
             Entity(
                 id = vegadresseId(11),
@@ -204,8 +212,8 @@ class TransformerVegadresserTest : FunSpec({
                     Fylkesnummer(12),
                     Kommunenummer.Lopenummer(34),
                     Adressekode(10100),
-                    Adressenummernummer(2)
-                )
+                    Adressenummernummer(2),
+                ),
             ),
         )
 
@@ -213,9 +221,9 @@ class TransformerVegadresserTest : FunSpec({
             FraTil(Fylkesnummer(12), Fylkesnummer(12)),
             FraEnTilMange(
                 Kommunenummer.Lopenummer(34),
-                listOf(Kommunenummer.Lopenummer(35), Kommunenummer.Lopenummer(36))
+                listOf(Kommunenummer.Lopenummer(35), Kommunenummer.Lopenummer(36)),
             ),
-            FraTil(Adressekode(10100), Adressekode(10100))
+            FraTil(Adressekode(10100), Adressekode(10100)),
         )
 
         test("Manglende regler for adresser") {
@@ -228,17 +236,18 @@ class TransformerVegadresserTest : FunSpec({
                     "abc",
                     Clock.System.todayIn(TimeZone.currentSystemDefault()),
                     listOf(
-                        vegendring
+                        vegendring,
                     ),
                     emptyList(),
-                    emptyList()
+                    emptyList(),
                 ),
                 listOf(vegSource, vegadresseSource),
                 emptyList(),
                 listOf(sink),
                 idGeneratorManager,
                 kommuneService,
-                TestStorage()
+                TestStorage(),
+                true,
             )
 
             val unresolvedVegadresseIdentType = getUnresolvedVegadresseIdentType()
@@ -251,8 +260,8 @@ class TransformerVegadresserTest : FunSpec({
                         adresseparsellIdentType(
                             Fylkesnummer(12),
                             Kommunenummer.Lopenummer(36),
-                            Adressekode(10100)
-                        )
+                            Adressekode(10100),
+                        ),
                     )
                     prop(Transformation::transformedAssociatedIdents).isNull()
                     prop(Transformation::resultObject).isNull()
@@ -263,8 +272,8 @@ class TransformerVegadresserTest : FunSpec({
                         adresseparsellIdentType(
                             Fylkesnummer(12),
                             Kommunenummer.Lopenummer(35),
-                            Adressekode(10100)
-                        )
+                            Adressekode(10100),
+                        ),
                     )
                     prop(Transformation::transformedAssociatedIdents).isNull()
                     prop(Transformation::resultObject).isNull()
@@ -273,8 +282,8 @@ class TransformerVegadresserTest : FunSpec({
                     prop(Transformation::id).isEqualTo(vegadresseId(10))
                     prop(Transformation::transformedIdent).isEqualTo(
                         unresolvedVegadresseIdentType(
-                            Adressenummernummer(1)
-                        )
+                            Adressenummernummer(1),
+                        ),
                     )
                     prop(Transformation::transformedAssociatedIdents).isNull()
                     prop(Transformation::resultObject).isNull()
@@ -283,8 +292,8 @@ class TransformerVegadresserTest : FunSpec({
                     prop(Transformation::id).isEqualTo(vegadresseId(11))
                     prop(Transformation::transformedIdent).isEqualTo(
                         unresolvedVegadresseIdentType(
-                            Adressenummernummer(2)
-                        )
+                            Adressenummernummer(2),
+                        ),
                     )
                     prop(Transformation::transformedAssociatedIdents).isNull()
                     prop(Transformation::resultObject).isNull()
@@ -307,24 +316,25 @@ class TransformerVegadresserTest : FunSpec({
                             FraTil(Fylkesnummer(12), Fylkesnummer(12)),
                             FraTil(Kommunenummer.Lopenummer(34), Kommunenummer.Lopenummer(35)),
                             FraTil(Adressekode(10100), Adressekode(10100)),
-                            FraTil(Adressenummernummer(1), Adressenummernummer(1))
+                            FraTil(Adressenummernummer(1), Adressenummernummer(1)),
                         ),
                         Vegadresseendring(
                             FraTil(Fylkesnummer(12), Fylkesnummer(12)),
                             FraTil(Kommunenummer.Lopenummer(34), Kommunenummer.Lopenummer(36)),
                             FraTil(Adressekode(10100), Adressekode(10100)),
-                            FraTil(Adressenummernummer(2), Adressenummernummer(1))
+                            FraTil(Adressenummernummer(2), Adressenummernummer(1)),
                         ),
                     ),
                     emptyList(),
-                    emptyList()
+                    emptyList(),
                 ),
                 listOf(vegSource, vegadresseSource),
                 emptyList(),
                 listOf(sink),
                 idGeneratorManager,
                 kommuneService,
-                TestStorage()
+                TestStorage(),
+                true,
             )
 
             assertThat(sink::transformations).all {
@@ -335,8 +345,8 @@ class TransformerVegadresserTest : FunSpec({
                         adresseparsellIdentType(
                             Fylkesnummer(12),
                             Kommunenummer.Lopenummer(36),
-                            Adressekode(10100)
-                        )
+                            Adressekode(10100),
+                        ),
                     )
                     prop(Transformation::transformedAssociatedIdents).isNull()
                     prop(Transformation::resultObject).isNull()
@@ -347,8 +357,8 @@ class TransformerVegadresserTest : FunSpec({
                         adresseparsellIdentType(
                             Fylkesnummer(12),
                             Kommunenummer.Lopenummer(35),
-                            Adressekode(10100)
-                        )
+                            Adressekode(10100),
+                        ),
                     )
                     prop(Transformation::transformedAssociatedIdents).isNull()
                     prop(Transformation::resultObject).isNull()
@@ -360,8 +370,8 @@ class TransformerVegadresserTest : FunSpec({
                             Fylkesnummer(12),
                             Kommunenummer.Lopenummer(35),
                             Adressekode(10100),
-                            Adressenummernummer(1)
-                        )
+                            Adressenummernummer(1),
+                        ),
                     )
                     prop(Transformation::transformedAssociatedIdents).isNull()
                     prop(Transformation::resultObject).isNull()
@@ -373,8 +383,8 @@ class TransformerVegadresserTest : FunSpec({
                             Fylkesnummer(12),
                             Kommunenummer.Lopenummer(36),
                             Adressekode(10100),
-                            Adressenummernummer(1)
-                        )
+                            Adressenummernummer(1),
+                        ),
                     )
                     prop(Transformation::transformedAssociatedIdents).isNull()
                     prop(Transformation::resultObject).isNull()
