@@ -21,7 +21,7 @@ suspend fun transform(
     idGeneratorManager: IdGeneratorManager,
     kommuneService: KommuneService,
     storage: Storage,
-    tilbakeforing: Boolean,
+    skalTilbakefores: Boolean,
 ) {
     // TODO: Fjern når Fylkeendring får FraEnTilMange
     if (input.fylker.isNotEmpty()) {
@@ -58,7 +58,7 @@ suspend fun transform(
 
     val transformations = storage.readTransformationsFromDatabase(kjoringId)
 
-    if (tilbakeforing) {
+    if (skalTilbakefores) {
         // Kjør ut alle nyopprettinger
         entitySinks.forEach { sink ->
             sink.consumeTransformations(
