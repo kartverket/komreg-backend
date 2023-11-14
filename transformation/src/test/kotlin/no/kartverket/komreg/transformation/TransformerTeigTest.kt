@@ -33,8 +33,8 @@ class TransformerTeigTest : FunSpec({
                     Matrikkelnummer.Bruksnummer(1),
                     Matrikkelnummer.Festenummer(0),
                     Matrikkelnummer.Seksjonsnummer(0),
-                    TeigId(2)
-                )
+                    TeigId(2),
+                ),
             ),
             Entity(
                 id = teigId(3),
@@ -45,8 +45,8 @@ class TransformerTeigTest : FunSpec({
                     Matrikkelnummer.Bruksnummer(0),
                     Matrikkelnummer.Festenummer(0),
                     Matrikkelnummer.Seksjonsnummer(0),
-                    TeigId(4)
-                )
+                    TeigId(4),
+                ),
             ),
         )
 
@@ -60,8 +60,8 @@ class TransformerTeigTest : FunSpec({
                 listOf(
                     Kommuneendring(
                         FraTil(Fylkesnummer(12), Fylkesnummer(13)),
-                        FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(24)))
-                    )
+                        FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(24))),
+                    ),
                 ),
                 emptyList(),
                 listOf(
@@ -75,45 +75,50 @@ class TransformerTeigTest : FunSpec({
                         "",
                         null,
                         null,
-                        null
-                    )
-                )
+                        null,
+                    ),
+                ),
             ),
             listOf(source),
             emptyList(),
             listOf(sink),
             idGeneratorManager,
             kommuneService,
-            TestStorage()
+            TestStorage(),
+            true,
         )
 
         assertThat(sink::transformations).all {
             hasSize(2)
             index(0).all {
                 prop(Transformation::id).isEqualTo(teigId(1))
-                prop(Transformation::transformedIdent).isEqualTo(teigIdentType(
-                    Fylkesnummer(13),
-                    Kommunenummer.Lopenummer(24),
-                    Matrikkelnummer.Gardsnummer(1),
-                    Matrikkelnummer.Bruksnummer(1),
-                    Matrikkelnummer.Festenummer(0),
-                    Matrikkelnummer.Seksjonsnummer(0),
-                    TeigId(2)
-                ))
+                prop(Transformation::transformedIdent).isEqualTo(
+                    teigIdentType(
+                        Fylkesnummer(13),
+                        Kommunenummer.Lopenummer(24),
+                        Matrikkelnummer.Gardsnummer(1),
+                        Matrikkelnummer.Bruksnummer(1),
+                        Matrikkelnummer.Festenummer(0),
+                        Matrikkelnummer.Seksjonsnummer(0),
+                        TeigId(2),
+                    ),
+                )
                 prop(Transformation::transformedAssociatedIdents).isNull()
                 prop(Transformation::resultObject).isNull()
             }
             index(1).all {
                 prop(Transformation::id).isEqualTo(teigId(3))
-                prop(Transformation::transformedIdent).isEqualTo(teigIdentType(
-                    Fylkesnummer(13),
-                    Kommunenummer.Lopenummer(24),
-                    Matrikkelnummer.Gardsnummer(0),
-                    Matrikkelnummer.Bruksnummer(0),
-                    Matrikkelnummer.Festenummer(0),
-                    Matrikkelnummer.Seksjonsnummer(0),
-                    TeigId(4)
-                ))
+                prop(Transformation::transformedIdent).isEqualTo(
+                    teigIdentType(
+                        Fylkesnummer(13),
+                        Kommunenummer.Lopenummer(24),
+                        Matrikkelnummer.Gardsnummer(0),
+                        Matrikkelnummer.Bruksnummer(0),
+                        Matrikkelnummer.Festenummer(0),
+                        Matrikkelnummer.Seksjonsnummer(0),
+                        TeigId(4),
+                    ),
+                )
                 prop(Transformation::transformedAssociatedIdents).isNull()
                 prop(Transformation::resultObject).isNull()
             }
@@ -136,8 +141,8 @@ class TransformerTeigTest : FunSpec({
                     Matrikkelnummer.Bruksnummer(0),
                     Matrikkelnummer.Festenummer(0),
                     Matrikkelnummer.Seksjonsnummer(0),
-                    TeigId(2)
-                )
+                    TeigId(2),
+                ),
             ),
             Entity(
                 id = teigId(3),
@@ -148,8 +153,8 @@ class TransformerTeigTest : FunSpec({
                     Matrikkelnummer.Bruksnummer(0),
                     Matrikkelnummer.Festenummer(0),
                     Matrikkelnummer.Seksjonsnummer(0),
-                    TeigId(4)
-                )
+                    TeigId(4),
+                ),
             ),
         )
 
@@ -165,19 +170,19 @@ class TransformerTeigTest : FunSpec({
                         FraTil(Fylkesnummer(12), Fylkesnummer(13)),
                         FraEnTilMange(
                             Kommunenummer.Lopenummer(34),
-                            listOf(Kommunenummer.Lopenummer(24), Kommunenummer.Lopenummer(25))
-                        )
+                            listOf(Kommunenummer.Lopenummer(24), Kommunenummer.Lopenummer(25)),
+                        ),
                     ),
                     Teigendring(
                         FraTil(Fylkesnummer(12), Fylkesnummer(13)),
                         FraTil(Kommunenummer.Lopenummer(34), Kommunenummer.Lopenummer(24)),
-                        FraTil(TeigId(2), TeigId(2))
+                        FraTil(TeigId(2), TeigId(2)),
                     ),
                     Teigendring(
                         FraTil(Fylkesnummer(12), Fylkesnummer(13)),
                         FraTil(Kommunenummer.Lopenummer(34), Kommunenummer.Lopenummer(25)),
-                        FraTil(TeigId(4), TeigId(4))
-                    )
+                        FraTil(TeigId(4), TeigId(4)),
+                    ),
                 ),
                 emptyList(),
                 listOf(
@@ -191,7 +196,7 @@ class TransformerTeigTest : FunSpec({
                         "",
                         null,
                         null,
-                        null
+                        null,
                     ),
                     Kommune(
                         Kommunenummer(1325),
@@ -203,45 +208,50 @@ class TransformerTeigTest : FunSpec({
                         "",
                         null,
                         null,
-                        null
-                    )
-                )
+                        null,
+                    ),
+                ),
             ),
             listOf(source),
             emptyList(),
             listOf(sink),
             idGeneratorManager,
             kommuneService,
-            TestStorage()
+            TestStorage(),
+            true,
         )
 
         assertThat(sink::transformations).all {
             hasSize(2)
             index(0).all {
                 prop(Transformation::id).isEqualTo(teigId(1))
-                prop(Transformation::transformedIdent).isEqualTo(teigIdentType(
-                    Fylkesnummer(13),
-                    Kommunenummer.Lopenummer(24),
-                    Matrikkelnummer.Gardsnummer(0),
-                    Matrikkelnummer.Bruksnummer(0),
-                    Matrikkelnummer.Festenummer(0),
-                    Matrikkelnummer.Seksjonsnummer(0),
-                    TeigId(2)
-                ))
+                prop(Transformation::transformedIdent).isEqualTo(
+                    teigIdentType(
+                        Fylkesnummer(13),
+                        Kommunenummer.Lopenummer(24),
+                        Matrikkelnummer.Gardsnummer(0),
+                        Matrikkelnummer.Bruksnummer(0),
+                        Matrikkelnummer.Festenummer(0),
+                        Matrikkelnummer.Seksjonsnummer(0),
+                        TeigId(2),
+                    ),
+                )
                 prop(Transformation::transformedAssociatedIdents).isNull()
                 prop(Transformation::resultObject).isNull()
             }
             index(1).all {
                 prop(Transformation::id).isEqualTo(teigId(3))
-                prop(Transformation::transformedIdent).isEqualTo(teigIdentType(
-                    Fylkesnummer(13),
-                    Kommunenummer.Lopenummer(25),
-                    Matrikkelnummer.Gardsnummer(0),
-                    Matrikkelnummer.Bruksnummer(0),
-                    Matrikkelnummer.Festenummer(0),
-                    Matrikkelnummer.Seksjonsnummer(0),
-                    TeigId(4)
-                ))
+                prop(Transformation::transformedIdent).isEqualTo(
+                    teigIdentType(
+                        Fylkesnummer(13),
+                        Kommunenummer.Lopenummer(25),
+                        Matrikkelnummer.Gardsnummer(0),
+                        Matrikkelnummer.Bruksnummer(0),
+                        Matrikkelnummer.Festenummer(0),
+                        Matrikkelnummer.Seksjonsnummer(0),
+                        TeigId(4),
+                    ),
+                )
                 prop(Transformation::transformedAssociatedIdents).isNull()
                 prop(Transformation::resultObject).isNull()
             }

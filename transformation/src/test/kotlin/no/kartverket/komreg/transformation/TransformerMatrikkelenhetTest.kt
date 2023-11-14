@@ -29,8 +29,8 @@ class TransformerMatrikkelenhetTest : FunSpec({
                     Matrikkelnummer.Gardsnummer(1),
                     Matrikkelnummer.Bruksnummer(1),
                     Matrikkelnummer.Festenummer(0),
-                    Matrikkelnummer.Seksjonsnummer(0)
-                )
+                    Matrikkelnummer.Seksjonsnummer(0),
+                ),
             ),
             Entity(
                 id = matrikkelenhetId(2),
@@ -40,8 +40,8 @@ class TransformerMatrikkelenhetTest : FunSpec({
                     Matrikkelnummer.Gardsnummer(1),
                     Matrikkelnummer.Bruksnummer(1),
                     Matrikkelnummer.Festenummer(1),
-                    Matrikkelnummer.Seksjonsnummer(0)
-                )
+                    Matrikkelnummer.Seksjonsnummer(0),
+                ),
             ),
         )
 
@@ -55,8 +55,8 @@ class TransformerMatrikkelenhetTest : FunSpec({
                 listOf(
                     Kommuneendring(
                         FraTil(Fylkesnummer(12), Fylkesnummer(13)),
-                        FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(24)))
-                    )
+                        FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(24))),
+                    ),
                 ),
                 emptyList(),
                 listOf(
@@ -70,43 +70,48 @@ class TransformerMatrikkelenhetTest : FunSpec({
                         "",
                         null,
                         null,
-                        null
-                    )
-                )
+                        null,
+                    ),
+                ),
             ),
             listOf(source),
             emptyList(),
             listOf(sink),
             idGeneratorManager,
             kommuneService,
-            TestStorage()
+            TestStorage(),
+            true,
         )
 
         assertThat(sink::transformations).all {
             hasSize(2)
             index(0).all {
                 prop(Transformation::id).isEqualTo(matrikkelenhetId(1))
-                prop(Transformation::transformedIdent).isEqualTo(matrikkelenhetIdentType(
-                    Fylkesnummer(13),
-                    Kommunenummer.Lopenummer(24),
-                    Matrikkelnummer.Gardsnummer(1),
-                    Matrikkelnummer.Bruksnummer(1),
-                    Matrikkelnummer.Festenummer(0),
-                    Matrikkelnummer.Seksjonsnummer(0)
-                ))
+                prop(Transformation::transformedIdent).isEqualTo(
+                    matrikkelenhetIdentType(
+                        Fylkesnummer(13),
+                        Kommunenummer.Lopenummer(24),
+                        Matrikkelnummer.Gardsnummer(1),
+                        Matrikkelnummer.Bruksnummer(1),
+                        Matrikkelnummer.Festenummer(0),
+                        Matrikkelnummer.Seksjonsnummer(0),
+                    ),
+                )
                 prop(Transformation::transformedAssociatedIdents).isNull()
                 prop(Transformation::resultObject).isNull()
             }
             index(1).all {
                 prop(Transformation::id).isEqualTo(matrikkelenhetId(2))
-                prop(Transformation::transformedIdent).isEqualTo(matrikkelenhetIdentType(
-                    Fylkesnummer(13),
-                    Kommunenummer.Lopenummer(24),
-                    Matrikkelnummer.Gardsnummer(1),
-                    Matrikkelnummer.Bruksnummer(1),
-                    Matrikkelnummer.Festenummer(1),
-                    Matrikkelnummer.Seksjonsnummer(0)
-                ))
+                prop(Transformation::transformedIdent).isEqualTo(
+                    matrikkelenhetIdentType(
+                        Fylkesnummer(13),
+                        Kommunenummer.Lopenummer(24),
+                        Matrikkelnummer.Gardsnummer(1),
+                        Matrikkelnummer.Bruksnummer(1),
+                        Matrikkelnummer.Festenummer(1),
+                        Matrikkelnummer.Seksjonsnummer(0),
+                    ),
+                )
                 prop(Transformation::transformedAssociatedIdents).isNull()
                 prop(Transformation::resultObject).isNull()
             }
@@ -128,8 +133,8 @@ class TransformerMatrikkelenhetTest : FunSpec({
                     Matrikkelnummer.Gardsnummer(1),
                     Matrikkelnummer.Bruksnummer(1),
                     Matrikkelnummer.Festenummer(0),
-                    Matrikkelnummer.Seksjonsnummer(0)
-                )
+                    Matrikkelnummer.Seksjonsnummer(0),
+                ),
             ),
             Entity(
                 id = matrikkelenhetId(2),
@@ -139,8 +144,8 @@ class TransformerMatrikkelenhetTest : FunSpec({
                     Matrikkelnummer.Gardsnummer(2),
                     Matrikkelnummer.Bruksnummer(1),
                     Matrikkelnummer.Festenummer(0),
-                    Matrikkelnummer.Seksjonsnummer(0)
-                )
+                    Matrikkelnummer.Seksjonsnummer(0),
+                ),
             ),
         )
 
@@ -148,8 +153,8 @@ class TransformerMatrikkelenhetTest : FunSpec({
             FraTil(Fylkesnummer(12), Fylkesnummer(12)),
             FraEnTilMange(
                 Kommunenummer.Lopenummer(34),
-                listOf(Kommunenummer.Lopenummer(35), Kommunenummer.Lopenummer(36))
-            )
+                listOf(Kommunenummer.Lopenummer(35), Kommunenummer.Lopenummer(36)),
+            ),
         )
 
         val nyeKommuner = listOf(
@@ -163,7 +168,7 @@ class TransformerMatrikkelenhetTest : FunSpec({
                 "",
                 null,
                 null,
-                null
+                null,
             ),
             Kommune(
                 Kommunenummer(1236),
@@ -175,8 +180,8 @@ class TransformerMatrikkelenhetTest : FunSpec({
                 "",
                 null,
                 null,
-                null
-            )
+                null,
+            ),
         )
 
         test("Manglende regel for matrikkelenhet") {
@@ -194,43 +199,48 @@ class TransformerMatrikkelenhetTest : FunSpec({
                         Matrikkelenhetendring(
                             FraTil(Fylkesnummer(12), Fylkesnummer(12)),
                             FraTil(Kommunenummer.Lopenummer(34), Kommunenummer.Lopenummer(35)),
-                            FraTil(Matrikkelnummer.Gardsnummer(1), Matrikkelnummer.Gardsnummer(1))
-                        )
+                            FraTil(Matrikkelnummer.Gardsnummer(1), Matrikkelnummer.Gardsnummer(1)),
+                        ),
                     ),
                     emptyList(),
-                    nyeKommuner
+                    nyeKommuner,
                 ),
                 listOf(source),
                 emptyList(),
                 listOf(sink),
                 idGeneratorManager,
                 kommuneService,
-                TestStorage()
+                TestStorage(),
+                true,
             )
 
             assertThat(sink::transformations).all {
                 hasSize(2)
                 index(0).all {
                     prop(Transformation::id).isEqualTo(matrikkelenhetId(1))
-                    prop(Transformation::transformedIdent).isEqualTo(matrikkelenhetIdentType(
-                        Fylkesnummer(12),
-                        Kommunenummer.Lopenummer(35),
-                        Matrikkelnummer.Gardsnummer(1),
-                        Matrikkelnummer.Bruksnummer(1),
-                        Matrikkelnummer.Festenummer(0),
-                        Matrikkelnummer.Seksjonsnummer(0)
-                    ))
+                    prop(Transformation::transformedIdent).isEqualTo(
+                        matrikkelenhetIdentType(
+                            Fylkesnummer(12),
+                            Kommunenummer.Lopenummer(35),
+                            Matrikkelnummer.Gardsnummer(1),
+                            Matrikkelnummer.Bruksnummer(1),
+                            Matrikkelnummer.Festenummer(0),
+                            Matrikkelnummer.Seksjonsnummer(0),
+                        ),
+                    )
                     prop(Transformation::transformedAssociatedIdents).isNull()
                     prop(Transformation::resultObject).isNull()
                 }
                 index(1).all {
                     prop(Transformation::id).isEqualTo(matrikkelenhetId(2))
-                    prop(Transformation::transformedIdent).isEqualTo(unresolvedMatrikkelenhetIdentType(
-                        Matrikkelnummer.Gardsnummer(2),
-                        Matrikkelnummer.Bruksnummer(1),
-                        Matrikkelnummer.Festenummer(0),
-                        Matrikkelnummer.Seksjonsnummer(0)
-                    ))
+                    prop(Transformation::transformedIdent).isEqualTo(
+                        unresolvedMatrikkelenhetIdentType(
+                            Matrikkelnummer.Gardsnummer(2),
+                            Matrikkelnummer.Bruksnummer(1),
+                            Matrikkelnummer.Festenummer(0),
+                            Matrikkelnummer.Seksjonsnummer(0),
+                        ),
+                    )
                     prop(Transformation::transformedAssociatedIdents).isNull()
                     prop(Transformation::resultObject).isNull()
                 }
@@ -250,50 +260,55 @@ class TransformerMatrikkelenhetTest : FunSpec({
                         Matrikkelenhetendring(
                             FraTil(Fylkesnummer(12), Fylkesnummer(12)),
                             FraTil(Kommunenummer.Lopenummer(34), Kommunenummer.Lopenummer(35)),
-                            FraTil(Matrikkelnummer.Gardsnummer(1), Matrikkelnummer.Gardsnummer(1))
+                            FraTil(Matrikkelnummer.Gardsnummer(1), Matrikkelnummer.Gardsnummer(1)),
                         ),
                         Matrikkelenhetendring(
                             FraTil(Fylkesnummer(12), Fylkesnummer(12)),
                             FraTil(Kommunenummer.Lopenummer(34), Kommunenummer.Lopenummer(36)),
-                            FraTil(Matrikkelnummer.Gardsnummer(2), Matrikkelnummer.Gardsnummer(2))
-                        )
+                            FraTil(Matrikkelnummer.Gardsnummer(2), Matrikkelnummer.Gardsnummer(2)),
+                        ),
                     ),
                     emptyList(),
-                    nyeKommuner
+                    nyeKommuner,
                 ),
                 listOf(source),
                 emptyList(),
                 listOf(sink),
                 idGeneratorManager,
                 kommuneService,
-                TestStorage()
+                TestStorage(),
+                true,
             )
 
             assertThat(sink::transformations).all {
                 hasSize(2)
                 index(0).all {
                     prop(Transformation::id).isEqualTo(matrikkelenhetId(1))
-                    prop(Transformation::transformedIdent).isEqualTo(matrikkelenhetIdentType(
-                        Fylkesnummer(12),
-                        Kommunenummer.Lopenummer(35),
-                        Matrikkelnummer.Gardsnummer(1),
-                        Matrikkelnummer.Bruksnummer(1),
-                        Matrikkelnummer.Festenummer(0),
-                        Matrikkelnummer.Seksjonsnummer(0)
-                    ))
+                    prop(Transformation::transformedIdent).isEqualTo(
+                        matrikkelenhetIdentType(
+                            Fylkesnummer(12),
+                            Kommunenummer.Lopenummer(35),
+                            Matrikkelnummer.Gardsnummer(1),
+                            Matrikkelnummer.Bruksnummer(1),
+                            Matrikkelnummer.Festenummer(0),
+                            Matrikkelnummer.Seksjonsnummer(0),
+                        ),
+                    )
                     prop(Transformation::transformedAssociatedIdents).isNull()
                     prop(Transformation::resultObject).isNull()
                 }
                 index(1).all {
                     prop(Transformation::id).isEqualTo(matrikkelenhetId(2))
-                    prop(Transformation::transformedIdent).isEqualTo(matrikkelenhetIdentType(
-                        Fylkesnummer(12),
-                        Kommunenummer.Lopenummer(36),
-                        Matrikkelnummer.Gardsnummer(2),
-                        Matrikkelnummer.Bruksnummer(1),
-                        Matrikkelnummer.Festenummer(0),
-                        Matrikkelnummer.Seksjonsnummer(0)
-                    ))
+                    prop(Transformation::transformedIdent).isEqualTo(
+                        matrikkelenhetIdentType(
+                            Fylkesnummer(12),
+                            Kommunenummer.Lopenummer(36),
+                            Matrikkelnummer.Gardsnummer(2),
+                            Matrikkelnummer.Bruksnummer(1),
+                            Matrikkelnummer.Festenummer(0),
+                            Matrikkelnummer.Seksjonsnummer(0),
+                        ),
+                    )
                     prop(Transformation::transformedAssociatedIdents).isNull()
                     prop(Transformation::resultObject).isNull()
                 }

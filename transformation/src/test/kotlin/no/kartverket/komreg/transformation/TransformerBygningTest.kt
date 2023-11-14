@@ -30,15 +30,15 @@ class TransformerBygningTest : FunSpec({
                 ident = bygningIdentType(
                     Fylkesnummer(12),
                     Kommunenummer.Lopenummer(34),
-                    Bygningsnummer(1)
-                )
+                    Bygningsnummer(1),
+                ),
             ),
             Entity(
                 id = bygningId(2),
                 ident = bygningIdentType(
                     Fylkesnummer(12),
                     Kommunenummer.Lopenummer(34),
-                    Bygningsnummer(2)
+                    Bygningsnummer(2),
                 ),
                 associatedIdents = setOf(
                     matrikkelenhetIdentType(
@@ -47,9 +47,9 @@ class TransformerBygningTest : FunSpec({
                         Matrikkelnummer.Gardsnummer(1),
                         Matrikkelnummer.Bruksnummer(1),
                         Matrikkelnummer.Festenummer(0),
-                        Matrikkelnummer.Seksjonsnummer(0)
-                    )
-                )
+                        Matrikkelnummer.Seksjonsnummer(0),
+                    ),
+                ),
             ),
         )
 
@@ -63,8 +63,8 @@ class TransformerBygningTest : FunSpec({
                 listOf(
                     Kommuneendring(
                         FraTil(Fylkesnummer(12), Fylkesnummer(13)),
-                        FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(24)))
-                    )
+                        FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(24))),
+                    ),
                 ),
                 emptyList(),
                 listOf(
@@ -78,16 +78,17 @@ class TransformerBygningTest : FunSpec({
                         "",
                         null,
                         null,
-                        null
-                    )
-                )
+                        null,
+                    ),
+                ),
             ),
             listOf(byggSource),
             emptyList(),
             listOf(sink),
             idGeneratorManager,
             kommuneService,
-            TestStorage()
+            TestStorage(),
+            true,
         )
 
         assertThat(sink::transformations).all {
@@ -98,8 +99,8 @@ class TransformerBygningTest : FunSpec({
                     bygningIdentType(
                         Fylkesnummer(13),
                         Kommunenummer.Lopenummer(24),
-                        Bygningsnummer(1)
-                    )
+                        Bygningsnummer(1),
+                    ),
                 )
                 prop(Transformation::transformedAssociatedIdents).isNull()
                 prop(Transformation::resultObject).isNull()
@@ -110,8 +111,8 @@ class TransformerBygningTest : FunSpec({
                     bygningIdentType(
                         Fylkesnummer(13),
                         Kommunenummer.Lopenummer(24),
-                        Bygningsnummer(2)
-                    )
+                        Bygningsnummer(2),
+                    ),
                 )
                 prop(Transformation::transformedAssociatedIdents).isNotNull()
                     .containsOnly(
@@ -121,8 +122,8 @@ class TransformerBygningTest : FunSpec({
                             Matrikkelnummer.Gardsnummer(1),
                             Matrikkelnummer.Bruksnummer(1),
                             Matrikkelnummer.Festenummer(0),
-                            Matrikkelnummer.Seksjonsnummer(0)
-                        )
+                            Matrikkelnummer.Seksjonsnummer(0),
+                        ),
                     )
                 prop(Transformation::resultObject).isNull()
             }
@@ -144,14 +145,14 @@ class TransformerBygningTest : FunSpec({
                     FraTil(Fylkesnummer(12), Fylkesnummer(13)),
                     FraEnTilMange(
                         Kommunenummer.Lopenummer(34),
-                        listOf(Kommunenummer.Lopenummer(24), Kommunenummer.Lopenummer(25))
-                    )
+                        listOf(Kommunenummer.Lopenummer(24), Kommunenummer.Lopenummer(25)),
+                    ),
                 ),
                 Matrikkelenhetendring(
                     FraTil(Fylkesnummer(12), Fylkesnummer(13)),
                     FraTil(Kommunenummer.Lopenummer(34), Kommunenummer.Lopenummer(24)),
-                    FraTil(Matrikkelnummer.Gardsnummer(1), Matrikkelnummer.Gardsnummer(1))
-                )
+                    FraTil(Matrikkelnummer.Gardsnummer(1), Matrikkelnummer.Gardsnummer(1)),
+                ),
             ),
             emptyList(),
             listOf(
@@ -165,7 +166,7 @@ class TransformerBygningTest : FunSpec({
                     "",
                     null,
                     null,
-                    null
+                    null,
                 ),
                 Kommune(
                     Kommunenummer(1325),
@@ -177,9 +178,9 @@ class TransformerBygningTest : FunSpec({
                     "",
                     null,
                     null,
-                    null
-                )
-            )
+                    null,
+                ),
+            ),
         )
 
         val unresolvedBygningIdentType = getUnresolvedBygningIdentType()
@@ -191,8 +192,8 @@ class TransformerBygningTest : FunSpec({
                     ident = bygningIdentType(
                         Fylkesnummer(12),
                         Kommunenummer.Lopenummer(34),
-                        Bygningsnummer(1)
-                    )
+                        Bygningsnummer(1),
+                    ),
                 ),
             )
 
@@ -206,7 +207,8 @@ class TransformerBygningTest : FunSpec({
                 listOf(sink),
                 idGeneratorManager,
                 kommuneService,
-                TestStorage()
+                TestStorage(),
+                true,
             )
 
             assertThat(sink::transformations).all {
@@ -215,8 +217,8 @@ class TransformerBygningTest : FunSpec({
                     prop(Transformation::id).isEqualTo(bygningId(1))
                     prop(Transformation::transformedIdent).isEqualTo(
                         unresolvedBygningIdentType(
-                            Bygningsnummer(1)
-                        )
+                            Bygningsnummer(1),
+                        ),
                     )
                     prop(Transformation::transformedAssociatedIdents).isNull()
                     prop(Transformation::resultObject).isNull()
@@ -231,7 +233,7 @@ class TransformerBygningTest : FunSpec({
                     ident = bygningIdentType(
                         Fylkesnummer(12),
                         Kommunenummer.Lopenummer(34),
-                        Bygningsnummer(2)
+                        Bygningsnummer(2),
                     ),
                     associatedIdents = setOf(
                         matrikkelenhetIdentType(
@@ -240,9 +242,9 @@ class TransformerBygningTest : FunSpec({
                             Matrikkelnummer.Gardsnummer(1),
                             Matrikkelnummer.Bruksnummer(1),
                             Matrikkelnummer.Festenummer(0),
-                            Matrikkelnummer.Seksjonsnummer(0)
-                        )
-                    )
+                            Matrikkelnummer.Seksjonsnummer(0),
+                        ),
+                    ),
                 ),
             )
 
@@ -256,7 +258,8 @@ class TransformerBygningTest : FunSpec({
                 listOf(sink),
                 idGeneratorManager,
                 kommuneService,
-                TestStorage()
+                TestStorage(),
+                true,
             )
 
             assertThat(sink::transformations).all {
@@ -265,8 +268,8 @@ class TransformerBygningTest : FunSpec({
                     prop(Transformation::id).isEqualTo(bygningId(2))
                     prop(Transformation::transformedIdent).isEqualTo(
                         unresolvedBygningIdentType(
-                            Bygningsnummer(2)
-                        )
+                            Bygningsnummer(2),
+                        ),
                     )
                     prop(Transformation::transformedAssociatedIdents).isNotNull()
                         .containsOnly(
@@ -276,8 +279,8 @@ class TransformerBygningTest : FunSpec({
                                 Matrikkelnummer.Gardsnummer(1),
                                 Matrikkelnummer.Bruksnummer(1),
                                 Matrikkelnummer.Festenummer(0),
-                                Matrikkelnummer.Seksjonsnummer(0)
-                            )
+                                Matrikkelnummer.Seksjonsnummer(0),
+                            ),
                         )
                     prop(Transformation::resultObject).isNull()
                 }

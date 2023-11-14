@@ -30,8 +30,8 @@ class TransformerKretsTest : FunSpec({
                     Fylkesnummer(12),
                     Kommunenummer.Lopenummer(34),
                     Kretstype("G"),
-                    Kretsnummer(1)
-                )
+                    Kretsnummer(1),
+                ),
             ),
             Entity(
                 id = kretsId(2),
@@ -39,8 +39,8 @@ class TransformerKretsTest : FunSpec({
                     Fylkesnummer(12),
                     Kommunenummer.Lopenummer(34),
                     Kretstype("1"),
-                    Kretsnummer(101)
-                )
+                    Kretsnummer(101),
+                ),
             ),
         )
 
@@ -54,8 +54,8 @@ class TransformerKretsTest : FunSpec({
                 listOf(
                     Kommuneendring(
                         FraTil(Fylkesnummer(12), Fylkesnummer(13)),
-                        FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(24)))
-                    )
+                        FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(24))),
+                    ),
                 ),
                 emptyList(),
                 listOf(
@@ -69,16 +69,17 @@ class TransformerKretsTest : FunSpec({
                         "",
                         null,
                         null,
-                        null
-                    )
-                )
+                        null,
+                    ),
+                ),
             ),
             listOf(source),
             emptyList(),
             listOf(sink),
             idGeneratorManager,
             kommuneService,
-            TestStorage()
+            TestStorage(),
+            true,
         )
 
         assertThat(sink::transformations).all {
@@ -90,8 +91,8 @@ class TransformerKretsTest : FunSpec({
                         Fylkesnummer(13),
                         Kommunenummer.Lopenummer(24),
                         Kretstype("G"),
-                        Kretsnummer(1)
-                    )
+                        Kretsnummer(1),
+                    ),
                 )
                 prop(Transformation::transformedAssociatedIdents).isNull()
                 prop(Transformation::resultObject).isNull()
@@ -103,8 +104,8 @@ class TransformerKretsTest : FunSpec({
                         Fylkesnummer(13),
                         Kommunenummer.Lopenummer(24),
                         Kretstype("1"),
-                        Kretsnummer(101)
-                    )
+                        Kretsnummer(101),
+                    ),
                 )
                 prop(Transformation::transformedAssociatedIdents).isNull()
                 prop(Transformation::resultObject).isNull()
@@ -125,8 +126,8 @@ class TransformerKretsTest : FunSpec({
                     Fylkesnummer(12),
                     Kommunenummer.Lopenummer(34),
                     Kretstype("G"),
-                    Kretsnummer(1)
-                )
+                    Kretsnummer(1),
+                ),
             ),
             Entity(
                 id = kretsId(2),
@@ -134,8 +135,8 @@ class TransformerKretsTest : FunSpec({
                     Fylkesnummer(12),
                     Kommunenummer.Lopenummer(34),
                     Kretstype("G"),
-                    Kretsnummer(2)
-                )
+                    Kretsnummer(2),
+                ),
             ),
         )
 
@@ -151,8 +152,8 @@ class TransformerKretsTest : FunSpec({
                         FraTil(Fylkesnummer(12), Fylkesnummer(13)),
                         FraTil(Kommunenummer.Lopenummer(34), Kommunenummer.Lopenummer(24)),
                         kretstype = FraTil(Kretstype("G"), Kretstype("G")),
-                        kretsnummer = FraTil(Kretsnummer(2), Kretsnummer(10))
-                    )
+                        kretsnummer = FraTil(Kretsnummer(2), Kretsnummer(10)),
+                    ),
                 ),
                 emptyList(),
                 listOf(
@@ -166,16 +167,17 @@ class TransformerKretsTest : FunSpec({
                         "",
                         null,
                         null,
-                        null
-                    )
-                )
+                        null,
+                    ),
+                ),
             ),
             listOf(source),
             emptyList(),
             listOf(sink),
             idGeneratorManager,
             kommuneService,
-            TestStorage()
+            TestStorage(),
+            true,
         )
 
         assertThat(sink::transformations).all {
@@ -187,8 +189,8 @@ class TransformerKretsTest : FunSpec({
                         Fylkesnummer(13),
                         Kommunenummer.Lopenummer(24),
                         Kretstype("G"),
-                        Kretsnummer(10)
-                    )
+                        Kretsnummer(10),
+                    ),
                 )
                 prop(Transformation::transformedAssociatedIdents).isNull()
                 prop(Transformation::resultObject).isNull()
