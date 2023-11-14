@@ -58,33 +58,31 @@ suspend fun transform(
 
     val transformations = storage.readTransformationsFromDatabase(kjoringId)
 
-    when (tilbakeforing) {
-        true -> {
-            // Kjør ut alle nyopprettinger
-            entitySinks.forEach { sink ->
-                sink.consumeTransformations(
-                    transformations.filter {
-                        val sourceEntity = it.sourceEntity
-                        sourceEntity == null || sourceEntity.id != it.id
-                    },
-                    input.ikrafttredelsesdato.toJavaLocalDate(),
-                )
-            }
-
-            // Kjør ut resten
-            // TODO: Hva med "slettinger"
-            entitySinks.forEach { sink ->
-                sink.consumeTransformations(
-                    transformations.filter {
-                        val sourceEntity = it.sourceEntity
-                        sourceEntity != null && sourceEntity.id == it.id
-                    },
-                    input.ikrafttredelsesdato.toJavaLocalDate(),
-                )
-            }
+    if (tilbakeforing) {
+        // Kjør ut alle nyopprettinger
+        entitySinks.forEach { sink ->
+            sink.consumeTransformations(
+                transformations.filter {
+                    val sourceEntity = it.sourceEntity
+                    sourceEntity == null || sourceEntity.id != it.id
+                },
+                input.ikrafttredelsesdato.toJavaLocalDate(),
+            )
         }
 
-        false -> transformations.collect()
+        // Kjør ut resten
+        // TODO: Hva med "slettinger"
+        entitySinks.forEach { sink ->
+            sink.consumeTransformations(
+                transformations.filter {
+                    val sourceEntity = it.sourceEntity
+                    sourceEntity != null && sourceEntity.id == it.id
+                },
+                input.ikrafttredelsesdato.toJavaLocalDate(),
+            )
+        }
+    } else {
+        transformations.collect()
     }
 }
 
