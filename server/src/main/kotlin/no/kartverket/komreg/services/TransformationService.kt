@@ -15,6 +15,7 @@ import no.kartverket.komreg.integration.EntitySourceManager
 import no.kartverket.komreg.integration.spi.IdGeneratorManager
 import no.kartverket.komreg.logger
 import no.kartverket.komreg.repositories.KjoringRepo
+import no.kartverket.komreg.repositories.TilbakeføringsstatusRepo
 import no.kartverket.komreg.repositories.TransformationRepo
 import no.kartverket.komreg.transformation.Reguleringsinput
 import no.kartverket.komreg.transformation.Storage
@@ -25,6 +26,7 @@ fun transformEntities(
     kjoringId: Int,
     transformationRepo: TransformationRepo,
     kjoringRepo: KjoringRepo,
+    tilbakeføringsstatusRepo: TilbakeføringsstatusRepo,
 ) {
     logger.info("Starter transformasjon!")
 
@@ -44,8 +46,9 @@ fun transformEntities(
         input,
         entitySinks,
         kjoringId,
-        StorageService(transformationRepo),
+        StorageService(transformationRepo, tilbakeføringsstatusRepo, kjoringRepo),
         kjoringRepo,
+        tilbakeføringsstatusRepo,
     )
 }
 
@@ -72,6 +75,7 @@ private fun runAndWriteTransformations(
     kjoringId: Int,
     storage: Storage,
     kjoringRepo: KjoringRepo,
+    tilbakeføringsstatusRepo: TilbakeføringsstatusRepo,
 
 ) {
     val sources = EntitySourceManager(bootContext).entitySources
@@ -84,8 +88,16 @@ private fun runAndWriteTransformations(
     val mdc = CoroutineMDC(mapOf(
         "kjoringId" to kjoringId.toString()
     ))
+
     CoroutineScope(Dispatchers.IO + mdc).launch {
         logger.info(FAG, "Startet å kjøre transformasjoner")
+
+    if (tilbakeføringsstatusRepo.getTilbakeføringsstatusForKjøringId(kjoringId) == null) {
+        logger.info("Førstegangskjøring av Regulering ${input.id}. Oppretter tilbakeføringsstatus for sinker.")
+        tilbakeføringsstatusRepo.createTilbakeføringsstatusForKjoring(kjoringId, entitySinks.entitySinks)
+    }
+
+    CoroutineScope(Dispatchers.IO).launch {
         transform(
             kjoringId,
             input,
