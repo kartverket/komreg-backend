@@ -12,6 +12,7 @@ import io.ktor.server.routing.routing
 import no.kartverket.komreg.exceptions.MissingPathVariableException
 import no.kartverket.komreg.repositories.KjoringRepo
 import no.kartverket.komreg.repositories.ReguleringRepo
+import no.kartverket.komreg.repositories.RunConfigRepo
 import no.kartverket.komreg.repositories.TransformationRepo
 import no.kartverket.komreg.services.transformEntities
 
@@ -19,6 +20,7 @@ fun Application.transformationRoutes(
     transformationRepo: TransformationRepo,
     kjoringRepo: KjoringRepo,
     reguleringRepo: ReguleringRepo,
+    configRepo: RunConfigRepo,
 ) {
     routing {
         route("/run/{regId}") {
@@ -35,7 +37,7 @@ fun Application.transformationRoutes(
                     if (kjoringId != null) {
                         val reguleringsinput = regulering.toReguleringsinput()
 
-                        transformEntities(reguleringsinput, kjoringId, transformationRepo, kjoringRepo)
+                        transformEntities(reguleringsinput, kjoringId, transformationRepo, kjoringRepo, configRepo)
 
                         call.respond("OK")
                     } else {

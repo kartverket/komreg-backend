@@ -60,6 +60,7 @@ class TransformerKommuneTest : FunSpec({
             idGeneratorManager,
             kommuneService,
             TestStorage(),
+
             true,
         )
 

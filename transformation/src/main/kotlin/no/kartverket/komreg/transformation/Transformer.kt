@@ -5,6 +5,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toJavaLocalDate
 import no.kartverket.komreg.core.domain.*
 import no.kartverket.komreg.integration.spi.*
+import no.kartverket.komreg.repositories.RunConfigRepo
 
 interface Storage {
     fun writeTransformationsToDatabase(kjoringId: Int, transformResultList: List<Transformation>)
@@ -20,6 +21,7 @@ suspend fun transform(
     entitySinks: List<EntitySink>,
     idGeneratorManager: IdGeneratorManager,
     kommuneService: KommuneService,
+    configrepo: RunConfigRepo,
     storage: Storage,
     skalTilbakefores: Boolean,
 ) {
@@ -58,7 +60,6 @@ suspend fun transform(
 
     val transformations = storage.readTransformationsFromDatabase(kjoringId)
 
-
     if (skalTilbakefores) {
         // Kjør ut alle nyopprettinger
         entitySinks.forEach { sink ->
@@ -68,9 +69,10 @@ suspend fun transform(
                     sourceEntity == null || sourceEntity.id != it.id
                 },
                 input.ikrafttredelsesdato.toJavaLocalDate(),
+
             )
-            kjoringsrepo.updateConfigForKjoring(kjoringId, sink.id, true, false)
-            configrepo.addConfig("sink", true, false)
+
+            configrepo.addNyOpprettingStatusForSink(sink, kjoringId)
         }
 
         // Kjør ut resten
@@ -83,8 +85,10 @@ suspend fun transform(
                 },
                 input.ikrafttredelsesdato.toJavaLocalDate(),
             )
+
+            configrepo.addAndreEndringerStatusForSink(sink, kjoringId)
         }
-    } else
+    } else {
         transformations.collect()
     }
 }

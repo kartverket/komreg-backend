@@ -36,12 +36,4 @@ class KjoringRepo(
             updateStatement.executeUpdate()
         }
     }
-
-    fun setLastSuccessfullSink(kjoringId: Int) {
-        dataSource.connection.use {
-            val updateStatement = connection.prepareStatement(
-                "UPDATE kjoring SET ",
-            )
-        }
-    }
 }
