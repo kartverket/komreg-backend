@@ -7,6 +7,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import no.kartverket.komreg.core.KrAppBootContext
 import no.kartverket.komreg.featureToggle
+import no.kartverket.komreg.integration.EntityProcessorManager
 import no.kartverket.komreg.integration.EntitySinkManager
 import no.kartverket.komreg.integration.EntitySourceManager
 import no.kartverket.komreg.integration.KommuneServiceManager
@@ -73,6 +74,7 @@ private fun runAndWriteTransformations(
 
 ) {
     val sources = EntitySourceManager(bootContext).entitySources
+    val processors = EntityProcessorManager(bootContext).entityProcessors
 
     val idGeneratorManager = IdGeneratorManager(bootContext)
 
@@ -83,7 +85,7 @@ private fun runAndWriteTransformations(
             kjoringId,
             input,
             sources,
-            emptyList(),
+            processors,
             entitySinks.entitySinks,
             idGeneratorManager,
             KommuneServiceManager(bootContext).kommuneService,
