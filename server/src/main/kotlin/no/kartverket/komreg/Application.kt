@@ -16,7 +16,7 @@ import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import no.kartverket.komreg.repositories.KjoringRepo
 import no.kartverket.komreg.repositories.ReguleringRepo
-import no.kartverket.komreg.repositories.RunConfigRepo
+import no.kartverket.komreg.repositories.TilbakeføringsstatusRepo
 import no.kartverket.komreg.repositories.TransformationRepo
 import no.kartverket.komreg.routes.grunndataRoutes
 import no.kartverket.komreg.routes.internalRoutes
@@ -83,7 +83,7 @@ fun Application.module() {
 
     val reguleringsRepo = ReguleringRepo(komregDbPool)
     val kjoringRepo = KjoringRepo(komregDbPool)
-    val runConfigRepo = RunConfigRepo(komregDbPool)
+    val tilbakeføringsstatusRepo = TilbakeføringsstatusRepo(komregDbPool)
     val transformationRepo = TransformationRepo(komregDbPool, jsonSerializer())
 
     install(ContentNegotiation) {
@@ -113,6 +113,6 @@ fun Application.module() {
 
     internalRoutes(metricsRegistry)
     reguleringRoutes(reguleringsRepo)
-    transformationRoutes(transformationRepo, kjoringRepo, reguleringsRepo, runConfigRepo)
+    transformationRoutes(transformationRepo, kjoringRepo, reguleringsRepo, tilbakeføringsstatusRepo)
     grunndataRoutes(createKildeDataSource())
 }

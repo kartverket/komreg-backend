@@ -5,12 +5,17 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toJavaLocalDate
 import no.kartverket.komreg.core.domain.*
 import no.kartverket.komreg.integration.spi.*
-import no.kartverket.komreg.repositories.RunConfigRepo
 
 interface Storage {
     fun writeTransformationsToDatabase(kjoringId: Int, transformResultList: List<Transformation>)
 
     fun readTransformationsFromDatabase(kjoringId: Int): Flow<Transformation>
+
+    fun createConfigForRegulering(reguleringId: String, entitySinks: List<EntitySink>)
+
+    fun addNyOpprettingStatusForSink(sink: EntitySink, reguleringId: String)
+
+    fun addAndreEndringerStatusForSink(sink: EntitySink, reguleringId: String)
 }
 
 suspend fun transform(
@@ -21,9 +26,11 @@ suspend fun transform(
     entitySinks: List<EntitySink>,
     idGeneratorManager: IdGeneratorManager,
     kommuneService: KommuneService,
-    configrepo: RunConfigRepo,
     storage: Storage,
     skalTilbakefores: Boolean,
+    gjenværendeFørsteSinker: List<String>,
+    gjenværendeAndreSinker: List<String>,
+
 ) {
     // TODO: Fjern når Fylkeendring får FraEnTilMange
     if (input.fylker.isNotEmpty()) {
@@ -60,33 +67,43 @@ suspend fun transform(
 
     val transformations = storage.readTransformationsFromDatabase(kjoringId)
 
+    println("Skal tilbakeføres: $skalTilbakefores")
+    println(gjenværendeFørsteSinker)
+    println(gjenværendeAndreSinker)
+
     if (skalTilbakefores) {
         // Kjør ut alle nyopprettinger
         entitySinks.forEach { sink ->
-            sink.consumeTransformations(
-                transformations.filter {
-                    val sourceEntity = it.sourceEntity
-                    sourceEntity == null || sourceEntity.id != it.id
-                },
-                input.ikrafttredelsesdato.toJavaLocalDate(),
 
-            )
+            if (gjenværendeFørsteSinker.contains(sink.id)) {
+                println("Kjører ut nyopprettinger for ${sink.id}")
+                sink.consumeTransformations(
+                    transformations.filter {
+                        val sourceEntity = it.sourceEntity
+                        sourceEntity == null || sourceEntity.id != it.id
+                    },
+                    input.ikrafttredelsesdato.toJavaLocalDate(),
 
-            configrepo.addNyOpprettingStatusForSink(sink, kjoringId)
+                )
+
+                storage.addNyOpprettingStatusForSink(sink, input.id)
+            }
         }
 
         // Kjør ut resten
         // TODO: Hva med "slettinger"
         entitySinks.forEach { sink ->
-            sink.consumeTransformations(
-                transformations.filter {
-                    val sourceEntity = it.sourceEntity
-                    sourceEntity != null && sourceEntity.id == it.id
-                },
-                input.ikrafttredelsesdato.toJavaLocalDate(),
-            )
-
-            configrepo.addAndreEndringerStatusForSink(sink, kjoringId)
+            if (gjenværendeAndreSinker.contains(sink.id)) {
+                println("Kjører ut gjenværende for ${sink.id}")
+                sink.consumeTransformations(
+                    transformations.filter {
+                        val sourceEntity = it.sourceEntity
+                        sourceEntity != null && sourceEntity.id == it.id
+                    },
+                    input.ikrafttredelsesdato.toJavaLocalDate(),
+                )
+                storage.addAndreEndringerStatusForSink(sink, input.id)
+            }
         }
     } else {
         transformations.collect()

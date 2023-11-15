@@ -16,7 +16,6 @@ dependencies {
 
     api("com.google.guava:guava:32.1.3-jre")
     implementation(kotlin("reflect"))
-    implementation(project(mapOf("path" to ":server")))
 
     // Testing
     testImplementation(kotlin("test"))

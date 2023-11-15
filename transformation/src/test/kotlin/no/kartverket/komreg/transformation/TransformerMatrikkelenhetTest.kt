@@ -9,7 +9,10 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 import no.kartverket.komreg.core.domain.*
-import no.kartverket.komreg.integration.spi.*
+import no.kartverket.komreg.integration.spi.Entity
+import no.kartverket.komreg.integration.spi.KommuneService
+import no.kartverket.komreg.integration.spi.Transformation
+import no.kartverket.komreg.integration.spi.invoke
 
 class TransformerMatrikkelenhetTest : FunSpec({
     fun matrikkelenhetId(idValue: Long) = Id(TestIdType.Foo, idValue) // Faktisk id-type er irrelevant
@@ -81,6 +84,8 @@ class TransformerMatrikkelenhetTest : FunSpec({
             kommuneService,
             TestStorage(),
             true,
+            listOf(sink.id),
+            listOf(sink.id),
         )
 
         assertThat(sink::transformations).all {
@@ -212,6 +217,8 @@ class TransformerMatrikkelenhetTest : FunSpec({
                 kommuneService,
                 TestStorage(),
                 true,
+                listOf(sink.id),
+                listOf(sink.id),
             )
 
             assertThat(sink::transformations).all {
@@ -278,6 +285,8 @@ class TransformerMatrikkelenhetTest : FunSpec({
                 kommuneService,
                 TestStorage(),
                 true,
+                listOf(sink.id),
+                listOf(sink.id),
             )
 
             assertThat(sink::transformations).all {

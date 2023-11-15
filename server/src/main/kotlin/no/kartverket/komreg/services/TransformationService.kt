@@ -13,7 +13,7 @@ import no.kartverket.komreg.integration.KommuneServiceManager
 import no.kartverket.komreg.integration.spi.IdGeneratorManager
 import no.kartverket.komreg.logger
 import no.kartverket.komreg.repositories.KjoringRepo
-import no.kartverket.komreg.repositories.RunConfigRepo
+import no.kartverket.komreg.repositories.TilbakeføringsstatusRepo
 import no.kartverket.komreg.repositories.TransformationRepo
 import no.kartverket.komreg.transformation.Reguleringsinput
 import no.kartverket.komreg.transformation.Storage
@@ -24,7 +24,7 @@ fun transformEntities(
     kjoringId: Int,
     transformationRepo: TransformationRepo,
     kjoringRepo: KjoringRepo,
-    configRepo: RunConfigRepo,
+    configRepo: TilbakeføringsstatusRepo,
 ) {
     logger.info("Starter transformasjon!")
 
@@ -44,7 +44,7 @@ fun transformEntities(
         input,
         entitySinks,
         kjoringId,
-        StorageService(transformationRepo),
+        StorageService(transformationRepo, configRepo),
         kjoringRepo,
         configRepo,
     )
@@ -73,7 +73,7 @@ private fun runAndWriteTransformations(
     kjoringId: Int,
     storage: Storage,
     kjoringRepo: KjoringRepo,
-    configRepo: RunConfigRepo,
+    configRepo: TilbakeføringsstatusRepo,
 
 ) {
     val sources = EntitySourceManager(bootContext).entitySources
@@ -82,7 +82,14 @@ private fun runAndWriteTransformations(
 
     val skalTilbakefores = !bootContext.config.featureToggle("feature.disable_sink")
 
-    configRepo.createConfigForKjoring(kjoringId, entitySinks.entitySinks)
+    if (configRepo.getConfigForKjoring(input.id) == null) {
+        logger.info("Førstegangskjøring av Regulering ${input.id}. Oppretter config.")
+        configRepo.createConfigForRegulering(input.id, entitySinks.entitySinks)
+    }
+
+    val gjenværendeFørsteSinker = configRepo.findGjenværendeFørsteSinkerId(input.id)
+
+    val gjenværendeAndreSinker = configRepo.findGjenværendeAndreSinkerId(input.id)
 
     CoroutineScope(Dispatchers.IO).launch {
         transform(
@@ -93,9 +100,10 @@ private fun runAndWriteTransformations(
             entitySinks.entitySinks,
             idGeneratorManager,
             KommuneServiceManager(bootContext).kommuneService,
-            configRepo,
             storage,
             skalTilbakefores,
+            gjenværendeFørsteSinker,
+            gjenværendeAndreSinker,
         )
 
         kjoringRepo.updateKjoringEndTime(kjoringId)
