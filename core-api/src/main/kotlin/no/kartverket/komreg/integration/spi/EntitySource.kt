@@ -1,5 +1,7 @@
 package no.kartverket.komreg.integration.spi
 
+import arrow.core.EitherNel
+import arrow.core.right
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.domain.Id
@@ -34,6 +36,9 @@ interface EntitySource {
 interface EntitySink {
     val id: String
     suspend fun consumeTransformations(flow: Flow<Transformation>, ikrafttredelsesdato: LocalDate)
+
+    suspend fun postTransformValidate() : EitherNel<TransformValidationError, Unit> = Unit.right()
+
     val postValidation: Set<() -> Unit>
     val preValidation: Set<() -> Unit>
 }

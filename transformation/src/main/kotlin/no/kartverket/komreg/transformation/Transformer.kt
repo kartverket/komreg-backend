@@ -1,10 +1,13 @@
 package no.kartverket.komreg.transformation
 
+import arrow.core.getOrElse
+import arrow.core.mapOrAccumulate
 import kotlinx.coroutines.flow.*
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toJavaLocalDate
 import no.kartverket.komreg.core.domain.*
 import no.kartverket.komreg.integration.spi.*
+import org.slf4j.LoggerFactory
 
 interface Storage {
     fun writeTransformationsToDatabase(kjoringId: Int, transformResultList: List<Transformation>)
@@ -84,6 +87,27 @@ suspend fun transform(
     } else {
         transformations.collect()
     }
+
+    entitySinks
+        .mapOrAccumulate { sink ->
+            sink.postTransformValidate()
+                .mapLeft { errs -> errs.map { sink::class.java.name to it } }.bindNel()
+        }
+        .getOrElse { errs ->
+            errs.groupBy({ it.first }, { it.second })
+                .forEach { (sinkName, errs) ->
+                    val logger = LoggerFactory.getLogger(sinkName)
+                    errs.forEach { err ->
+                        when(err) {
+                            is TransformValidationError.ForIdent ->
+                                logger.error("Valideringsfeil {}: {}", err.ident, err.message)
+                            is TransformValidationError.UncaughtThrowable ->
+                                logger.error("VALIDERING IKKE UTFØRT PGA FEIL: ${err.message}", err.throwable)
+                        }
+
+                    }
+                }
+        }
 }
 
 private suspend fun mapInput(input: Reguleringsinput): List<Pair<Ident, IdentTransformer.Mapping>> {
