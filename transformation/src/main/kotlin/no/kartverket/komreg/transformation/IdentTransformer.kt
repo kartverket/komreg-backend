@@ -11,12 +11,10 @@ import kotlin.collections.HashMap
 
 class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
     private val kommuneviseRegler: Map<Kommunenummer, List<Pair<Ident, Mapping>>>
-    private val fylkesviseRegler: Map<Fylkesnummer, List<Pair<Ident, Mapping>>>
     private val andreRegler: List<Pair<Ident, Mapping>>
 
     init {
         val kRegler = HashMap<Kommunenummer, ArrayList<Pair<Ident, Mapping>>>()
-        val fRegler = HashMap<Fylkesnummer, ArrayList<Pair<Ident, Mapping>>>()
         val aRegler = ArrayList<Pair<Ident, Mapping>>()
 
         mappings.forEach { m ->
@@ -29,16 +27,12 @@ class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
             if (fylkesnummer != null && kommunelopenummer != null) {
                 kRegler.computeIfAbsent(Kommunenummer(fylkesnummer, kommunelopenummer)) { ArrayList() }
                     .add(m)
-            } else if (fylkesnummer != null) {
-                fRegler.computeIfAbsent(fylkesnummer) { ArrayList() }
-                    .add(m)
             } else {
                 aRegler.add(m)
             }
         }
 
         kommuneviseRegler = kRegler
-        fylkesviseRegler = fRegler
         andreRegler = aRegler
     }
 
@@ -125,8 +119,6 @@ class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
                 ),
                 ::emptyList,
             )
-        } else if (fylkesnummer != null) {
-            fylkesviseRegler.getOrElse(fylkesnummer, ::emptyList)
         } else {
             andreRegler
         }
