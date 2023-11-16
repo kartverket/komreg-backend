@@ -22,3 +22,8 @@ data class Fylke(
             )
     }
 }
+
+fun Fylke.tilFylkesdata(): Fylkesdata =
+    Fylkesdata(
+        navn = fylkesnavn.name,
+    )
