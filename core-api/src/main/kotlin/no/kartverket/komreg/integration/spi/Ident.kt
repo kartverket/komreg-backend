@@ -1195,6 +1195,9 @@ class IdentSerializer : KSerializer<Ident> {
                     else -> throw IllegalStateException("Deserialization failure")
                 }
             }
+            if (type == EmptyIdentType){
+                 Ident.Empty
+            } else
             identWithTypeOrThrow(type as IdentType<*, *>, *value.toTypedArray())
         }
     }

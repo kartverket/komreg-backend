@@ -429,6 +429,9 @@ class IdentTypeSerializer : KSerializer<IdentOrEmptyType<*>> {
             }
             types
         }
+        if (types.isEmpty()) {
+            return EmptyIdentType
+        }
         return runBlocking { identTypeFromKotlinTypes(types.first(), *types.drop(1).toTypedArray()) }
     }
 }

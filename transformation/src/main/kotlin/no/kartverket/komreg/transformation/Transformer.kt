@@ -22,15 +22,14 @@ suspend fun transform(
     entityProcessors: List<EntityProcessor>,
     entitySinks: List<EntitySink>,
     idGeneratorManager: IdGeneratorManager,
-    kommuneService: KommuneService,
     storage: Storage,
     skalTilbakefores: Boolean,
 ) {
     // TODO: Fjern når Fylkeendring får FraEnTilMange
-    if (input.fylker.isNotEmpty()) {
-        val fylkeFlow = createFylker(input, kommuneService)
-        storage.writeTransformationsToDatabase(kjoringId, fylkeFlow.toList())
-    }
+//    if (input.fylker.isNotEmpty()) {
+//        val fylkeFlow = createFylker(input, kommuneService)
+//        storage.writeTransformationsToDatabase(kjoringId, fylkeFlow.toList())
+//    }
 
     val transformer = IdentTransformer(mapInput(input))
 
@@ -58,10 +57,8 @@ suspend fun transform(
         val result = processor.produce()
         storage.writeTransformationsToDatabase(kjoringId, result.toList())
     }
-
-    val transformations = storage.readTransformationsFromDatabase(kjoringId)
-
     if (skalTilbakefores) {
+        val transformations = storage.readTransformationsFromDatabase(kjoringId)
         // Kjør ut alle nyopprettinger
         entitySinks.forEach { sink ->
             sink.consumeTransformations(
@@ -84,8 +81,6 @@ suspend fun transform(
                 input.ikrafttredelsesdato.toJavaLocalDate(),
             )
         }
-    } else {
-        transformations.collect()
     }
 
     entitySinks
@@ -112,10 +107,11 @@ suspend fun transform(
 
 private suspend fun mapInput(input: Reguleringsinput): List<Pair<Ident, IdentTransformer.Mapping>> {
     val kommuneMap = input.kommuner.associateBy { it.kommunenummer }
+    val fylkeMap = input.fylker.associateBy { it.fylkesnummer }
 
     return input.endringer.map { m ->
         when (m) {
-            is Fylkeendring -> TODO("Venter på at Fylkeendring får FraEnTilMange")
+            is Fylkeendring -> mapFylkeendring(m, fylkeMap)
             is Kommuneendring -> mapKommuneendring(m, kommuneMap, input.ikrafttredelsesdato)
             is Kretsendring -> mapKretsendring(m)
             is Matrikkelenhetendring -> mapMatrikkelenhetendring(m)
@@ -123,6 +119,36 @@ private suspend fun mapInput(input: Reguleringsinput): List<Pair<Ident, IdentTra
             is Vegadresseendring -> mapVegadresseendring(m)
             is Vegendring -> mapVegendring(m)
         }
+    }
+}
+
+private suspend fun mapFylkeendring(
+    fylkeendring: Fylkeendring,
+    fylkeMap: Map<Fylkesnummer, Fylke>,
+): Pair<Ident, IdentTransformer.Mapping> {
+    val fylkeIdentType: IdentType1<Fylkesnummer> = identTypeOf1()
+
+    val til = fylkeendring.fylkesnummer.til.map { tilFnr ->
+
+        val fylke = fylkeMap.getValue(tilFnr)
+
+        val payload = fylke.tilFylkesdata()
+
+        return@map fylkeIdentType(tilFnr) to payload
+    }
+
+    return fylkeIdentType(fylkeendring.fylkesnummer.fra) to if (til.size == 1) {
+        val t = til[0]
+        IdentTransformer.Mapping.Replace(
+            t.first,
+            t.second,
+        )
+    } else {
+        IdentTransformer.Mapping.Split(
+            listOf(
+                Ident.Empty to null, // Ikke sett ny kommune-kobling
+            ) + til,
+        )
     }
 }
 
@@ -134,12 +160,12 @@ private suspend fun mapKommuneendring(
     val kommuneIdentType: IdentType2<Fylkesnummer, Kommunenummer.Lopenummer> = identTypeOf2()
 
     val til = kommuneendring.kommuneløpenummer.til.map { tilKlnr ->
-        val nyttKommunenummer = Kommunenummer(kommuneendring.fylkesnummer.til, tilKlnr)
+        val nyttKommunenummer = Kommunenummer(kommuneendring.fylkesnummer.til.single(), tilKlnr)
         val kommune = kommuneMap.getValue(nyttKommunenummer)
 
         val payload = kommune.tilKommunedata(ikrafttredelsesdato)
 
-        return@map kommuneIdentType(kommuneendring.fylkesnummer.til, tilKlnr) to payload
+        return@map kommuneIdentType(kommuneendring.fylkesnummer.til.single(), tilKlnr) to payload
     }
 
     return kommuneIdentType(kommuneendring.fylkesnummer.fra, kommuneendring.kommuneløpenummer.fra) to if (til.size == 1) {
@@ -166,7 +192,7 @@ suspend fun mapMatrikkelenhetendring(matrikkelenhetendring: Matrikkelenhetendrin
         matrikkelenhetendring.gårdsnummer.fra,
     ) to IdentTransformer.Mapping.Simple(
         gardsnummerIdentType(
-            matrikkelenhetendring.fylkesnummer.til,
+            matrikkelenhetendring.fylkesnummer.til.single(),
             matrikkelenhetendring.kommuneløpenummer.til,
             matrikkelenhetendring.gårdsnummer.til,
         ),
@@ -182,7 +208,7 @@ suspend fun mapTeig(teigendring: Teigendring): Pair<Ident, IdentTransformer.Mapp
         teigendring.teigId.fra,
     ) to IdentTransformer.Mapping.Simple(
         teigIdentType(
-            teigendring.fylkesnummer.til,
+            teigendring.fylkesnummer.til.single(),
             teigendring.kommuneløpenummer.til,
             teigendring.teigId.til,
         ),
@@ -194,7 +220,7 @@ suspend fun mapVegendring(vegendring: Vegendring): Pair<Ident, IdentTransformer.
 
     val til = vegendring.kommuneløpenummer.til.map { tilKnln ->
         adresseparsellIdentType(
-            vegendring.fylkesnummer.til,
+            vegendring.fylkesnummer.til.single(),
             tilKnln,
             vegendring.adressekode.til,
         ) to null
@@ -225,7 +251,7 @@ suspend fun mapVegadresseendring(vegadresseendring: Vegadresseendring): Pair<Ide
         vegadresseendring.adressenummer.fra,
     ) to IdentTransformer.Mapping.Simple(
         vegadresseIdentType(
-            vegadresseendring.fylkesnummer.til,
+            vegadresseendring.fylkesnummer.til.single(),
             vegadresseendring.kommuneløpenummer.til,
             vegadresseendring.adressekode.til,
             vegadresseendring.adressenummer.til,
@@ -243,7 +269,7 @@ suspend fun mapKretsendring(kretsendring: Kretsendring): Pair<Ident, IdentTransf
         kretsendring.kretsnummer.fra,
     ) to IdentTransformer.Mapping.Simple(
         kretsIdentType(
-            kretsendring.fylkesnummer.til,
+            kretsendring.fylkesnummer.til.single(),
             kretsendring.kommuneløpenummer.til,
             kretsendring.kretstype.til,
             kretsendring.kretsnummer.til,

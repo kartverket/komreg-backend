@@ -12,6 +12,7 @@ plugins {
 allprojects {
     repositories {
         mavenCentral()
+        mavenLocal()
         maven {
             url = uri("https://maven.pkg.github.com/kartverket/matrikkel")
             credentials {

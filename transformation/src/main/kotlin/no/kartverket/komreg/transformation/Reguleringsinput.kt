@@ -14,7 +14,7 @@ data class Reguleringsinput(
 )
 
 sealed class Endring {
-    abstract val fylkesnummer: FraTil<Fylkesnummer>
+    abstract val fylkesnummer: FraEnTilMange<Fylkesnummer>
 }
 
 data class FraTil<out T>(
@@ -28,57 +28,76 @@ data class FraEnTilMange<out T>(
 )
 
 data class Fylkeendring(
-    override val fylkesnummer: FraTil<Fylkesnummer>,
+    override val fylkesnummer: FraEnTilMange<Fylkesnummer>,
 ) : Endring()
 
 data class Kommuneendring(
-    override val fylkesnummer: FraTil<Fylkesnummer>,
+    override val fylkesnummer: FraEnTilMange<Fylkesnummer>,
     val kommuneløpenummer: FraEnTilMange<Kommunenummer.Lopenummer>,
 ) : Endring()
 
 data class Matrikkelenhetendring(
-    override val fylkesnummer: FraTil<Fylkesnummer>,
+    override val fylkesnummer: FraEnTilMange<Fylkesnummer>,
     val kommuneløpenummer: FraTil<Kommunenummer.Lopenummer>,
     val gårdsnummer: FraTil<Matrikkelnummer.Gardsnummer>,
 ) : Endring()
 
 data class Kretsendring(
-    override val fylkesnummer: FraTil<Fylkesnummer>,
+    override val fylkesnummer: FraEnTilMange<Fylkesnummer>,
     val kommuneløpenummer: FraTil<Kommunenummer.Lopenummer>,
     val kretsnummer: FraTil<Kretsnummer>,
     val kretstype: FraTil<Kretstype>,
 ) : Endring()
 
 data class Vegendring(
-    override val fylkesnummer: FraTil<Fylkesnummer>,
+    override val fylkesnummer: FraEnTilMange<Fylkesnummer>,
     val kommuneløpenummer: FraEnTilMange<Kommunenummer.Lopenummer>,
     val adressekode: FraTil<Adressekode>,
 ) : Endring()
 
 data class Teigendring(
-    override val fylkesnummer: FraTil<Fylkesnummer>,
+    override val fylkesnummer: FraEnTilMange<Fylkesnummer>,
     val kommuneløpenummer: FraTil<Kommunenummer.Lopenummer>,
     val teigId: FraTil<TeigId>,
 ) : Endring()
 
 data class Vegadresseendring(
-    override val fylkesnummer: FraTil<Fylkesnummer>,
+    override val fylkesnummer: FraEnTilMange<Fylkesnummer>,
     val kommuneløpenummer: FraTil<Kommunenummer.Lopenummer>,
     val adressekode: FraTil<Adressekode>,
     val adressenummer: FraTil<Adressenummernummer>,
 ) : Endring()
 
+//TODO: Fjern
 fun Reguleringsinput.toMappings(): List<Pair<Ident, IdentTransformer.Mapping>> {
     return runBlocking {
         endringer.map { endring ->
             when (endring) {
                 is Fylkeendring -> Ident(
                     endring.fylkesnummer.fra,
-                ) to IdentTransformer.Mapping.Replace(
-                    Ident(
-                        endring.fylkesnummer.til,
-                    ),
-                )
+                ) to if (endring.fylkesnummer.til.size == 1) {
+                    IdentTransformer.Mapping.Replace(
+                        Ident(
+                            endring.fylkesnummer.til.single(),
+                        ),
+                        fylker.find {
+                            it.fylkesnummer == endring.fylkesnummer.til.single()
+                        }?.tilFylkesdata(),
+                    )
+                } else {
+                    IdentTransformer.Mapping.Split(
+                        listOf(
+                            Ident.Empty to null, // For å sette gammelt fylke utgått
+                        ) +
+                            endring.fylkesnummer.til.map { fylkesnummerTil ->
+                                Ident(
+                                    fylkesnummerTil,
+                                ) to fylker.find {
+                                    it.fylkesnummer == fylkesnummerTil
+                                }?.tilFylkesdata()
+                            },
+                    )
+                }
 
                 is Kommuneendring -> Ident(
                     endring.fylkesnummer.fra,
@@ -86,12 +105,12 @@ fun Reguleringsinput.toMappings(): List<Pair<Ident, IdentTransformer.Mapping>> {
                 ) to if (endring.kommuneløpenummer.til.size == 1) {
                     IdentTransformer.Mapping.Replace(
                         Ident(
-                            endring.fylkesnummer.til,
+                            endring.fylkesnummer.til.single(),
                             endring.kommuneløpenummer.til.single(),
                         ),
                         kommuner.find {
                             it.kommunenummer == Kommunenummer(
-                                endring.fylkesnummer.til,
+                                endring.fylkesnummer.til.single(),
                                 endring.kommuneløpenummer.til.single(),
                             )
                         }?.tilKommunedata(ikrafttredelsesdato), // TODO: Hva gjør vi hvis ingen kommune?
@@ -103,11 +122,11 @@ fun Reguleringsinput.toMappings(): List<Pair<Ident, IdentTransformer.Mapping>> {
                         ) +
                             endring.kommuneløpenummer.til.map { kommuneløpenummerTil ->
                                 Ident(
-                                    endring.fylkesnummer.til,
+                                    endring.fylkesnummer.til.single(),
                                     kommuneløpenummerTil,
                                 ) to kommuner.find {
                                     it.kommunenummer == Kommunenummer(
-                                        endring.fylkesnummer.til,
+                                        endring.fylkesnummer.til.single(),
                                         kommuneløpenummerTil,
                                     )
                                 }?.tilKommunedata(ikrafttredelsesdato) // TODO: Hva gjør vi hvis ingen kommune?
@@ -121,7 +140,7 @@ fun Reguleringsinput.toMappings(): List<Pair<Ident, IdentTransformer.Mapping>> {
                     endring.gårdsnummer.fra,
                 ) to IdentTransformer.Mapping.Simple(
                     Ident(
-                        endring.fylkesnummer.til,
+                        endring.fylkesnummer.til.single(),
                         endring.kommuneløpenummer.til,
                         endring.gårdsnummer.til,
                     ),
@@ -134,7 +153,7 @@ fun Reguleringsinput.toMappings(): List<Pair<Ident, IdentTransformer.Mapping>> {
                     endring.kretstype.fra,
                 ) to IdentTransformer.Mapping.Simple(
                     Ident(
-                        endring.fylkesnummer.til,
+                        endring.fylkesnummer.til.single(),
                         endring.kommuneløpenummer.til,
                         endring.kretsnummer.til,
                         endring.kretstype.til,
@@ -148,7 +167,7 @@ fun Reguleringsinput.toMappings(): List<Pair<Ident, IdentTransformer.Mapping>> {
                 ) to if (endring.kommuneløpenummer.til.size == 1) {
                     IdentTransformer.Mapping.Simple(
                         Ident(
-                            endring.fylkesnummer.til,
+                            endring.fylkesnummer.til.single(),
                             endring.kommuneløpenummer.til.single(),
                             endring.adressekode.til,
                         ),
@@ -157,7 +176,7 @@ fun Reguleringsinput.toMappings(): List<Pair<Ident, IdentTransformer.Mapping>> {
                     IdentTransformer.Mapping.Split(
                         endring.kommuneløpenummer.til.map {
                             Ident(
-                                endring.fylkesnummer.til,
+                                endring.fylkesnummer.til.single(),
                                 it,
                                 endring.adressekode.til,
                             ) to null
@@ -171,7 +190,7 @@ fun Reguleringsinput.toMappings(): List<Pair<Ident, IdentTransformer.Mapping>> {
                     endring.teigId.fra,
                 ) to IdentTransformer.Mapping.Simple(
                     Ident(
-                        endring.fylkesnummer.til,
+                        endring.fylkesnummer.til.single(),
                         endring.kommuneløpenummer.til,
                         endring.teigId.til,
                     ),
@@ -184,7 +203,7 @@ fun Reguleringsinput.toMappings(): List<Pair<Ident, IdentTransformer.Mapping>> {
                     endring.adressenummer.fra,
                 ) to IdentTransformer.Mapping.Simple(
                     Ident(
-                        endring.fylkesnummer.til,
+                        endring.fylkesnummer.til.single(),
                         endring.kommuneløpenummer.til,
                         endring.adressekode.til,
                         endring.adressenummer.til,
