@@ -100,6 +100,7 @@ dependencyResolutionManagement {
             library("assertk", "com.willowtreeapps.assertk:assertk:0.27.0")
 
             library("logback-classic", "ch.qos.logback", "logback-classic").versionRef("logback")
+            library("logback-classic-db", "ch.qos.logback.db", "logback-classic-db").version("1.2.11.1")
 
             library(
                 "micrometer-registry-prometheus",

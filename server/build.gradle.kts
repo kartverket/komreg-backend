@@ -91,6 +91,7 @@ dependencies {
     implementation(libs.postgresql)
     implementation(libs.flyway.core)
     implementation(libs.hikari)
+    implementation(libs.logback.classic.db)
 
     testImplementation(kotlin("test"))
     testImplementation(libs.junit.jupiter.api)
