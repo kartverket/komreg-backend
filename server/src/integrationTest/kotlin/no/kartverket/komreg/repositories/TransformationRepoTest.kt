@@ -50,8 +50,8 @@ class TransformationRepoTest {
                 "abc",
                 "def",
                 Clock.System.todayIn(TimeZone.currentSystemDefault()),
-                emptyList()
-            )
+                emptyList(),
+            ),
         )
         Assertions.assertTrue(ok, "Lagring av regulering")
 
@@ -69,7 +69,7 @@ class TransformationRepoTest {
 
             val repo = TransformationRepo(
                 dataSource,
-                jsonSerializer()
+                jsonSerializer(),
             )
 
             val kommuneIdentType = runBlocking {
@@ -85,7 +85,7 @@ class TransformationRepoTest {
                     sourceObject = TestPayload(
                         true,
                         "Hallo",
-                        setOf(7L, 13L)
+                        setOf(7L, 13L),
                     ),
                 ),
                 transformedIdent = kommuneIdentType(Fylkesnummer(99), Kommunenummer.Lopenummer(99)),
@@ -96,8 +96,8 @@ class TransformationRepoTest {
             repo.writeTransformationsToDatabase(
                 kjoringId,
                 listOf(
-                    transformation
-                )
+                    transformation,
+                ),
             )
 
             val tFlow = repo.readTransformationFromDatabase(kjoringId)

@@ -7,7 +7,7 @@ import javax.sql.DataSource
 
 data class SinkConfig(
     val sinkId: String,
-    val reguleringId: String,
+    val kjoringId: Int,
     val opprettinger: Boolean?,
     val endringer: Boolean?,
     val createdAt: Timestamp,
@@ -16,14 +16,14 @@ data class SinkConfig(
 
 class TilbakeføringsstatusRepo(private val dataSource: DataSource) {
 
-    fun createConfigForRegulering(reguleringId: String, entitySinks: List<EntitySink>) {
+    fun createInitialTilbakeføringsstatus(kjoringId: Int, entitySinks: List<EntitySink>) {
         dataSource.connection.use { connection ->
 
             entitySinks.forEach { sink ->
                 val insertStatement =
-                    connection.prepareStatement("INSERT INTO tilbakeføringsstatus (id, reguleringid, sink ) VALUES (?, ?, ?)")
+                    connection.prepareStatement("INSERT INTO tilbakeføringsstatus (id, kjoringid, sink ) VALUES (?, ?, ?)")
                 insertStatement.setString(1, UUID.randomUUID().toString())
-                insertStatement.setString(2, reguleringId)
+                insertStatement.setInt(2, kjoringId)
                 insertStatement.setString(3, sink.id)
 
                 insertStatement.executeUpdate()
@@ -31,19 +31,19 @@ class TilbakeføringsstatusRepo(private val dataSource: DataSource) {
         }
     }
 
-    fun getConfigForKjoring(reguleringId: String): List<SinkConfig>? {
+    fun getTilbakeføringsstatusForKjøringId(kjoringId: Int): List<SinkConfig>? {
         val configs = mutableListOf<SinkConfig>()
         dataSource.connection.use { connection ->
             val selectStatement =
-                connection.prepareStatement("SELECT * FROM tilbakeføringsstatus WHERE reguleringid = ?")
-            selectStatement.setString(1, reguleringId)
+                connection.prepareStatement("SELECT * FROM tilbakeføringsstatus WHERE kjoringid = ?")
+            selectStatement.setInt(1, kjoringId)
 
             val sinkConfigResultSet = selectStatement.executeQuery()
             while (sinkConfigResultSet.next()) {
                 configs.add(
                     SinkConfig(
                         sinkId = sinkConfigResultSet.getString("sink"),
-                        reguleringId = sinkConfigResultSet.getString("reguleringId"),
+                        kjoringId = sinkConfigResultSet.getInt("kjoringId"),
                         opprettinger = sinkConfigResultSet.getBoolean("opprettinger"),
                         endringer = sinkConfigResultSet.getBoolean("endringer"),
                         createdAt = sinkConfigResultSet.getTimestamp("created_at"),
@@ -55,45 +55,45 @@ class TilbakeføringsstatusRepo(private val dataSource: DataSource) {
         return if (configs.isEmpty()) null else configs
     }
 
-    fun addNyOpprettingStatusForSink(sink: EntitySink, reguleringId: String) {
+    fun leggTilIkkeStartedeSinkerForNyeEntiteter(sink: EntitySink, kjoringId: Int) {
         dataSource.connection.use { connection ->
 
             val updatedAt = Timestamp(System.currentTimeMillis())
 
             val updateStatement =
-                connection.prepareStatement("UPDATE tilbakeføringsstatus SET opprettinger = TRUE, updated_at = ? WHERE reguleringid = ? AND sink = ?")
+                connection.prepareStatement("UPDATE tilbakeføringsstatus SET opprettinger = TRUE, updated_at = ? WHERE kjoringid = ? AND sink = ?")
             updateStatement.setTimestamp(1, updatedAt)
-            updateStatement.setString(2, reguleringId)
+            updateStatement.setInt(2, kjoringId)
             updateStatement.setString(3, sink.id)
 
             updateStatement.executeUpdate()
         }
     }
 
-    fun addAndreEndringerStatusForSink(sink: EntitySink, reguleringId: String) {
+    fun leggTilIkkeStartedeSinkerForErstattendeEntiteter(sink: EntitySink, kjoringId: Int) {
         dataSource.connection.use { connection ->
 
             val updatedAt = Timestamp(System.currentTimeMillis())
 
             val updateStatement =
-                connection.prepareStatement("UPDATE tilbakeføringsstatus SET endringer = TRUE, updated_at = ? WHERE reguleringid = ? AND sink = ?")
+                connection.prepareStatement("UPDATE tilbakeføringsstatus SET endringer = TRUE, updated_at = ? WHERE kjoringid = ? AND sink = ?")
             updateStatement.setTimestamp(1, updatedAt)
-            updateStatement.setString(2, reguleringId)
+            updateStatement.setInt(2, kjoringId)
             updateStatement.setString(3, sink.id)
 
             updateStatement.executeUpdate()
         }
     }
 
-    fun findGjenværendeFørsteSinkerId(reguleringId: String): List<String> {
+    fun hentIkkeStartedeTilbakeføringerForNyeEntiteter(kjoringId: Int): List<String> {
         val sinkIder = mutableListOf<String>()
 
         dataSource.connection.use { connection ->
             val selectStatement =
                 connection.prepareStatement(
-                    "SELECT sink FROM tilbakeføringsstatus WHERE reguleringid = ? AND (opprettinger = FALSE OR opprettinger IS NULL)",
+                    "SELECT sink FROM tilbakeføringsstatus WHERE kjoringid = ? AND (opprettinger = FALSE OR opprettinger IS NULL)",
                 )
-            selectStatement.setString(1, reguleringId)
+            selectStatement.setInt(1, kjoringId)
 
             val sinkIdResultSet = selectStatement.executeQuery()
             while (sinkIdResultSet.next()) {
@@ -103,12 +103,12 @@ class TilbakeføringsstatusRepo(private val dataSource: DataSource) {
         return sinkIder
     }
 
-    fun findGjenværendeAndreSinkerId(reguleringId: String): List<String> {
+    fun hentIkkeStartedeTilbakeføringerForErstattendeEntiteter(kjoringId: Int): List<String> {
         val sinkIder = mutableListOf<String>()
         dataSource.connection.use { connection ->
             val selectStatement =
-                connection.prepareStatement("SELECT sink FROM tilbakeføringsstatus  WHERE reguleringid = ? AND (endringer = FALSE OR endringer IS NULL)")
-            selectStatement.setString(1, reguleringId)
+                connection.prepareStatement("SELECT sink FROM tilbakeføringsstatus  WHERE kjoringid = ? AND (endringer = FALSE OR endringer IS NULL)")
+            selectStatement.setInt(1, kjoringId)
 
             val sinkIdResultSet = selectStatement.executeQuery()
             while (sinkIdResultSet.next()) {

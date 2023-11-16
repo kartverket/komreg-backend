@@ -68,6 +68,8 @@ class TransformerVegadresserTest : FunSpec({
             kommuneService,
             TestStorage(),
             true,
+            listOf(sink.id),
+            listOf(sink.id),
         )
 
         assertThat(sink::transformations).single().prop(Transformation::id).isEqualTo(vegId(1))
@@ -135,6 +137,8 @@ class TransformerVegadresserTest : FunSpec({
             kommuneService,
             TestStorage(),
             true,
+            listOf(sink.id),
+            listOf(sink.id),
         )
 
         assertThat(sink::transformations).all {
@@ -248,6 +252,8 @@ class TransformerVegadresserTest : FunSpec({
                 kommuneService,
                 TestStorage(),
                 true,
+                listOf(sink.id),
+                listOf(sink.id),
             )
 
             val unresolvedVegadresseIdentType = getUnresolvedVegadresseIdentType()
@@ -335,6 +341,8 @@ class TransformerVegadresserTest : FunSpec({
                 kommuneService,
                 TestStorage(),
                 true,
+                listOf(sink.id),
+                listOf(sink.id),
             )
 
             assertThat(sink::transformations).all {

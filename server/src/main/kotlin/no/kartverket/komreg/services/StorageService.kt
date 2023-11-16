@@ -19,15 +19,15 @@ class StorageService(
         return transformationRepo.readTransformationFromDatabase(kjoringId)
     }
 
-    override fun createConfigForRegulering(reguleringId: String, entitySinks: List<EntitySink>) {
-        tilbakeføringsstatusRepo.createConfigForRegulering(reguleringId, entitySinks)
+    override fun createConfigForRegulering(kjoringId: Int, entitySinks: List<EntitySink>) {
+        tilbakeføringsstatusRepo.createInitialTilbakeføringsstatus(kjoringId, entitySinks)
     }
 
-    override fun addNyOpprettingStatusForSink(sink: EntitySink, reguleringId: String) {
-        tilbakeføringsstatusRepo.addNyOpprettingStatusForSink(sink, reguleringId)
+    override fun settStatusNyeEntiteterTilbakeført(sink: EntitySink, kjoringId: Int) {
+        tilbakeføringsstatusRepo.leggTilIkkeStartedeSinkerForNyeEntiteter(sink, kjoringId)
     }
 
-    override fun addAndreEndringerStatusForSink(sink: EntitySink, reguleringId: String) {
-        tilbakeføringsstatusRepo.addAndreEndringerStatusForSink(sink, reguleringId)
+    override fun settStatusErstattendeEntiteterTilbakeført(sink: EntitySink, kjoringId: Int) {
+        tilbakeføringsstatusRepo.leggTilIkkeStartedeSinkerForErstattendeEntiteter(sink, kjoringId)
     }
 }

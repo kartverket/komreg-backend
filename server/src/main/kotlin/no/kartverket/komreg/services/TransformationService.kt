@@ -73,7 +73,7 @@ private fun runAndWriteTransformations(
     kjoringId: Int,
     storage: Storage,
     kjoringRepo: KjoringRepo,
-    configRepo: TilbakeføringsstatusRepo,
+    tilbakeføringsstatusRepo: TilbakeføringsstatusRepo,
 
 ) {
     val sources = EntitySourceManager(bootContext).entitySources
@@ -82,14 +82,15 @@ private fun runAndWriteTransformations(
 
     val skalTilbakefores = !bootContext.config.featureToggle("feature.disable_sink")
 
-    if (configRepo.getConfigForKjoring(input.id) == null) {
+    if (tilbakeføringsstatusRepo.getTilbakeføringsstatusForKjøringId(kjoringId) == null) {
         logger.info("Førstegangskjøring av Regulering ${input.id}. Oppretter config.")
-        configRepo.createConfigForRegulering(input.id, entitySinks.entitySinks)
+        tilbakeføringsstatusRepo.createInitialTilbakeføringsstatus(kjoringId, entitySinks.entitySinks)
     }
 
-    val gjenværendeFørsteSinker = configRepo.findGjenværendeFørsteSinkerId(input.id)
+    val gjenværendeFørsteSinker = tilbakeføringsstatusRepo.hentIkkeStartedeTilbakeføringerForNyeEntiteter(kjoringId)
 
-    val gjenværendeAndreSinker = configRepo.findGjenværendeAndreSinkerId(input.id)
+    val gjenværendeAndreSinker =
+        tilbakeføringsstatusRepo.hentIkkeStartedeTilbakeføringerForErstattendeEntiteter(kjoringId)
 
     CoroutineScope(Dispatchers.IO).launch {
         transform(

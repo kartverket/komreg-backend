@@ -11,11 +11,11 @@ interface Storage {
 
     fun readTransformationsFromDatabase(kjoringId: Int): Flow<Transformation>
 
-    fun createConfigForRegulering(reguleringId: String, entitySinks: List<EntitySink>)
+    fun createConfigForRegulering(kjoringId: Int, entitySinks: List<EntitySink>)
 
-    fun addNyOpprettingStatusForSink(sink: EntitySink, reguleringId: String)
+    fun settStatusNyeEntiteterTilbakeført(sink: EntitySink, kjoringId: Int)
 
-    fun addAndreEndringerStatusForSink(sink: EntitySink, reguleringId: String)
+    fun settStatusErstattendeEntiteterTilbakeført(sink: EntitySink, kjoringId: Int)
 }
 
 suspend fun transform(
@@ -86,7 +86,7 @@ suspend fun transform(
 
                 )
 
-                storage.addNyOpprettingStatusForSink(sink, input.id)
+                storage.settStatusNyeEntiteterTilbakeført(sink, kjoringId)
             }
         }
 
@@ -102,7 +102,7 @@ suspend fun transform(
                     },
                     input.ikrafttredelsesdato.toJavaLocalDate(),
                 )
-                storage.addAndreEndringerStatusForSink(sink, input.id)
+                storage.settStatusErstattendeEntiteterTilbakeført(sink, kjoringId)
             }
         }
     } else {
