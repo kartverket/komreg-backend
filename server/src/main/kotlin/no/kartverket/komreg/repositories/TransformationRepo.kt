@@ -50,7 +50,6 @@ class TransformationRepo(
                         preparedStatement.executeQuery().use { resultSet ->
                             while (resultSet.next()) {
                                 val text = resultSet.getString(1)
-                                logger.info(text)
                                 val t = jsonSerializer.decodeFromString(Transformation.serializer(), text)
                                 emit(t)
                             }
