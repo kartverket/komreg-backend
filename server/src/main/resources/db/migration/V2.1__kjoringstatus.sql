@@ -1,2 +1,2 @@
 ALTER TABLE kjoring
-    ADD COLUMN status varchar(255) NOT NULL DEFAULT 'KJORER';
+    ADD COLUMN status varchar(255);

@@ -84,7 +84,7 @@ private fun runAndWriteTransformations(
 
     if (tilbakeføringsstatusRepo.getTilbakeføringsstatusForKjøringId(kjoringId) == null) {
         logger.info("Førstegangskjøring av Regulering ${input.id}. Oppretter config.")
-        tilbakeføringsstatusRepo.createInitialTilbakeføringsstatus(kjoringId, entitySinks.entitySinks)
+        tilbakeføringsstatusRepo.createTilbakeføringsstatusForKjoring(kjoringId, entitySinks.entitySinks)
     }
 
     val gjenværendeFørsteSinker = tilbakeføringsstatusRepo.hentIkkeStartedeTilbakeføringerForNyeEntiteter(kjoringId)

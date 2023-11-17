@@ -16,7 +16,7 @@ data class SinkConfig(
 
 class TilbakeføringsstatusRepo(private val dataSource: DataSource) {
 
-    fun createInitialTilbakeføringsstatus(kjoringId: Int, entitySinks: List<EntitySink>) {
+    fun createTilbakeføringsstatusForKjoring(kjoringId: Int, entitySinks: List<EntitySink>) {
         dataSource.connection.use { connection ->
 
             entitySinks.forEach { sink ->

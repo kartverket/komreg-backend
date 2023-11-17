@@ -11,7 +11,7 @@ interface Storage {
 
     fun readTransformationsFromDatabase(kjoringId: Int): Flow<Transformation>
 
-    fun createConfigForRegulering(kjoringId: Int, entitySinks: List<EntitySink>)
+    fun createTilbakeføringsstatusForKjoring(kjoringId: Int, entitySinks: List<EntitySink>)
 
     fun settStatusNyeEntiteterTilbakeført(sink: EntitySink, kjoringId: Int)
 
@@ -35,7 +35,14 @@ suspend fun transform(
     // TODO: Fjern når Fylkeendring får FraEnTilMange
     if (input.fylker.isNotEmpty()) {
         val fylkeFlow = createFylker(input, kommuneService)
-        storage.writeTransformationsToDatabase(kjoringId, fylkeFlow.toList())
+
+        val isFylkePreviouslyWritten = storage.readTransformationsFromDatabase(kjoringId)
+            .mapNotNull { it.id }
+            .toSet()
+
+        val filteredFylkeFlow = fylkeFlow.filter { !isFylkePreviouslyWritten.contains(it.id) }
+
+        storage.writeTransformationsToDatabase(kjoringId, filteredFylkeFlow.toList())
     }
 
     val transformer = IdentTransformer(mapInput(input))
@@ -54,7 +61,11 @@ suspend fun transform(
         }
         transformResultFlow.chunked(10000)
             .collect { chunk ->
-                storage.writeTransformationsToDatabase(kjoringId, chunk)
+                val previouslyWritten = storage.readTransformationsFromDatabase(kjoringId)
+                    .toList()
+
+                val filteredChunk = chunk.filter { !previouslyWritten.contains(it) }
+                storage.writeTransformationsToDatabase(kjoringId, filteredChunk)
             }
     }
 

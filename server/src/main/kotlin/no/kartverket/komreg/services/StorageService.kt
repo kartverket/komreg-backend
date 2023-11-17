@@ -19,8 +19,8 @@ class StorageService(
         return transformationRepo.readTransformationFromDatabase(kjoringId)
     }
 
-    override fun createConfigForRegulering(kjoringId: Int, entitySinks: List<EntitySink>) {
-        tilbakeføringsstatusRepo.createInitialTilbakeføringsstatus(kjoringId, entitySinks)
+    override fun createTilbakeføringsstatusForKjoring(kjoringId: Int, entitySinks: List<EntitySink>) {
+        tilbakeføringsstatusRepo.createTilbakeføringsstatusForKjoring(kjoringId, entitySinks)
     }
 
     override fun settStatusNyeEntiteterTilbakeført(sink: EntitySink, kjoringId: Int) {

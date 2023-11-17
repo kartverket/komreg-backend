@@ -36,6 +36,8 @@ fun Application.transformationRoutes(
 
                     val kjoringsomskalgjenopptas = kjoringRepo.finnStoppetKjøringForRegulering(regId)
 
+                    println("kjoringsomskalgjenopptas: $kjoringsomskalgjenopptas")
+
                     if (kjoringsomskalgjenopptas != null) {
                         transformEntities(
                             regulering.toReguleringsinput(),

@@ -11,7 +11,7 @@ class KjoringRepo(
     fun insertAndRetrieveKjoringId(reguleringId: String): Int? {
         dataSource.connection.use { connection ->
             val insertStatement = connection.prepareStatement(
-                "INSERT INTO kjoring (regulering, start) VALUES (?, now())",
+                "INSERT INTO kjoring (regulering, start, status) VALUES (?, now(), 'KJØRER')",
                 Statement.RETURN_GENERATED_KEYS,
             )
             insertStatement.setString(1, reguleringId)
@@ -30,10 +30,11 @@ class KjoringRepo(
         dataSource.connection.use { connection ->
             val endTime = Timestamp(System.currentTimeMillis())
             val updateStatement = connection.prepareStatement(
-                "UPDATE kjoring SET slutt = ? WHERE id = ? AND slutt IS NULL",
+                "UPDATE kjoring SET slutt = ?, status = ? WHERE id = ? AND slutt IS NULL",
             )
             updateStatement.setTimestamp(1, endTime)
-            updateStatement.setInt(2, kjoringId)
+            updateStatement.setString(2, Kjoringstatus.FERDIG.toString())
+            updateStatement.setInt(3, kjoringId)
             updateStatement.executeUpdate()
         }
     }
@@ -41,9 +42,7 @@ class KjoringRepo(
     fun finnStoppetKjøringForRegulering(reguleringId: String): Kjoring? {
         dataSource.connection.use { connection ->
             val preparedStatement = connection.prepareStatement(
-                "SELECT * \n" +
-                    "FROM kjoring \n" +
-                    "WHERE regulering = ? \n" +
+                "SELECT * FROM kjoring WHERE regulering = ? \n" +
                     "AND status = 'STOPPET' \n" +
                     "AND slutt IS NULL \n" +
                     "ORDER BY start DESC \n" +
