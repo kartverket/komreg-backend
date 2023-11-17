@@ -35,9 +35,9 @@ class TransformEntityTest {
         ikrafttredelsesdato = ikrafttredelsesdato,
         endringer = listOf(
             Kommuneendring(
-                fylkesnummer = FraTil(
+                fylkesnummer = FraEnTilMange(
                     fra = Fylkesnummer(2),
-                    til = Fylkesnummer(3),
+                    til = listOf(Fylkesnummer(3)),
                 ),
                 kommuneløpenummer = FraEnTilMange(
                     fra = Kommunenummer.Lopenummer(5),
@@ -45,9 +45,9 @@ class TransformEntityTest {
                 ),
             ),
             Kommuneendring(
-                fylkesnummer = FraTil(
+                fylkesnummer = FraEnTilMange(
                     fra = Fylkesnummer(5),
-                    til = Fylkesnummer(5),
+                    til = listOf(Fylkesnummer(5)),
                 ),
                 kommuneløpenummer = FraEnTilMange(
                     fra = Kommunenummer.Lopenummer(5),
@@ -55,9 +55,9 @@ class TransformEntityTest {
                 ),
             ),
             Vegendring(
-                fylkesnummer = FraTil(
+                fylkesnummer = FraEnTilMange(
                     fra = Fylkesnummer(2),
-                    til = Fylkesnummer(3),
+                    til = listOf(Fylkesnummer(3)),
                 ),
                 kommuneløpenummer = FraEnTilMange(
                     fra = Kommunenummer.Lopenummer(5),
@@ -72,11 +72,11 @@ class TransformEntityTest {
                 ),
             ),
         ),
-        kommuner = listOf(dummyKommune),
+        kommuner = listOf(dummyKommune(3, 6), dummyKommune(5, 7), dummyKommune(5, 8), dummyKommune(3, 7)),
         fylker = emptyList(),
     )
 
-    private val mappings = reguleringsInput.toMappings()
+    private val mappings = runBlocking { mapInput(reguleringsInput) }
     private val identTransformer = IdentTransformer(*mappings.toTypedArray())
 
     private val idGenerator = mockk<IdGeneratorManager>()

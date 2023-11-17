@@ -34,7 +34,7 @@ class TransformerKommuneTest : FunSpec({
                 Clock.System.todayIn(TimeZone.currentSystemDefault()),
                 listOf(
                     Kommuneendring(
-                        FraTil(Fylkesnummer(12), Fylkesnummer(13)),
+                        FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(13))),
                         FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(35))),
                     ),
                 ),
@@ -58,7 +58,6 @@ class TransformerKommuneTest : FunSpec({
             emptyList(),
             listOf(sink),
             idGeneratorManager,
-            kommuneService,
             TestStorage(),
             true,
         )
@@ -110,7 +109,7 @@ class TransformerKommuneTest : FunSpec({
                 Clock.System.todayIn(TimeZone.currentSystemDefault()),
                 listOf(
                     Kommuneendring(
-                        FraTil(Fylkesnummer(12), Fylkesnummer(12)),
+                        FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(12))),
                         FraEnTilMange(
                             Kommunenummer.Lopenummer(34),
                             listOf(
@@ -152,7 +151,6 @@ class TransformerKommuneTest : FunSpec({
             emptyList(),
             listOf(sink),
             idGeneratorManager,
-            kommuneService,
             TestStorage(),
             true,
         )

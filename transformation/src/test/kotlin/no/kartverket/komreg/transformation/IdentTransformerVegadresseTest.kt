@@ -21,9 +21,9 @@ class IdentTransformerVegadresseTest {
         ikrafttredelsesdato = ikrafttredelsesdato,
         endringer = listOf(
             Vegadresseendring(
-                fylkesnummer = FraTil(
+                fylkesnummer = FraEnTilMange(
                     fra = Fylkesnummer(2),
-                    til = Fylkesnummer(3),
+                    til = listOf(Fylkesnummer(3)),
                 ),
                 kommuneløpenummer = FraTil(
                     fra = Kommunenummer.Lopenummer(5),
@@ -43,7 +43,7 @@ class IdentTransformerVegadresseTest {
         fylker = emptyList(),
     )
 
-    private val mappings = reguleringsInput.toMappings()
+    private val mappings = runBlocking { mapInput(reguleringsInput) }
     private val identTransformer = IdentTransformer(*mappings.toTypedArray())
 
     private val idGenerator = mockk<IdGeneratorManager>()

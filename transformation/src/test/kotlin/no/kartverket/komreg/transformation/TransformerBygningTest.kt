@@ -62,7 +62,7 @@ class TransformerBygningTest : FunSpec({
                 Clock.System.todayIn(TimeZone.currentSystemDefault()),
                 listOf(
                     Kommuneendring(
-                        FraTil(Fylkesnummer(12), Fylkesnummer(13)),
+                        FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(13))),
                         FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(24))),
                     ),
                 ),
@@ -86,7 +86,6 @@ class TransformerBygningTest : FunSpec({
             emptyList(),
             listOf(sink),
             idGeneratorManager,
-            kommuneService,
             TestStorage(),
             true,
         )
@@ -142,14 +141,14 @@ class TransformerBygningTest : FunSpec({
             Clock.System.todayIn(TimeZone.currentSystemDefault()),
             listOf(
                 Kommuneendring(
-                    FraTil(Fylkesnummer(12), Fylkesnummer(13)),
+                    FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(13))),
                     FraEnTilMange(
                         Kommunenummer.Lopenummer(34),
                         listOf(Kommunenummer.Lopenummer(24), Kommunenummer.Lopenummer(25)),
                     ),
                 ),
                 Matrikkelenhetendring(
-                    FraTil(Fylkesnummer(12), Fylkesnummer(13)),
+                    FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(13))),
                     FraTil(Kommunenummer.Lopenummer(34), Kommunenummer.Lopenummer(24)),
                     FraTil(Matrikkelnummer.Gardsnummer(1), Matrikkelnummer.Gardsnummer(1)),
                 ),
@@ -206,7 +205,6 @@ class TransformerBygningTest : FunSpec({
                 emptyList(),
                 listOf(sink),
                 idGeneratorManager,
-                kommuneService,
                 TestStorage(),
                 true,
             )
@@ -257,7 +255,6 @@ class TransformerBygningTest : FunSpec({
                 emptyList(),
                 listOf(sink),
                 idGeneratorManager,
-                kommuneService,
                 TestStorage(),
                 true,
             )
