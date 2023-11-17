@@ -118,7 +118,7 @@ suspend fun transform(
         }
 }
 
-private suspend fun mapInput(input: Reguleringsinput): List<Pair<Ident, IdentTransformer.Mapping>> {
+suspend fun mapInput(input: Reguleringsinput): List<Pair<Ident, IdentTransformer.Mapping>> {
     val kommuneMap = input.kommuner.associateBy { it.kommunenummer }
     val fylkeMap = input.fylker.associateBy { it.fylkesnummer }
 

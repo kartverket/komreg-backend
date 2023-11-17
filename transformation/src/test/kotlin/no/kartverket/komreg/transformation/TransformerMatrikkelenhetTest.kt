@@ -54,7 +54,7 @@ class TransformerMatrikkelenhetTest : FunSpec({
                 Clock.System.todayIn(TimeZone.currentSystemDefault()),
                 listOf(
                     Kommuneendring(
-                        FraTil(Fylkesnummer(12), Fylkesnummer(13)),
+                        FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(13))),
                         FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(24))),
                     ),
                 ),
@@ -78,7 +78,6 @@ class TransformerMatrikkelenhetTest : FunSpec({
             emptyList(),
             listOf(sink),
             idGeneratorManager,
-            kommuneService,
             TestStorage(),
             true,
         )
@@ -150,7 +149,7 @@ class TransformerMatrikkelenhetTest : FunSpec({
         )
 
         val kommuneendring = Kommuneendring(
-            FraTil(Fylkesnummer(12), Fylkesnummer(12)),
+            FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(12))),
             FraEnTilMange(
                 Kommunenummer.Lopenummer(34),
                 listOf(Kommunenummer.Lopenummer(35), Kommunenummer.Lopenummer(36)),
@@ -197,7 +196,7 @@ class TransformerMatrikkelenhetTest : FunSpec({
                     listOf(
                         kommuneendring,
                         Matrikkelenhetendring(
-                            FraTil(Fylkesnummer(12), Fylkesnummer(12)),
+                            FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(12))),
                             FraTil(Kommunenummer.Lopenummer(34), Kommunenummer.Lopenummer(35)),
                             FraTil(Matrikkelnummer.Gardsnummer(1), Matrikkelnummer.Gardsnummer(1)),
                         ),
@@ -209,7 +208,6 @@ class TransformerMatrikkelenhetTest : FunSpec({
                 emptyList(),
                 listOf(sink),
                 idGeneratorManager,
-                kommuneService,
                 TestStorage(),
                 true,
             )
@@ -258,12 +256,12 @@ class TransformerMatrikkelenhetTest : FunSpec({
                     listOf(
                         kommuneendring,
                         Matrikkelenhetendring(
-                            FraTil(Fylkesnummer(12), Fylkesnummer(12)),
+                            FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(12))),
                             FraTil(Kommunenummer.Lopenummer(34), Kommunenummer.Lopenummer(35)),
                             FraTil(Matrikkelnummer.Gardsnummer(1), Matrikkelnummer.Gardsnummer(1)),
                         ),
                         Matrikkelenhetendring(
-                            FraTil(Fylkesnummer(12), Fylkesnummer(12)),
+                            FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(12))),
                             FraTil(Kommunenummer.Lopenummer(34), Kommunenummer.Lopenummer(36)),
                             FraTil(Matrikkelnummer.Gardsnummer(2), Matrikkelnummer.Gardsnummer(2)),
                         ),
@@ -275,7 +273,6 @@ class TransformerMatrikkelenhetTest : FunSpec({
                 emptyList(),
                 listOf(sink),
                 idGeneratorManager,
-                kommuneService,
                 TestStorage(),
                 true,
             )
