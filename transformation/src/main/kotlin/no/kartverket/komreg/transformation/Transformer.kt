@@ -23,21 +23,12 @@ suspend fun transform(
     storage: Storage,
     skalTilbakefores: Boolean,
 ) {
-    // TODO: Fjern når Fylkeendring får FraEnTilMange
-//    if (input.fylker.isNotEmpty()) {
-//        val fylkeFlow = createFylker(input, kommuneService)
-//        storage.writeTransformationsToDatabase(kjoringId, fylkeFlow.toList())
-//    }
-
-    val logger = LoggerFactory.getLogger("transform")
 
     val transformer = IdentTransformer(mapInput(input))
 
-    logger.info("Begynner å lage transformasjoner fra entitySources")
     entitySources.forEach { entitySource ->
         val flow = entitySource.entityFlow
 
-        logger.info("Lager transformasjoner fra ${entitySource.id}")
         val transformResult = flow
             .mapNotNull { entity ->
                 val result = transformer.transform(entity, idGeneratorManager::idFor)
@@ -48,13 +39,11 @@ suspend fun transform(
             list.forEach { emit(it) }
         }
 
-        logger.info("Lagde ${transformResultFlow.count()} transformasjoner fra ${entitySource.id}, skriver disse til transformasjons-databasen")
         transformResultFlow.chunked(10000)
             .collect { chunk ->
                 storage.writeTransformationsToDatabase(kjoringId, chunk)
             }
     }
-    logger.info("Ferdig med å opprette og lagre transformasjoner")
 
     entityProcessors.forEach { processor ->
         storage.readTransformationsFromDatabase(kjoringId)
@@ -63,11 +52,9 @@ suspend fun transform(
         storage.writeTransformationsToDatabase(kjoringId, result.toList())
     }
     if (skalTilbakefores) {
-        logger.info("Tilbakefører transformasjoner, begynner med nyopprettelser")
         val transformations = storage.readTransformationsFromDatabase(kjoringId)
         // Kjør ut alle nyopprettinger
         entitySinks.forEach { sink ->
-            logger.info("Starter tilbakeføring for ${sink.id}")
             sink.consumeTransformations(
                 transformations.filter {
                     val sourceEntity = it.sourceEntity
@@ -76,13 +63,10 @@ suspend fun transform(
                 input.ikrafttredelsesdato.toJavaLocalDate(),
             )
         }
-        logger.info("Tilbakeføring av nyopprettelser ferdig")
 
-        logger.info("Tilbakefører transformasjoner, fortsetter med endringer")
         // Kjør ut resten
         // TODO: Hva med "slettinger"
         entitySinks.forEach { sink ->
-            logger.info("Starter tilbakeføring for ${sink.id}")
             sink.consumeTransformations(
                 transformations.filter {
                     val sourceEntity = it.sourceEntity
@@ -91,9 +75,7 @@ suspend fun transform(
                 input.ikrafttredelsesdato.toJavaLocalDate(),
             )
         }
-        logger.info("Tilbakeføring av endringer ferdig")
     }
-    logger.info("Ferdig med å tilbakeføre transformasjoner")
 }
 
 suspend fun mapInput(input: Reguleringsinput): List<Pair<Ident, IdentTransformer.Mapping>> {
