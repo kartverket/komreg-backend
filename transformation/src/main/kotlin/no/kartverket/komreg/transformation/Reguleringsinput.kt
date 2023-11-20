@@ -11,9 +11,7 @@ data class Reguleringsinput(
     val kommuner: List<Kommune>,
 )
 
-sealed class Endring {
-    abstract val fylkesnummer: FraEnTilMange<Fylkesnummer>
-}
+sealed class Endring
 
 data class FraTil<out T>(
     val fra: T,
@@ -26,41 +24,41 @@ data class FraEnTilMange<out T>(
 )
 
 data class Fylkeendring(
-    override val fylkesnummer: FraEnTilMange<Fylkesnummer>,
+    val fylkesnummer: FraEnTilMange<Fylkesnummer>,
 ) : Endring()
 
 data class Kommuneendring(
-    override val fylkesnummer: FraEnTilMange<Fylkesnummer>,
+    val fylkesnummer: FraEnTilMange<Fylkesnummer>,
     val kommuneløpenummer: FraEnTilMange<Kommunenummer.Lopenummer>,
 ) : Endring()
 
 data class Matrikkelenhetendring(
-    override val fylkesnummer: FraEnTilMange<Fylkesnummer>,
+    val fylkesnummer: FraTil<Fylkesnummer>,
     val kommuneløpenummer: FraTil<Kommunenummer.Lopenummer>,
     val gårdsnummer: FraTil<Matrikkelnummer.Gardsnummer>,
 ) : Endring()
 
 data class Kretsendring(
-    override val fylkesnummer: FraEnTilMange<Fylkesnummer>,
+    val fylkesnummer: FraTil<Fylkesnummer>,
     val kommuneløpenummer: FraTil<Kommunenummer.Lopenummer>,
     val kretsnummer: FraTil<Kretsnummer>,
     val kretstype: FraTil<Kretstype>,
 ) : Endring()
 
 data class Vegendring(
-    override val fylkesnummer: FraEnTilMange<Fylkesnummer>,
+    val fylkesnummer: FraEnTilMange<Fylkesnummer>,
     val kommuneløpenummer: FraEnTilMange<Kommunenummer.Lopenummer>,
     val adressekode: FraTil<Adressekode>,
 ) : Endring()
 
 data class Teigendring(
-    override val fylkesnummer: FraEnTilMange<Fylkesnummer>,
+    val fylkesnummer: FraTil<Fylkesnummer>,
     val kommuneløpenummer: FraTil<Kommunenummer.Lopenummer>,
     val teigId: FraTil<TeigId>,
 ) : Endring()
 
 data class Vegadresseendring(
-    override val fylkesnummer: FraEnTilMange<Fylkesnummer>,
+    val fylkesnummer: FraTil<Fylkesnummer>,
     val kommuneløpenummer: FraTil<Kommunenummer.Lopenummer>,
     val adressekode: FraTil<Adressekode>,
     val adressenummer: FraTil<Adressenummernummer>,

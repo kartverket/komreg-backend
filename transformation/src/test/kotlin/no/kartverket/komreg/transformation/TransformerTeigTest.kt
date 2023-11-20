@@ -173,12 +173,12 @@ class TransformerTeigTest : FunSpec({
                         ),
                     ),
                     Teigendring(
-                        FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(13))),
+                        FraTil(Fylkesnummer(12), Fylkesnummer(13)),
                         FraTil(Kommunenummer.Lopenummer(34), Kommunenummer.Lopenummer(24)),
                         FraTil(TeigId(2), TeigId(2)),
                     ),
                     Teigendring(
-                        FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(13))),
+                        FraTil(Fylkesnummer(12), Fylkesnummer(13)),
                         FraTil(Kommunenummer.Lopenummer(34), Kommunenummer.Lopenummer(25)),
                         FraTil(TeigId(4), TeigId(4)),
                     ),

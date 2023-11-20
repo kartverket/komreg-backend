@@ -4,7 +4,9 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.toKotlinLocalDate
-import no.kartverket.komreg.core.domain.*
+import no.kartverket.komreg.core.domain.Adressekode
+import no.kartverket.komreg.core.domain.Fylkesnummer
+import no.kartverket.komreg.core.domain.Kommunenummer
 import no.kartverket.komreg.integration.spi.Entity
 import no.kartverket.komreg.integration.spi.IdGeneratorManager
 import no.kartverket.komreg.integration.spi.Ident

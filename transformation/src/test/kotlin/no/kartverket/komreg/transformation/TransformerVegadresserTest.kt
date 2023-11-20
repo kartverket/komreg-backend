@@ -310,13 +310,13 @@ class TransformerVegadresserTest : FunSpec({
                     listOf(
                         vegendring,
                         Vegadresseendring(
-                            FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(12))),
+                            FraTil(Fylkesnummer(12), Fylkesnummer(12)),
                             FraTil(Kommunenummer.Lopenummer(34), Kommunenummer.Lopenummer(35)),
                             FraTil(Adressekode(10100), Adressekode(10100)),
                             FraTil(Adressenummernummer(1), Adressenummernummer(1)),
                         ),
                         Vegadresseendring(
-                            FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(12))),
+                            FraTil(Fylkesnummer(12), Fylkesnummer(12)),
                             FraTil(Kommunenummer.Lopenummer(34), Kommunenummer.Lopenummer(36)),
                             FraTil(Adressekode(10100), Adressekode(10100)),
                             FraTil(Adressenummernummer(2), Adressenummernummer(1)),

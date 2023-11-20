@@ -185,7 +185,7 @@ suspend fun mapMatrikkelenhetendring(matrikkelenhetendring: Matrikkelenhetendrin
         matrikkelenhetendring.gårdsnummer.fra,
     ) to IdentTransformer.Mapping.Simple(
         gardsnummerIdentType(
-            matrikkelenhetendring.fylkesnummer.til.single(),
+            matrikkelenhetendring.fylkesnummer.til,
             matrikkelenhetendring.kommuneløpenummer.til,
             matrikkelenhetendring.gårdsnummer.til,
         ),
@@ -201,7 +201,7 @@ suspend fun mapTeig(teigendring: Teigendring): Pair<Ident, IdentTransformer.Mapp
         teigendring.teigId.fra,
     ) to IdentTransformer.Mapping.Simple(
         teigIdentType(
-            teigendring.fylkesnummer.til.single(),
+            teigendring.fylkesnummer.til,
             teigendring.kommuneløpenummer.til,
             teigendring.teigId.til,
         ),
@@ -244,7 +244,7 @@ suspend fun mapVegadresseendring(vegadresseendring: Vegadresseendring): Pair<Ide
         vegadresseendring.adressenummer.fra,
     ) to IdentTransformer.Mapping.Simple(
         vegadresseIdentType(
-            vegadresseendring.fylkesnummer.til.single(),
+            vegadresseendring.fylkesnummer.til,
             vegadresseendring.kommuneløpenummer.til,
             vegadresseendring.adressekode.til,
             vegadresseendring.adressenummer.til,
@@ -262,7 +262,7 @@ suspend fun mapKretsendring(kretsendring: Kretsendring): Pair<Ident, IdentTransf
         kretsendring.kretsnummer.fra,
     ) to IdentTransformer.Mapping.Simple(
         kretsIdentType(
-            kretsendring.fylkesnummer.til.single(),
+            kretsendring.fylkesnummer.til,
             kretsendring.kommuneløpenummer.til,
             kretsendring.kretstype.til,
             kretsendring.kretsnummer.til,
