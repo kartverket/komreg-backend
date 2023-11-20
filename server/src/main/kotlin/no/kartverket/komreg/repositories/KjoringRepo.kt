@@ -67,7 +67,6 @@ class KjoringRepo(
     }
 
     fun setStatusForKjøring(kjoringId: Int, status: Kjoringstatus) {
-        println("status $status")
         dataSource.connection.use { connection ->
             val updateStatement = connection.prepareStatement(
                 "UPDATE kjoring SET status = ? WHERE id = ?",
@@ -78,6 +77,31 @@ class KjoringRepo(
 
             updateStatement.executeUpdate()
         }
+    }
+
+    fun getStatusForKjoringMedReguleringsId(reguleringsId: String): List<Kjoring> {
+        val kjoringer = mutableListOf<Kjoring>()
+        dataSource.connection.use { connection ->
+            val prepareStatement = connection.prepareStatement("SELECT * FROM kjoring WHERE regulering = ?")
+
+            prepareStatement.setString(1, reguleringsId)
+
+            val result = prepareStatement.executeQuery()
+
+            while (result.next()) {
+                kjoringer.add(
+                    Kjoring(
+                        id = result.getInt("id"),
+                        regulering = result.getString("regulering"),
+                        start = result.getTimestamp("start"),
+                        stop = result.getTimestamp("slutt"),
+                        status = enumValueOf<Kjoringstatus>(result.getString("status")),
+                    ),
+                )
+            }
+        }
+
+        return kjoringer
     }
 }
 

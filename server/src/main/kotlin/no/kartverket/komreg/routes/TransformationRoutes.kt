@@ -10,10 +10,8 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.kartverket.komreg.exceptions.MissingPathVariableException
-import no.kartverket.komreg.repositories.KjoringRepo
-import no.kartverket.komreg.repositories.ReguleringRepo
-import no.kartverket.komreg.repositories.TilbakeføringsstatusRepo
-import no.kartverket.komreg.repositories.TransformationRepo
+import no.kartverket.komreg.exceptions.ReguleringAlreadyFinishedException
+import no.kartverket.komreg.repositories.*
 import no.kartverket.komreg.services.transformEntities
 import java.sql.SQLException
 
@@ -32,11 +30,12 @@ fun Application.transformationRoutes(
                     val regulering = reguleringRepo.getReguleringById(regId)
                         ?: throw NotFoundException("Fant ingen regulering for regId: $regId")
 
+                    kjoringRepo.getStatusForKjoringMedReguleringsId(regId).any { it.status === Kjoringstatus.FERDIG }
+                        .also { if (it) throw ReguleringAlreadyFinishedException(regId) }
+
                     call.application.log.info("Starter transformasjon for regulering: $regId")
 
                     val kjoringsomskalgjenopptas = kjoringRepo.finnStoppetKjøringForRegulering(regId)
-
-                    println("kjoringsomskalgjenopptas: $kjoringsomskalgjenopptas")
 
                     if (kjoringsomskalgjenopptas != null) {
                         transformEntities(
@@ -79,6 +78,11 @@ fun Application.transformationRoutes(
                         is SQLException -> call.respond(
                             HttpStatusCode.InternalServerError,
                             "SQL exception: ${t.message}",
+                        )
+
+                        is ReguleringAlreadyFinishedException -> call.respond(
+                            HttpStatusCode.Conflict,
+                            "${t::class.simpleName}: ${t.message}",
                         )
 
                         else -> call.respond(HttpStatusCode.InternalServerError, "Internal server error: ${t.message}")
