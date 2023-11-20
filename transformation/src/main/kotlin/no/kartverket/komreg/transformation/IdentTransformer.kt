@@ -77,8 +77,11 @@ class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
 
                 else -> {
                     primaryTransform.mapIndexed { index, transform ->
-                        val id = if (index == 0) entity.id
-                        else idProvider(entity.id.type, transform.first)
+                        val id = if (index == 0) {
+                            entity.id
+                        } else {
+                            idProvider(entity.id.type, transform.first)
+                        }
                         Transformation(
                             id = id,
                             sourceEntity = entity,
@@ -108,14 +111,17 @@ class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
     private suspend fun Ident.transformIdent(): List<Pair<Ident, Payload?>> {
         val fylkesnummer = getOrNull<Fylkesnummer>()
         val kommunelopenummer = getOrNull<Kommunenummer.Lopenummer>()
-        val mappings = if (fylkesnummer != null && kommunelopenummer != null) kommuneviseRegler.getOrElse(
-            Kommunenummer(
-                fylkesnummer,
-                kommunelopenummer
-            ),
-            ::emptyList
-        )
-        else andreRegler
+        val mappings = if (fylkesnummer != null && kommunelopenummer != null) {
+            kommuneviseRegler.getOrElse(
+                Kommunenummer(
+                    fylkesnummer,
+                    kommunelopenummer,
+                ),
+                ::emptyList,
+            )
+        } else {
+            andreRegler
+        }
 
         return mappings.map { mapping ->
             val source = mapping.first
@@ -132,8 +138,11 @@ class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
             .groupByTo(TreeMap()) { it.second.size }
             .lastEntry()
             ?.let { (_, mappingMatches) ->
-                if (mappingMatches.size > 1) throw RuntimeException("More than one match")
-                else mappingMatches.singleOrNull() // Kan vel aldri bli null, men samma det...
+                if (mappingMatches.size > 1) {
+                    throw RuntimeException("More than one match")
+                } else {
+                    mappingMatches.singleOrNull() // Kan vel aldri bli null, men samma det...
+                }
             }
             ?.let { (mapping, matches) ->
                 when (val target = mapping.second) {
@@ -167,22 +176,29 @@ class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
                     is Mapping.Split -> if (matches.size == type.size) {
                         // Perfect match: Split it
                         target.into.map { (targetIdent, payload) ->
-                            if (targetIdent == Ident.Empty) targetIdent to payload
-                            else matches.foldIndexed(this) { targetIndex, transformedIdent, match ->
-                                val typeIndex = match.first
-                                transformedIdent.updateOrThrow(typeIndex) { targetIdent.getOrThrow(targetIndex) }
-                            } to payload
+                            if (targetIdent == Ident.Empty) {
+                                targetIdent to payload
+                            } else {
+                                matches.foldIndexed(this) { targetIndex, transformedIdent, match ->
+                                    val typeIndex = match.first
+                                    transformedIdent.updateOrThrow(typeIndex) { targetIdent.getOrThrow(targetIndex) }
+                                } to payload
+                            }
                         }
                     } else {
                         // Imperfect match: Unresolved
                         val matchedIndicies = matches.map { it.first }.toSet()
                         val preserveTypes = type.types.mapIndexedNotNull { index, kType ->
-                            if (matchedIndicies.contains(index)) null
-                            else index to kType
+                            if (matchedIndicies.contains(index)) {
+                                null
+                            } else {
+                                index to kType
+                            }
                         }
                         listOf(
-                            if (preserveTypes.isEmpty()) Ident.Empty to null
-                            else {
+                            if (preserveTypes.isEmpty()) {
+                                Ident.Empty to null
+                            } else {
                                 val newType = identTypeFromKotlinTypes(
                                     preserveTypes.first().second,
                                     *preserveTypes.drop(1).map { it.second }.toTypedArray(),
@@ -192,7 +208,7 @@ class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
                                     *preserveTypes.map { getOrThrow(it.first) }
                                         .toTypedArray(),
                                 ) to null
-                            }
+                            },
                         )
                     }
                 }

@@ -53,7 +53,7 @@ class TransformerKretsTest : FunSpec({
                 Clock.System.todayIn(TimeZone.currentSystemDefault()),
                 listOf(
                     Kommuneendring(
-                        FraTil(Fylkesnummer(12), Fylkesnummer(13)),
+                        FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(13))),
                         FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(24))),
                     ),
                 ),
@@ -77,7 +77,6 @@ class TransformerKretsTest : FunSpec({
             emptyList(),
             listOf(sink),
             idGeneratorManager,
-            kommuneService,
             TestStorage(),
             true,
         )
@@ -175,7 +174,6 @@ class TransformerKretsTest : FunSpec({
             emptyList(),
             listOf(sink),
             idGeneratorManager,
-            kommuneService,
             TestStorage(),
             true,
         )

@@ -5,7 +5,9 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.toKotlinLocalDate
 import no.kartverket.komreg.core.domain.*
-import no.kartverket.komreg.integration.spi.*
+import no.kartverket.komreg.integration.spi.Entity
+import no.kartverket.komreg.integration.spi.IdGeneratorManager
+import no.kartverket.komreg.integration.spi.Ident
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -35,9 +37,9 @@ class TransformEntityTest {
         ikrafttredelsesdato = ikrafttredelsesdato,
         endringer = listOf(
             Kommuneendring(
-                fylkesnummer = FraTil(
+                fylkesnummer = FraEnTilMange(
                     fra = Fylkesnummer(2),
-                    til = Fylkesnummer(3),
+                    til = listOf(Fylkesnummer(3)),
                 ),
                 kommuneløpenummer = FraEnTilMange(
                     fra = Kommunenummer.Lopenummer(5),
@@ -45,9 +47,9 @@ class TransformEntityTest {
                 ),
             ),
             Kommuneendring(
-                fylkesnummer = FraTil(
+                fylkesnummer = FraEnTilMange(
                     fra = Fylkesnummer(5),
-                    til = Fylkesnummer(5),
+                    til = listOf(Fylkesnummer(5)),
                 ),
                 kommuneløpenummer = FraEnTilMange(
                     fra = Kommunenummer.Lopenummer(5),
@@ -55,9 +57,9 @@ class TransformEntityTest {
                 ),
             ),
             Vegendring(
-                fylkesnummer = FraTil(
+                fylkesnummer = FraEnTilMange(
                     fra = Fylkesnummer(2),
-                    til = Fylkesnummer(3),
+                    til = listOf(Fylkesnummer(3)),
                 ),
                 kommuneløpenummer = FraEnTilMange(
                     fra = Kommunenummer.Lopenummer(5),
@@ -72,11 +74,11 @@ class TransformEntityTest {
                 ),
             ),
         ),
-        kommuner = listOf(dummyKommune),
+        kommuner = listOf(dummyKommune(3, 6), dummyKommune(5, 7), dummyKommune(5, 8), dummyKommune(3, 7)),
         fylker = emptyList(),
     )
 
-    private val mappings = reguleringsInput.toMappings()
+    private val mappings = runBlocking { mapInput(reguleringsInput) }
     private val identTransformer = IdentTransformer(*mappings.toTypedArray())
 
     private val idGenerator = mockk<IdGeneratorManager>()

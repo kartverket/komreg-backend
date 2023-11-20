@@ -88,7 +88,6 @@ private fun runAndWriteTransformations(
             processors,
             entitySinks.entitySinks,
             idGeneratorManager,
-            KommuneServiceManager(bootContext).kommuneService,
             storage,
             skalTilbakefores,
         )

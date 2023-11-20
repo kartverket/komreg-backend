@@ -53,7 +53,7 @@ class TransformerVegadresserTest : FunSpec({
                 Clock.System.todayIn(TimeZone.currentSystemDefault()),
                 listOf(
                     Vegendring(
-                        FraTil(Fylkesnummer(12), Fylkesnummer(12)),
+                        FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(12))),
                         FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(35))),
                         FraTil(Adressekode(10100), Adressekode(20100)),
                     ),
@@ -65,7 +65,6 @@ class TransformerVegadresserTest : FunSpec({
             emptyList(),
             listOf(sink),
             idGeneratorManager,
-            kommuneService,
             TestStorage(),
             true,
         )
@@ -120,7 +119,7 @@ class TransformerVegadresserTest : FunSpec({
                 Clock.System.todayIn(TimeZone.currentSystemDefault()),
                 listOf(
                     Vegendring(
-                        FraTil(Fylkesnummer(12), Fylkesnummer(12)),
+                        FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(12))),
                         FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(35))),
                         FraTil(Adressekode(10100), Adressekode(20100)),
                     ),
@@ -132,7 +131,6 @@ class TransformerVegadresserTest : FunSpec({
             emptyList(),
             listOf(sink),
             idGeneratorManager,
-            kommuneService,
             TestStorage(),
             true,
         )
@@ -218,7 +216,7 @@ class TransformerVegadresserTest : FunSpec({
         )
 
         val vegendring = Vegendring(
-            FraTil(Fylkesnummer(12), Fylkesnummer(12)),
+            FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(12))),
             FraEnTilMange(
                 Kommunenummer.Lopenummer(34),
                 listOf(Kommunenummer.Lopenummer(35), Kommunenummer.Lopenummer(36)),
@@ -245,7 +243,6 @@ class TransformerVegadresserTest : FunSpec({
                 emptyList(),
                 listOf(sink),
                 idGeneratorManager,
-                kommuneService,
                 TestStorage(),
                 true,
             )
@@ -332,7 +329,6 @@ class TransformerVegadresserTest : FunSpec({
                 emptyList(),
                 listOf(sink),
                 idGeneratorManager,
-                kommuneService,
                 TestStorage(),
                 true,
             )

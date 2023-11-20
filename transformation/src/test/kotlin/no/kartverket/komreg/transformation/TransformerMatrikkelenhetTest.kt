@@ -9,7 +9,10 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 import no.kartverket.komreg.core.domain.*
-import no.kartverket.komreg.integration.spi.*
+import no.kartverket.komreg.integration.spi.Entity
+import no.kartverket.komreg.integration.spi.KommuneService
+import no.kartverket.komreg.integration.spi.Transformation
+import no.kartverket.komreg.integration.spi.invoke
 
 class TransformerMatrikkelenhetTest : FunSpec({
     fun matrikkelenhetId(idValue: Long) = Id(TestIdType.Foo, idValue) // Faktisk id-type er irrelevant
@@ -54,7 +57,7 @@ class TransformerMatrikkelenhetTest : FunSpec({
                 Clock.System.todayIn(TimeZone.currentSystemDefault()),
                 listOf(
                     Kommuneendring(
-                        FraTil(Fylkesnummer(12), Fylkesnummer(13)),
+                        FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(13))),
                         FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(24))),
                     ),
                 ),
@@ -78,7 +81,6 @@ class TransformerMatrikkelenhetTest : FunSpec({
             emptyList(),
             listOf(sink),
             idGeneratorManager,
-            kommuneService,
             TestStorage(),
             true,
         )
@@ -150,7 +152,7 @@ class TransformerMatrikkelenhetTest : FunSpec({
         )
 
         val kommuneendring = Kommuneendring(
-            FraTil(Fylkesnummer(12), Fylkesnummer(12)),
+            FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(12))),
             FraEnTilMange(
                 Kommunenummer.Lopenummer(34),
                 listOf(Kommunenummer.Lopenummer(35), Kommunenummer.Lopenummer(36)),
@@ -209,7 +211,6 @@ class TransformerMatrikkelenhetTest : FunSpec({
                 emptyList(),
                 listOf(sink),
                 idGeneratorManager,
-                kommuneService,
                 TestStorage(),
                 true,
             )
@@ -275,7 +276,6 @@ class TransformerMatrikkelenhetTest : FunSpec({
                 emptyList(),
                 listOf(sink),
                 idGeneratorManager,
-                kommuneService,
                 TestStorage(),
                 true,
             )
