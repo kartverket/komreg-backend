@@ -7,8 +7,6 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.serialization.json.Json
 import no.kartverket.komreg.core.domain.Id
 import no.kartverket.komreg.integration.spi.Transformation
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.sql.PreparedStatement
 import javax.sql.DataSource
 
@@ -16,8 +14,6 @@ class TransformationRepo(
     private val dataSource: DataSource,
     private val jsonSerializer: Json,
 ) {
-    val logger: Logger = LoggerFactory.getLogger(TransformationRepo::class.java)
-
     fun writeTransformationsToDatabase(kjoringId: Int, transformResultList: List<Transformation>) {
         dataSource.connection.use { connection ->
             connection.prepareStatement(

@@ -139,7 +139,7 @@ private suspend fun mapFylkeendring(
     } else {
         IdentTransformer.Mapping.Split(
             listOf(
-                Ident.Empty to null, // Ikke sett ny kommune-kobling
+                Ident.Empty to null, // Ikke sett ny fylke-kobling
             ) + til,
         )
     }
