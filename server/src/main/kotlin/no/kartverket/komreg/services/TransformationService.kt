@@ -24,7 +24,7 @@ fun transformEntities(
     kjoringId: Int,
     transformationRepo: TransformationRepo,
     kjoringRepo: KjoringRepo,
-    configRepo: TilbakeføringsstatusRepo,
+    tilbakeføringsstatusRepo: TilbakeføringsstatusRepo,
 ) {
     logger.info("Starter transformasjon!")
 
@@ -44,9 +44,9 @@ fun transformEntities(
         input,
         entitySinks,
         kjoringId,
-        StorageService(transformationRepo, configRepo),
+        StorageService(transformationRepo, tilbakeføringsstatusRepo, kjoringRepo),
         kjoringRepo,
-        configRepo,
+        tilbakeføringsstatusRepo,
     )
 }
 
@@ -83,14 +83,9 @@ private fun runAndWriteTransformations(
     val skalTilbakefores = !bootContext.config.featureToggle("feature.disable_sink")
 
     if (tilbakeføringsstatusRepo.getTilbakeføringsstatusForKjøringId(kjoringId) == null) {
-        logger.info("Førstegangskjøring av Regulering ${input.id}. Oppretter config.")
+        logger.info("Førstegangskjøring av Regulering ${input.id}. Oppretter tilbakeføringsstatus for sinker.")
         tilbakeføringsstatusRepo.createTilbakeføringsstatusForKjoring(kjoringId, entitySinks.entitySinks)
     }
-
-    val gjenværendeFørsteSinker = tilbakeføringsstatusRepo.hentIkkeStartedeTilbakeføringerForNyeEntiteter(kjoringId)
-
-    val gjenværendeAndreSinker =
-        tilbakeføringsstatusRepo.hentIkkeStartedeTilbakeføringerForErstattendeEntiteter(kjoringId)
 
     CoroutineScope(Dispatchers.IO).launch {
         transform(
@@ -103,8 +98,6 @@ private fun runAndWriteTransformations(
             KommuneServiceManager(bootContext).kommuneService,
             storage,
             skalTilbakefores,
-            gjenværendeFørsteSinker,
-            gjenværendeAndreSinker,
         )
 
         kjoringRepo.updateKjoringEndTime(kjoringId)

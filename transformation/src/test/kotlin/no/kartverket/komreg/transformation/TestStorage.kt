@@ -7,6 +7,7 @@ import no.kartverket.komreg.integration.spi.Transformation
 
 class TestStorage : Storage {
     private val transformations: MutableList<Transformation> = mutableListOf()
+    private val mockSink = MockSink()
 
     override fun writeTransformationsToDatabase(kjoringId: Int, transformResultList: List<Transformation>) {
         transformations.addAll(transformResultList)
@@ -20,11 +21,24 @@ class TestStorage : Storage {
         return
     }
 
-    override fun settStatusNyeEntiteterTilbakeført(sink: EntitySink, kjoringId: Int) {
+    override fun setTilbakeføringsStatusForSink(
+        sink: EntitySink,
+        status: String,
+        kjoringId: Int,
+        erOppretting: Boolean,
+    ) {
         return
     }
 
-    override fun settStatusErstattendeEntiteterTilbakeført(sink: EntitySink, kjoringId: Int) {
+    override fun hentIkkeStartedeTilbakeføringerForNyeEntiteter(kjoringId: Int): List<String> {
+        return listOf(mockSink.id)
+    }
+
+    override fun hentIkkeStartedeTilbakeføringerForErstattendeEntiteter(kjoringId: Int): List<String> {
+        return listOf(mockSink.id)
+    }
+
+    override fun setStatusForKjøring(kjoringId: Int, status: String) {
         return
     }
 }

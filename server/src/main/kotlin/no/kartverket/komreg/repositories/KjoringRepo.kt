@@ -43,7 +43,7 @@ class KjoringRepo(
         dataSource.connection.use { connection ->
             val preparedStatement = connection.prepareStatement(
                 "SELECT * FROM kjoring WHERE regulering = ? \n" +
-                    "AND status = 'STOPPET' \n" +
+                    "AND status = 'TILBAKEFØRING_FEILET' \n" +
                     "AND slutt IS NULL \n" +
                     "ORDER BY start DESC \n" +
                     "LIMIT 1;\n",
@@ -65,6 +65,20 @@ class KjoringRepo(
             }
         }
     }
+
+    fun setStatusForKjøring(kjoringId: Int, status: Kjoringstatus) {
+        println("status $status")
+        dataSource.connection.use { connection ->
+            val updateStatement = connection.prepareStatement(
+                "UPDATE kjoring SET status = ? WHERE id = ?",
+            )
+
+            updateStatement.setString(1, status.toString())
+            updateStatement.setInt(2, kjoringId)
+
+            updateStatement.executeUpdate()
+        }
+    }
 }
 
 data class Kjoring(
@@ -77,7 +91,10 @@ data class Kjoring(
 
 enum class Kjoringstatus(status: String) {
     KJORER("KJØRER"),
+    STARTET_TILBAKEFØRING("STARTET_TILBAKEFØRING"),
+    IKKE_TILBAKEFØRT("IKKE_TILBAKEFØRT"),
     STOPPET("STOPPET"),
-    FEILET("FEILET"),
+    TILBAKEFØRING_FEILET("TILBAKEFØRING_FEILET"),
+    FULLFØRT_TILBAKEFØRING("FULLFØRT_TILBAKEFØRING"),
     FERDIG("FERDIG"),
 }

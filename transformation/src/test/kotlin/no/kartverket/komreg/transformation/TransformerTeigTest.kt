@@ -86,8 +86,6 @@ class TransformerTeigTest : FunSpec({
             kommuneService,
             TestStorage(),
             true,
-            listOf(sink.id),
-            listOf(sink.id),
         )
 
         assertThat(sink::transformations).all {
@@ -221,8 +219,6 @@ class TransformerTeigTest : FunSpec({
             kommuneService,
             TestStorage(),
             true,
-            listOf(sink.id),
-            listOf(sink.id),
         )
 
         assertThat(sink::transformations).all {

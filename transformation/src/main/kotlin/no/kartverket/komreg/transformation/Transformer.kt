@@ -13,9 +13,12 @@ interface Storage {
 
     fun createTilbakeføringsstatusForKjoring(kjoringId: Int, entitySinks: List<EntitySink>)
 
-    fun settStatusNyeEntiteterTilbakeført(sink: EntitySink, kjoringId: Int)
+    fun setTilbakeføringsStatusForSink(sink: EntitySink, status: String, kjoringId: Int, erOppretting: Boolean)
+    fun hentIkkeStartedeTilbakeføringerForNyeEntiteter(kjoringId: Int): List<String>
 
-    fun settStatusErstattendeEntiteterTilbakeført(sink: EntitySink, kjoringId: Int)
+    fun hentIkkeStartedeTilbakeføringerForErstattendeEntiteter(kjoringId: Int): List<String>
+
+    fun setStatusForKjøring(kjoringId: Int, status: String)
 }
 
 suspend fun transform(
@@ -28,45 +31,40 @@ suspend fun transform(
     kommuneService: KommuneService,
     storage: Storage,
     skalTilbakefores: Boolean,
-    gjenværendeFørsteSinker: List<String>,
-    gjenværendeAndreSinker: List<String>,
 
 ) {
-    // TODO: Fjern når Fylkeendring får FraEnTilMange
-    if (input.fylker.isNotEmpty()) {
-        val fylkeFlow = createFylker(input, kommuneService)
-
-        val isFylkePreviouslyWritten = storage.readTransformationsFromDatabase(kjoringId)
-            .mapNotNull { it.id }
-            .toSet()
-
-        val filteredFylkeFlow = fylkeFlow.filter { !isFylkePreviouslyWritten.contains(it.id) }
-
-        storage.writeTransformationsToDatabase(kjoringId, filteredFylkeFlow.toList())
-    }
-
     val transformer = IdentTransformer(mapInput(input))
 
-    entitySources.forEach { entitySource ->
-        val flow = entitySource.entityFlow
+    val gjenværendeSinkerForNyeEntiteter = storage.hentIkkeStartedeTilbakeføringerForNyeEntiteter(kjoringId)
+    val gjenværendeSinkerForErstattendeEntiteter =
+        storage.hentIkkeStartedeTilbakeføringerForErstattendeEntiteter(kjoringId)
 
-        val transformResult = flow
-            .mapNotNull { entity ->
-                val result = transformer.transform(entity, idGeneratorManager::idFor)
-                result
-            }
+    if (gjenværendeSinkerForNyeEntiteter.isNotEmpty() && gjenværendeSinkerForErstattendeEntiteter.isNotEmpty()) {
+        // TODO: Fjern når Fylkeendring får FraEnTilMange
+        if (input.fylker.isNotEmpty()) {
+            val fylkeFlow = createFylker(input, kommuneService)
 
-        val transformResultFlow = transformResult.transform { list ->
-            list.forEach { emit(it) }
+            storage.writeTransformationsToDatabase(kjoringId, fylkeFlow.toList())
         }
-        transformResultFlow.chunked(10000)
-            .collect { chunk ->
-                val previouslyWritten = storage.readTransformationsFromDatabase(kjoringId)
-                    .toList()
 
-                val filteredChunk = chunk.filter { !previouslyWritten.contains(it) }
-                storage.writeTransformationsToDatabase(kjoringId, filteredChunk)
+        entitySources.forEach { entitySource ->
+            val flow = entitySource.entityFlow
+
+            val transformResult = flow
+                .mapNotNull { entity ->
+                    val result = transformer.transform(entity, idGeneratorManager::idFor)
+                    result
+                }
+
+            val transformResultFlow = transformResult.transform { list ->
+                list.forEach { emit(it) }
             }
+            transformResultFlow.chunked(10000)
+                .collect { chunk ->
+
+                    storage.writeTransformationsToDatabase(kjoringId, chunk)
+                }
+        }
     }
 
     entityProcessors.forEach { processor ->
@@ -78,46 +76,56 @@ suspend fun transform(
 
     val transformations = storage.readTransformationsFromDatabase(kjoringId)
 
-    println("Skal tilbakeføres: $skalTilbakefores")
-    println(gjenværendeFørsteSinker)
-    println(gjenværendeAndreSinker)
-
     if (skalTilbakefores) {
         // Kjør ut alle nyopprettinger
+        storage.setStatusForKjøring(kjoringId, "STARTET_TILBAKEFØRING")
+
         entitySinks.forEach { sink ->
 
-            if (gjenværendeFørsteSinker.contains(sink.id)) {
-                println("Kjører ut nyopprettinger for ${sink.id}")
-                sink.consumeTransformations(
-                    transformations.filter {
-                        val sourceEntity = it.sourceEntity
-                        sourceEntity == null || sourceEntity.id != it.id
-                    },
-                    input.ikrafttredelsesdato.toJavaLocalDate(),
+            if (gjenværendeSinkerForNyeEntiteter.contains(sink.id)) {
+                try {
+                    sink.consumeTransformations(
+                        transformations.filter {
+                            val sourceEntity = it.sourceEntity
+                            sourceEntity == null || sourceEntity.id != it.id
+                        },
+                        input.ikrafttredelsesdato.toJavaLocalDate(),
 
-                )
-
-                storage.settStatusNyeEntiteterTilbakeført(sink, kjoringId)
+                    )
+                    storage.setTilbakeføringsStatusForSink(sink, "FERDIG", kjoringId, erOppretting = true)
+                } catch (e: Exception) {
+                    storage.setTilbakeføringsStatusForSink(sink, "FEILET", kjoringId, erOppretting = true)
+                    storage.setStatusForKjøring(kjoringId, "TILBAKEFØRING_FEILET")
+                    throw e
+                }
             }
         }
 
         // Kjør ut resten
         // TODO: Hva med "slettinger"
         entitySinks.forEach { sink ->
-            if (gjenværendeAndreSinker.contains(sink.id)) {
-                println("Kjører ut gjenværende for ${sink.id}")
-                sink.consumeTransformations(
-                    transformations.filter {
-                        val sourceEntity = it.sourceEntity
-                        sourceEntity != null && sourceEntity.id == it.id
-                    },
-                    input.ikrafttredelsesdato.toJavaLocalDate(),
-                )
-                storage.settStatusErstattendeEntiteterTilbakeført(sink, kjoringId)
+            if (gjenværendeSinkerForErstattendeEntiteter.contains(sink.id)) {
+                try {
+                    sink.consumeTransformations(
+                        transformations.filter {
+                            val sourceEntity = it.sourceEntity
+                            sourceEntity != null && sourceEntity.id == it.id
+                        },
+                        input.ikrafttredelsesdato.toJavaLocalDate(),
+                    )
+                    storage.setTilbakeføringsStatusForSink(sink, "FERDIG", kjoringId, erOppretting = false)
+                } catch (e: Exception) {
+                    storage.setTilbakeføringsStatusForSink(sink, "FEILET", kjoringId, erOppretting = false)
+                    storage.setStatusForKjøring(kjoringId, "TILBAKEFØRING_FEILET")
+                    return
+                }
             }
         }
+
+        storage.setStatusForKjøring(kjoringId, "FULLFØRT_TILBAKEFØRING")
     } else {
         transformations.collect()
+        storage.setStatusForKjøring(kjoringId, "IKKE_TILBAKEFØRT")
     }
 }
 
