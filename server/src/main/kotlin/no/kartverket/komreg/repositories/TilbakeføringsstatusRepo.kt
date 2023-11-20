@@ -41,7 +41,7 @@ class TilbakeføringsstatusRepo(private val dataSource: DataSource) {
     }
 
     fun getTilbakeføringsstatusForKjøringId(kjoringId: Int): List<TilbakeføringsstatusForSink>? {
-        val configs = mutableListOf<TilbakeføringsstatusForSink>()
+        val tilbakeføringsstatuser = mutableListOf<TilbakeføringsstatusForSink>()
         dataSource.connection.use { connection ->
             val selectStatement =
                 connection.prepareStatement("SELECT * FROM tilbakeføringsstatus WHERE kjoringid = ?")
@@ -49,7 +49,7 @@ class TilbakeføringsstatusRepo(private val dataSource: DataSource) {
 
             val sinkConfigResultSet = selectStatement.executeQuery()
             while (sinkConfigResultSet.next()) {
-                configs.add(
+                tilbakeføringsstatuser.add(
                     TilbakeføringsstatusForSink(
                         sinkId = sinkConfigResultSet.getString("sink"),
                         kjoringId = sinkConfigResultSet.getInt("kjoringId"),
@@ -61,7 +61,7 @@ class TilbakeføringsstatusRepo(private val dataSource: DataSource) {
                 )
             }
         }
-        return if (configs.isEmpty()) null else configs
+        return if (tilbakeføringsstatuser.isEmpty()) null else tilbakeføringsstatuser
     }
 
     fun setTilbakeføringsStatusForSink(
