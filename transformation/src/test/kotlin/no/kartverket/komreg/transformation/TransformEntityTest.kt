@@ -5,7 +5,9 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.toKotlinLocalDate
 import no.kartverket.komreg.core.domain.*
-import no.kartverket.komreg.integration.spi.*
+import no.kartverket.komreg.integration.spi.Entity
+import no.kartverket.komreg.integration.spi.IdGeneratorManager
+import no.kartverket.komreg.integration.spi.Ident
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
