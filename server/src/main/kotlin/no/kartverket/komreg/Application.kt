@@ -26,10 +26,7 @@ import no.kartverket.komreg.core.logging.FAG
 import no.kartverket.komreg.repositories.KjoringRepo
 import no.kartverket.komreg.repositories.ReguleringRepo
 import no.kartverket.komreg.repositories.TransformationRepo
-import no.kartverket.komreg.routes.grunndataRoutes
-import no.kartverket.komreg.routes.internalRoutes
-import no.kartverket.komreg.routes.reguleringRoutes
-import no.kartverket.komreg.routes.transformationRoutes
+import no.kartverket.komreg.routes.*
 import org.flywaydb.core.Flyway
 import org.rocksdb.RocksDB
 import org.slf4j.Logger
@@ -125,6 +122,7 @@ fun Application.module() {
     reguleringRoutes(reguleringsRepo)
     transformationRoutes(transformationRepo, kjoringRepo, reguleringsRepo)
     grunndataRoutes(createKildeDataSource())
+    loggingRoutes(komregDbPool)
 }
 
 private fun Application.enableFagLogging(komregDbPool: DataSource) {
