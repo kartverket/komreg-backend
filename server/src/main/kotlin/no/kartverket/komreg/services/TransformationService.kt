@@ -6,11 +6,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import no.kartverket.komreg.core.KrAppBootContext
+import no.kartverket.komreg.core.logging.CoroutineMDC
+import no.kartverket.komreg.core.logging.FAG
 import no.kartverket.komreg.featureToggle
 import no.kartverket.komreg.integration.EntityProcessorManager
 import no.kartverket.komreg.integration.EntitySinkManager
 import no.kartverket.komreg.integration.EntitySourceManager
-import no.kartverket.komreg.integration.KommuneServiceManager
 import no.kartverket.komreg.integration.spi.IdGeneratorManager
 import no.kartverket.komreg.logger
 import no.kartverket.komreg.repositories.KjoringRepo
@@ -80,7 +81,11 @@ private fun runAndWriteTransformations(
 
     val skalTilbakefores = !bootContext.config.featureToggle("feature.disable_sink")
 
-    CoroutineScope(Dispatchers.IO).launch {
+    val mdc = CoroutineMDC(mapOf(
+        "kjoringId" to kjoringId.toString()
+    ))
+    CoroutineScope(Dispatchers.IO + mdc).launch {
+        logger.info(FAG, "Startet å kjøre transformasjoner")
         transform(
             kjoringId,
             input,
@@ -93,6 +98,6 @@ private fun runAndWriteTransformations(
         )
 
         kjoringRepo.updateKjoringEndTime(kjoringId)
-        logger.info("Avsluttet alle transformasjoner!")
+        logger.info(FAG, "Avsluttet alle transformasjoner!")
     }
 }
