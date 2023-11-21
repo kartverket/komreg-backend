@@ -85,31 +85,34 @@ private fun runAndWriteTransformations(
 
     val skalTilbakefores = !bootContext.config.featureToggle("feature.disable_sink")
 
-    val mdc = CoroutineMDC(mapOf(
-        "kjoringId" to kjoringId.toString()
-    ))
+    val mdc = CoroutineMDC(
+        mapOf(
+            "kjoringId" to kjoringId.toString(),
+        ),
+    )
 
     CoroutineScope(Dispatchers.IO + mdc).launch {
         logger.info(FAG, "Startet å kjøre transformasjoner")
 
-    if (tilbakeføringsstatusRepo.getTilbakeføringsstatusForKjøringId(kjoringId) == null) {
-        logger.info("Førstegangskjøring av Regulering ${input.id}. Oppretter tilbakeføringsstatus for sinker.")
-        tilbakeføringsstatusRepo.createTilbakeføringsstatusForKjoring(kjoringId, entitySinks.entitySinks)
-    }
+        if (tilbakeføringsstatusRepo.getTilbakeføringsstatusForKjøringId(kjoringId) == null) {
+            logger.info("Førstegangskjøring av Regulering ${input.id}. Oppretter tilbakeføringsstatus for sinker.")
+            tilbakeføringsstatusRepo.createTilbakeføringsstatusForKjoring(kjoringId, entitySinks.entitySinks)
+        }
 
-    CoroutineScope(Dispatchers.IO).launch {
-        transform(
-            kjoringId,
-            input,
-            sources,
-            processors,
-            entitySinks.entitySinks,
-            idGeneratorManager,
-            storage,
-            skalTilbakefores,
-        )
+        CoroutineScope(Dispatchers.IO).launch {
+            transform(
+                kjoringId,
+                input,
+                sources,
+                processors,
+                entitySinks.entitySinks,
+                idGeneratorManager,
+                storage,
+                skalTilbakefores,
+            )
 
-        kjoringRepo.updateKjoringEndTime(kjoringId)
-        logger.info(FAG, "Avsluttet alle transformasjoner!")
+            kjoringRepo.updateKjoringEndTime(kjoringId)
+            logger.info(FAG, "Avsluttet alle transformasjoner!")
+        }
     }
 }
