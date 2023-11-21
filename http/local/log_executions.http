@@ -1,0 +1,15 @@
+### Hent de 2 siste kjøringene fra loggen, nyeste først
+GET http://localhost:9080/log/api/executions?page=-1&page_size=100
+Accept: application/json
+
+### Hent de 500 siste logginnslagene for en gitt kjøring, nyeste først
+GET http://localhost:9080/log/api/executions/100?page=-1&page_size=500
+Accept: application/json
+
+### Hent de 200 eldste logginslagene for en gitt kjøring, eldste først
+GET http://localhost:9080/log/api/executions/100?page=0&page_size=200
+Accept: application/json
+
+### Hent 200 logginslag etter de 200 eldste logginslagene for en gitt kjøring, eldste først
+GET http://localhost:9080/log/api/executions/100?page=1&page_size=200
+Accept: application/json
