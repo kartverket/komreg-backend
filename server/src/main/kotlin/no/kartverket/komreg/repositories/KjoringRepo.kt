@@ -114,7 +114,7 @@ data class Kjoring(
 )
 
 enum class Kjoringstatus(status: String) {
-    KJORER("KJØRER"),
+    KJØRER("KJØRER"),
     STARTET_TILBAKEFØRING("STARTET_TILBAKEFØRING"),
     IKKE_TILBAKEFØRT("IKKE_TILBAKEFØRT"),
     STOPPET("STOPPET"),
