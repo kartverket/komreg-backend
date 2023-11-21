@@ -11,7 +11,7 @@ def createRegulering(grunndata, fordeling_input):
         "type": "kommune",
         "fylkesnummer": {
             "fra": fordeling_input["fylkesnummer"],
-            "til": fordeling_input["fylkesnummer"]
+            "til": [fordeling_input["fylkesnummer"]]
         },
         "kommuneløpenummer": {
             "fra": fordeling_input["eksisterende_kommuneløpenummer"],
@@ -38,7 +38,7 @@ def createRegulering(grunndata, fordeling_input):
             til_value = [til_value]
         transformasjoner.append({
             'type': 'veg',
-            'fylkesnummer': {'fra': fylkesnummer, 'til': fylkesnummer},
+            'fylkesnummer': {'fra': fylkesnummer, 'til': [fylkesnummer]},
             'kommuneløpenummer': {'fra': eksisterende_kommuneløpenummer, 'til': til_value},
             'adressekode': {'fra': adresse['adressekode'], 'til': adresse['adressekode']},
         })
