@@ -9,7 +9,7 @@ import java.sql.Date
 import javax.sql.DataSource
 
 class ReguleringRepo(
-    private val dataSource: DataSource
+    private val dataSource: DataSource,
 ) {
     fun getAllReguleringer(): List<Regulering> {
         dataSource.connection.use { connection ->

@@ -25,5 +25,4 @@ dependencies {
     testImplementation(libs.assertk)
     testImplementation(libs.kotest.runner)
     testImplementation(libs.kotest.extensions.arrow)
-
 }
