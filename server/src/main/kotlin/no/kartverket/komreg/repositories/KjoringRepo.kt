@@ -43,7 +43,7 @@ class KjoringRepo(
         dataSource.connection.use { connection ->
             val preparedStatement = connection.prepareStatement(
                 "SELECT * FROM kjoring WHERE regulering = ? \n" +
-                    "AND status = 'TILBAKEFØRING_FEILET' \n" +
+                    "AND status = 'STOPPET' \n" +
                     "AND slutt IS NULL \n" +
                     "ORDER BY start DESC \n" +
                     "LIMIT 1;\n",
