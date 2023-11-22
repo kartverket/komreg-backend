@@ -41,8 +41,6 @@ suspend fun transform(
         storage.hentIkkeStartedeTilbakeføringerForErstattendeEntiteter(kjoringId)
 
     if (gjenværendeSinkerForNyeEntiteter.isNotEmpty() && gjenværendeSinkerForErstattendeEntiteter.isNotEmpty()) {
-
-
         entitySources.forEach { entitySource ->
             val flow = entitySource.entityFlow
 
@@ -80,6 +78,7 @@ suspend fun transform(
 
             if (gjenværendeSinkerForNyeEntiteter.contains(sink.id)) {
                 try {
+                    storage.setTilbakeføringsStatusForSink(sink, "TILBAKEFØRER", kjoringId, erOppretting = true)
                     sink.consumeTransformations(
                         transformations.filter {
                             val sourceEntity = it.sourceEntity
@@ -102,6 +101,7 @@ suspend fun transform(
         entitySinks.forEach { sink ->
             if (gjenværendeSinkerForErstattendeEntiteter.contains(sink.id)) {
                 try {
+                    storage.setTilbakeføringsStatusForSink(sink, "TILBAKEFØRER", kjoringId, erOppretting = false)
                     sink.consumeTransformations(
                         transformations.filter {
                             val sourceEntity = it.sourceEntity
@@ -113,7 +113,7 @@ suspend fun transform(
                 } catch (e: Exception) {
                     storage.setTilbakeføringsStatusForSink(sink, "FEILET", kjoringId, erOppretting = false)
                     storage.setStatusForKjøring(kjoringId, "TILBAKEFØRING_FEILET")
-                    return
+                    throw e
                 }
             }
         }
@@ -134,13 +134,12 @@ suspend fun transform(
                 .forEach { (sinkName, errs) ->
                     val logger = LoggerFactory.getLogger(sinkName)
                     errs.forEach { err ->
-                        when(err) {
+                        when (err) {
                             is TransformValidationError.ForIdent ->
                                 logger.error("Valideringsfeil {}: {}", err.ident, err.message)
                             is TransformValidationError.UncaughtThrowable ->
                                 logger.error("VALIDERING IKKE UTFØRT PGA FEIL: ${err.message}", err.throwable)
                         }
-
                     }
                 }
         }

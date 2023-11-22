@@ -16,6 +16,7 @@ data class TilbakeføringsstatusForSink(
 ) {
     enum class Status {
         IKKE_STARTET,
+        TILBAKEFØRER,
         FEILET,
         FERDIG,
     }
