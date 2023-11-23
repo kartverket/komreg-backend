@@ -1,7 +1,7 @@
 package no.kartverket.komreg.integration.spi
 
-import no.kartverket.komreg.core.KrAppBootContext
+import no.kartverket.komreg.core.KjoringContext
 
 interface EntitySinkFactory {
-    fun KrAppBootContext.create(): EntitySink
+    fun KjoringContext.create(): EntitySink
 }
