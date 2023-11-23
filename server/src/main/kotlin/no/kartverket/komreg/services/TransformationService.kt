@@ -5,7 +5,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import no.kartverket.komreg.core.KrAppBootContext
+import no.kartverket.komreg.core.KjoringContext
 import no.kartverket.komreg.core.logging.CoroutineMDC
 import no.kartverket.komreg.core.logging.FAG
 import no.kartverket.komreg.featureToggle
@@ -32,11 +32,12 @@ fun transformEntities(
 ) {
     logger.info("Starter transformasjon!")
 
-    val bootContext = object : KrAppBootContext {
+    val bootContext = object : KjoringContext {
         override val config by lazy {
             ConfigFactory.invalidateCaches()
             ConfigFactory.load("properties.conf")
         }
+        override val kjoringId: Int = kjoringId
     }
 
     val entitySinks = EntitySinkManager(bootContext)
@@ -47,7 +48,6 @@ fun transformEntities(
         bootContext,
         input,
         entitySinks,
-        kjoringId,
         StorageService(transformationRepo, tilbakeføringsstatusRepo, kjoringRepo),
         kjoringRepo,
         tilbakeføringsstatusRepo,
@@ -72,22 +72,22 @@ private fun printMemoryUsage() {
 
 @Suppress("LocalVariableName", "NonAsciiCharacters")
 private fun runAndWriteTransformations(
-    bootContext: KrAppBootContext,
+    kjoringContext: KjoringContext,
     input: Reguleringsinput,
     entitySinks: EntitySinkManager,
-    kjoringId: Int,
     storage: Storage,
     kjoringRepo: KjoringRepo,
     tilbakeføringsstatusRepo: TilbakeføringsstatusRepo,
 
-) {
-    val skalTilbakefores = !bootContext.config.featureToggle("feature.disable_sink")
+    ) {
+    val kjoringId = kjoringContext.kjoringId
+    val skalTilbakefores = !kjoringContext.config.featureToggle("feature.disable_sink")
 
-    val lifeCycleHandlers = LifeCycleHandlerManager(bootContext).lifeCycleHandlers
-    val sources = EntitySourceManager(bootContext).entitySources
-    val processors = EntityProcessorManager(bootContext).entityProcessors
+    val lifeCycleHandlers = LifeCycleHandlerManager(kjoringContext).lifeCycleHandlers
+    val sources = EntitySourceManager(kjoringContext).entitySources
+    val processors = EntityProcessorManager(kjoringContext).entityProcessors
 
-    val idGeneratorManager = IdGeneratorManager(bootContext)
+    val idGeneratorManager = IdGeneratorManager(kjoringContext)
 
     val mdc = CoroutineMDC(
         mapOf(

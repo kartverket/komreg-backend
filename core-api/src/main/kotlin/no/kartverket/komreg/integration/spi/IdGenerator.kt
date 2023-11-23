@@ -1,6 +1,6 @@
 package no.kartverket.komreg.integration.spi
 
-import no.kartverket.komreg.core.KrAppBootContext
+import no.kartverket.komreg.core.KjoringContext
 import no.kartverket.komreg.core.domain.Id
 import no.kartverket.komreg.core.domain.IdType
 import java.util.ServiceLoader
@@ -10,10 +10,10 @@ interface IdGenerator {
 }
 
 interface IdGeneratorFactory {
-    fun createFor(context: KrAppBootContext, idType: IdType<*, *>): IdGenerator?
+    fun createFor(context: KjoringContext, idType: IdType<*, *>): IdGenerator?
 }
 
-class IdGeneratorManager(private val context: KrAppBootContext) {
+class IdGeneratorManager(private val context: KjoringContext) {
     private val idGeneratorFactories: List<IdGeneratorFactory> = ServiceLoader.load(IdGeneratorFactory::class.java)
         .toList()
 
