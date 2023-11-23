@@ -1,13 +1,13 @@
 package no.kartverket.komreg.integration
 
-import no.kartverket.komreg.core.KrAppBootContext
+import no.kartverket.komreg.core.KjoringContext
 import no.kartverket.komreg.integration.spi.EntityProcessor
 import no.kartverket.komreg.integration.spi.EntityProcessorFactory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.ServiceLoader
 
-class EntityProcessorManager(bootContext: KrAppBootContext) {
+class EntityProcessorManager(bootContext: KjoringContext) {
 
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 

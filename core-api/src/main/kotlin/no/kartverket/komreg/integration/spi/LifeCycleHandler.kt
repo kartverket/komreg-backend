@@ -1,6 +1,6 @@
 package no.kartverket.komreg.integration.spi
 
-import no.kartverket.komreg.core.KrAppBootContext
+import no.kartverket.komreg.core.KjoringContext
 
 interface LifeCycleHandler {
     fun beforeRun(dryRun: Boolean)
@@ -9,5 +9,5 @@ interface LifeCycleHandler {
 }
 
 interface LifeCycleHandlerFactory {
-    fun KrAppBootContext.create(): LifeCycleHandler
+    fun KjoringContext.create(): LifeCycleHandler
 }

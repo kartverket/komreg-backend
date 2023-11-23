@@ -1,7 +1,7 @@
 package no.kartverket.komreg.integration.spi
 
 import kotlinx.coroutines.flow.Flow
-import no.kartverket.komreg.core.KrAppBootContext
+import no.kartverket.komreg.core.KjoringContext
 
 interface EntityProcessor {
     fun consume(t: Transformation)
@@ -9,5 +9,5 @@ interface EntityProcessor {
 }
 
 interface EntityProcessorFactory {
-    fun KrAppBootContext.create(): EntityProcessor
+    fun KjoringContext.create(): EntityProcessor
 }
