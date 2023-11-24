@@ -7,12 +7,15 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toJavaLocalDate
 import no.kartverket.komreg.core.domain.*
 import no.kartverket.komreg.integration.spi.*
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 interface Storage {
     fun writeTransformationsToDatabase(kjoringId: Int, transformResultList: List<Transformation>)
 
     fun readTransformationsFromDatabase(kjoringId: Int): Flow<Transformation>
+
+    fun readTransformationOfTypeFromDatabase(kjoringId: Int, type: String): Flow<Transformation>
 
     fun createTilbakeforingsstatusForKjoring(kjoringId: Int, entitySinks: List<EntitySink>)
 
@@ -35,16 +38,22 @@ suspend fun transform(
     storage: Storage,
     skalTilbakefores: Boolean,
 ) {
+    val logger: Logger = LoggerFactory.getLogger(Transformation::class.java)
     val transformer = IdentTransformer(mapInput(input))
 
     val gjenvarendeSinkerForNyeEntiteter = storage.hentIkkeStartedeTilbakeforingerForNyeEntiteter(kjoringId)
     val gjenvarendeSinkerForErstattendeEntiteter =
         storage.hentIkkeStartedeTilbakeforingerForErstattendeEntiteter(kjoringId)
 
+    logger.info("gjenvarendeSinkerForNyeEntiteter: $gjenvarendeSinkerForNyeEntiteter")
+    logger.info("gjenvarendeSinkerForErstattendeEntiteter: $gjenvarendeSinkerForErstattendeEntiteter")
+
     if (gjenvarendeSinkerForNyeEntiteter.isNotEmpty() && gjenvarendeSinkerForErstattendeEntiteter.isNotEmpty()) {
+        logger.info("starter skriving av transformasjoner for kjøring $kjoringId")
         lifeCycleHandlers.forEach { it.beforeRun(!skalTilbakefores) }
 
         entitySources.forEach { entitySource ->
+            logger.info("Starter transformasjon for ${entitySource.id}")
             val flow = entitySource.entityFlow
 
             val transformResult = flow
@@ -61,14 +70,19 @@ suspend fun transform(
 
                     storage.writeTransformationsToDatabase(kjoringId, chunk)
                 }
+            logger.info("Ferdig med transformasjon for ${entitySource.id}")
         }
     }
 
     entityProcessors.forEach { processor ->
+        logger.info("1")
         storage.readTransformationsFromDatabase(kjoringId)
             .collect { processor.consume(it) }
+        logger.info("2")
         val result = processor.produce()
+        logger.info("3")
         storage.writeTransformationsToDatabase(kjoringId, result.toList())
+        logger.info("4")
     }
 
     val transformations = storage.readTransformationsFromDatabase(kjoringId)

@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.serialization.json.Json
 import no.kartverket.komreg.core.domain.Id
 import no.kartverket.komreg.integration.spi.Transformation
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.sql.PreparedStatement
 import javax.sql.DataSource
 
@@ -14,13 +16,20 @@ class TransformationRepo(
     private val dataSource: DataSource,
     private val jsonSerializer: Json,
 ) {
+
+    val logger: Logger = LoggerFactory.getLogger(TransformationRepo::class.java)
     fun writeTransformationsToDatabase(kjoringId: Int, transformResultList: List<Transformation>) {
         dataSource.connection.use { connection ->
+            logger.info("Writing ${transformResultList.size} transformations to database")
             connection.prepareStatement(
                 "INSERT INTO transformasjon (transformasjonsid, kjoring, transformasjon, tid) VALUES (?::jsonb, ?, ?::jsonb, now())",
             ).use { statement ->
+                logger.info("Iam in a statement")
+
                 transformResultList.chunked(100000) {
+                    logger.info("writing chunk of ${it.size} transformations")
                     writeChunk(kjoringId, statement, it)
+                    logger.info("wrote chunk of ${it.size} transformations")
                 }
             }
         }
@@ -39,9 +48,37 @@ class TransformationRepo(
     fun readTransformationFromDatabase(kjoringId: Int): Flow<Transformation> {
         return flow {
             dataSource.connection.use { connection ->
+                connection.autoCommit = false
                 connection.prepareStatement("SELECT transformasjon FROM transformasjon WHERE kjoring=?")
                     .use { preparedStatement ->
+
                         preparedStatement.setInt(1, kjoringId)
+                        preparedStatement.fetchSize = 5000
+
+                        preparedStatement.executeQuery().use { resultSet ->
+
+                            var counter = 0
+
+                            while (resultSet.next()) {
+                                counter++
+                                val text = resultSet.getString(1)
+                                val t = jsonSerializer.decodeFromString(Transformation.serializer(), text)
+                                if (counter % 1_000_000 == 0) logger.info("Read $counter transformations")
+                                emit(t)
+                            }
+                        }
+                    }
+            }
+        }.flowOn(Dispatchers.IO)
+    }
+
+    fun readTransformationOfTypeFromDatabase(kjoringId: Int, type: String): Flow<Transformation> {
+        return flow {
+            dataSource.connection.use { connection ->
+                connection.prepareStatement("SELECT transformasjon FROM transformasjon WHERE kjoring=? AND transformasjon.transformasjonsid -> 'type' ->> 'value' = ?")
+                    .use { preparedStatement ->
+                        preparedStatement.setInt(1, kjoringId)
+                        preparedStatement.setString(2, type)
                         preparedStatement.fetchSize = 1000
                         preparedStatement.executeQuery().use { resultSet ->
                             while (resultSet.next()) {
