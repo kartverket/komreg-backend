@@ -81,7 +81,12 @@ suspend fun transform(
         logger.info("2")
         val result = processor.produce()
         logger.info("3")
-        storage.writeTransformationsToDatabase(kjoringId, result.toList())
+
+        result.chunked(10000)
+            .collect { chunk ->
+                storage.writeTransformationsToDatabase(kjoringId, chunk)
+            }
+        // storage.writeTransformationsToDatabase(kjoringId, result.toList())
         logger.info("4")
     }
 
