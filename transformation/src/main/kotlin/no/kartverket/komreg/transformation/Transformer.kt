@@ -15,8 +15,6 @@ interface Storage {
 
     fun readTransformationsFromDatabase(kjoringId: Int): Flow<Transformation>
 
-    fun readTransformationOfTypeFromDatabase(kjoringId: Int, type: String): Flow<Transformation>
-
     fun createTilbakeforingsstatusForKjoring(kjoringId: Int, entitySinks: List<EntitySink>)
 
     fun setTilbakeforingsStatusForSink(sink: EntitySink, status: String, kjoringId: Int, erOppretting: Boolean)
@@ -38,7 +36,7 @@ suspend fun transform(
     storage: Storage,
     skalTilbakefores: Boolean,
 ) {
-    val logger: Logger = LoggerFactory.getLogger(Transformation::class.java)
+    val logger: Logger = LoggerFactory.getLogger({}::class.java)
     val transformer = IdentTransformer(mapInput(input))
 
     val gjenvarendeSinkerForNyeEntiteter = storage.hentIkkeStartedeTilbakeforingerForNyeEntiteter(kjoringId)
@@ -49,11 +47,11 @@ suspend fun transform(
     logger.info("gjenvarendeSinkerForErstattendeEntiteter: $gjenvarendeSinkerForErstattendeEntiteter")
 
     if (gjenvarendeSinkerForNyeEntiteter.isNotEmpty() && gjenvarendeSinkerForErstattendeEntiteter.isNotEmpty()) {
-        logger.info("starter skriving av transformasjoner for kjøring $kjoringId")
+        logger.info("Starter skriving av transformasjoner for kjøring $kjoringId")
         lifeCycleHandlers.forEach { it.beforeRun(!skalTilbakefores) }
 
         entitySources.forEach { entitySource ->
-            logger.info("Starter transformasjon for ${entitySource.id}")
+            logger.info("Skriver transformasjon for ${entitySource.id}")
             val flow = entitySource.entityFlow
 
             val transformResult = flow
@@ -70,24 +68,22 @@ suspend fun transform(
 
                     storage.writeTransformationsToDatabase(kjoringId, chunk)
                 }
-            logger.info("Ferdig med transformasjon for ${entitySource.id}")
+            logger.info("Ferdigskrevet transformasjoner for ${entitySource.id}")
         }
     }
 
     entityProcessors.forEach { processor ->
-        logger.info("1")
+        logger.info("Skriver transformasjoner")
         storage.readTransformationsFromDatabase(kjoringId)
             .collect { processor.consume(it) }
-        logger.info("2")
         val result = processor.produce()
-        logger.info("3")
 
         result.chunked(10000)
             .collect { chunk ->
                 storage.writeTransformationsToDatabase(kjoringId, chunk)
             }
-        // storage.writeTransformationsToDatabase(kjoringId, result.toList())
-        logger.info("4")
+
+        logger.info("Ferdigskrevet transformasjoner for processor")
     }
 
     val transformations = storage.readTransformationsFromDatabase(kjoringId)
@@ -95,20 +91,22 @@ suspend fun transform(
     if (skalTilbakefores) {
         // Kjør ut alle nyopprettinger
         storage.setStatusForKjoring(kjoringId, "STARTET_TILBAKEFØRING")
+        logger.info("Starter tilbakeføring av ${transformations.count()} transformasjoner")
 
         entitySinks.forEach { sink ->
 
             if (gjenvarendeSinkerForNyeEntiteter.contains(sink.id)) {
                 try {
                     storage.setTilbakeforingsStatusForSink(sink, "TILBAKEFØRER", kjoringId, erOppretting = true)
+                    logger.info("Tilbakefører nyopprettinger for ${sink.id}")
                     sink.consumeTransformations(
                         transformations.filter {
                             val sourceEntity = it.sourceEntity
                             sourceEntity == null || sourceEntity.id != it.id
                         },
                         input.ikrafttredelsesdato.toJavaLocalDate(),
-
                     )
+                    logger.info("Tilbakeført nyopprettinger for ${sink.id}")
                     storage.setTilbakeforingsStatusForSink(sink, "FERDIG", kjoringId, erOppretting = true)
                 } catch (e: Exception) {
                     storage.setTilbakeforingsStatusForSink(sink, "FEILET", kjoringId, erOppretting = true)
@@ -124,6 +122,7 @@ suspend fun transform(
             if (gjenvarendeSinkerForErstattendeEntiteter.contains(sink.id)) {
                 try {
                     storage.setTilbakeforingsStatusForSink(sink, "TILBAKEFØRER", kjoringId, erOppretting = false)
+                    logger.info("Tilbakefører endringer for ${sink.id}")
                     sink.consumeTransformations(
                         transformations.filter {
                             val sourceEntity = it.sourceEntity
@@ -131,6 +130,7 @@ suspend fun transform(
                         },
                         input.ikrafttredelsesdato.toJavaLocalDate(),
                     )
+                    logger.info("Tilbakeført endringer for ${sink.id}")
                     storage.setTilbakeforingsStatusForSink(sink, "FERDIG", kjoringId, erOppretting = false)
                 } catch (e: Exception) {
                     storage.setTilbakeforingsStatusForSink(sink, "FEILET", kjoringId, erOppretting = false)

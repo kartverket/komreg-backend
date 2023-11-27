@@ -20,16 +20,11 @@ class TransformationRepo(
     val logger: Logger = LoggerFactory.getLogger(TransformationRepo::class.java)
     fun writeTransformationsToDatabase(kjoringId: Int, transformResultList: List<Transformation>) {
         dataSource.connection.use { connection ->
-            logger.info("Writing ${transformResultList.size} transformations to database")
             connection.prepareStatement(
                 "INSERT INTO transformasjon (transformasjonsid, kjoring, transformasjon, tid) VALUES (?::jsonb, ?, ?::jsonb, now())",
             ).use { statement ->
-                logger.info("Iam in a statement")
-
                 transformResultList.chunked(100000) {
-                    logger.info("writing chunk of ${it.size} transformations")
                     writeChunk(kjoringId, statement, it)
-                    logger.info("wrote chunk of ${it.size} transformations")
                 }
             }
         }

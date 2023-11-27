@@ -60,7 +60,7 @@ private fun printMemoryUsage() {
         val mb = 1024 * 1024
 
         while (true) {
-            delay(2000)
+            delay(30_000)
             val used = (runtime.totalMemory() - runtime.freeMemory()) / mb
             val free = runtime.freeMemory() / mb
             val total = runtime.totalMemory() / mb

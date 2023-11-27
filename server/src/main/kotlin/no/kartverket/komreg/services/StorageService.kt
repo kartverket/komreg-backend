@@ -20,10 +20,6 @@ class StorageService(
         return transformationRepo.readTransformationFromDatabase(kjoringId)
     }
 
-    override fun readTransformationOfTypeFromDatabase(kjoringId: Int, type: String): Flow<Transformation> {
-        return transformationRepo.readTransformationOfTypeFromDatabase(kjoringId, type)
-    }
-
     override fun createTilbakeforingsstatusForKjoring(kjoringId: Int, entitySinks: List<EntitySink>) {
         tilbakeføringsstatusRepo.createTilbakeføringsstatusForKjoring(kjoringId, entitySinks)
     }
