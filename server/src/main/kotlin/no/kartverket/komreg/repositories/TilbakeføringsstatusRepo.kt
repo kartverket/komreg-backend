@@ -93,7 +93,7 @@ class TilbakeføringsstatusRepo(private val dataSource: DataSource) {
         dataSource.connection.use { connection ->
             val selectStatement =
                 connection.prepareStatement(
-                    "SELECT sink FROM tilbakeføringsstatus WHERE kjoringid = ? AND (opprettinger = 'FEILET' OR opprettinger = 'IKKE_STARTET')",
+                    "SELECT sink FROM tilbakeføringsstatus WHERE kjoringid = ? AND (opprettinger = 'FEILET' OR opprettinger = 'IKKE_STARTET' OR opprettinger = 'TILBAKEFØRER')",
                 )
             selectStatement.setInt(1, kjoringId)
 
