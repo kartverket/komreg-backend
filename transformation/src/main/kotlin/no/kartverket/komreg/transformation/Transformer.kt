@@ -35,6 +35,7 @@ suspend fun transform(
     idGeneratorManager: IdGeneratorManager,
     storage: Storage,
     skalTilbakefores: Boolean,
+    erForstegangskjoring: Boolean = true,
 ) {
     val logger: Logger = LoggerFactory.getLogger({}::class.java)
     val transformer = IdentTransformer(mapInput(input))
@@ -46,7 +47,7 @@ suspend fun transform(
     logger.info("gjenvarendeSinkerForNyeEntiteter: $gjenvarendeSinkerForNyeEntiteter")
     logger.info("gjenvarendeSinkerForErstattendeEntiteter: $gjenvarendeSinkerForErstattendeEntiteter")
 
-    if (gjenvarendeSinkerForNyeEntiteter.isNotEmpty() && gjenvarendeSinkerForErstattendeEntiteter.isNotEmpty()) {
+    if (erForstegangskjoring) {
         logger.info("Starter skriving av transformasjoner for kjøring $kjoringId")
         lifeCycleHandlers.forEach { it.beforeRun(!skalTilbakefores) }
 
@@ -70,20 +71,20 @@ suspend fun transform(
                 }
             logger.info("Ferdigskrevet transformasjoner for ${entitySource.id}")
         }
-    }
 
-    entityProcessors.forEach { processor ->
-        logger.info("Skriver transformasjoner")
-        storage.readTransformationsFromDatabase(kjoringId)
-            .collect { processor.consume(it) }
-        val result = processor.produce()
+        entityProcessors.forEach { processor ->
+            logger.info("Starter å lese transformasjoner for processor $processor")
+            storage.readTransformationsFromDatabase(kjoringId)
+                .collect { processor.consume(it) }
+            val result = processor.produce()
 
-        result.chunked(10000)
-            .collect { chunk ->
-                storage.writeTransformationsToDatabase(kjoringId, chunk)
-            }
+            result.chunked(10000)
+                .collect { chunk ->
+                    storage.writeTransformationsToDatabase(kjoringId, chunk)
+                }
 
-        logger.info("Ferdigskrevet transformasjoner for processor")
+            logger.info("Ferdigskrevet transformasjoner for processor")
+        }
     }
 
     val transformations = storage.readTransformationsFromDatabase(kjoringId)
@@ -142,7 +143,8 @@ suspend fun transform(
 
         storage.setStatusForKjoring(kjoringId, "FULLFØRT_TILBAKEFØRING")
     } else {
-        transformations.collect()
+        val t = transformations.toList()
+        logger.info("Antall transformasjoner som ikke ble tilbakeført: ${t.size}")
         storage.setStatusForKjoring(kjoringId, "IKKE_TILBAKEFØRT")
     }
 

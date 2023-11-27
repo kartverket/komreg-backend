@@ -48,17 +48,13 @@ class TransformationRepo(
                     .use { preparedStatement ->
 
                         preparedStatement.setInt(1, kjoringId)
-                        preparedStatement.fetchSize = 5000
+                        preparedStatement.fetchSize = 10_000
 
                         preparedStatement.executeQuery().use { resultSet ->
 
-                            var counter = 0
-
                             while (resultSet.next()) {
-                                counter++
                                 val text = resultSet.getString(1)
                                 val t = jsonSerializer.decodeFromString(Transformation.serializer(), text)
-                                if (counter % 1_000_000 == 0) logger.info("Read $counter transformations")
                                 emit(t)
                             }
                         }

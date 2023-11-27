@@ -29,6 +29,7 @@ fun transformEntities(
     transformationRepo: TransformationRepo,
     kjoringRepo: KjoringRepo,
     tilbakeføringsstatusRepo: TilbakeføringsstatusRepo,
+    erForsteGangkjoring: Boolean,
 ) {
     logger.info("Starter transformasjon!")
 
@@ -51,6 +52,7 @@ fun transformEntities(
         StorageService(transformationRepo, tilbakeføringsstatusRepo, kjoringRepo),
         kjoringRepo,
         tilbakeføringsstatusRepo,
+        erForsteGangkjoring,
     )
 }
 
@@ -79,6 +81,7 @@ private fun runAndWriteTransformations(
     storage: Storage,
     kjoringRepo: KjoringRepo,
     tilbakeføringsstatusRepo: TilbakeføringsstatusRepo,
+    erFortegangskjoring: Boolean,
 
 ) {
     val skalTilbakefores = !bootContext.config.featureToggle("feature.disable_sink")
@@ -114,6 +117,7 @@ private fun runAndWriteTransformations(
                 idGeneratorManager,
                 storage,
                 skalTilbakefores,
+                erFortegangskjoring,
             )
 
             kjoringRepo.updateKjoringEndTime(kjoringId)
