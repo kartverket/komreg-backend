@@ -3,12 +3,7 @@ package no.kartverket.komreg.validation
 import no.kartverket.komreg.routes.*
 
 enum class ErrorType {
-    FYLKESDELING_MANGLER_KOMMUNER,
-    KOMMUNEDELING_MANGLER_MATRIKKELENHETER,
-    KOMMUNEDELING_MANGLER_KRETSER,
-    KOMMUNEDELING_MANGLER_TEIGER,
-    KOMMUNEDELING_MANGLER_VEGER,
-    VEGDELING_MANGLER_VEGADRESSER,
+    FYLKESDELING_MANGLER_KOMMUNER, KOMMUNEDELING_MANGLER_MATRIKKELENHETER, KOMMUNEDELING_MANGLER_KRETSER, KOMMUNEDELING_MANGLER_TEIGER, KOMMUNEDELING_MANGLER_VEGER, VEGDELING_MANGLER_VEGADRESSER,
 }
 
 class ReguleringValidator {
@@ -50,11 +45,9 @@ class ReguleringValidator {
                     if (!hasTeigtransformasjon(endring)) {
                         existingErrors = existingErrors.plus(ErrorType.KOMMUNEDELING_MANGLER_TEIGER)
                     }
-                    if (!hasVegadressetransformasjon(endring)) {
+                    if (!hasVegtransformasjon(endring)) {
                         existingErrors = existingErrors.plus(ErrorType.KOMMUNEDELING_MANGLER_VEGER)
                     }
-
-                    println(existingErrors)
 
                     errors[endring.id] = existingErrors
                 }
@@ -101,6 +94,9 @@ class ReguleringValidator {
 
         private fun hasTeigtransformasjon(endring: EndringDTO) =
             endring.transformasjoner.any { it is TeigTransformasjonDTO }
+
+        private fun hasVegtransformasjon(endring: EndringDTO) =
+            endring.transformasjoner.any { it is VegTransformasjonDTO }
 
         private fun hasVegadressetransformasjon(endring: EndringDTO) =
             endring.transformasjoner.any { it is VegadresseTransformasjonDTO }
