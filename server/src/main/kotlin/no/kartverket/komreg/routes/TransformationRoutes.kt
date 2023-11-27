@@ -32,7 +32,7 @@ fun Application.transformationRoutes(
                         ?: throw NotFoundException("Fant ingen regulering for regId: $regId")
 
                     val errors = ReguleringValidator.validate(regulering)
-                    if (errors.isNotEmpty()) {
+                    if (errors.flatMap { it.value }.isNotEmpty()) {
                         call.respond(HttpStatusCode.BadRequest, errors)
                         return@get
                     }
