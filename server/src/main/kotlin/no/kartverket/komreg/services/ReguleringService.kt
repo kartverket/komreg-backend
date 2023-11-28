@@ -1,9 +1,6 @@
 package no.kartverket.komreg.services
 
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.call
 import io.ktor.server.plugins.NotFoundException
-import io.ktor.server.response.respond
 import no.kartverket.komreg.exceptions.ReguleringAlreadyFinishedException
 import no.kartverket.komreg.exceptions.ReguleringAlreadyRunningException
 import no.kartverket.komreg.repositories.KjoringRepo
@@ -12,22 +9,31 @@ import no.kartverket.komreg.repositories.ReguleringRepo
 import no.kartverket.komreg.routes.Regulering
 import no.kartverket.komreg.validation.ReguleringValidator
 
-fun getOrThrowRegulering(reguleringRepo: ReguleringRepo,
-                         kjoringRepo: KjoringRepo,
-                         regId: String): Regulering {
-    val regulering = reguleringRepo.getReguleringById(regId)
-        ?: throw NotFoundException("Fant ingen regulering for regId: $regId")
+class ReguleringService(
+    private val reguleringRepo: ReguleringRepo,
+    private val kjoringRepo: KjoringRepo,
+) {
 
-    val errors = ReguleringValidator.validate(regulering)
-    if (errors.flatMap { it.value }.isNotEmpty()) {
-        throw IllegalArgumentException("Reguleringsinput er ugyldig, se errors for detaljer", IllegalArgumentException(errors.toString()))
-    }
+    fun getOrThrowRegulering(
+        regId: String,
+    ): Regulering {
+        val regulering = reguleringRepo.getReguleringById(regId)
+            ?: throw NotFoundException("Fant ingen regulering for regId: $regId")
 
-    if(kjoringRepo.getStatusForKjoringMedReguleringsId(regId).any { it.status === Kjoringstatus.KJØRER }
+        kjoringRepo.getStatusForKjoringMedReguleringsId(regId).any { it.status === Kjoringstatus.KJØRER }
             .also { if (it) throw ReguleringAlreadyRunningException(regId) }
-        )
 
-    kjoringRepo.getStatusForKjoringMedReguleringsId(regId).any { it.status === Kjoringstatus.FERDIG }
-        .also { if (it) throw ReguleringAlreadyFinishedException(regId) }
-    return regulering
+        kjoringRepo.getStatusForKjoringMedReguleringsId(regId).any { it.status === Kjoringstatus.FERDIG }
+            .also { if (it) throw ReguleringAlreadyFinishedException(regId) }
+
+        val errors = ReguleringValidator.validate(regulering)
+
+        if (errors.flatMap { it.value }.isNotEmpty()) {
+            throw IllegalArgumentException(
+                "Reguleringsinput er ugyldig, se errors for detaljer",
+                IllegalArgumentException(errors.toString()),
+            )
+        }
+        return regulering
+    }
 }

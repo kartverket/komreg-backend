@@ -7,6 +7,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationStopping
 import io.ktor.server.application.install
 import io.ktor.server.metrics.micrometer.MicrometerMetrics
 import io.ktor.server.netty.EngineMain
@@ -19,6 +20,8 @@ import no.kartverket.komreg.repositories.ReguleringRepo
 import no.kartverket.komreg.repositories.TilbakeføringsstatusRepo
 import no.kartverket.komreg.repositories.TransformationRepo
 import no.kartverket.komreg.routes.*
+import no.kartverket.komreg.services.KjoringService
+import no.kartverket.komreg.services.ReguleringService
 import org.flywaydb.core.Flyway
 import org.rocksdb.RocksDB
 import org.slf4j.Logger
@@ -78,12 +81,17 @@ fun Application.module() {
         HikariDataSource(hikariConfig)
     }
 
-
-
     val reguleringsRepo = ReguleringRepo(komregDbPool)
     val kjoringRepo = KjoringRepo(komregDbPool)
     val tilbakeføringsstatusRepo = TilbakeføringsstatusRepo(komregDbPool)
     val transformationRepo = TransformationRepo(komregDbPool, jsonSerializer())
+
+    val reguleringService = ReguleringService(reguleringsRepo, kjoringRepo)
+    val kjoringService = KjoringService(kjoringRepo)
+
+    environment.monitor.subscribe(ApplicationStopping) {
+        kjoringService.handleShutdown()
+    }
 
     install(ContentNegotiation) {
         json()
@@ -112,9 +120,8 @@ fun Application.module() {
 
     internalRoutes(metricsRegistry)
     reguleringRoutes(reguleringsRepo)
-    transformationRoutes(transformationRepo, kjoringRepo, reguleringsRepo, tilbakeføringsstatusRepo)
+    transformationRoutes(transformationRepo, kjoringRepo, tilbakeføringsstatusRepo, reguleringService)
     grunndataRoutes(createKildeDataSource())
 
     enableFagLogging(komregDbPool)
 }
-
