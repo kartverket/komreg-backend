@@ -120,6 +120,10 @@ fun Application.module() {
         hikariConfig.jdbcUrl = env["DB_MATRIKKEL_JDBC_URL"]
         hikariConfig.username = env["DB_MATRIKKEL_KILDE_USERNAME"]
         hikariConfig.password = env["DB_MATRIKKEL_KILDE_PASSWORD"]
+        // Keep-alive for å unngå at firewall lukker idle connections.
+        // Prøver å sende en keep-alive hvert 10. minutt.
+        hikariConfig.addDataSourceProperty("oracle.net.keepAlive", "true")
+        hikariConfig.addDataSourceProperty("oracle.net.TCP_KEEPIDLE", "600")
         return HikariDataSource(hikariConfig)
     }
 
