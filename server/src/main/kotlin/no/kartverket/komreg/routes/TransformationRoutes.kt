@@ -12,6 +12,7 @@ import io.ktor.server.routing.routing
 import no.kartverket.komreg.exceptions.MissingPathVariableException
 import no.kartverket.komreg.exceptions.ReguleringAlreadyFinishedException
 import no.kartverket.komreg.repositories.*
+import no.kartverket.komreg.services.getOrThrowRegulering
 import no.kartverket.komreg.services.transformEntities
 import no.kartverket.komreg.validation.ReguleringValidator
 import java.sql.SQLException
@@ -28,18 +29,7 @@ fun Application.transformationRoutes(
                 try {
                     val regId = call.parameters["regId"] ?: throw MissingPathVariableException("Missing regId")
 
-                    val regulering = reguleringRepo.getReguleringById(regId)
-                        ?: throw NotFoundException("Fant ingen regulering for regId: $regId")
-
-                    val errors = ReguleringValidator.validate(regulering)
-                    if (errors.flatMap { it.value }.isNotEmpty()) {
-                        call.respond(HttpStatusCode.BadRequest, errors)
-                        return@get
-                    }
-
-
-                    kjoringRepo.getStatusForKjoringMedReguleringsId(regId).any { it.status === Kjoringstatus.FERDIG }
-                        .also { if (it) throw ReguleringAlreadyFinishedException(regId) }
+                    val regulering = getOrThrowRegulering(reguleringRepo, kjoringRepo, regId)
 
                     call.application.log.info("Starter transformasjon for regulering: $regId")
 
