@@ -99,7 +99,7 @@ fun Application.grunndataRoutes(dataSource: DataSource) {
 
                 dataSource.connection.use { connection ->
                     val gårdsnummerStatement =
-                        connection.prepareStatement("SELECT DISTINCT gardsnr FROM matrikkelenhet WHERE kommuneid = ? and gardsnr != 0")
+                        connection.prepareStatement("SELECT DISTINCT gardsnr FROM matrikkelenhet WHERE kommuneid = ? AND gardsnr != 0 ORDER BY gardsnr")
                     gårdsnummerStatement.setString(1, kommuneId)
                     val gårdsnummerResultSet = gårdsnummerStatement.executeQuery()
                     while (gårdsnummerResultSet.next()) {
@@ -107,7 +107,7 @@ fun Application.grunndataRoutes(dataSource: DataSource) {
                     }
 
                     val adresseparsellStatement =
-                        connection.prepareStatement("SELECT adressekode, adressenavn FROM veg WHERE kommuneid = ?")
+                        connection.prepareStatement("SELECT adressekode, adressenavn FROM veg WHERE kommuneid = ? ORDER BY adressekode")
                     adresseparsellStatement.setString(1, kommuneId)
                     val adresseparsellResultSet = adresseparsellStatement.executeQuery()
                     while (adresseparsellResultSet.next()) {
@@ -123,7 +123,8 @@ fun Application.grunndataRoutes(dataSource: DataSource) {
                         connection.prepareStatement(
                             "SELECT kr.kretsnavn, ko.kodeverdi, " +
                                 "nvl(kr.bispedomme, 0) * 1000000 + nvl(kr.prosti, 0) * 10000 + nvl(kr.prestegjeld, 0) * 100 + kr.kretsnr AS kretsnummer " +
-                                "FROM krets kr JOIN kommunerforkrets kfk ON kfk.kretsid = kr.id JOIN kode ko ON ko.id = kr.kretstypekodeid WHERE kfk.kommuneid = ?",
+                                "FROM krets kr JOIN kommunerforkrets kfk ON kfk.kretsid = kr.id JOIN kode ko ON ko.id = kr.kretstypekodeid WHERE kfk.kommuneid = ? " +
+                                "ORDER BY ko.kodeverdi, kretsnummer",
                         )
                     kretsStatement.setString(1, kommuneId)
                     val kretsResultSet = kretsStatement.executeQuery()
@@ -139,8 +140,9 @@ fun Application.grunndataRoutes(dataSource: DataSource) {
 
                     val teigStatement =
                         connection.prepareStatement(
-                            "SELECT t.id AS id, koordinatsystemkodeid, nord, ost FROM teig t LEFT JOIN teigformatrikkelenhet tfm ON t.id = tfm.teigid\n" +
-                                "    WHERE matrikkelenhetid IN (SELECT id FROM matrikkelenhet WHERE kommuneid = ? AND gardsnr = 0)",
+                            "SELECT t.id AS id, koordinatsystemkodeid, nord, ost FROM teig t LEFT JOIN teigformatrikkelenhet tfm ON t.id = tfm.teigid " +
+                                "WHERE matrikkelenhetid IN (SELECT id FROM matrikkelenhet WHERE kommuneid = ? AND gardsnr = 0) " +
+                                "ORDER BY id",
                         )
                     teigStatement.setString(1, kommuneId)
                     val teigResultSet = teigStatement.executeQuery()
@@ -178,7 +180,10 @@ fun Application.grunndataRoutes(dataSource: DataSource) {
 
                 dataSource.connection.use { connection ->
                     val vegadresseStatement =
-                        connection.prepareStatement("SELECT v.adressekode, v.adressenavn, a.nr, a.bokstav FROM adresse a LEFT JOIN veg v ON a.vegid = v.id WHERE v.kommuneid = ? AND v.adressekode = ?")
+                        connection.prepareStatement(
+                            "SELECT v.adressekode, v.adressenavn, a.nr, a.bokstav FROM adresse a LEFT JOIN veg v ON a.vegid = v.id " +
+                                "WHERE v.kommuneid = ? AND v.adressekode = ? ORDER BY a.nr, a.bokstav",
+                        )
                     vegadresseStatement.setString(1, kommuneId)
                     vegadresseStatement.setString(2, adressekode)
                     val vegadresseResultSet = vegadresseStatement.executeQuery()
