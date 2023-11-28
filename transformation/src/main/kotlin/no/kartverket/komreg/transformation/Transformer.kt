@@ -87,7 +87,8 @@ suspend fun transform(
         }
     }
 
-    val transformations = storage.readTransformationsFromDatabase(kjoringId)
+    val transformationList = storage.readTransformationsFromDatabase(kjoringId).toList()
+    val transformations = transformationList.asFlow()
 
     if (skalTilbakefores) {
         // Kjør ut alle nyopprettinger
@@ -143,8 +144,7 @@ suspend fun transform(
 
         storage.setStatusForKjoring(kjoringId, "FULLFØRT_TILBAKEFØRING")
     } else {
-        val t = transformations.toList()
-        logger.info("Antall transformasjoner som ikke ble tilbakeført: ${t.size}")
+        logger.info("Antall transformasjoner som ikke ble tilbakeført: ${transformationList.size}")
         storage.setStatusForKjoring(kjoringId, "IKKE_TILBAKEFØRT")
     }
 
