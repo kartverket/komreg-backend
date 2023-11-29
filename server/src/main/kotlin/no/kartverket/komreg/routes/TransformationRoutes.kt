@@ -45,7 +45,6 @@ fun Application.transformationRoutes(
                             kjoringRepo,
                             tilbakeføringsstatusRepo,
                             false,
-
                         )
                         call.application.log.info("Gjenopptar kjøring med id: ${kjoringsomskalgjenopptas.id}, og regId: $regId")
                         kjoringRepo.setStatusForKjøring(kjoringsomskalgjenopptas.id, Kjoringstatus.KJØRER)
