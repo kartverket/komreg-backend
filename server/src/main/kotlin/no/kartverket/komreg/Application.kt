@@ -15,6 +15,7 @@ import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
+import no.kartverket.komreg.integration.SchemaManager
 import no.kartverket.komreg.repositories.KjoringRepo
 import no.kartverket.komreg.repositories.ReguleringRepo
 import no.kartverket.komreg.repositories.TilbakeføringsstatusRepo
@@ -44,10 +45,8 @@ fun main(args: Array<String>) =
 
 @Suppress("unused") // Referenced in application.conf
 fun Application.module() {
-    logger.info("Current environment: ${System.getenv("environment")}")
-    logger.info("Source DB: ${env["DB_MATRIKKEL_KILDE_USERNAME"]}, Mottaker DB: ${env["DB_MATRIKKEL_MOTTAKER_USERNAME"]}")
-
     val metricsRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
+    val schemaManager = SchemaManager()
 
     install(MicrometerMetrics) {
         registry = metricsRegistry
@@ -56,6 +55,13 @@ fun Application.module() {
     val komregJdbcUrl = env["DB_KOMREG_JDBC_URL"]
     val komregDbUsername = env["DB_KOMREG_USERNAME"]
     val komregDbPassword = env["DB_KOMREG_PASSWORD"]
+
+    val matrikkelJdbcUrl = env["DB_MATRIKKEL_JDBC_URL"]
+    val matrikkelDbUsername = env[schemaManager.getMottakerUsername()]
+    val matrikkelDbPassword = env[schemaManager.getMottakerPassword()]
+
+    logger.info("Current environment: ${System.getenv("environment")}")
+    logger.info("Mottaker DB: $matrikkelDbUsername")
 
     if (!komregJdbcUrl.isNullOrEmpty()) {
         val flyway = Flyway.configure()
@@ -108,13 +114,13 @@ fun Application.module() {
     }
 
     // TODO: PoC for uthenting av fordelingsparametre for kommune
-    fun createKildeDataSource(): HikariDataSource {
+    fun createMatrikkelDataSource(): HikariDataSource {
         val hikariConfig = HikariConfig()
         hikariConfig.poolName = "db-connection"
         hikariConfig.driverClassName = "oracle.jdbc.OracleDriver"
-        hikariConfig.jdbcUrl = env["DB_MATRIKKEL_JDBC_URL"]
-        hikariConfig.username = env["DB_MATRIKKEL_KILDE_USERNAME"]
-        hikariConfig.password = env["DB_MATRIKKEL_KILDE_PASSWORD"]
+        hikariConfig.jdbcUrl = matrikkelJdbcUrl
+        hikariConfig.username = matrikkelDbUsername
+        hikariConfig.password = matrikkelDbPassword
         return HikariDataSource(hikariConfig)
     }
 

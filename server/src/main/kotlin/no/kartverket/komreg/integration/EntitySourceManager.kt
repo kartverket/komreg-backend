@@ -13,8 +13,6 @@ class EntitySourceManager(bootContext: KjoringContext) {
 
     var entitySources: List<EntitySource>
 
-    private var isLocal = false
-
     init {
         val services = ServiceLoader.load(EntitySourceFactory::class.java)
         logger.info("Fant ${services.toList().size} kilder")
@@ -22,8 +20,6 @@ class EntitySourceManager(bootContext: KjoringContext) {
         entitySources = with(bootContext) {
             services.map { service -> with(service) { create() } }
         }
-
-        isLocal = System.getenv("environment") == "local" || System.getenv("environment") == null
 
         entitySources.forEach {
             logger.info("EntitySource: ${it.id} - $it")
