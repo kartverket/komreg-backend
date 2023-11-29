@@ -103,6 +103,29 @@ class KjoringRepo(
 
         return kjoringer
     }
+
+    fun getKjoringer(): List<Kjoring> {
+        val kjoringer = mutableListOf<Kjoring>()
+        dataSource.connection.use { connection ->
+            val prepareStatement = connection.prepareStatement("SELECT * FROM kjoring")
+
+            val result = prepareStatement.executeQuery()
+
+            while (result.next()) {
+                kjoringer.add(
+                    Kjoring(
+                        id = result.getInt("id"),
+                        regulering = result.getString("regulering"),
+                        start = result.getTimestamp("start"),
+                        stop = result.getTimestamp("slutt"),
+                        status = enumValueOf<Kjoringstatus>(result.getString("status")),
+                    ),
+                )
+            }
+        }
+
+        return kjoringer
+    }
 }
 
 data class Kjoring(
@@ -118,6 +141,7 @@ enum class Kjoringstatus(status: String) {
     STARTET_TILBAKEFØRING("STARTET_TILBAKEFØRING"),
     IKKE_TILBAKEFØRT("IKKE_TILBAKEFØRT"),
     STOPPET("STOPPET"),
+    AVBRUTT("AVBRUTT"),
     TILBAKEFØRING_FEILET("TILBAKEFØRING_FEILET"),
     FULLFØRT_TILBAKEFØRING("FULLFØRT_TILBAKEFØRING"),
     FERDIG("FERDIG"),

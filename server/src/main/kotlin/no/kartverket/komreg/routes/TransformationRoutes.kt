@@ -11,16 +11,19 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.kartverket.komreg.exceptions.MissingPathVariableException
 import no.kartverket.komreg.exceptions.ReguleringAlreadyFinishedException
-import no.kartverket.komreg.repositories.*
+import no.kartverket.komreg.repositories.KjoringRepo
+import no.kartverket.komreg.repositories.Kjoringstatus
+import no.kartverket.komreg.repositories.TilbakeføringsstatusRepo
+import no.kartverket.komreg.repositories.TransformationRepo
+import no.kartverket.komreg.services.ReguleringService
 import no.kartverket.komreg.services.transformEntities
-import no.kartverket.komreg.validation.ReguleringValidator
 import java.sql.SQLException
 
 fun Application.transformationRoutes(
     transformationRepo: TransformationRepo,
     kjoringRepo: KjoringRepo,
-    reguleringRepo: ReguleringRepo,
     tilbakeføringsstatusRepo: TilbakeføringsstatusRepo,
+    reguleringsService: ReguleringService,
 ) {
     routing {
         route("/run/{regId}") {
@@ -28,18 +31,7 @@ fun Application.transformationRoutes(
                 try {
                     val regId = call.parameters["regId"] ?: throw MissingPathVariableException("Missing regId")
 
-                    val regulering = reguleringRepo.getReguleringById(regId)
-                        ?: throw NotFoundException("Fant ingen regulering for regId: $regId")
-
-                    val errors = ReguleringValidator.validate(regulering)
-                    if (errors.flatMap { it.value }.isNotEmpty()) {
-                        call.respond(HttpStatusCode.BadRequest, errors)
-                        return@get
-                    }
-
-
-                    kjoringRepo.getStatusForKjoringMedReguleringsId(regId).any { it.status === Kjoringstatus.FERDIG }
-                        .also { if (it) throw ReguleringAlreadyFinishedException(regId) }
+                    val regulering = reguleringsService.getOrThrowRegulering(regId)
 
                     call.application.log.info("Starter transformasjon for regulering: $regId")
 
@@ -53,7 +45,6 @@ fun Application.transformationRoutes(
                             kjoringRepo,
                             tilbakeføringsstatusRepo,
                             false,
-
                         )
                         call.application.log.info("Gjenopptar kjøring med id: ${kjoringsomskalgjenopptas.id}, og regId: $regId")
                         kjoringRepo.setStatusForKjøring(kjoringsomskalgjenopptas.id, Kjoringstatus.KJØRER)
