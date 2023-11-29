@@ -1,10 +1,18 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
 group = "no.kartverket.komreg"
 version = "1.0-SNAPSHOT"
 
 plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
+    application
     `jvm-test-suite`
+}
+
+application {
+    mainClass.set("no.kartverket.komreg.ApplicationKt")
+    applicationName = "komreg-server"
 }
 
 configurations.all {
@@ -49,8 +57,9 @@ dependencies {
     implementation(project(":core-api"))
     implementation(project(":transformation"))
 
-    api("no.statkart.matrikkel:matrikkel-komreg:4.15-SNAPSHOT") {
+    runtimeOnly("no.statkart.matrikkel:matrikkel-komreg:4.15-SNAPSHOT") {
         isChanging = true
+        exclude(group = "com.oracle.database.jdbc")
     }
     implementation("io.netty:netty-codec-http2:4.1.101.Final")
 
@@ -68,8 +77,9 @@ dependencies {
     implementation(libs.arrow.fx.coroutines)
     implementation(libs.arrow.fx.stm)
 
-    implementation("com.oracle.database.jdbc:ojdbc11:23.2.0.0")
+    runtimeOnly(libs.ojdbc11)
     implementation("org.rocksdb:rocksdbjni:8.6.7")
+    implementation(libs.logback.classic)
 
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
@@ -110,7 +120,39 @@ dependencies {
     integrationTestImplementation(libs.hikari)
     integrationTestImplementation(project(":core-api"))
     integrationTestImplementation(libs.kotlinx.serialization.json)
+}
 
-    // TODO: For PoC på uthenting av fordelingsparametre for kommune
-    implementation("com.oracle.database.jdbc:ojdbc11:23.2.0.0")
+
+val buildDockerContext = tasks.create<Sync>("buildDockerContext") {
+    val dockerfileTemplate = "template.Dockerfile"
+    val startScriptPath = tasks
+        .named<CreateStartScripts>(ApplicationPlugin.TASK_START_SCRIPTS_NAME)
+        .map { "${it.executableDir}/${it.applicationName}" }
+
+    inputs.property("startScriptPath", startScriptPath)
+
+    destinationDir = File(buildDir, "docker")
+
+    from(File(projectDir, dockerfileTemplate)) {
+        rename(dockerfileTemplate, "Dockerfile")
+        filter<ReplaceTokens>("tokens" to mapOf(
+            "START_SCRIPT" to startScriptPath.get())
+        )
+    }
+
+    into("app") {
+        from(tasks.installDist)
+    }
+}
+
+tasks.assemble {
+    dependsOn(buildDockerContext)
+}
+
+tasks.distTar {
+    enabled = false
+}
+
+tasks.distZip {
+    enabled = false
 }
