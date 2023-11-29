@@ -127,7 +127,7 @@ fun Application.module() {
     internalRoutes(metricsRegistry)
     reguleringRoutes(reguleringsRepo)
     transformationRoutes(transformationRepo, kjoringRepo, tilbakeføringsstatusRepo, reguleringService)
-    grunndataRoutes(createKildeDataSource())
+    grunndataRoutes(createMatrikkelDataSource())
 
     enableFagLogging(komregDbPool)
 }
