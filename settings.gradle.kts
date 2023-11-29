@@ -32,7 +32,7 @@ dependencyResolutionManagement {
             version("kotest", "5.7.2")
             version("ktor", "2.3.5")
             version("hamcrest", "2.2")
-            version("logback", "1.4.5")
+            version("logback", "1.4.12")
             version("micrometer-prometheus", "1.10.3")
             version("testcontainers", "1.19.1")
 
@@ -99,6 +99,7 @@ dependencyResolutionManagement {
 
             library("assertk", "com.willowtreeapps.assertk:assertk:0.27.0")
 
+            library("slf4j-api", "org.slf4j", "slf4j-api").version("2.0.7")
             library("logback-classic", "ch.qos.logback", "logback-classic").versionRef("logback")
             library("logback-classic-db", "ch.qos.logback.db", "logback-classic-db").version("1.2.11.1")
 
@@ -122,6 +123,8 @@ dependencyResolutionManagement {
                 "org.testcontainers",
                 "postgresql",
             ).versionRef("testcontainers")
+
+            library("ojdbc11", "com.oracle.database.jdbc", "ojdbc11").version("23.3.0.23.09")
         }
     }
 }
