@@ -21,10 +21,10 @@ class ReguleringService(
             ?: throw NotFoundException("Fant ingen regulering for regId: $regId")
 
         kjoringRepo.getStatusForKjoringMedReguleringsId(regId).any { it.status === Kjoringstatus.KJØRER }
-            .also { if (it) throw ReguleringAlreadyRunningException(regId) }
+            .let { if (it) throw ReguleringAlreadyRunningException(regId) }
 
         kjoringRepo.getStatusForKjoringMedReguleringsId(regId).any { it.status === Kjoringstatus.FERDIG }
-            .also { if (it) throw ReguleringAlreadyFinishedException(regId) }
+            .let { if (it) throw ReguleringAlreadyFinishedException(regId) }
 
         val errors = ReguleringValidator.validate(regulering)
 
