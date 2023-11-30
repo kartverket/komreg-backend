@@ -108,6 +108,7 @@ fun Application.module() {
         allowHost("localhost:3000")
         allowHost("komreg.dev.skip.statkart.no", schemes = listOf("http", "https"))
         allowHost("komreg.test.skip.statkart.no", schemes = listOf("http", "https"))
+        allowHost("komreg.prod.skip.statkart.no", schemes = listOf("http", "https"))
         allowHeader(HttpHeaders.ContentType)
         allowMethod(HttpMethod.Delete)
         allowMethod(HttpMethod.Put)
