@@ -10,10 +10,12 @@ import kotlin.coroutines.CoroutineContext
  *
  */
 @OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
-data class CoroutineMDC (
-    private var contextMap: Map<String, String?> = mutableMapOf()
+data class CoroutineMDC private constructor(
+    private var contextMap: Map<String, String?>
 ) : CopyableThreadContextElement<Map<String, String?>> {
     companion object Key : CoroutineContext.Key<CoroutineMDC>
+
+    constructor() : this(emptyMap())
 
     override val key: Key get() = Key
 
@@ -22,13 +24,13 @@ data class CoroutineMDC (
     }
 
     override fun updateThreadContext(context: CoroutineContext): Map<String, String?> {
-        val currentThreadContext: MutableMap<String, String>? = MDC.getCopyOfContextMap()
+        val prevMDC: MutableMap<String, String>? = MDC.getCopyOfContextMap()
         if (contextMap.isNotEmpty()) {
             MDC.setContextMap(contextMap)
         } else {
             MDC.setContextMap(null)
         }
-        return currentThreadContext ?: emptyMap()
+        return prevMDC ?: emptyMap()
     }
 
     override fun restoreThreadContext(context: CoroutineContext, oldState: Map<String, String?>) {
@@ -46,7 +48,9 @@ data class CoroutineMDC (
 
     override fun mergeForChild(overwritingElement: CoroutineContext.Element): CoroutineMDC {
         return when (overwritingElement) {
-            is CoroutineMDC -> CoroutineMDC(mergeContextMaps(contextMap, overwritingElement.contextMap))
+            is CoroutineMDC -> CoroutineMDC(mergeContextMaps(
+                MDC.getCopyOfContextMap() ?: emptyMap(),
+                overwritingElement.contextMap))
             else -> copyForChild()
         }
     }
