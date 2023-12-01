@@ -21,6 +21,7 @@ import no.kartverket.komreg.repositories.TransformationRepo
 import no.kartverket.komreg.transformation.Reguleringsinput
 import no.kartverket.komreg.transformation.Storage
 import no.kartverket.komreg.transformation.transform
+import org.slf4j.MDC
 
 @Suppress("LocalVariableName", "NonAsciiCharacters")
 fun transformEntities(
@@ -92,13 +93,8 @@ private fun runAndWriteTransformations(
 
     val idGeneratorManager = IdGeneratorManager(kjoringContext)
 
-    val mdc = CoroutineMDC(
-        mapOf(
-            "kjoringId" to kjoringId.toString(),
-        ),
-    )
-
-    CoroutineScope(Dispatchers.IO + mdc).launch {
+    CoroutineScope(Dispatchers.IO + CoroutineMDC()).launch {
+        MDC.put("kjoringId", kjoringId.toString())
         logger.info(FAG, "Startet å kjøre transformasjoner")
 
         if (tilbakeføringsstatusRepo.getTilbakeføringsstatusForKjøringId(kjoringId) == null) {
@@ -106,7 +102,7 @@ private fun runAndWriteTransformations(
             tilbakeføringsstatusRepo.createTilbakeføringsstatusForKjoring(kjoringId, entitySinks.entitySinks)
         }
 
-        CoroutineScope(Dispatchers.IO).launch {
+        launch(Dispatchers.IO) {
             transform(
                 kjoringId,
                 input,
