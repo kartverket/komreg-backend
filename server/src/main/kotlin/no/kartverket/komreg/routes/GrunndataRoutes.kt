@@ -1,6 +1,5 @@
 package no.kartverket.komreg.routes
 
-import com.typesafe.config.ConfigFactory
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
 import io.ktor.server.application.log
@@ -9,20 +8,14 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import kotlinx.serialization.Serializable
-import no.kartverket.komreg.core.KrAppBootContext
+import no.kartverket.komreg.KrAppBootContextImpl
 import no.kartverket.komreg.core.domain.verdi
 import no.kartverket.komreg.integration.KommuneServiceManager
 import java.util.Base64
 import javax.sql.DataSource
 
 fun Application.grunndataRoutes(dataSource: DataSource) {
-    val bootContext = object : KrAppBootContext {
-        override val config by lazy {
-            ConfigFactory.invalidateCaches()
-            ConfigFactory.load("properties.conf")
-        }
-    }
-    val kommuneService = KommuneServiceManager(bootContext).kommuneService
+    val kommuneService = KommuneServiceManager(KrAppBootContextImpl).kommuneService
 
     routing {
         route("/fylker") {

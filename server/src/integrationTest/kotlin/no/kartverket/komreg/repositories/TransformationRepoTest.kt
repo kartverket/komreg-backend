@@ -7,6 +7,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
+import no.kartverket.komreg.IdCache
+import no.kartverket.komreg.KjoringContextImpl
 import no.kartverket.komreg.core.domain.Fylkesnummer
 import no.kartverket.komreg.core.domain.Id
 import no.kartverket.komreg.core.domain.Kommunenummer
@@ -106,6 +108,27 @@ class TransformationRepoTest {
 
             val readTransformation = readTransformations.single()
             Assertions.assertEquals(transformation, readTransformation, "Read transformation")
+        }
+    }
+
+    @Test
+    fun testIdCache() {
+        withDatabase { dataSource ->
+            val kjoringContext = KjoringContextImpl(0, dataSource)
+            runBlocking {
+                val firstId = kjoringContext.idGenerators.idFor(TestIdType.Foo,  null)
+                val secondId = kjoringContext.idGenerators.idFor(TestIdType.Foo,  null)
+                Assertions.assertNotEquals(firstId, secondId, "Expected different ids")
+            }
+
+            runBlocking {
+                val firstId = kjoringContext.idGenerators.idFor(TestIdType.Foo,  "foo")
+                val secondId = kjoringContext.idGenerators.idFor(TestIdType.Foo,  "foo")
+                val thirdId = kjoringContext.idGenerators.idFor(TestIdType.Foo,  "bar")
+
+                Assertions.assertEquals(firstId, secondId, "Expected same ids")
+                Assertions.assertNotEquals(secondId, thirdId, "Expected different ids")
+            }
         }
     }
 }

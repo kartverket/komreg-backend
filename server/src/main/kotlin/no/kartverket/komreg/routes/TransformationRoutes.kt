@@ -9,6 +9,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import no.kartverket.komreg.KjoringContextImpl
 import no.kartverket.komreg.exceptions.MissingPathVariableException
 import no.kartverket.komreg.exceptions.ReguleringAlreadyFinishedException
 import no.kartverket.komreg.repositories.KjoringRepo
@@ -18,12 +19,14 @@ import no.kartverket.komreg.repositories.TransformationRepo
 import no.kartverket.komreg.services.ReguleringService
 import no.kartverket.komreg.services.transformEntities
 import java.sql.SQLException
+import javax.sql.DataSource
 
 fun Application.transformationRoutes(
     transformationRepo: TransformationRepo,
     kjoringRepo: KjoringRepo,
     tilbakeføringsstatusRepo: TilbakeføringsstatusRepo,
     reguleringsService: ReguleringService,
+    komregDataSource: DataSource,
 ) {
     routing {
         route("/run/{regId}") {
@@ -40,7 +43,7 @@ fun Application.transformationRoutes(
                     if (kjoringsomskalgjenopptas != null) {
                         transformEntities(
                             regulering.toReguleringsinput(),
-                            kjoringsomskalgjenopptas.id,
+                            KjoringContextImpl(kjoringsomskalgjenopptas.id, komregDataSource),
                             transformationRepo,
                             kjoringRepo,
                             tilbakeføringsstatusRepo,
@@ -60,7 +63,7 @@ fun Application.transformationRoutes(
 
                         transformEntities(
                             reguleringsinput,
-                            kjoringId,
+                            KjoringContextImpl(kjoringId, komregDataSource),
                             transformationRepo,
                             kjoringRepo,
                             tilbakeføringsstatusRepo,
