@@ -1,6 +1,5 @@
 package no.kartverket.komreg.services
 
-import com.typesafe.config.ConfigFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -13,7 +12,6 @@ import no.kartverket.komreg.integration.EntityProcessorManager
 import no.kartverket.komreg.integration.EntitySinkManager
 import no.kartverket.komreg.integration.EntitySourceManager
 import no.kartverket.komreg.integration.LifeCycleHandlerManager
-import no.kartverket.komreg.integration.spi.IdGeneratorManager
 import no.kartverket.komreg.logger
 import no.kartverket.komreg.repositories.KjoringRepo
 import no.kartverket.komreg.repositories.TilbakeføringsstatusRepo
@@ -26,7 +24,7 @@ import org.slf4j.MDC
 @Suppress("LocalVariableName", "NonAsciiCharacters")
 fun transformEntities(
     input: Reguleringsinput,
-    kjoringId: Int,
+    kjoringContext: KjoringContext,
     transformationRepo: TransformationRepo,
     kjoringRepo: KjoringRepo,
     tilbakeføringsstatusRepo: TilbakeføringsstatusRepo,
@@ -34,20 +32,12 @@ fun transformEntities(
 ) {
     logger.info("Starter transformasjon!")
 
-    val bootContext = object : KjoringContext {
-        override val config by lazy {
-            ConfigFactory.invalidateCaches()
-            ConfigFactory.load("properties.conf")
-        }
-        override val kjoringId: Int = kjoringId
-    }
-
-    val entitySinks = EntitySinkManager(bootContext)
+    val entitySinks = EntitySinkManager(kjoringContext)
 
     printMemoryUsage()
 
     runAndWriteTransformations(
-        bootContext,
+        kjoringContext,
         input,
         entitySinks,
         StorageService(transformationRepo, tilbakeføringsstatusRepo, kjoringRepo),
@@ -91,8 +81,6 @@ private fun runAndWriteTransformations(
     val sources = EntitySourceManager(kjoringContext).entitySources
     val processors = EntityProcessorManager(kjoringContext).entityProcessors
 
-    val idGeneratorManager = IdGeneratorManager(kjoringContext)
-
     CoroutineScope(Dispatchers.IO + CoroutineMDC()).launch {
         MDC.put("kjoringId", kjoringId.toString())
         logger.info(FAG, "Startet å kjøre transformasjoner")
@@ -110,7 +98,7 @@ private fun runAndWriteTransformations(
                 sources,
                 processors,
                 entitySinks.entitySinks,
-                idGeneratorManager,
+                kjoringContext.idGenerators,
                 storage,
                 skalTilbakefores,
                 erFortegangskjoring,

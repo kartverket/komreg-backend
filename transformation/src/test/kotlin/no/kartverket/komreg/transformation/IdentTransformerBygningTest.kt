@@ -1,5 +1,6 @@
 package no.kartverket.komreg.transformation
 
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
@@ -31,7 +32,7 @@ class IdentTransformerBygningTest {
 
     @BeforeEach
     fun setup() {
-        every { idGenerator.idFor(any(), any()) } returns dummyId(1)
+        coEvery { idGenerator.idFor(any(), any()) } returns dummyId(1)
     }
 
     @Test

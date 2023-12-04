@@ -15,6 +15,11 @@ import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import no.kartverket.komreg.core.logging.CoroutineMDC
+import no.kartverket.komreg.core.logging.FAG
 import no.kartverket.komreg.integration.SchemaManager
 import no.kartverket.komreg.repositories.KjoringRepo
 import no.kartverket.komreg.repositories.ReguleringRepo
@@ -127,7 +132,7 @@ fun Application.module() {
 
     internalRoutes(metricsRegistry)
     reguleringRoutes(reguleringsRepo)
-    transformationRoutes(transformationRepo, kjoringRepo, tilbakeføringsstatusRepo, reguleringService)
+    transformationRoutes(transformationRepo, kjoringRepo, tilbakeføringsstatusRepo, reguleringService, komregDbPool)
     grunndataRoutes(createMatrikkelDataSource())
 
     enableFagLogging(komregDbPool)
