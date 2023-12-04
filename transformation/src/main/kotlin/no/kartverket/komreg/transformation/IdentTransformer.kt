@@ -38,7 +38,7 @@ class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
 
     suspend fun transform(
         entity: Entity,
-        idProvider: (IdType<*, *>, Any?) -> Id,
+        idProvider: suspend (IdType<*, *>, Any?) -> Id,
     ): List<Transformation>? {
         val primaryTransform = entity.ident?.transformIdent()
         val transformedAssociatedIdents = entity.associatedIdents?.flatMap {
