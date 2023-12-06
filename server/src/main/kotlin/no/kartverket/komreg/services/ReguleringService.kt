@@ -1,7 +1,6 @@
 package no.kartverket.komreg.services
 
 import io.ktor.server.plugins.NotFoundException
-import no.kartverket.komreg.exceptions.ReguleringAlreadyFinishedException
 import no.kartverket.komreg.exceptions.ReguleringAlreadyRunningException
 import no.kartverket.komreg.repositories.KjoringRepo
 import no.kartverket.komreg.repositories.Kjoringstatus
@@ -22,9 +21,6 @@ class ReguleringService(
 
         kjoringRepo.getStatusForKjoringMedReguleringsId(regId).any { it.status === Kjoringstatus.KJØRER }
             .let { if (it) throw ReguleringAlreadyRunningException(regId) }
-
-        kjoringRepo.getStatusForKjoringMedReguleringsId(regId).any { it.status === Kjoringstatus.FERDIG }
-            .let { if (it) throw ReguleringAlreadyFinishedException(regId) }
 
         val errors = ReguleringValidator.validate(regulering)
 

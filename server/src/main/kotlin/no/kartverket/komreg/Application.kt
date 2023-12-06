@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.ForkJoinPool
 
 val env = dotenv {
-    ignoreIfMissing = true
+    ignoreIfMissing = false
     systemProperties = true
 }
 
@@ -127,7 +127,7 @@ fun Application.module() {
 
     internalRoutes(metricsRegistry)
     reguleringRoutes(reguleringsRepo)
-    transformationRoutes(transformationRepo, kjoringRepo, tilbakeføringsstatusRepo, reguleringService)
+    kjoringRoutes(kjoringService, transformationRepo, tilbakeføringsstatusRepo, reguleringService, kjoringRepo)
     grunndataRoutes(createMatrikkelDataSource())
 
     enableFagLogging(komregDbPool)

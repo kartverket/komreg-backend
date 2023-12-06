@@ -12,7 +12,7 @@ CREATE TABLE regulering (
 CREATE TABLE kjoring (
     id SERIAL PRIMARY KEY,
     regulering VARCHAR(255) NOT NULL,
-    start TIMESTAMP WITH TIME ZONE NOT NULL,
+    start timestamp WITH TIME ZONE,
     slutt TIMESTAMP WITH TIME ZONE
 );
 
