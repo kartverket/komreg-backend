@@ -15,8 +15,8 @@ interface IdGeneratorFactory {
 interface IdGeneratorManager {
     suspend fun idFor(idType: IdType<*, *>, hint: Any?): Id
 
-    suspend fun idFor(idType: IdType<*, *>, hint: List<Any?>): List<Id> {
-        return hint.map { idFor(idType, it) }
+    suspend fun idsFor(idType: IdType<*, *>, hints: List<String?>): List<Pair<String?, Id>> {
+        return hints.map { it to idFor(idType, it) }
     }
 
 }
@@ -24,3 +24,9 @@ interface IdGeneratorManager {
 suspend fun <V : Any> IdGeneratorManager.idValueFor(idType: IdType<V, *>, hint: Any?): V {
     return idFor(idType, hint).typedValue(idType)!!
 }
+
+suspend fun <V : Any> IdGeneratorManager.idValuesFor(idType: IdType<V, *>, hints: List<String?>): List<Pair<String?, V>> {
+    return idsFor(idType, hints).map { (hint, id) -> hint to id.typedValue(idType)!! }
+}
+
+
