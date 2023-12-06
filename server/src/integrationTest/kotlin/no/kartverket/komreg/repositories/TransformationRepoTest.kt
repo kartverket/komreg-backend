@@ -7,7 +7,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
-import no.kartverket.komreg.IdCache
 import no.kartverket.komreg.KjoringContextImpl
 import no.kartverket.komreg.core.domain.Fylkesnummer
 import no.kartverket.komreg.core.domain.Id
@@ -129,6 +128,34 @@ class TransformationRepoTest {
                 Assertions.assertEquals(firstId, secondId, "Expected same ids")
                 Assertions.assertNotEquals(secondId, thirdId, "Expected different ids")
             }
+        }
+    }
+
+    @Test
+    fun testBatchingIdCache() {
+        withDatabase { dataSource ->
+            val kjoringContext = KjoringContextImpl(0, dataSource)
+            val hints = listOf("foo", "bar", null, null, "baz", null)
+            val firstIds = runBlocking {
+                kjoringContext.idGenerators.idsFor(TestIdType.Foo, hints)
+            }
+            val secondIds = runBlocking {
+                kjoringContext.idGenerators.idsFor(TestIdType.Foo, hints)
+            }
+
+
+            Assertions.assertEquals(firstIds.map { it.first }, hints, "Expected same hints")
+            Assertions.assertEquals(
+                firstIds.filter { (hint, _) -> hint != null },
+                secondIds.filter { (hint, _) -> hint != null },
+                "Expected same ids")
+
+
+            Assertions.assertEquals(secondIds.map { it.first }, hints, "Expected same hints")
+            Assertions.assertNotEquals(
+                firstIds.filterIndexed { n, _ -> hints[n] == null },
+                secondIds.filterIndexed {n, _ -> hints[n] == null },
+                "Expected different ids")
         }
     }
 }
