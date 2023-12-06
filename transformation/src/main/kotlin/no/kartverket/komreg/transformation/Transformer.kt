@@ -240,7 +240,7 @@ private suspend fun mapKommuneendring(
     } else {
         IdentTransformer.Mapping.Split(
             listOf(
-                Ident.Empty to null, // Ikke sett ny kommune-kobling
+                til[0].first to null,
             ) + til,
         )
     }
