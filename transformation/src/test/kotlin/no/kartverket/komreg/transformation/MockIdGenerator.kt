@@ -13,12 +13,12 @@ import java.util.concurrent.atomic.AtomicLong
 
 fun mockIdGenerator(startAt: Long = 1) = mockk<IdGeneratorManager> {
     val nextId = AtomicLong(startAt)
-    coEvery { idFor(TestIdType.Kommune, any()) }.answers { call ->
+    coEvery { idFor(TestIdType.Kommune, any() as? Any?) }.answers { call ->
         val ident = call.invocation.args[1] as Ident
         val fylkesnummer = ident.getOrThrow<Fylkesnummer>()
         val lopenummer = ident.getOrThrow<Kommunenummer.Lopenummer>()
         val idValue = fylkesnummer.value * 100 + lopenummer.value
         Id(TestIdType.Kommune, idValue)
     }
-    coEvery { idFor(TestIdType.Foo, any()) }.answers { Id(TestIdType.Foo, nextId.getAndIncrement()) }
+    coEvery { idFor(TestIdType.Foo, any() as? Any?) }.answers { Id(TestIdType.Foo, nextId.getAndIncrement()) }
 }

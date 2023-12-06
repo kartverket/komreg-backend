@@ -54,7 +54,7 @@ class IdentTransformerVegadresseTest {
 
     @BeforeEach
     fun setup() {
-        coEvery { idGenerator.idFor(any(), any()) } returns dummyId(1)
+        coEvery { idGenerator.idFor(any(), any() as? Any?) } returns dummyId(1)
     }
 
     @Test

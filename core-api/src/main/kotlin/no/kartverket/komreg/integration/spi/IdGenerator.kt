@@ -3,8 +3,6 @@ package no.kartverket.komreg.integration.spi
 import no.kartverket.komreg.core.KjoringContext
 import no.kartverket.komreg.core.domain.Id
 import no.kartverket.komreg.core.domain.IdType
-import org.jetbrains.annotations.TestOnly
-import java.util.ServiceLoader
 
 interface IdGenerator {
     fun generateId(hint: Any?): Id
@@ -16,4 +14,13 @@ interface IdGeneratorFactory {
 
 interface IdGeneratorManager {
     suspend fun idFor(idType: IdType<*, *>, hint: Any?): Id
+
+    suspend fun idFor(idType: IdType<*, *>, hint: List<Any?>): List<Id> {
+        return hint.map { idFor(idType, it) }
+    }
+
+}
+
+suspend fun <V : Any> IdGeneratorManager.idValueFor(idType: IdType<V, *>, hint: Any?): V {
+    return idFor(idType, hint).typedValue(idType)!!
 }
