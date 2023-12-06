@@ -57,7 +57,7 @@ class TransformationRepoTest {
         Assertions.assertTrue(ok, "Lagring av regulering")
 
         val kjoringRepo = KjoringRepo(dataSource)
-        return kjoringRepo.insertAndRetrieveKjoringId("abc")!!
+        return kjoringRepo.opprettKjoring("abc").id
     }
 
     /**

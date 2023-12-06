@@ -1,5 +1,6 @@
 package no.kartverket.komreg.repositories
 
+import java.sql.SQLException
 import java.sql.Statement
 import java.sql.Timestamp
 import java.util.Date
@@ -8,20 +9,42 @@ import javax.sql.DataSource
 class KjoringRepo(
     private val dataSource: DataSource,
 ) {
-    fun insertAndRetrieveKjoringId(reguleringId: String): Int? {
+    fun opprettKjoring(reguleringId: String): Kjoring {
         dataSource.connection.use { connection ->
-            val insertStatement = connection.prepareStatement(
-                "INSERT INTO kjoring (regulering, start, status) VALUES (?, now(), 'KJØRER')",
-                Statement.RETURN_GENERATED_KEYS,
-            )
-            insertStatement.setString(1, reguleringId)
-            insertStatement.executeUpdate()
 
-            val generatedKeys = insertStatement.generatedKeys
-            return if (generatedKeys.next()) {
-                generatedKeys.getInt(1)
+            val skjemaStatement = connection.prepareStatement(
+                "SELECT skjema FROM skjemaconfig",
+            )
+
+            val result = skjemaStatement.executeQuery()
+
+            if (result.next()) {
+                val skjema = result.getString("skjema") // Change here
+
+                val insertStatement = connection.prepareStatement(
+                    "INSERT INTO kjoring (regulering, start, status, skjema) VALUES (?, now(), 'OPPRETTET', ?)",
+                    Statement.RETURN_GENERATED_KEYS,
+                )
+                insertStatement.setString(1, reguleringId)
+                insertStatement.setString(2, skjema) // Add this line before executing the update
+                insertStatement.executeUpdate()
+
+                val generatedKeys = insertStatement.generatedKeys
+                return if (generatedKeys.next()) {
+                    val id = generatedKeys.getInt(1)
+                    Kjoring(
+                        id = id,
+                        regulering = reguleringId,
+                        start = null,
+                        stop = null,
+                        skjema = skjema,
+                        status = Kjoringstatus.OPPRETTET,
+                    )
+                } else {
+                    throw SQLException("Klarte ikke å opprette kjøring")
+                }
             } else {
-                null
+                throw RuntimeException("Fant ikke ledig skjema i skjemaconfig")
             }
         }
     }
@@ -58,11 +81,24 @@ class KjoringRepo(
                     regulering = result.getString("regulering"),
                     start = result.getTimestamp("start"),
                     stop = result.getTimestamp("slutt"),
+                    skjema = result.getString("skjema"),
                     status = enumValueOf<Kjoringstatus>(result.getString("status")),
                 )
             } else {
                 null
             }
+        }
+    }
+
+    fun startKjoring(kjoringId: Int) {
+        dataSource.connection.use { connection ->
+            val updateStatement = connection.prepareStatement(
+                "UPDATE kjoring SET status = 'KJØRER' WHERE id = ?",
+            )
+
+            updateStatement.setInt(2, kjoringId)
+
+            updateStatement.executeUpdate()
         }
     }
 
@@ -95,6 +131,7 @@ class KjoringRepo(
                         regulering = result.getString("regulering"),
                         start = result.getTimestamp("start"),
                         stop = result.getTimestamp("slutt"),
+                        skjema = result.getString("skjema"),
                         status = enumValueOf<Kjoringstatus>(result.getString("status")),
                     ),
                 )
@@ -118,6 +155,7 @@ class KjoringRepo(
                         regulering = result.getString("regulering"),
                         start = result.getTimestamp("start"),
                         stop = result.getTimestamp("slutt"),
+                        skjema = result.getString("skjema"),
                         status = enumValueOf<Kjoringstatus>(result.getString("status")),
                     ),
                 )
@@ -126,17 +164,42 @@ class KjoringRepo(
 
         return kjoringer
     }
+
+    fun getKjoring(kjoringId: Int): Kjoring? {
+        dataSource.connection.use { connection ->
+            val preparedStatement = connection.prepareStatement("SELECT * FROM kjoring WHERE id = ?")
+
+            preparedStatement.setInt(1, kjoringId)
+
+            val result = preparedStatement.executeQuery()
+
+            return if (result.next()) {
+                Kjoring(
+                    id = result.getInt("id"),
+                    regulering = result.getString("regulering"),
+                    start = result.getTimestamp("start"),
+                    stop = result.getTimestamp("slutt"),
+                    skjema = result.getString("skjema"),
+                    status = enumValueOf<Kjoringstatus>(result.getString("status")),
+                )
+            } else {
+                null
+            }
+        }
+    }
 }
 
 data class Kjoring(
     val id: Int,
     val regulering: String,
-    val start: Date,
+    val start: Date?,
     val stop: Date?,
+    val skjema: String,
     val status: Kjoringstatus,
 )
 
 enum class Kjoringstatus(status: String) {
+    OPPRETTET("OPPRETTET"),
     KJØRER("KJØRER"),
     STARTET_TILBAKEFØRING("STARTET_TILBAKEFØRING"),
     IKKE_TILBAKEFØRT("IKKE_TILBAKEFØRT"),
