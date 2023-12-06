@@ -240,7 +240,7 @@ private suspend fun mapKommuneendring(
     } else {
         IdentTransformer.Mapping.Split(
             listOf(
-                til[0].first to null,
+                til[0].first to null, // TODO: Første kommune i input-en blir satt som ny kommune for den utgående kommunen, mulig at dette bør være mer eksplisitt på sikt
             ) + til,
         )
     }

@@ -186,7 +186,7 @@ class TransformerKommuneTest : FunSpec({
             }
             index(2).all {
                 prop(Transformation::id).isEqualTo(Id(TestIdType.Kommune, 1234))
-                prop(Transformation::transformedIdent).isEqualTo(Ident.Empty)
+                prop(Transformation::transformedIdent).isEqualTo(kommuneIdentType(Fylkesnummer(12), Kommunenummer.Lopenummer(35)))
                 prop(Transformation::transformedAssociatedIdents).isNull()
                 prop(Transformation::resultObject).isNull()
             }
