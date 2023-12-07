@@ -1,6 +1,5 @@
 package no.kartverket.komreg.repositories
 
-import Matrikkeltyper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -46,31 +45,6 @@ class TransformationRepo(
             dataSource.connection.use { connection ->
                 connection.autoCommit = false
                 connection.prepareStatement("SELECT transformasjon FROM transformasjon WHERE kjoring=?")
-                    .use { preparedStatement ->
-
-                        preparedStatement.setInt(1, kjoringId)
-                        preparedStatement.fetchSize = 10_000
-
-                        preparedStatement.executeQuery().use { resultSet ->
-
-                            while (resultSet.next()) {
-                                val text = resultSet.getString(1)
-                                val t = jsonSerializer.decodeFromString(Transformation.serializer(), text)
-                                emit(t)
-                            }
-                        }
-                    }
-            }
-        }.flowOn(Dispatchers.IO)
-    }
-
-    fun readTransformationOfTypeFromDatabase(kjoringId: Int, type: Matrikkeltyper): Flow<Transformation> {
-        val ty = type
-
-        return flow {
-            dataSource.connection.use { connection ->
-                connection.autoCommit = false
-                connection.prepareStatement("SELECT transformasjon, transformasjonsid FROM transformasjon WHERE kjoring=? transformasjonsid->>'type' = ?")
                     .use { preparedStatement ->
 
                         preparedStatement.setInt(1, kjoringId)

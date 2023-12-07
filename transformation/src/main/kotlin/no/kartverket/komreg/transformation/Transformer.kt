@@ -1,6 +1,5 @@
 package no.kartverket.komreg.transformation
 
-import Matrikkeltyper
 import arrow.core.getOrElse
 import arrow.core.mapOrAccumulate
 import kotlinx.coroutines.flow.*
@@ -91,24 +90,10 @@ suspend fun transform(
     val transformationList = storage.readTransformationsFromDatabase(kjoringId).toList()
     val transformations = transformationList.asFlow()
 
-    /**
-     * loop over Matrikkeltyper
-     *
-     * * tempList = readTransOfType(type).toList()
-     * * transOfType = tempList.asFlow()
-     *
-     * * loop
-     *
-     *
-     */
-
     if (skalTilbakefores) {
         // Kjør ut alle nyopprettinger
         storage.setStatusForKjoring(kjoringId, "STARTET_TILBAKEFØRING")
         logger.info("Starter tilbakeføring av ${transformations.count()} transformasjoner")
-
-        for (type in Matrikkeltyper.entries) {
-        }
 
         entitySinks.forEach { sink ->
 

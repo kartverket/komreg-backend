@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.ForkJoinPool
 
 val env = dotenv {
-    ignoreIfMissing = false
+    ignoreIfMissing = true
     systemProperties = true
 }
 
