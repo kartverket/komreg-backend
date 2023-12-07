@@ -5,10 +5,14 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.call
 import io.ktor.server.application.log
 import io.ktor.server.plugins.NotFoundException
+import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
+import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import no.kartverket.komreg.exceptions.KjoringAlreadyFinishedException
 import no.kartverket.komreg.exceptions.MissingPathVariableException
 import no.kartverket.komreg.repositories.KjoringRepo
@@ -28,15 +32,15 @@ fun Application.kjoringRoutes(
     kjoringRepo: KjoringRepo,
 ) {
     routing {
-        route("/kjoring/{regId}") {
-            get {
-                val regId = call.parameters["regId"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+        route("/kjoring") {
+            post {
+                val req = Json.decodeFromString(OpprettKjoringRequest.serializer(), call.receiveText())
 
                 try {
-                    val kjoring = kjoringService.opprettKjoring(regId)
+                    val kjoring = kjoringService.opprettKjoring(req.regId, req.skjema)
                     call.respond(
                         HttpStatusCode.OK,
-                        "Opprettet kjøring med id: ${kjoring.id} for regulering: $regId. Denne kjøringen bruker skjema ${kjoring.skjema}",
+                        "Opprettet kjøring med id: ${kjoring.id} for regulering: ${kjoring.regulering}. Denne kjøringen bruker skjema ${kjoring.skjema}",
                     )
                 } catch (e: Exception) {
                     call.respond(HttpStatusCode.InternalServerError, e.message.toString())
@@ -101,3 +105,9 @@ fun Application.kjoringRoutes(
         }
     }
 }
+
+@Serializable
+data class OpprettKjoringRequest(
+    val regId: String,
+    val skjema: String,
+)
