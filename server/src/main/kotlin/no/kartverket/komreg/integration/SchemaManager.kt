@@ -7,7 +7,7 @@ class SchemaManager {
         return if (environment == "prod") {
             selectProdMottakerUsername()
         } else {
-            "DB_MATRIKKEL_MOTTAKER1_USERNAME"
+            "DB_MATRIKKEL_MOTTAKER2_USERNAME"
         }
     }
 
@@ -16,7 +16,7 @@ class SchemaManager {
         return if (environment == "prod") {
             selectProdMottakerPassword()
         } else {
-            "DB_MATRIKKEL_MOTTAKER1_PASSWORD"
+            "DB_MATRIKKEL_MOTTAKER2_PASSWORD"
         }
     }
 
