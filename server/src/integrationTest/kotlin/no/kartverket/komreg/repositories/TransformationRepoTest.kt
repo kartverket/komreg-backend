@@ -57,7 +57,7 @@ class TransformationRepoTest {
         Assertions.assertTrue(ok, "Lagring av regulering")
 
         val kjoringRepo = KjoringRepo(dataSource)
-        return kjoringRepo.opprettKjoring("abc").id
+        return kjoringRepo.opprettKjoring("abc", "et skjema").id
     }
 
     /**

@@ -3,10 +3,9 @@ package no.kartverket.komreg.services
 import no.kartverket.komreg.repositories.Kjoring
 import no.kartverket.komreg.repositories.KjoringRepo
 import no.kartverket.komreg.repositories.Kjoringstatus
-import java.lang.IllegalArgumentException
 
 class KjoringService(private val kjoringRepo: KjoringRepo) {
-    fun handleShutdown() {
+    fun handleStartup() {
         kjoringRepo.getKjoringer().forEach { kjoring ->
             if (kjoring.status == Kjoringstatus.KJØRER) {
                 kjoringRepo.setStatusForKjøring(
@@ -17,7 +16,7 @@ class KjoringService(private val kjoringRepo: KjoringRepo) {
         }
     }
 
-    fun opprettKjoring(reguleringId: String): Kjoring {
+    fun opprettKjoring(reguleringId: String, skjema: String): Kjoring {
         val harOpprettedeKjoringerPaaRegulering =
             kjoringRepo.getStatusForKjoringMedReguleringsId(reguleringId).any { it.status == Kjoringstatus.OPPRETTET }
 
@@ -25,15 +24,11 @@ class KjoringService(private val kjoringRepo: KjoringRepo) {
             throw IllegalArgumentException("Det finnes allerede en kjøring på reguleringen som har status OPPRETTET")
         }
 
-        return kjoringRepo.opprettKjoring(reguleringId)
+        return kjoringRepo.opprettKjoring(reguleringId, skjema)
     }
 
     fun hentKjoring(kjoringId: Int): Kjoring? {
         return kjoringRepo.getKjoring(kjoringId)
-    }
-
-    fun hentKjoringer(): List<Kjoring> {
-        return kjoringRepo.getKjoringer()
     }
 
     fun setStatusForKjoring(kjoringId: Int, status: Kjoringstatus) {

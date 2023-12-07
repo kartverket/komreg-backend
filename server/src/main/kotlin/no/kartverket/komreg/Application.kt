@@ -96,7 +96,7 @@ fun Application.module() {
     val kjoringService = KjoringService(kjoringRepo)
 
     environment.monitor.subscribe(ApplicationStopping) {
-        kjoringService.handleShutdown()
+        kjoringService.handleStartup()
     }
 
     install(ContentNegotiation) {

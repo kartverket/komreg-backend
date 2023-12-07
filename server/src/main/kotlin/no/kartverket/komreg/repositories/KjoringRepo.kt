@@ -9,42 +9,29 @@ import javax.sql.DataSource
 class KjoringRepo(
     private val dataSource: DataSource,
 ) {
-    fun opprettKjoring(reguleringId: String): Kjoring {
+    fun opprettKjoring(reguleringId: String, skjema: String): Kjoring {
         dataSource.connection.use { connection ->
-
-            val skjemaStatement = connection.prepareStatement(
-                "SELECT skjema FROM skjemaconfig",
+            val insertStatement = connection.prepareStatement(
+                "INSERT INTO kjoring (regulering, start, status, skjema) VALUES (?, now(), 'OPPRETTET', ?)",
+                Statement.RETURN_GENERATED_KEYS,
             )
+            insertStatement.setString(1, reguleringId)
+            insertStatement.setString(2, skjema)
+            insertStatement.executeUpdate()
 
-            val result = skjemaStatement.executeQuery()
-
-            if (result.next()) {
-                val skjema = result.getString("skjema") // Change here
-
-                val insertStatement = connection.prepareStatement(
-                    "INSERT INTO kjoring (regulering, start, status, skjema) VALUES (?, now(), 'OPPRETTET', ?)",
-                    Statement.RETURN_GENERATED_KEYS,
+            val generatedKeys = insertStatement.generatedKeys
+            return if (generatedKeys.next()) {
+                val id = generatedKeys.getInt(1)
+                Kjoring(
+                    id = id,
+                    regulering = reguleringId,
+                    start = null,
+                    stop = null,
+                    skjema = skjema,
+                    status = Kjoringstatus.OPPRETTET,
                 )
-                insertStatement.setString(1, reguleringId)
-                insertStatement.setString(2, skjema) // Add this line before executing the update
-                insertStatement.executeUpdate()
-
-                val generatedKeys = insertStatement.generatedKeys
-                return if (generatedKeys.next()) {
-                    val id = generatedKeys.getInt(1)
-                    Kjoring(
-                        id = id,
-                        regulering = reguleringId,
-                        start = null,
-                        stop = null,
-                        skjema = skjema,
-                        status = Kjoringstatus.OPPRETTET,
-                    )
-                } else {
-                    throw SQLException("Klarte ikke å opprette kjøring")
-                }
             } else {
-                throw RuntimeException("Fant ikke ledig skjema i skjemaconfig")
+                throw SQLException("Klarte ikke å opprette kjøring")
             }
         }
     }
