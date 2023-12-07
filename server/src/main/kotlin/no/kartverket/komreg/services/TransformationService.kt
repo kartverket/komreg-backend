@@ -7,7 +7,7 @@ import kotlinx.coroutines.launch
 import no.kartverket.komreg.core.KjoringContext
 import no.kartverket.komreg.core.logging.CoroutineMDC
 import no.kartverket.komreg.core.logging.FAG
-import no.kartverket.komreg.featureToggle
+import no.kartverket.komreg.env
 import no.kartverket.komreg.integration.EntityProcessorManager
 import no.kartverket.komreg.integration.EntitySinkManager
 import no.kartverket.komreg.integration.EntitySourceManager
@@ -73,9 +73,9 @@ private fun runAndWriteTransformations(
     tilbakeføringsstatusRepo: TilbakeføringsstatusRepo,
     erFortegangskjoring: Boolean,
 
-    ) {
+) {
     val kjoringId = kjoringContext.kjoringId
-    val skalTilbakefores = !kjoringContext.config.featureToggle("feature.disable_sink")
+    val skalTilbakefores = !env["TOGGLE_SINK_OFF"].toBoolean()
 
     val lifeCycleHandlers = LifeCycleHandlerManager(kjoringContext).lifeCycleHandlers
     val sources = EntitySourceManager(kjoringContext).entitySources
