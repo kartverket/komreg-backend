@@ -46,18 +46,21 @@ fun main(args: Array<String>) =
 @Suppress("unused") // Referenced in application.conf
 fun Application.module() {
     val metricsRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
-    val schemaManager = SchemaManager()
-
-    install(MicrometerMetrics) {
-        registry = metricsRegistry
-    }
 
     val komregJdbcUrl = env["DB_KOMREG_JDBC_URL"]
     val komregDbUsername = env["DB_KOMREG_USERNAME"]
     val komregDbPassword = env["DB_KOMREG_PASSWORD"]
 
-    logger.info("Current environment: ${System.getenv("environment")}")
-    logger.info("Mottaker DB: ${env[schemaManager.getMottakerUsername()]}")
+    val komregDbPool = run {
+        val hikariConfig = HikariConfig()
+        hikariConfig.poolName = "komreg-db-connection"
+        hikariConfig.jdbcUrl = komregJdbcUrl
+        hikariConfig.username = komregDbUsername
+        hikariConfig.password = komregDbPassword
+        hikariConfig.minimumIdle = 1
+        hikariConfig.keepaliveTime = 600000
+        HikariDataSource(hikariConfig)
+    }
 
     if (!komregJdbcUrl.isNullOrEmpty()) {
         val flyway = Flyway.configure()
@@ -72,24 +75,23 @@ fun Application.module() {
         flyway.migrate()
     }
 
-    val komregDbPool = run {
-        val hikariConfig = HikariConfig()
-        hikariConfig.poolName = "komreg-db-connection"
-        hikariConfig.jdbcUrl = komregJdbcUrl
-        hikariConfig.username = komregDbUsername
-        hikariConfig.password = komregDbPassword
-        hikariConfig.minimumIdle = 1
-        hikariConfig.keepaliveTime = 600000
-        HikariDataSource(hikariConfig)
-    }
-
-    val reguleringsRepo = ReguleringRepo(komregDbPool)
     val kjoringRepo = KjoringRepo(komregDbPool)
+    val reguleringsRepo = ReguleringRepo(komregDbPool)
     val tilbakeføringsstatusRepo = TilbakeføringsstatusRepo(komregDbPool)
     val transformationRepo = TransformationRepo(komregDbPool, jsonSerializer())
-
     val reguleringService = ReguleringService(reguleringsRepo, kjoringRepo)
     val kjoringService = KjoringService(kjoringRepo)
+
+    val schemaManager = SchemaManager(kjoringRepo)
+    val matrikkelDbUsername = env[schemaManager.getMottakerUsername()]
+
+
+    install(MicrometerMetrics) {
+        registry = metricsRegistry
+    }
+
+    logger.info("Current environment: ${System.getenv("environment")}")
+    logger.info("Mottaker DB: $matrikkelDbUsername")
 
     environment.monitor.subscribe(ApplicationStopping) {
         kjoringService.handleShutdown()
