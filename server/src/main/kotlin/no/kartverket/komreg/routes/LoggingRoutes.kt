@@ -26,13 +26,17 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.kartverket.komreg.core.logging.FAG
+import no.kartverket.komreg.repositories.Kjoring
+import no.kartverket.komreg.repositories.KjoringRepo
 import org.slf4j.LoggerFactory
 import java.sql.Connection
+import java.time.format.DateTimeFormatter
 import javax.sql.DataSource
 
 @Serializable
@@ -189,9 +193,10 @@ private fun Application.loggingRoutes(dataSource: DataSource, eventFlow: Flow<Pa
 }
 
 private fun Routing.tempUiRoutes(dataSource: DataSource) {
+    val kjoringRepo = KjoringRepo(dataSource)
     route("/log") {
         get {
-            call.respondRedirect("executions")
+            call.respondRedirect("/log/executions")
         }
         route("/executions") {
             get("/{executionId}") {
@@ -206,12 +211,11 @@ private fun Routing.tempUiRoutes(dataSource: DataSource) {
                             <body>
                             <table style='width: 100%'>
                             <title>Kjøring $executionId</title>
-                            <thead>
+                            <thead style="position: sticky; top: 0">
                                 <tr>
-                                    <th>Event ID</th>
-                                    <th>Level</th>
-                                    <th>Timestamp</th>
-                                    <th>Logger</th>
+                                    <th class="kjoring_id">Event ID</th>
+                                    <th class="level">Level</th>
+                                    <th class="datetime">Timestamp</th>
                                     <th>Message</th>
                                 </tr>
                             </thead>
@@ -222,10 +226,15 @@ private fun Routing.tempUiRoutes(dataSource: DataSource) {
                         write(
                             """
                             <tr>
-                                <td>${it.eventId}</td>
-                                <td>${it.levelString}</td>
-                                <td>${it.timestamp.toLocalDateTime(TZ)}</td>
-                                <td>${it.loggerName}</td>
+                                <td class="kjoring_id">${it.eventId}</td>
+                                <td class="level">${it.levelString}</td>
+                                <td class="datetime">
+                                    ${it
+                                        .timestamp
+                                        .toLocalDateTime(TZ)
+                                        .toJavaLocalDateTime()
+                                        .format(dateTimeFormatter)}
+                                </td>
                                 <td>${it.formattedMessage ?: ""}</td>
                             </tr>
                         """.trimIndent()
@@ -247,12 +256,14 @@ private fun Routing.tempUiRoutes(dataSource: DataSource) {
                             <li><a href="/log/executions/$executionId?page=0">Første side</a></li>
                             <li><a href="/log/executions">Tilbake til oversikt</a></li>
                         </ul>
+                        $defaultStyle
                         </body>
                         </html>""".trimIndent()
                     )
                 }
             }
             get {
+                val kjoringer = kjoringRepo.getKjoringer().associateBy(Kjoring::id)
                 call.respondTextWriter(contentType = ContentType.Text.Html) {
                     write(
                         """
@@ -263,11 +274,10 @@ private fun Routing.tempUiRoutes(dataSource: DataSource) {
                             <title>Kjøringer</title>
                             <thead>
                                 <tr>
-                                    <th>Kjøring ID</th>
-                                    <th>Første event ID</th>
-                                    <th>Første timestamp</th>
-                                    <th>Siste event ID</th>
-                                    <th>Siste timestamp</th>
+                                    <th class="kjoring_id">Kjøring ID</th>
+                                    <th>Regulering</th>
+                                    <th class="datetime">Første timestamp</th>
+                                    <th class="datetime">Siste timestamp</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -277,11 +287,23 @@ private fun Routing.tempUiRoutes(dataSource: DataSource) {
                         write(
                             """
                             <tr>
-                                <td><a href="/log/executions/${execution.executionId}">${execution.executionId}</a></td>
-                                <td>${execution.firstEventId}</td>
-                                <td>${execution.firstEventTime.toLocalDateTime(TZ)}</td>
-                                <td>${execution.lastEventId ?: ""}</td>
-                                <td>${execution.lasEventTime?.toLocalDateTime(TZ) ?: ""}</td>
+                                <td class="kjoring_id"><a href="/log/executions/${execution.executionId}">${execution.executionId}</a></td>
+                                <td>${kjoringer[execution.executionId]?.regulering ?: "(ukjent)"}</td>
+                                <td class="datetime">
+                                    ${execution
+                                        .firstEventTime
+                                        .toLocalDateTime(TZ)
+                                        .toJavaLocalDateTime()
+                                        .format(dateTimeFormatter)}
+                                 </td>
+                                <td class="datetime">
+                                  ${execution
+                                      .lasEventTime
+                                      ?.toLocalDateTime(TZ)
+                                      ?.toJavaLocalDateTime()
+                                      ?.format(dateTimeFormatter)
+                                      ?: ""}
+                                </td>
                             </tr>
                         """.trimIndent()
                         )
@@ -293,6 +315,7 @@ private fun Routing.tempUiRoutes(dataSource: DataSource) {
                         <ul>
                             <li><a href="/log/live">Live visning</a></li>
                         </ul>
+                        $defaultStyle
                         </body>
                         </html>""".trimIndent()
                     )
@@ -307,42 +330,51 @@ private fun Routing.tempUiRoutes(dataSource: DataSource) {
                             <body>
                             <table style='width: 100%'>
                             <title>Logg</title>
-                            <ul>
-                            <li><a href="/log/executions">Tilbake til oversikt</a></li>
-                            </ul>
+
                             <thead>
                                 <tr>
-                                    <th>Event ID</th>
-                                    <th>Level</th>
-                                    <th>Timestamp</th>
-                                    <th>Logger</th>
+                                    <th class="kjoring_id">Event ID</th>
+                                    <th class="level">Level</th>
+                                    <th class="datetime">Timestamp</th>
                                     <th>Message</th>
                                 </tr>
                             </thead>
                             <tbody id="log"/>
                             </table>
+                            <ul>
+                            <li><a href="/log/executions">Tilbake til oversikt</a></li>
+                            </ul>
                                 <script type="text/javascript">
                                     const source = new EventSource('/log/api/live');
                                     const logTable = document.getElementById('log');
+                                    const dateFormat = new Intl.DateTimeFormat("nb-NO", {
+                                        year: "2-digit", 
+                                        month: "2-digit", 
+                                        day: "2-digit", 
+                                        hour: "2-digit", 
+                                        minute: "2-digit", 
+                                        second: "2-digit", 
+                                        fractionalSecondDigits: 3
+                                    })
 
                                     function logEvent(logEvent) {
                                         console.log(logEvent);
                                         const event = JSON.parse(logEvent);
                                         const row = document.createElement('tr');
                                         const eventId = document.createElement('td');
+                                        eventId.className = 'kjoring_id';
                                         const level = document.createElement('td');
+                                        level.className = 'level';
                                         const timestamp = document.createElement('td');
-                                        const logger = document.createElement('td');
+                                        timestamp.className = 'datetime';
                                         const message = document.createElement('td');
                                         eventId.innerText = event.eventId;
                                         level.innerText = event.levelString;
-                                        timestamp.innerText = event.timestamp;
-                                        logger.innerText = event.loggerName;
+                                        timestamp.innerText = dateFormat.format(Date.parse(event.timestamp));
                                         message.innerText = event.formattedMessage;
                                         row.appendChild(eventId);
                                         row.appendChild(level);
                                         row.appendChild(timestamp);
-                                        row.appendChild(logger);
                                         row.appendChild(message);
                                         logTable.appendChild(row);
                                         
@@ -365,6 +397,7 @@ private fun Routing.tempUiRoutes(dataSource: DataSource) {
                                         }
                                     }, false);
                                 </script>
+                                $defaultStyle
                             </body>
                         </html>
                     """.trimIndent(),
@@ -546,3 +579,33 @@ private fun pageAndSortOrder(page: Int): Pair<Int, String> = when {
 private fun Short.requireGtZero(variableName: String) {
     require(this > 0) { "$variableName must be strictly greater than 0" }
 }
+
+private val defaultStyle: String = """
+    <style type="text/css">
+      html, body {
+        font-family: sans-serif;
+        height: 100%;
+      }
+      thead {
+        text-align: left;
+        position: -webkit-sticky;
+        position: sticky;
+        pos: 0;
+      }
+      thead tr {
+        background-color: #005900;
+        color: white;
+      }
+      th.kjoring_id, tr.kjoring_id {
+        width: 8em;
+      }
+      th.level. tr.level {
+        width: 3em;
+      }
+      th.datetime, tr.datetime {
+        width: 15em;
+      };
+    </style>
+""".trimIndent()
+
+private val dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss.SSS")
