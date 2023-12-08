@@ -79,6 +79,37 @@ class KjoringRepo(
         }
     }
 
+    fun hentMottakerSkjema(): MottakerSkjema {
+        dataSource.connection.use { connection ->
+
+            val mottakere = mutableListOf<MottakerSkjema>()
+            val preparedStatement = connection.prepareStatement("SELECT * FROM mottakerskjema")
+
+            val result = preparedStatement.executeQuery()
+
+            while (result.next()) {
+                mottakere.add(
+                    MottakerSkjema(
+                        id = result.getInt("id"),
+                        mottaker = enumValueOf<Mottaker>(result.getString("mottaker")),
+                        isFree = result.getBoolean("isfree"),
+                        created_at = result.getTimestamp("created_at"),
+                        updated_at = result.getTimestamp("updated_at"),
+                    )
+                )
+            }
+
+
+            if (mottakere.all { !it.isFree }) {
+                throw RuntimeException("Alle mottakere er opptatt")
+            }
+
+            return mottakere.first { it.isFree }
+
+        }
+
+    }
+
     fun getStatusForKjoringMedReguleringsId(reguleringsId: String): List<Kjoring> {
         val kjoringer = mutableListOf<Kjoring>()
         dataSource.connection.use { connection ->
@@ -145,4 +176,17 @@ enum class Kjoringstatus(status: String) {
     TILBAKEFØRING_FEILET("TILBAKEFØRING_FEILET"),
     FULLFØRT_TILBAKEFØRING("FULLFØRT_TILBAKEFØRING"),
     FERDIG("FERDIG"),
+}
+
+data class MottakerSkjema(
+    val id: Int,
+    val mottaker: Mottaker,
+    val isFree: Boolean,
+    val created_at: Date,
+    val updated_at: Date?
+)
+
+enum class Mottaker() {
+    DB_MATRIKKEL_MOTTAKER1,
+    DB_MATRIKKEL_MOTTAKER2
 }
