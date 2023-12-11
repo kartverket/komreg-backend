@@ -1,5 +1,5 @@
 ALTER TABLE kjoring
-    ADD COLUMN mottaker varchar(255) NOT NULL;
+    ADD COLUMN mottaker varchar(255);
 
 CREATE TABLE mottakerskjema
 (
