@@ -11,10 +11,11 @@ class KjoringRepo(
     fun insertAndRetrieveKjoringId(reguleringId: String): Int? {
         dataSource.connection.use { connection ->
             val insertStatement = connection.prepareStatement(
-                "INSERT INTO kjoring (regulering, start, status) VALUES (?, now(), 'KJØRER')",
+                "INSERT INTO kjoring (regulering, start, status, mottaker) VALUES (?, now(), 'KJØRER', ?)",
                 Statement.RETURN_GENERATED_KEYS,
             )
             insertStatement.setString(1, reguleringId)
+            insertStatement.setString(2, hentMottakerSkjema().mottaker.toString())
             insertStatement.executeUpdate()
 
             val generatedKeys = insertStatement.generatedKeys
@@ -59,6 +60,7 @@ class KjoringRepo(
                     start = result.getTimestamp("start"),
                     stop = result.getTimestamp("slutt"),
                     status = enumValueOf<Kjoringstatus>(result.getString("status")),
+                    mottaker = enumValueOf<Mottaker>(result.getString("mottaker"))
                 )
             } else {
                 null
@@ -79,6 +81,61 @@ class KjoringRepo(
         }
     }
 
+    fun hentMottakerSkjema(): MottakerSkjema {
+        dataSource.connection.use { connection ->
+
+            val mottakere = mutableListOf<MottakerSkjema>()
+            val preparedStatement = connection.prepareStatement("SELECT * FROM mottakerskjema")
+
+            val result = preparedStatement.executeQuery()
+
+            while (result.next()) {
+                mottakere.add(
+                    MottakerSkjema(
+                        id = result.getInt("id"),
+                        mottaker = enumValueOf<Mottaker>(result.getString("mottaker")),
+                        isFree = result.getBoolean("isfree"),
+                        created_at = result.getTimestamp("created_at"),
+                        updated_at = result.getTimestamp("updated_at"),
+                    )
+                )
+            }
+
+
+            if (mottakere.all { !it.isFree }) {
+                throw RuntimeException("Alle mottakere er opptatt")
+            }
+
+            return mottakere.first { it.isFree }
+
+        }
+
+    }
+
+    fun settMottakerSkjema(mottaker: Mottaker) {
+        dataSource.connection.use { connection ->
+            try {
+                connection.autoCommit = false
+
+                val alleMottakere = connection.prepareStatement(
+                    "UPDATE mottakerskjema SET isfree = FALSE"
+                )
+                alleMottakere.executeUpdate()
+
+                val nyMottakerStatement = connection.prepareStatement(
+                    "UPDATE mottakerskjema SET isfree = TRUE WHERE mottaker = ?"
+                )
+                nyMottakerStatement.setString(1, mottaker.toString())
+                nyMottakerStatement.executeUpdate()
+
+                connection.commit()
+            } catch (ex: Exception) {
+                connection.rollback()
+                throw ex
+            }
+        }
+    }
+
     fun getStatusForKjoringMedReguleringsId(reguleringsId: String): List<Kjoring> {
         val kjoringer = mutableListOf<Kjoring>()
         dataSource.connection.use { connection ->
@@ -96,6 +153,7 @@ class KjoringRepo(
                         start = result.getTimestamp("start"),
                         stop = result.getTimestamp("slutt"),
                         status = enumValueOf<Kjoringstatus>(result.getString("status")),
+                        mottaker = enumValueOf<Mottaker>(result.getString("mottaker"))
                     ),
                 )
             }
@@ -119,6 +177,7 @@ class KjoringRepo(
                         start = result.getTimestamp("start"),
                         stop = result.getTimestamp("slutt"),
                         status = enumValueOf<Kjoringstatus>(result.getString("status")),
+                        mottaker = enumValueOf<Mottaker>(result.getString("mottaker"))
                     ),
                 )
             }
@@ -134,6 +193,7 @@ data class Kjoring(
     val start: Date,
     val stop: Date?,
     val status: Kjoringstatus,
+    val mottaker: Mottaker
 )
 
 enum class Kjoringstatus(status: String) {
@@ -145,4 +205,17 @@ enum class Kjoringstatus(status: String) {
     TILBAKEFØRING_FEILET("TILBAKEFØRING_FEILET"),
     FULLFØRT_TILBAKEFØRING("FULLFØRT_TILBAKEFØRING"),
     FERDIG("FERDIG"),
+}
+
+data class MottakerSkjema(
+    val id: Int,
+    val mottaker: Mottaker,
+    val isFree: Boolean,
+    val created_at: Date,
+    val updated_at: Date?
+)
+
+enum class Mottaker() {
+    DB_MATRIKKEL_MOTTAKER1,
+    DB_MATRIKKEL_MOTTAKER2
 }
