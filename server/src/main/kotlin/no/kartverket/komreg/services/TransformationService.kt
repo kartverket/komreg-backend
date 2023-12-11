@@ -75,7 +75,7 @@ private fun runAndWriteTransformations(
 
 ) {
     val kjoringId = kjoringContext.kjoringId
-    val skalTilbakefores = !env["TOGGLE_SINK_OFF"].toBoolean()
+    val skalTilbakefores = env["TOGGLE_SINK_OFF"]?.toBoolean() ?: true
 
     val lifeCycleHandlers = LifeCycleHandlerManager(kjoringContext).lifeCycleHandlers
     val sources = EntitySourceManager(kjoringContext).entitySources
