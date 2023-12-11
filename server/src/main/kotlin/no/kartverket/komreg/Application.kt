@@ -56,12 +56,8 @@ fun Application.module() {
     val komregDbUsername = env["DB_KOMREG_USERNAME"]
     val komregDbPassword = env["DB_KOMREG_PASSWORD"]
 
-    val matrikkelJdbcUrl = env["DB_MATRIKKEL_JDBC_URL"]
-    val matrikkelDbUsername = env[schemaManager.getMottakerUsername()]
-    val matrikkelDbPassword = env[schemaManager.getMottakerPassword()]
-
     logger.info("Current environment: ${System.getenv("environment")}")
-    logger.info("Mottaker DB: $matrikkelDbUsername")
+    logger.info("Mottaker DB: ${env[schemaManager.getMottakerUsername()]}")
 
     if (!komregJdbcUrl.isNullOrEmpty()) {
         val flyway = Flyway.configure()
@@ -119,9 +115,9 @@ fun Application.module() {
         val hikariConfig = HikariConfig()
         hikariConfig.poolName = "db-connection"
         hikariConfig.driverClassName = "oracle.jdbc.OracleDriver"
-        hikariConfig.jdbcUrl = matrikkelJdbcUrl
-        hikariConfig.username = matrikkelDbUsername
-        hikariConfig.password = matrikkelDbPassword
+        hikariConfig.jdbcUrl = env["DB_MATRIKKEL_JDBC_URL"]
+        hikariConfig.username = env[schemaManager.getMottakerUsername()]
+        hikariConfig.password = env[schemaManager.getMottakerPassword()]
         return HikariDataSource(hikariConfig)
     }
 
