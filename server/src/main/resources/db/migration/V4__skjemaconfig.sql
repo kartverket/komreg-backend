@@ -1,5 +1,5 @@
 ALTER TABLE kjoring
-    ADD COLUMN mottaker varchar(255);
+    ADD COLUMN mottaker varchar(255) NOT NULL;
 
 CREATE TABLE mottakerskjema
 (
@@ -9,3 +9,8 @@ CREATE TABLE mottakerskjema
     created_at timestamp DEFAULT current_timestamp,
     updated_at timestamp
 );
+
+INSERT INTO mottakerskjema (mottaker, isfree)
+VALUES ('DB_MATRIKKEL_MOTTAKER1', FALSE);
+INSERT INTO mottakerskjema (mottaker, isfree)
+VALUES ('DB_MATRIKKEL_MOTTAKER2', FALSE);

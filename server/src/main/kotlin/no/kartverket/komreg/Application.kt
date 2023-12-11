@@ -36,6 +36,9 @@ val env = dotenv {
 
 val logger: Logger = LoggerFactory.getLogger(object {}::class.java)
 
+var mottakerUsername: String? = null
+var mottakerPassword: String? = null
+
 fun main(args: Array<String>) =
     ForkJoinPool.commonPool().execute {
         RocksDB.loadLibrary()
@@ -81,9 +84,12 @@ fun Application.module() {
     val transformationRepo = TransformationRepo(komregDbPool, jsonSerializer())
     val reguleringService = ReguleringService(reguleringsRepo, kjoringRepo)
     val kjoringService = KjoringService(kjoringRepo)
-
     val schemaManager = SchemaManager(kjoringRepo)
-    val matrikkelDbUsername = env[schemaManager.getMottakerUsername()]
+
+    mottakerUsername = schemaManager.getMottakerUsername()
+    mottakerPassword = schemaManager.getMottakerPassword()
+
+    val matrikkelDbUsername = env[mottakerUsername]
 
 
     install(MicrometerMetrics) {
@@ -118,8 +124,8 @@ fun Application.module() {
         hikariConfig.poolName = "db-connection"
         hikariConfig.driverClassName = "oracle.jdbc.OracleDriver"
         hikariConfig.jdbcUrl = env["DB_MATRIKKEL_JDBC_URL"]
-        hikariConfig.username = env[schemaManager.getMottakerUsername()]
-        hikariConfig.password = env[schemaManager.getMottakerPassword()]
+        hikariConfig.username = env[mottakerUsername]
+        hikariConfig.password = env[mottakerPassword]
         return HikariDataSource(hikariConfig)
     }
 

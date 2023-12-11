@@ -11,10 +11,11 @@ class KjoringRepo(
     fun insertAndRetrieveKjoringId(reguleringId: String): Int? {
         dataSource.connection.use { connection ->
             val insertStatement = connection.prepareStatement(
-                "INSERT INTO kjoring (regulering, start, status) VALUES (?, now(), 'KJØRER')",
+                "INSERT INTO kjoring (regulering, start, status, mottaker) VALUES (?, now(), 'KJØRER', ?)",
                 Statement.RETURN_GENERATED_KEYS,
             )
             insertStatement.setString(1, reguleringId)
+            insertStatement.setString(2, hentMottakerSkjema().mottaker.toString())
             insertStatement.executeUpdate()
 
             val generatedKeys = insertStatement.generatedKeys
@@ -59,6 +60,7 @@ class KjoringRepo(
                     start = result.getTimestamp("start"),
                     stop = result.getTimestamp("slutt"),
                     status = enumValueOf<Kjoringstatus>(result.getString("status")),
+                    mottaker = enumValueOf<Mottaker>(result.getString("mottaker"))
                 )
             } else {
                 null
@@ -127,6 +129,7 @@ class KjoringRepo(
                         start = result.getTimestamp("start"),
                         stop = result.getTimestamp("slutt"),
                         status = enumValueOf<Kjoringstatus>(result.getString("status")),
+                        mottaker = enumValueOf<Mottaker>(result.getString("mottaker"))
                     ),
                 )
             }
@@ -150,6 +153,7 @@ class KjoringRepo(
                         start = result.getTimestamp("start"),
                         stop = result.getTimestamp("slutt"),
                         status = enumValueOf<Kjoringstatus>(result.getString("status")),
+                        mottaker = enumValueOf<Mottaker>(result.getString("mottaker"))
                     ),
                 )
             }
@@ -165,6 +169,7 @@ data class Kjoring(
     val start: Date,
     val stop: Date?,
     val status: Kjoringstatus,
+    val mottaker: Mottaker
 )
 
 enum class Kjoringstatus(status: String) {
