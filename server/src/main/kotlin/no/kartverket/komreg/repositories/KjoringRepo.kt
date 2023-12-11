@@ -112,6 +112,30 @@ class KjoringRepo(
 
     }
 
+    fun settMottakerSkjema(mottaker: Mottaker) {
+        dataSource.connection.use { connection ->
+            try {
+                connection.autoCommit = false
+
+                val alleMottakere = connection.prepareStatement(
+                    "UPDATE mottakerskjema SET isfree = FALSE"
+                )
+                alleMottakere.executeUpdate()
+
+                val nyMottakerStatement = connection.prepareStatement(
+                    "UPDATE mottakerskjema SET isfree = TRUE WHERE mottaker = ?"
+                )
+                nyMottakerStatement.setString(1, mottaker.toString())
+                nyMottakerStatement.executeUpdate()
+
+                connection.commit()
+            } catch (ex: Exception) {
+                connection.rollback()
+                throw ex
+            }
+        }
+    }
+
     fun getStatusForKjoringMedReguleringsId(reguleringsId: String): List<Kjoring> {
         val kjoringer = mutableListOf<Kjoring>()
         dataSource.connection.use { connection ->

@@ -56,7 +56,9 @@ class TransformationRepoTest {
         )
         Assertions.assertTrue(ok, "Lagring av regulering")
 
+
         val kjoringRepo = KjoringRepo(dataSource)
+        kjoringRepo.settMottakerSkjema(Mottaker.DB_MATRIKKEL_MOTTAKER1)
         return kjoringRepo.insertAndRetrieveKjoringId("abc")!!
     }
 
