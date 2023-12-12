@@ -50,102 +50,106 @@ class IdCache(
 
         @OptIn(ExperimentalSerializationApi::class)
         suspend fun generateIds(hints: NonEmptyList<String?>): List<Pair<String?, Id>> {
-            return withContext(Dispatchers.IO) {
-                resourceScope {
-                    val conn = autoCloseable { dataSource.connection }
-                    conn.autoCommit = false
-                    val queryStmt = autoCloseable {
-                        conn.prepareStatement(QUERY_BATCH_SQL).apply {
-                            setArray(1, install(
-                                acquire = { conn.createArrayOf("text", hints.toTypedArray()) },
-                                release = { array, _ -> array.free() }
-                            ))
-                            setInt(2, hints.size)
-                        }
-                    }
-                    val insertStmt = autoCloseable {
-                        conn.prepareStatement(INSERT_SQL).apply {
-                            setString(2, idTypeJson)
-                        }
-                    }
-
-                    val cachedIds = flow {
-                        resourceScope {
-                            val rs = autoCloseable { queryStmt.executeQuery() }
-                            while (rs.next()) {
-                                val idValue = rs.getBinaryStream(1)
-                                    ?.takeIf { !rs.wasNull() }
-                                    ?.let { json.decodeFromStream(idType.valueSerializer, it) }
-                                emit(idValue)
-                            }
-                        }
-                    }
-
-                    cachedIds
-                        .mapIndexed { index, cachedIdValue ->
-                            val hint = hints[index]
-                            hint to if (cachedIdValue != null) {
-                                Id(idType, cachedIdValue)
-                            } else {
-                                idGenerator.generateId(hint).also { newId ->
-                                    if (hint != null) {
-                                        insertStmt.setString(1, hint)
-                                        insertStmt.setString(
-                                            3,
-                                            json.encodeToString(idType.valueSerializer, newId.typedValue(idType)!!)
-                                        )
-                                        insertStmt.addBatch()
-                                    }
-                                }
-                            }
-                        }
-                        .toList()
-                        .also {
-                            insertStmt.executeBatch()
-                            conn.commit()
-                        }
-                }
-            }
+            return hints.map { it to generateId(it) }
+            // TKR-437: Midlertidig kommentert ut
+//            return withContext(Dispatchers.IO) {
+//                resourceScope {
+//                    val conn = autoCloseable { dataSource.connection }
+//                    conn.autoCommit = false
+//                    val queryStmt = autoCloseable {
+//                        conn.prepareStatement(QUERY_BATCH_SQL).apply {
+//                            setArray(1, install(
+//                                acquire = { conn.createArrayOf("text", hints.toTypedArray()) },
+//                                release = { array, _ -> array.free() }
+//                            ))
+//                            setInt(2, hints.size)
+//                        }
+//                    }
+//                    val insertStmt = autoCloseable {
+//                        conn.prepareStatement(INSERT_SQL).apply {
+//                            setString(2, idTypeJson)
+//                        }
+//                    }
+//
+//                    val cachedIds = flow {
+//                        resourceScope {
+//                            val rs = autoCloseable { queryStmt.executeQuery() }
+//                            while (rs.next()) {
+//                                val idValue = rs.getBinaryStream(1)
+//                                    ?.takeIf { !rs.wasNull() }
+//                                    ?.let { json.decodeFromStream(idType.valueSerializer, it) }
+//                                emit(idValue)
+//                            }
+//                        }
+//                    }
+//
+//                    cachedIds
+//                        .mapIndexed { index, cachedIdValue ->
+//                            val hint = hints[index]
+//                            hint to if (cachedIdValue != null) {
+//                                Id(idType, cachedIdValue)
+//                            } else {
+//                                idGenerator.generateId(hint).also { newId ->
+//                                    if (hint != null) {
+//                                        insertStmt.setString(1, hint)
+//                                        insertStmt.setString(
+//                                            3,
+//                                            json.encodeToString(idType.valueSerializer, newId.typedValue(idType)!!)
+//                                        )
+//                                        insertStmt.addBatch()
+//                                    }
+//                                }
+//                            }
+//                        }
+//                        .toList()
+//                        .also {
+//                            insertStmt.executeBatch()
+//                            conn.commit()
+//                        }
+//                }
+//            }
         }
 
         @OptIn(ExperimentalSerializationApi::class)
         suspend fun generateId(hint: Any?): Id {
-            if (hint == null) {
-                return idGenerator.generateId(null)
-            }
-            return withContext(Dispatchers.IO) {
-                resourceScope {
-                    val conn = autoCloseable { dataSource.connection }
-                    conn.autoCommit = false
-                    val stmt = autoCloseable {
-                        conn.prepareStatement(QUERY_SQL)
-                    }
-                    val rs = autoCloseable {
-                        stmt.setString(1, hint.toString())
-                        stmt.setString(2, idTypeJson)
-                        stmt.executeQuery()
-                    }
-                    if (rs.next()) {
-                        Id(idType, json.decodeFromStream(idType.valueSerializer, rs.getBinaryStream(1)))
-                    } else {
-                        idGenerator
-                            .generateId(hint)
-                            .also { id ->
-                                val insertStmt = autoCloseable {
-                                    conn.prepareStatement(INSERT_SQL)
-                                }
-                                insertStmt.setString(1, hint.toString())
-                                insertStmt.setString(2, idTypeJson)
-                                insertStmt.setString(3,
-                                    json.encodeToString(idType.valueSerializer, id.typedValue(idType)!!)
-                                )
-                                insertStmt.executeUpdate()
-                            }
-                    }.also {
-                        conn.commit()
-                    }
-                }
-            }
+            return idGenerator.generateId(hint)
+            // TKR-437: Midlertidig kommentert ut
+//            if (hint == null) {
+//                return idGenerator.generateId(null)
+//            }
+//            return withContext(Dispatchers.IO) {
+//                resourceScope {
+//                    val conn = autoCloseable { dataSource.connection }
+//                    conn.autoCommit = false
+//                    val stmt = autoCloseable {
+//                        conn.prepareStatement(QUERY_SQL)
+//                    }
+//                    val rs = autoCloseable {
+//                        stmt.setString(1, hint.toString())
+//                        stmt.setString(2, idTypeJson)
+//                        stmt.executeQuery()
+//                    }
+//                    if (rs.next()) {
+//                        Id(idType, json.decodeFromStream(idType.valueSerializer, rs.getBinaryStream(1)))
+//                    } else {
+//                        idGenerator
+//                            .generateId(hint)
+//                            .also { id ->
+//                                val insertStmt = autoCloseable {
+//                                    conn.prepareStatement(INSERT_SQL)
+//                                }
+//                                insertStmt.setString(1, hint.toString())
+//                                insertStmt.setString(2, idTypeJson)
+//                                insertStmt.setString(3,
+//                                    json.encodeToString(idType.valueSerializer, id.typedValue(idType)!!)
+//                                )
+//                                insertStmt.executeUpdate()
+//                            }
+//                    }.also {
+//                        conn.commit()
+//                    }
+//                }
+//            }
         }
 
     }
