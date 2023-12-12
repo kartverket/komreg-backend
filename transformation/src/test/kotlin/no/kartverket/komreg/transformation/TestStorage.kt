@@ -30,11 +30,11 @@ class TestStorage : Storage {
         return
     }
 
-    override fun hentIkkeStartedeTilbakeforingerForNyeEntiteter(kjoringId: Int): List<String> {
+    override fun hentSinkerSomSkalGjenopptasForNyeEntiteter(kjoringId: Int): List<String> {
         return listOf(mockSink.id)
     }
 
-    override fun hentIkkeStartedeTilbakeforingerForErstattendeEntiteter(kjoringId: Int): List<String> {
+    override fun hentSinkerSomSkalGjenopptasForErstattendeEntiteter(kjoringId: Int): List<String> {
         return listOf(mockSink.id)
     }
 

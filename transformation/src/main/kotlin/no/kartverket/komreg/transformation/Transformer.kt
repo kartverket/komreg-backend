@@ -18,9 +18,9 @@ interface Storage {
     fun createTilbakeforingsstatusForKjoring(kjoringId: Int, entitySinks: List<EntitySink>)
 
     fun setTilbakeforingsStatusForSink(sink: EntitySink, status: String, kjoringId: Int, erOppretting: Boolean)
-    fun hentIkkeStartedeTilbakeforingerForNyeEntiteter(kjoringId: Int): List<String>
+    fun hentSinkerSomSkalGjenopptasForNyeEntiteter(kjoringId: Int): List<String>
 
-    fun hentIkkeStartedeTilbakeforingerForErstattendeEntiteter(kjoringId: Int): List<String>
+    fun hentSinkerSomSkalGjenopptasForErstattendeEntiteter(kjoringId: Int): List<String>
 
     fun setStatusForKjoring(kjoringId: Int, status: String)
 }
@@ -40,9 +40,9 @@ suspend fun transform(
     val logger: Logger = LoggerFactory.getLogger({}::class.java)
     val transformer = IdentTransformer(mapInput(input))
 
-    val gjenvarendeSinkerForNyeEntiteter = storage.hentIkkeStartedeTilbakeforingerForNyeEntiteter(kjoringId)
+    val gjenvarendeSinkerForNyeEntiteter = storage.hentSinkerSomSkalGjenopptasForNyeEntiteter(kjoringId)
     val gjenvarendeSinkerForErstattendeEntiteter =
-        storage.hentIkkeStartedeTilbakeforingerForErstattendeEntiteter(kjoringId)
+        storage.hentSinkerSomSkalGjenopptasForErstattendeEntiteter(kjoringId)
 
     logger.info("gjenvarendeSinkerForNyeEntiteter: $gjenvarendeSinkerForNyeEntiteter")
     logger.info("gjenvarendeSinkerForErstattendeEntiteter: $gjenvarendeSinkerForErstattendeEntiteter")

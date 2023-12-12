@@ -38,12 +38,12 @@ class StorageService(
         )
     }
 
-    override fun hentIkkeStartedeTilbakeforingerForNyeEntiteter(kjoringId: Int): List<String> {
-        return tilbakeføringsstatusRepo.hentIkkeStartedeTilbakeføringerForNyeEntiteter(kjoringId)
+    override fun hentSinkerSomSkalGjenopptasForNyeEntiteter(kjoringId: Int): List<String> {
+        return tilbakeføringsstatusRepo.hentSinkerSomSkalGjenopptasForNyeEntiteter(kjoringId)
     }
 
-    override fun hentIkkeStartedeTilbakeforingerForErstattendeEntiteter(kjoringId: Int): List<String> {
-        return tilbakeføringsstatusRepo.hentIkkeStartedeTilbakeføringerForErstattendeEntiteter(kjoringId)
+    override fun hentSinkerSomSkalGjenopptasForErstattendeEntiteter(kjoringId: Int): List<String> {
+        return tilbakeføringsstatusRepo.hentSinkerSomSkalGjenopptasForErstattendeEntiteter(kjoringId)
     }
 
     override fun setStatusForKjoring(kjoringId: Int, status: String) {
