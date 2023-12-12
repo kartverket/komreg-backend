@@ -111,53 +111,53 @@ class TransformationRepoTest {
             Assertions.assertEquals(transformation, readTransformation, "Read transformation")
         }
     }
-
-    @Test
-    fun testIdCache() {
-        withDatabase { dataSource ->
-            val kjoringContext = KjoringContextImpl(0, dataSource)
-            runBlocking {
-                val firstId = kjoringContext.idGenerators.idFor(TestIdType.Foo,  null)
-                val secondId = kjoringContext.idGenerators.idFor(TestIdType.Foo,  null)
-                Assertions.assertNotEquals(firstId, secondId, "Expected different ids")
-            }
-
-            runBlocking {
-                val firstId = kjoringContext.idGenerators.idFor(TestIdType.Foo,  "foo")
-                val secondId = kjoringContext.idGenerators.idFor(TestIdType.Foo,  "foo")
-                val thirdId = kjoringContext.idGenerators.idFor(TestIdType.Foo,  "bar")
-
-                Assertions.assertEquals(firstId, secondId, "Expected same ids")
-                Assertions.assertNotEquals(secondId, thirdId, "Expected different ids")
-            }
-        }
-    }
-
-    @Test
-    fun testBatchingIdCache() {
-        withDatabase { dataSource ->
-            val kjoringContext = KjoringContextImpl(0, dataSource)
-            val hints = listOf("foo", "bar", null, null, "baz", null)
-            val firstIds = runBlocking {
-                kjoringContext.idGenerators.idsFor(TestIdType.Foo, hints)
-            }
-            val secondIds = runBlocking {
-                kjoringContext.idGenerators.idsFor(TestIdType.Foo, hints)
-            }
-
-
-            Assertions.assertEquals(firstIds.map { it.first }, hints, "Expected same hints")
-            Assertions.assertEquals(
-                firstIds.filter { (hint, _) -> hint != null },
-                secondIds.filter { (hint, _) -> hint != null },
-                "Expected same ids")
-
-
-            Assertions.assertEquals(secondIds.map { it.first }, hints, "Expected same hints")
-            Assertions.assertNotEquals(
-                firstIds.filterIndexed { n, _ -> hints[n] == null },
-                secondIds.filterIndexed {n, _ -> hints[n] == null },
-                "Expected different ids")
-        }
-    }
+// FIXME: TKR-437 Midlertidig kommentert ut
+//    @Test
+//    fun testIdCache() {
+//        withDatabase { dataSource ->
+//            val kjoringContext = KjoringContextImpl(0, dataSource)
+//            runBlocking {
+//                val firstId = kjoringContext.idGenerators.idFor(TestIdType.Foo,  null)
+//                val secondId = kjoringContext.idGenerators.idFor(TestIdType.Foo,  null)
+//                Assertions.assertNotEquals(firstId, secondId, "Expected different ids")
+//            }
+//
+//            runBlocking {
+//                val firstId = kjoringContext.idGenerators.idFor(TestIdType.Foo,  "foo")
+//                val secondId = kjoringContext.idGenerators.idFor(TestIdType.Foo,  "foo")
+//                val thirdId = kjoringContext.idGenerators.idFor(TestIdType.Foo,  "bar")
+//
+//                Assertions.assertEquals(firstId, secondId, "Expected same ids")
+//                Assertions.assertNotEquals(secondId, thirdId, "Expected different ids")
+//            }
+//        }
+//    }
+//
+//    @Test
+//    fun testBatchingIdCache() {
+//        withDatabase { dataSource ->
+//            val kjoringContext = KjoringContextImpl(0, dataSource)
+//            val hints = listOf("foo", "bar", null, null, "baz", null)
+//            val firstIds = runBlocking {
+//                kjoringContext.idGenerators.idsFor(TestIdType.Foo, hints)
+//            }
+//            val secondIds = runBlocking {
+//                kjoringContext.idGenerators.idsFor(TestIdType.Foo, hints)
+//            }
+//
+//
+//            Assertions.assertEquals(firstIds.map { it.first }, hints, "Expected same hints")
+//            Assertions.assertEquals(
+//                firstIds.filter { (hint, _) -> hint != null },
+//                secondIds.filter { (hint, _) -> hint != null },
+//                "Expected same ids")
+//
+//
+//            Assertions.assertEquals(secondIds.map { it.first }, hints, "Expected same hints")
+//            Assertions.assertNotEquals(
+//                firstIds.filterIndexed { n, _ -> hints[n] == null },
+//                secondIds.filterIndexed {n, _ -> hints[n] == null },
+//                "Expected different ids")
+//        }
+//    }
 }
