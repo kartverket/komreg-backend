@@ -1,5 +1,6 @@
 package no.kartverket.komreg.repositories
 
+import kotlinx.serialization.Serializable
 import java.sql.Statement
 import java.sql.Timestamp
 import java.util.Date
@@ -118,14 +119,17 @@ class KjoringRepo(
                 connection.autoCommit = false
 
                 val alleMottakere = connection.prepareStatement(
-                    "UPDATE mottakerskjema SET isfree = FALSE"
+                    "UPDATE mottakerskjema SET isfree = FALSE, updated_at = ?"
                 )
+                alleMottakere.setTimestamp(1, Timestamp(System.currentTimeMillis()))
                 alleMottakere.executeUpdate()
 
                 val nyMottakerStatement = connection.prepareStatement(
-                    "UPDATE mottakerskjema SET isfree = TRUE WHERE mottaker = ?"
+                    "UPDATE mottakerskjema SET isfree = TRUE, updated_at = ? WHERE mottaker = ?"
                 )
-                nyMottakerStatement.setString(1, mottaker.toString())
+
+                nyMottakerStatement.setTimestamp(1, Timestamp(System.currentTimeMillis()))
+                nyMottakerStatement.setString(2, mottaker.toString())
                 nyMottakerStatement.executeUpdate()
 
                 connection.commit()
@@ -215,6 +219,7 @@ data class MottakerSkjema(
     val updated_at: Date?
 )
 
+@Serializable
 enum class Mottaker() {
     DB_MATRIKKEL_MOTTAKER1,
     DB_MATRIKKEL_MOTTAKER2
