@@ -57,7 +57,8 @@ dependencies {
     implementation(project(":core-api"))
     implementation(project(":transformation"))
 
-    runtimeOnly("no.statkart.matrikkel:matrikkel-komreg:4.15-SNAPSHOT") {
+    // Skulle egentlig vært runtimeOnly, men har ikke funnet på noe ordentlig grensesnitt for SSR-generering
+    implementation("no.statkart.matrikkel:matrikkel-komreg:4.15-SNAPSHOT") {
         isChanging = true
         exclude(group = "com.oracle.database.jdbc")
     }

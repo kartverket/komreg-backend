@@ -62,4 +62,33 @@ class TransformationRepo(
             }
         }.flowOn(Dispatchers.IO)
     }
+
+    fun readTransformationFromDatabase(kjoringId: Int, type: String): Flow<Transformation> {
+        return flow {
+            dataSource.connection.use { connection ->
+                connection.autoCommit = false
+                connection.prepareStatement(
+                    "SELECT transformasjon\n" +
+                        "FROM transformasjon t\n" +
+                        "WHERE kjoring = ?\n" +
+                        "  AND t.transformasjon -> 'id' -> 'type' ->> 'value' = ?"
+                )
+                    .use { preparedStatement ->
+
+                        preparedStatement.setInt(1, kjoringId)
+                        preparedStatement.setString(2, type)
+                        preparedStatement.fetchSize = 10_000
+
+                        preparedStatement.executeQuery().use { resultSet ->
+
+                            while (resultSet.next()) {
+                                val text = resultSet.getString(1)
+                                val t = jsonSerializer.decodeFromString(Transformation.serializer(), text)
+                                emit(t)
+                            }
+                        }
+                    }
+            }
+        }.flowOn(Dispatchers.IO)
+    }
 }

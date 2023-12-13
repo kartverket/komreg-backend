@@ -5,7 +5,16 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 @SerialName("Kommunenummer")
-data class Kommunenummer(val fylkesnummer: Fylkesnummer, val lopenummer: Lopenummer) {
+data class Kommunenummer(val fylkesnummer: Fylkesnummer, val lopenummer: Lopenummer) : Comparable<Kommunenummer> {
+    override fun compareTo(other: Kommunenummer): Int {
+        return compareValuesBy(
+            this,
+            other,
+            Kommunenummer::fylkesnummer,
+            Kommunenummer::lopenummer,
+        )
+    }
+
     @Serializable
     @SerialName("Kommunelopenummer")
     data class Lopenummer(val value: Byte) : Comparable<Lopenummer> {

@@ -189,6 +189,34 @@ class KjoringRepo(
 
         return kjoringer
     }
+
+    fun getKjoring(kjoringId: Int): Kjoring? {
+        return dataSource.connection.use { connection ->
+            connection.prepareStatement("SELECT * FROM kjoring where id=?").use { prepareStatement ->
+                prepareStatement.setInt(1, kjoringId)
+                prepareStatement.executeQuery().use { result ->
+                    val kjoring = if (result.next()) {
+                        Kjoring(
+                            id = result.getInt("id"),
+                            regulering = result.getString("regulering"),
+                            start = result.getTimestamp("start"),
+                            stop = result.getTimestamp("slutt"),
+                            status = enumValueOf<Kjoringstatus>(result.getString("status")),
+                            mottaker = enumValueOf<Mottaker>(result.getString("mottaker"))
+                        )
+                    } else {
+                        null
+                    }
+
+                    if (result.next()) {
+                        null
+                    } else {
+                        kjoring
+                    }
+                }
+            }
+        }
+    }
 }
 
 data class Kjoring(
