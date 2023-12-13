@@ -133,6 +133,7 @@ fun Application.module() {
     reguleringRoutes(reguleringsRepo)
     kjoringroutes(transformationRepo, kjoringRepo, tilbakeføringsstatusRepo, reguleringService, komregDbPool)
     grunndataRoutes(createMatrikkelDataSource())
+    stedsnavnRoutes(reguleringsRepo, kjoringRepo, transformationRepo)
 
     enableFagLogging(komregDbPool)
 }
