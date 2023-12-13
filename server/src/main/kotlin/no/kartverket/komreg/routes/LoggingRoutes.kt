@@ -32,8 +32,6 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.kartverket.komreg.core.logging.FAG
-import no.kartverket.komreg.repositories.Kjoring
-import no.kartverket.komreg.repositories.KjoringRepo
 import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.time.format.DateTimeFormatter
@@ -43,7 +41,8 @@ import javax.sql.DataSource
 data class ExecutionLogEventDTO(
     val executionId: Int,
     val firstEventRef: LogEventRef,
-    val lastEventRef: LogEventRef?
+    val lastEventRef: LogEventRef?,
+    val reguleringsNavn: String?
 ) {
     @Serializable
     data class LogEventRef(
@@ -193,7 +192,6 @@ private fun Application.loggingRoutes(dataSource: DataSource, eventFlow: Flow<Pa
 }
 
 private fun Routing.tempUiRoutes(dataSource: DataSource) {
-    val kjoringRepo = KjoringRepo(dataSource)
     route("/log") {
         get {
             call.respondRedirect("/log/executions")
@@ -263,7 +261,6 @@ private fun Routing.tempUiRoutes(dataSource: DataSource) {
                 }
             }
             get {
-                val kjoringer = kjoringRepo.getKjoringer().associateBy(Kjoring::id)
                 call.respondTextWriter(contentType = ContentType.Text.Html) {
                     write(
                         """
@@ -288,7 +285,7 @@ private fun Routing.tempUiRoutes(dataSource: DataSource) {
                             """
                             <tr>
                                 <td class="kjoring_id"><a href="/log/executions/${execution.executionId}">${execution.executionId}</a></td>
-                                <td>${kjoringer[execution.executionId]?.regulering ?: "(ukjent)"}</td>
+                                <td>${execution.reguleringsNavn ?: "(ukjent)"}</td>
                                 <td class="datetime">
                                     ${execution
                                         .firstEventTime
@@ -455,7 +452,7 @@ private suspend fun fetchExecutionLogEventDTOs(
 
     val sql = """
         SELECT 
-          kjoring_id, first_event_id, first_timestamp, last_event_id, last_timestamp
+          s.kjoring_id, s.first_event_id, s.first_timestamp, s.last_event_id, s.last_timestamp, r.regulering ->> 'navn' navn
           FROM 
             (SELECT
                  row_number() OVER () - 1 row_number,
@@ -477,7 +474,10 @@ private suspend fun fetchExecutionLogEventDTOs(
                  LEFT JOIN logging_event lst ON q.fst_event_id <> q.lst_event_id 
                                              AND q.lst_event_id = lst.event_id
              ORDER BY first_timestamp $sortDirection, q.kjoring_id $sortDirection) s
+             LEFT JOIN kjoring k ON s.kjoring_id::int4 = k.id
+             LEFT JOIN regulering r ON k.regulering = r.id
         WHERE s.row_number BETWEEN ? AND ?
+        ORDER BY s.row_number
     """.trimIndent()
 
     resourceScope {
@@ -503,7 +503,7 @@ private suspend fun fetchExecutionLogEventDTOs(
                         Instant.fromEpochMilliseconds(rs.getLong(5))
                     )
                 }
-            emit(ExecutionLogEventDTO(rs.getInt(1), firstEventRef, lastEventRef))
+            emit(ExecutionLogEventDTO(rs.getInt(1), firstEventRef, lastEventRef, rs.getString(6)))
         }
     }
 
