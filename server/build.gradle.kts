@@ -57,12 +57,12 @@ dependencies {
     implementation(project(":core-api"))
     implementation(project(":transformation"))
 
-    // Skulle egentlig vært runtimeOnly, men har ikke funnet på noe ordentlig grensesnitt for SSR-generering
+    // Skulle egentlig vÃ¦rt runtimeOnly, men har ikke funnet pÃ¥ noe ordentlig grensesnitt for SSR-generering
     implementation("no.statkart.matrikkel:matrikkel-komreg:4.15-SNAPSHOT") {
         isChanging = true
         exclude(group = "com.oracle.database.jdbc")
     }
-    implementation("io.netty:netty-codec-http2:4.1.101.Final")
+    implementation("io.netty:netty-codec-http2:4.1.103.Final")
 
     implementation(libs.kotlin.reflect)
 
