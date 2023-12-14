@@ -90,14 +90,16 @@ test = {"url": 'https://komreg-backend.test.skip.statkart.no/', "env": "test"}
 # Path til fordelingsinput
 fordelingsInputPath = 'alesund_haram/fordeling_input_alesund_haram.json'
 
+fylkesEndringerPath = 'alesund_haram/fylkesEndringer.json'
+
 # nyeKommunerJson
-nyeKommunerPath = 'alesund_haram/nyeKommuner.json' 
+alesundEndringPath = 'alesund_haram/alesundEndring.json' 
 
 with open(fordelingsInputPath, 'r', encoding='utf8') as f:
     fordeling_input = json.load(f)
 
 
-with open(nyeKommunerPath, 'r', encoding='utf8') as f:
+with open(alesundEndringPath, 'r', encoding='utf8') as f:
     nyeKommuner = json.load(f)
 
 # Kommunenummeret til kommunen du skal hente fordelingsparametere for
@@ -112,7 +114,16 @@ valgtEnv = test
 
 transformasjoner = createRegulering(fordeling_input=fordeling_input, grunndata=createGrunndataTilFordeling(valgtEnv["url"], kommunenr) )
 
+with open(fylkesEndringerPath, 'r', encoding='utf8') as f:
+    fylkesEndringer = json.load(f)
+
+with open(alesundEndringPath, 'r', encoding='utf8') as f:
+    alesundEndring = json.load(f)
+    alesundEndring["transformasjoner"] = transformasjoner
 
 
 
-save_json({"nyeKommuner": nyeKommuner, "transformasjoner": transformasjoner}, kommunenr + "_til_" + nyKommune1 + "_" + nyKommune2 + "_" + valgtEnv["env"] + "_regulering.json")
+fylkesEndringer["endringer"].append(alesundEndring)
+
+
+save_json(fylkesEndringer, kommunenr + "_til_" + nyKommune1 + "_" + nyKommune2 + "_" + valgtEnv["env"] + "_regulering123.json")
