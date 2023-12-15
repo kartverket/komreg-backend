@@ -1,6 +1,6 @@
 import json
-from deepdiff import DeepDiff
 
+from deepdiff import DeepDiff
 
 with open('komplett24.json', 'r', encoding='utf8') as f:
     komplett24_postman = json.load(f)

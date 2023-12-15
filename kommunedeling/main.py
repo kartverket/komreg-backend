@@ -134,6 +134,7 @@ regulering_med_alle_fylker["endringer"].append(alesund_kommunedata)
 
 # nåværende klokkeslett og dato
 from datetime import datetime
+
 now = datetime.now() 
 # YYYYMMDD-HHMMSS
 dt_string = now.strftime("%Y%m%d-%H%M")

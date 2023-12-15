@@ -1,48 +1,44 @@
 {
-    "gårdsnumre": [
-        "0",
-        "1",
-        "2029"
-    ],
-    "adresseparseller": [
-        {
-            "adressekode": "1120",
-            "adressenavn": "FYRVEGEN"
-        },
-        {
-            "adressekode": "99988",
-            "adressenavn": "Kartverksvegen"
-        },
-        {
-            "adressekode": "2222",
-            "adressenavn": "Gateveien"
-        }
-    ],
-    "kretser": [
-        {
-            "kretsnummer": "111",
-            "kretsnavn": "FENESET",
-            "kretstype": "G"
-        },
-        {
-            "kretsnummer": "7777",
-            "nytt_kretsnummer": "8888",
-            "kretsnavn": "Lødingen",
-            "kretstype": "K"
-        }
-    ],
-    "teiger": [
-        {
-            "teigId": "180295568",
-            "koordinatsystemkodeid": 11,
-            "nord": 7584187.57,
-            "øst": 509747.76
-        },
-        {
-            "teigId": "180442264",
-            "koordinatsystemkodeid": 11,
-            "nord": 7589995.23,
-            "øst": 540841.95
-        }
-    ]
+  "gårdsnumre": ["0", "1", "2029"],
+  "adresseparseller": [
+    {
+      "adressekode": "1120",
+      "adressenavn": "FYRVEGEN"
+    },
+    {
+      "adressekode": "99988",
+      "adressenavn": "Kartverksvegen"
+    },
+    {
+      "adressekode": "2222",
+      "adressenavn": "Gateveien"
+    }
+  ],
+  "kretser": [
+    {
+      "kretsnummer": "111",
+      "kretsnavn": "FENESET",
+      "kretstype": "G"
+    },
+    {
+      "kretsnummer": "7777",
+      "nytt_kretsnummer": "8888",
+      "kretsnavn": "Lødingen",
+      "kretstype": "K"
+    }
+  ],
+  "teiger": [
+    {
+      "teigId": "180295568",
+      "koordinatsystemkodeid": 11,
+      "nord": 7584187.57,
+      "øst": 509747.76
+    },
+    {
+      "teigId": "180442264",
+      "koordinatsystemkodeid": 11,
+      "nord": 7589995.23,
+      "øst": 540841.95
+    }
+  ]
 }
