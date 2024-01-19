@@ -29,8 +29,6 @@ data class Transformation(
 interface EntitySource {
     val id: String
     val entityFlow: Flow<Entity>
-    val preValidation: Set<() -> Unit>
-    val postValidation: Set<() -> Unit>
 }
 
 interface EntitySink {
@@ -38,7 +36,4 @@ interface EntitySink {
     suspend fun consumeTransformations(flow: Flow<Transformation>, ikrafttredelsesdato: LocalDate)
 
     suspend fun postTransformValidate() : EitherNel<TransformValidationError, Unit> = Unit.right()
-
-    val postValidation: Set<() -> Unit>
-    val preValidation: Set<() -> Unit>
 }

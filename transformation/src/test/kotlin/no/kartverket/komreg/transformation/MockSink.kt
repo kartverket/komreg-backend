@@ -16,8 +16,4 @@ class MockSink : EntitySink {
         }
     }
 
-    override val postValidation: Set<() -> Unit>
-        get() = TODO("Not yet implemented")
-    override val preValidation: Set<() -> Unit>
-        get() = TODO("Not yet implemented")
 }
