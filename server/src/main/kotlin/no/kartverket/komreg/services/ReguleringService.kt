@@ -36,4 +36,14 @@ class ReguleringService(
         }
         return regulering
     }
+
+    fun deleteReguleringById(
+        regId: String
+    ): Boolean {
+        if (kjoringRepo.getKjoringer().any { it.regulering == regId }) {
+            throw IllegalArgumentException("Reguleringen er i bruk av en kjøring og kan ikke slettes")
+        }
+
+        return reguleringRepo.deleteReguleringById(regId)
+    }
 }

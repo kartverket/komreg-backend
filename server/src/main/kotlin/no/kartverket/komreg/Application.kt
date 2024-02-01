@@ -130,7 +130,7 @@ fun Application.module() {
     }
 
     internalRoutes(metricsRegistry)
-    reguleringRoutes(reguleringsRepo)
+    reguleringRoutes(reguleringService, reguleringsRepo)
     kjoringroutes(transformationRepo, kjoringRepo, tilbakeføringsstatusRepo, reguleringService, komregDbPool)
     grunndataRoutes(createMatrikkelDataSource())
     stedsnavnRoutes(reguleringsRepo, kjoringRepo, transformationRepo)

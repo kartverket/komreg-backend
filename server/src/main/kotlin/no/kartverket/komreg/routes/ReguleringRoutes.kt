@@ -11,8 +11,9 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
 import no.kartverket.komreg.repositories.ReguleringRepo
+import no.kartverket.komreg.services.ReguleringService
 
-fun Application.reguleringRoutes(reguleringRepo: ReguleringRepo) {
+fun Application.reguleringRoutes(reguleringService: ReguleringService, reguleringRepo: ReguleringRepo) {
     routing {
         // Get all reguleringer
         route("/reguleringer") {
@@ -61,6 +62,7 @@ fun Application.reguleringRoutes(reguleringRepo: ReguleringRepo) {
             put {
                 val regulering: Regulering = call.receive()
 
+
                 if (reguleringRepo.updateRegulering(regulering)) {
                     call.respond(HttpStatusCode.OK, "Regulering with ID ${regulering.id} updated successfully.")
                 } else {
@@ -74,10 +76,11 @@ fun Application.reguleringRoutes(reguleringRepo: ReguleringRepo) {
             delete {
                 val regId = call.parameters["regId"]
 
-                if (reguleringRepo.deleteReguleringById(regId!!)) {
-                    call.respond(HttpStatusCode.OK, "Regulering with ID $regId deleted successfully.")
-                } else {
-                    call.respond(HttpStatusCode.NotFound, "Regulering with ID $regId not found.")
+                try {
+                    reguleringService.deleteReguleringById(regId!!)
+                } catch (e: Exception) {
+                    application.log.error("${e.message}")
+                    call.respond(HttpStatusCode.InternalServerError, e.message.toString())
                 }
             }
         }
@@ -163,5 +166,82 @@ fun Application.reguleringRoutes(reguleringRepo: ReguleringRepo) {
                 }
             }
         }
+
+        // Get all kommunedata in endring by id in regulering by id
+        route("/reguleringer/{regId}/endringer/{endringId}/kommunedata") {
+            post {
+
+                val regId = call.parameters["regId"]
+                val endringId = call.parameters["endringId"]
+                println("POST /reguleringer/$regId/endringer/$endringId/kommunedata")
+
+                val dto = call.receiveText()
+                val oppdatertKommune = Json.decodeFromString<OppdaterKommuneDTO>(dto)
+
+                println(dto)
+
+                if (regId != null && endringId != null) {
+                    val kommuneDTO = reguleringRepo.getNyKommuneFromEndring(
+                        regId,
+                        endringId,
+                        oppdatertKommune.fylkesnummer,
+                        oppdatertKommune.kommunenummer
+                    )
+                    if (kommuneDTO != null) {
+                        call.respond(kommuneDTO)
+                    } else {
+                        call.respond(HttpStatusCode.NotFound, "KommuneDTO not found")
+                    }
+                } else {
+                    call.respond(HttpStatusCode.BadRequest, "Missing regId and/or endringId")
+                }
+            }
+        }
+
+        route("/reguleringer/{regId}/endringer/{endringId}/kommunedata") {
+            put {
+                val regId = call.parameters["regId"]
+                val endringId = call.parameters["endringId"]
+                val dto = call.receiveText()
+                val oppdatertKommuneDTO = Json.decodeFromString<OppdaterKommuneDTO>(dto)
+
+                println(oppdatertKommuneDTO)
+
+                val tidligereEndring = reguleringRepo.getEndringFromRegulering(regId!!, endringId!!)
+                    ?: throw IllegalArgumentException("KommuneDTO not found")
+
+                val nyKommuneSomSkalOppdaters =
+                    tidligereEndring.nyeKommuner.firstOrNull { it.fylkesnummer == oppdatertKommuneDTO.fylkesnummer && it.kommunenummer == oppdatertKommuneDTO.kommunenummer }
+                        ?: throw IllegalArgumentException("KommuneDTO not found")
+
+                val oppdatertKommune = KommuneDTO(
+                    navn = nyKommuneSomSkalOppdaters.navn,
+                    fylkesnummer = nyKommuneSomSkalOppdaters.fylkesnummer,
+                    kommunenummer = nyKommuneSomSkalOppdaters.kommunenummer,
+                    gyldigTilDato = nyKommuneSomSkalOppdaters.gyldigTilDato,
+                    koordinatsystem = oppdatertKommuneDTO.koordinatsystem ?: nyKommuneSomSkalOppdaters.koordinatsystem,
+                    senterpunkt = oppdatertKommuneDTO.senterpunkt ?: nyKommuneSomSkalOppdaters.senterpunkt,
+                    nedsattKonsesjonsgrense = oppdatertKommuneDTO.nedsattKonsesjonsgrense
+                        ?: nyKommuneSomSkalOppdaters.nedsattKonsesjonsgrense,
+                    godkjenteGardsnumre = oppdatertKommuneDTO.godkjenteGardsnumre
+                        ?: nyKommuneSomSkalOppdaters.godkjenteGardsnumre,
+                    adresse = oppdatertKommuneDTO.adresse ?: nyKommuneSomSkalOppdaters.adresse,
+                    standardRekvirent = oppdatertKommuneDTO.standardRekvirent
+                        ?: nyKommuneSomSkalOppdaters.standardRekvirent,
+                    kommunevapen = oppdatertKommuneDTO.kommunevapen ?: nyKommuneSomSkalOppdaters.kommunevapen,
+
+                    )
+                reguleringRepo.updateEndringOfRegulering(
+                    regId,
+                    endringId,
+                    tidligereEndring.copy(nyeKommuner = tidligereEndring.nyeKommuner.map { if (it == nyKommuneSomSkalOppdaters) oppdatertKommune else it })
+                )
+
+                call.respond(HttpStatusCode.OK, "KommuneDTO updated successfully")
+
+            }
+        }
+
+
     }
 }

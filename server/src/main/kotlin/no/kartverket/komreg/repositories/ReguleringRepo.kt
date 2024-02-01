@@ -4,6 +4,7 @@ import kotlinx.datetime.toJavaLocalDate
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.kartverket.komreg.routes.EndringDTO
+import no.kartverket.komreg.routes.KommuneDTO
 import no.kartverket.komreg.routes.Regulering
 import java.sql.Date
 import javax.sql.DataSource
@@ -114,6 +115,7 @@ class ReguleringRepo(
             if (count == 0) {
                 return false
             }
+
 
             val deleteStatement = connection.prepareStatement("DELETE FROM regulering WHERE id = ?")
             deleteStatement.setString(1, regId)
@@ -258,6 +260,41 @@ class ReguleringRepo(
 
             statement.close()
             return false
+        }
+    }
+
+    fun getNyKommuneFromEndring(
+        reguleringsId: String,
+        endringId: String,
+        fylkesnummer: String,
+        kommunelopenummer: String
+    ): KommuneDTO? {
+        dataSource.connection.use { connection ->
+            val prepareStatement = connection.prepareStatement(
+                """
+                SELECT nyekommuner AS nyekommuner
+                FROM regulering r, jsonb_array_elements(r.regulering->'endringer') AS endringer,
+                    jsonb_array_elements(endringer->'nyeKommuner') AS nyekommuner
+                WHERE (nyekommuner->>'fylkesnummer' = ?)
+                    AND (nyekommuner->>'kommunenummer' = ?) 
+                    AND r.id = ? 
+                    AND endringer->>'id' =  ?
+            """
+            )
+            prepareStatement.setString(1, fylkesnummer)
+            prepareStatement.setString(2, kommunelopenummer)
+            prepareStatement.setString(3, reguleringsId)
+            prepareStatement.setString(4, endringId)
+
+            val resultSet = prepareStatement.executeQuery()
+
+            if (resultSet.next()) {
+                val nyKommuneJson = resultSet.getString("nyekommuner")
+                val nyKommune = Json.decodeFromString<KommuneDTO>(nyKommuneJson)
+                return nyKommune
+            }
+
+            return null
         }
     }
 }
