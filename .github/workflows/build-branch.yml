@@ -17,7 +17,7 @@ jobs:
     name: Docker build and push
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       packages: write
     outputs:
       image_url: ${{ steps.setOutput.outputs.image_url }}
