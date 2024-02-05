@@ -1,6 +1,7 @@
 # KOMREG
 
 ## Modernisert kommuneendringssystem
+TEST   
 
 ## Lokalt oppsett
 
