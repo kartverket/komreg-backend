@@ -294,6 +294,21 @@ data class KommuneDTO(
 )
 
 @Serializable
+data class OppdaterKommuneDTO(
+    val navn: String? = null,
+    val fylkesnummer: String,
+    val kommunenummer: String,
+    val gyldigTilDato: LocalDate? = null,
+    val koordinatsystem: Koordinatsystem? = null,
+    val senterpunkt: KoordinatDTO? = null,
+    val nedsattKonsesjonsgrense: Boolean? = null,
+    val godkjenteGardsnumre: List<Gardsnummerserie>? = null,
+    val adresse: AdresseDTO? = null,
+    val standardRekvirent: StandardRekvirentDTO? = null,
+    val kommunevapen: String? = null,
+)
+
+@Serializable
 data class KoordinatDTO(
     val x: Double,
     val y: Double,
