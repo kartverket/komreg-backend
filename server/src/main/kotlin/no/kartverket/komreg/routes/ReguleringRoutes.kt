@@ -78,6 +78,7 @@ fun Application.reguleringRoutes(reguleringService: ReguleringService, regulerin
 
                 try {
                     reguleringService.deleteReguleringById(regId!!)
+                    call.respond(HttpStatusCode.OK, "Slettet regulering $regId")
                 } catch (e: Exception) {
                     application.log.error("${e.message}")
                     call.respond(HttpStatusCode.InternalServerError, e.message.toString())
