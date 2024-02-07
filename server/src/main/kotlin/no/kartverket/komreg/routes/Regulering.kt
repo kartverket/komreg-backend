@@ -18,167 +18,194 @@ data class Regulering(
         return Reguleringsinput(
             id,
             dato,
-            endringer = endringer.flatMap { endring ->
-                endring.transformasjoner.map { transformasjon ->
-                    when (transformasjon) {
-                        is FylkeTransformasjonDTO -> {
-                            Fylkeendring(
-                                fylkesnummer = FraEnTilMange(
-                                    fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
-                                    til = transformasjon.fylkesnummer.til.map { Fylkesnummer(it.toLong()) },
-                                ),
-                            )
-                        }
+            endringer =
+                endringer.flatMap { endring ->
+                    endring.transformasjoner.map { transformasjon ->
+                        when (transformasjon) {
+                            is FylkeTransformasjonDTO -> {
+                                Fylkeendring(
+                                    fylkesnummer =
+                                        FraEnTilMange(
+                                            fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
+                                            til = transformasjon.fylkesnummer.til.map { Fylkesnummer(it.toLong()) },
+                                        ),
+                                )
+                            }
 
-                        is KommuneTransformasjonDTO -> {
-                            Kommuneendring(
-                                fylkesnummer = FraEnTilMange(
-                                    fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
-                                    til = transformasjon.fylkesnummer.til.map { Fylkesnummer(it.toLong()) },
-                                ),
-                                kommuneløpenummer = FraEnTilMange(
-                                    fra = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.fra.toByte()),
-                                    til = transformasjon.kommuneløpenummer.til.map { Kommunenummer.Lopenummer(it.toByte()) },
-                                ),
-                            )
-                        }
+                            is KommuneTransformasjonDTO -> {
+                                Kommuneendring(
+                                    fylkesnummer =
+                                        FraEnTilMange(
+                                            fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
+                                            til = transformasjon.fylkesnummer.til.map { Fylkesnummer(it.toLong()) },
+                                        ),
+                                    kommuneløpenummer =
+                                        FraEnTilMange(
+                                            fra = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.fra.toByte()),
+                                            til = transformasjon.kommuneløpenummer.til.map { Kommunenummer.Lopenummer(it.toByte()) },
+                                        ),
+                                )
+                            }
 
-                        is MatrikkelenhetTransformasjonDTO -> {
-                            Matrikkelenhetendring(
-                                fylkesnummer = FraTil(
-                                    fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
-                                    til = Fylkesnummer(transformasjon.fylkesnummer.til.toLong()),
-                                ),
-                                kommuneløpenummer = FraTil(
-                                    fra = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.fra.toByte()),
-                                    til = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.til.toByte()),
-                                ),
-                                gårdsnummer = FraTil(
-                                    fra = Matrikkelnummer.Gardsnummer(transformasjon.gårdsnummer.fra.toInt()),
-                                    til = Matrikkelnummer.Gardsnummer(transformasjon.gårdsnummer.til.toInt()),
-                                ),
-                            )
-                        }
+                            is MatrikkelenhetTransformasjonDTO -> {
+                                Matrikkelenhetendring(
+                                    fylkesnummer =
+                                        FraTil(
+                                            fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
+                                            til = Fylkesnummer(transformasjon.fylkesnummer.til.toLong()),
+                                        ),
+                                    kommuneløpenummer =
+                                        FraTil(
+                                            fra = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.fra.toByte()),
+                                            til = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.til.toByte()),
+                                        ),
+                                    gårdsnummer =
+                                        FraTil(
+                                            fra = Matrikkelnummer.Gardsnummer(transformasjon.gårdsnummer.fra.toInt()),
+                                            til = Matrikkelnummer.Gardsnummer(transformasjon.gårdsnummer.til.toInt()),
+                                        ),
+                                )
+                            }
 
-                        is KretsTransformasjonDTO -> {
-                            Kretsendring(
-                                fylkesnummer = FraTil(
-                                    fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
-                                    til = Fylkesnummer(transformasjon.fylkesnummer.til.toLong()),
-                                ),
-                                kommuneløpenummer = FraTil(
-                                    fra = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.fra.toByte()),
-                                    til = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.til.toByte()),
-                                ),
-                                kretsnummer = FraTil(
-                                    fra = Kretsnummer(transformasjon.kretsnummer.fra.toLong()),
-                                    til = Kretsnummer(transformasjon.kretsnummer.til.toLong()),
-                                ),
-                                kretstype = FraTil(
-                                    fra = Kretstype(transformasjon.kretstype.fra),
-                                    til = Kretstype(transformasjon.kretstype.til),
-                                ),
-                            )
-                        }
+                            is KretsTransformasjonDTO -> {
+                                Kretsendring(
+                                    fylkesnummer =
+                                        FraTil(
+                                            fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
+                                            til = Fylkesnummer(transformasjon.fylkesnummer.til.toLong()),
+                                        ),
+                                    kommuneløpenummer =
+                                        FraTil(
+                                            fra = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.fra.toByte()),
+                                            til = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.til.toByte()),
+                                        ),
+                                    kretsnummer =
+                                        FraTil(
+                                            fra = Kretsnummer(transformasjon.kretsnummer.fra.toLong()),
+                                            til = Kretsnummer(transformasjon.kretsnummer.til.toLong()),
+                                        ),
+                                    kretstype =
+                                        FraTil(
+                                            fra = Kretstype(transformasjon.kretstype.fra),
+                                            til = Kretstype(transformasjon.kretstype.til),
+                                        ),
+                                )
+                            }
 
-                        is VegTransformasjonDTO -> {
-                            Vegendring(
-                                fylkesnummer = FraEnTilMange(
-                                    fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
-                                    til = transformasjon.fylkesnummer.til.map { Fylkesnummer(it.toLong()) },
-                                ),
-                                kommuneløpenummer = FraEnTilMange(
-                                    fra = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.fra.toByte()),
-                                    til = transformasjon.kommuneløpenummer.til.map { Kommunenummer.Lopenummer(it.toByte()) },
-                                ),
-                                adressekode = FraTil(
-                                    fra = Adressekode(transformasjon.adressekode.fra.toInt()),
-                                    til = Adressekode(transformasjon.adressekode.til.toInt()),
-                                ),
-                            )
-                        }
+                            is VegTransformasjonDTO -> {
+                                Vegendring(
+                                    fylkesnummer =
+                                        FraEnTilMange(
+                                            fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
+                                            til = transformasjon.fylkesnummer.til.map { Fylkesnummer(it.toLong()) },
+                                        ),
+                                    kommuneløpenummer =
+                                        FraEnTilMange(
+                                            fra = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.fra.toByte()),
+                                            til = transformasjon.kommuneløpenummer.til.map { Kommunenummer.Lopenummer(it.toByte()) },
+                                        ),
+                                    adressekode =
+                                        FraEnTilMange(
+                                            fra = Adressekode(transformasjon.adressekode.fra.toInt()),
+                                            til = transformasjon.adressekode.til.map { Adressekode(it.toInt()) },
+                                        ),
+                                )
+                            }
 
-                        is TeigTransformasjonDTO -> {
-                            Teigendring(
-                                fylkesnummer = FraTil(
-                                    fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
-                                    til = Fylkesnummer(transformasjon.fylkesnummer.til.toLong()),
-                                ),
-                                kommuneløpenummer = FraTil(
-                                    fra = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.fra.toByte()),
-                                    til = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.til.toByte()),
-                                ),
-                                teigId = FraTil(
-                                    fra = TeigId(transformasjon.teigId.fra.toLong()),
-                                    til = TeigId(transformasjon.teigId.til.toLong()),
-                                ),
-                            )
-                        }
+                            is TeigTransformasjonDTO -> {
+                                Teigendring(
+                                    fylkesnummer =
+                                        FraTil(
+                                            fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
+                                            til = Fylkesnummer(transformasjon.fylkesnummer.til.toLong()),
+                                        ),
+                                    kommuneløpenummer =
+                                        FraTil(
+                                            fra = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.fra.toByte()),
+                                            til = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.til.toByte()),
+                                        ),
+                                    teigId =
+                                        FraTil(
+                                            fra = TeigId(transformasjon.teigId.fra.toLong()),
+                                            til = TeigId(transformasjon.teigId.til.toLong()),
+                                        ),
+                                )
+                            }
 
-                        is VegadresseTransformasjonDTO -> {
-                            Vegadresseendring(
-                                fylkesnummer = FraTil(
-                                    fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
-                                    til = Fylkesnummer(transformasjon.fylkesnummer.til.toLong()),
-                                ),
-                                kommuneløpenummer = FraTil(
-                                    fra = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.fra.toByte()),
-                                    til = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.til.toByte()),
-                                ),
-                                adressekode = FraTil(
-                                    fra = Adressekode(transformasjon.adressekode.fra.toInt()),
-                                    til = Adressekode(transformasjon.adressekode.til.toInt()),
-                                ),
-                                adressenummer = FraTil(
-                                    fra = Adressenummernummer(transformasjon.adressenummer.fra.toShort()),
-                                    til = Adressenummernummer(transformasjon.adressenummer.til.toShort()),
-                                ),
-                            )
+                            is VegadresseTransformasjonDTO -> {
+                                Vegadresseendring(
+                                    fylkesnummer =
+                                        FraTil(
+                                            fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
+                                            til = Fylkesnummer(transformasjon.fylkesnummer.til.toLong()),
+                                        ),
+                                    kommuneløpenummer =
+                                        FraTil(
+                                            fra = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.fra.toByte()),
+                                            til = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.til.toByte()),
+                                        ),
+                                    adressekode =
+                                        FraTil(
+                                            fra = Adressekode(transformasjon.adressekode.fra.toInt()),
+                                            til = Adressekode(transformasjon.adressekode.til.toInt()),
+                                        ),
+                                    adressenummer =
+                                        FraTil(
+                                            fra = Adressenummernummer(transformasjon.adressenummer.fra.toShort()),
+                                            til = Adressenummernummer(transformasjon.adressenummer.til.toShort()),
+                                        ),
+                                )
+                            }
                         }
                     }
-                }
-            },
-            fylker = endringer.flatMap { endring ->
-                endring.nyeFylker.map {
-                    Fylke(
-                        fylkesnummer = Fylkesnummer(it.fylkesnummer.toLong()),
-                        fylkesnavn = Fylkesnavn(it.navn),
-                        gyldigTilDato = null,
-                    )
-                }
-            },
-            kommuner = endringer.flatMap { endring ->
-                endring.nyeKommuner.map { kommune ->
-                    Kommune(
-                        kommunenummer = Kommunenummer(
-                            Fylkesnummer(kommune.fylkesnummer.toLong()),
-                            Kommunenummer.Lopenummer(kommune.kommunenummer.toByte()),
-                        ),
-                        kommunenavn = Kommunenavn(kommune.navn),
-                        gyldigTilDato = null,
-                        koordinatsystem = kommune.koordinatsystem,
-                        senterpunkt = Koordinat(
-                            x = kommune.senterpunkt.x,
-                            y = kommune.senterpunkt.y,
-                        ),
-                        nedsattKonsesjonsgrense = kommune.nedsattKonsesjonsgrense,
-                        godkjenteGardsnumre = kommune.godkjenteGardsnumre.joinToString(",") { serie -> serie.join() },
-                        adresse = kommune.adresse?.let {
-                            Postadresse(
-                                adresselinje1 = it.adresselinje1,
-                                adresselinje2 = it.adresselinje2,
-                                postnummer = it.postnummer,
-                                poststed = it.poststed,
-                            )
-                        },
-                        standardRekvirent = kommune.standardRekvirent?.let {
-                            StandardRekvirent(it.orgnummer, it.navn)
-                        },
-                        // TODO: Vil feile i sinken dersom kommunevåpen ikke er satt
-                        kommunevapen = kommune.kommunevapen?.let { Base64.getDecoder().decode(kommune.kommunevapen) },
-                    )
-                }
-            },
+                },
+            fylker =
+                endringer.flatMap { endring ->
+                    endring.nyeFylker.map {
+                        Fylke(
+                            fylkesnummer = Fylkesnummer(it.fylkesnummer.toLong()),
+                            fylkesnavn = Fylkesnavn(it.navn),
+                            gyldigTilDato = null,
+                        )
+                    }
+                },
+            kommuner =
+                endringer.flatMap { endring ->
+                    endring.nyeKommuner.map { kommune ->
+                        Kommune(
+                            kommunenummer =
+                                Kommunenummer(
+                                    Fylkesnummer(kommune.fylkesnummer.toLong()),
+                                    Kommunenummer.Lopenummer(kommune.kommunenummer.toByte()),
+                                ),
+                            kommunenavn = Kommunenavn(kommune.navn),
+                            gyldigTilDato = null,
+                            koordinatsystem = kommune.koordinatsystem,
+                            senterpunkt =
+                                Koordinat(
+                                    x = kommune.senterpunkt.x,
+                                    y = kommune.senterpunkt.y,
+                                ),
+                            nedsattKonsesjonsgrense = kommune.nedsattKonsesjonsgrense,
+                            godkjenteGardsnumre = kommune.godkjenteGardsnumre.joinToString(",") { serie -> serie.join() },
+                            adresse =
+                                kommune.adresse?.let {
+                                    Postadresse(
+                                        adresselinje1 = it.adresselinje1,
+                                        adresselinje2 = it.adresselinje2,
+                                        postnummer = it.postnummer,
+                                        poststed = it.poststed,
+                                    )
+                                },
+                            standardRekvirent =
+                                kommune.standardRekvirent?.let {
+                                    StandardRekvirent(it.orgnummer, it.navn)
+                                },
+                            // TODO: Vil feile i sinken dersom kommunevåpen ikke er satt
+                            kommunevapen = kommune.kommunevapen?.let { Base64.getDecoder().decode(kommune.kommunevapen) },
+                        )
+                    }
+                },
         )
     }
 }
@@ -233,7 +260,7 @@ data class KretsTransformasjonDTO(
 data class VegTransformasjonDTO(
     val fylkesnummer: FraEnTilMangeDTO,
     val kommuneløpenummer: FraEnTilMangeDTO,
-    val adressekode: FraTilDTO,
+    val adressekode: FraEnTilMangeDTO,
 ) : TransformasjonDTO()
 
 @Serializable

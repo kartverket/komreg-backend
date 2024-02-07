@@ -48,7 +48,7 @@ data class Kretsendring(
 data class Vegendring(
     val fylkesnummer: FraEnTilMange<Fylkesnummer>,
     val kommuneløpenummer: FraEnTilMange<Kommunenummer.Lopenummer>,
-    val adressekode: FraTil<Adressekode>,
+    val adressekode: FraEnTilMange<Adressekode>,
 ) : Endring()
 
 data class Teigendring(

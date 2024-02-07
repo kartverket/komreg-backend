@@ -11,18 +11,33 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 interface Storage {
-    fun writeTransformationsToDatabase(kjoringId: Int, transformResultList: List<Transformation>)
+    fun writeTransformationsToDatabase(
+        kjoringId: Int,
+        transformResultList: List<Transformation>,
+    )
 
     fun readTransformationsFromDatabase(kjoringId: Int): Flow<Transformation>
 
-    fun createTilbakeforingsstatusForKjoring(kjoringId: Int, entitySinks: List<EntitySink>)
+    fun createTilbakeforingsstatusForKjoring(
+        kjoringId: Int,
+        entitySinks: List<EntitySink>,
+    )
 
-    fun setTilbakeforingsStatusForSink(sink: EntitySink, status: String, kjoringId: Int, erOppretting: Boolean)
+    fun setTilbakeforingsStatusForSink(
+        sink: EntitySink,
+        status: String,
+        kjoringId: Int,
+        erOppretting: Boolean,
+    )
+
     fun hentSinkerSomSkalGjenopptasForNyeEntiteter(kjoringId: Int): List<String>
 
     fun hentSinkerSomSkalGjenopptasForErstattendeEntiteter(kjoringId: Int): List<String>
 
-    fun setStatusForKjoring(kjoringId: Int, status: String)
+    fun setStatusForKjoring(
+        kjoringId: Int,
+        status: String,
+    )
 }
 
 suspend fun transform(
@@ -55,15 +70,17 @@ suspend fun transform(
             logger.info("Skriver transformasjon for ${entitySource.id}")
             val flow = entitySource.entityFlow
 
-            val transformResult = flow
-                .mapNotNull { entity ->
-                    val result = transformer.transform(entity, idGeneratorManager::idFor)
-                    result
-                }
+            val transformResult =
+                flow
+                    .mapNotNull { entity ->
+                        val result = transformer.transform(entity, idGeneratorManager::idFor)
+                        result
+                    }
 
-            val transformResultFlow = transformResult.transform { list ->
-                list.forEach { emit(it) }
-            }
+            val transformResultFlow =
+                transformResult.transform { list ->
+                    list.forEach { emit(it) }
+                }
             transformResultFlow.chunked(10000)
                 .collect { chunk ->
 
@@ -194,25 +211,27 @@ private suspend fun mapFylkeendring(
 ): Pair<Ident, IdentTransformer.Mapping> {
     val fylkeIdentType: IdentType1<Fylkesnummer> = identTypeOf1()
 
-    val til = fylkeendring.fylkesnummer.til.map { tilFnr ->
-        val fylke = fylkeMap.getValue(tilFnr)
-        val payload = fylke.tilFylkesdata()
-        return@map fylkeIdentType(tilFnr) to payload
-    }
+    val til =
+        fylkeendring.fylkesnummer.til.map { tilFnr ->
+            val fylke = fylkeMap.getValue(tilFnr)
+            val payload = fylke.tilFylkesdata()
+            return@map fylkeIdentType(tilFnr) to payload
+        }
 
-    return fylkeIdentType(fylkeendring.fylkesnummer.fra) to if (til.size == 1) {
-        val t = til[0]
-        IdentTransformer.Mapping.Replace(
-            t.first,
-            t.second,
-        )
-    } else {
-        IdentTransformer.Mapping.Split(
-            listOf(
-                Ident.Empty to null, // Ikke sett ny fylke-kobling
-            ) + til,
-        )
-    }
+    return fylkeIdentType(fylkeendring.fylkesnummer.fra) to
+        if (til.size == 1) {
+            val t = til[0]
+            IdentTransformer.Mapping.Replace(
+                t.first,
+                t.second,
+            )
+        } else {
+            IdentTransformer.Mapping.Split(
+                listOf(
+                    Ident.Empty to null, // Ikke sett ny fylke-kobling
+                ) + til,
+            )
+        }
 }
 
 private suspend fun mapKommuneendring(
@@ -222,28 +241,30 @@ private suspend fun mapKommuneendring(
 ): Pair<Ident, IdentTransformer.Mapping> {
     val kommuneIdentType: IdentType2<Fylkesnummer, Kommunenummer.Lopenummer> = identTypeOf2()
 
-    val til = kommuneendring.kommuneløpenummer.til.map { tilKlnr ->
-        val nyttKommunenummer = Kommunenummer(kommuneendring.fylkesnummer.til.single(), tilKlnr)
-        val kommune = kommuneMap.getValue(nyttKommunenummer)
+    val til =
+        kommuneendring.kommuneløpenummer.til.map { tilKlnr ->
+            val nyttKommunenummer = Kommunenummer(kommuneendring.fylkesnummer.til.single(), tilKlnr)
+            val kommune = kommuneMap.getValue(nyttKommunenummer)
 
-        val payload = kommune.tilKommunedata(ikrafttredelsesdato)
+            val payload = kommune.tilKommunedata(ikrafttredelsesdato)
 
-        return@map kommuneIdentType(kommuneendring.fylkesnummer.til.single(), tilKlnr) to payload
-    }
+            return@map kommuneIdentType(kommuneendring.fylkesnummer.til.single(), tilKlnr) to payload
+        }
 
-    return kommuneIdentType(kommuneendring.fylkesnummer.fra, kommuneendring.kommuneløpenummer.fra) to if (til.size == 1) {
-        val t = til[0]
-        IdentTransformer.Mapping.Replace(
-            t.first,
-            t.second,
-        )
-    } else {
-        IdentTransformer.Mapping.Split(
-            listOf(
-                til[0].first to null, // TODO: Første kommune i input-en blir satt som ny kommune for den utgående kommunen, mulig at dette bør være mer eksplisitt på sikt
-            ) + til,
-        )
-    }
+    return kommuneIdentType(kommuneendring.fylkesnummer.fra, kommuneendring.kommuneløpenummer.fra) to
+        if (til.size == 1) {
+            val t = til[0]
+            IdentTransformer.Mapping.Replace(
+                t.first,
+                t.second,
+            )
+        } else {
+            IdentTransformer.Mapping.Split(
+                listOf(
+                    til[0].first to null, // TODO: Første kommune i input-en blir satt som ny kommune for den utgående kommunen, mulig at dette bør være mer eksplisitt på sikt
+                ) + til,
+            )
+        }
 }
 
 suspend fun mapMatrikkelenhetendring(matrikkelenhetendring: Matrikkelenhetendring): Pair<Ident, IdentTransformer.Mapping> {
@@ -253,13 +274,14 @@ suspend fun mapMatrikkelenhetendring(matrikkelenhetendring: Matrikkelenhetendrin
         matrikkelenhetendring.fylkesnummer.fra,
         matrikkelenhetendring.kommuneløpenummer.fra,
         matrikkelenhetendring.gårdsnummer.fra,
-    ) to IdentTransformer.Mapping.Simple(
-        gardsnummerIdentType(
-            matrikkelenhetendring.fylkesnummer.til,
-            matrikkelenhetendring.kommuneløpenummer.til,
-            matrikkelenhetendring.gårdsnummer.til,
-        ),
-    )
+    ) to
+        IdentTransformer.Mapping.Simple(
+            gardsnummerIdentType(
+                matrikkelenhetendring.fylkesnummer.til,
+                matrikkelenhetendring.kommuneløpenummer.til,
+                matrikkelenhetendring.gårdsnummer.til,
+            ),
+        )
 }
 
 suspend fun mapTeig(teigendring: Teigendring): Pair<Ident, IdentTransformer.Mapping> {
@@ -269,39 +291,42 @@ suspend fun mapTeig(teigendring: Teigendring): Pair<Ident, IdentTransformer.Mapp
         teigendring.fylkesnummer.fra,
         teigendring.kommuneløpenummer.fra,
         teigendring.teigId.fra,
-    ) to IdentTransformer.Mapping.Simple(
-        teigIdentType(
-            teigendring.fylkesnummer.til,
-            teigendring.kommuneløpenummer.til,
-            teigendring.teigId.til,
-        ),
-    )
+    ) to
+        IdentTransformer.Mapping.Simple(
+            teigIdentType(
+                teigendring.fylkesnummer.til,
+                teigendring.kommuneløpenummer.til,
+                teigendring.teigId.til,
+            ),
+        )
 }
 
 suspend fun mapVegendring(vegendring: Vegendring): Pair<Ident, IdentTransformer.Mapping> {
     val adresseparsellIdentType = identTypeOf3<Fylkesnummer, Kommunenummer.Lopenummer, Adressekode>()
 
-    val til = vegendring.kommuneløpenummer.til.map { tilKnln ->
-        adresseparsellIdentType(
-            vegendring.fylkesnummer.til.single(),
-            tilKnln,
-            vegendring.adressekode.til,
-        ) to null
-    }
+    val til =
+        vegendring.kommuneløpenummer.til.map { tilKlnr ->
+            adresseparsellIdentType(
+                vegendring.fylkesnummer.til.single(),
+                tilKlnr,
+                vegendring.adressekode.til[vegendring.kommuneløpenummer.til.indexOf(tilKlnr)],
+            ) to null
+        }
 
     return adresseparsellIdentType(
         vegendring.fylkesnummer.fra,
         vegendring.kommuneløpenummer.fra,
         vegendring.adressekode.fra,
-    ) to if (til.size == 1) {
-        val t = til[0]
-        IdentTransformer.Mapping.Simple(
-            t.first,
-            t.second,
-        )
-    } else {
-        IdentTransformer.Mapping.Split(til)
-    }
+    ) to
+        if (til.size == 1) {
+            val t = til[0]
+            IdentTransformer.Mapping.Simple(
+                t.first,
+                t.second,
+            )
+        } else {
+            IdentTransformer.Mapping.Split(til)
+        }
 }
 
 suspend fun mapVegadresseendring(vegadresseendring: Vegadresseendring): Pair<Ident, IdentTransformer.Mapping> {
@@ -312,14 +337,15 @@ suspend fun mapVegadresseendring(vegadresseendring: Vegadresseendring): Pair<Ide
         vegadresseendring.kommuneløpenummer.fra,
         vegadresseendring.adressekode.fra,
         vegadresseendring.adressenummer.fra,
-    ) to IdentTransformer.Mapping.Simple(
-        vegadresseIdentType(
-            vegadresseendring.fylkesnummer.til,
-            vegadresseendring.kommuneløpenummer.til,
-            vegadresseendring.adressekode.til,
-            vegadresseendring.adressenummer.til,
-        ),
-    )
+    ) to
+        IdentTransformer.Mapping.Simple(
+            vegadresseIdentType(
+                vegadresseendring.fylkesnummer.til,
+                vegadresseendring.kommuneløpenummer.til,
+                vegadresseendring.adressekode.til,
+                vegadresseendring.adressenummer.til,
+            ),
+        )
 }
 
 suspend fun mapKretsendring(kretsendring: Kretsendring): Pair<Ident, IdentTransformer.Mapping> {
@@ -330,26 +356,28 @@ suspend fun mapKretsendring(kretsendring: Kretsendring): Pair<Ident, IdentTransf
         kretsendring.kommuneløpenummer.fra,
         kretsendring.kretstype.fra,
         kretsendring.kretsnummer.fra,
-    ) to IdentTransformer.Mapping.Simple(
-        kretsIdentType(
-            kretsendring.fylkesnummer.til,
-            kretsendring.kommuneløpenummer.til,
-            kretsendring.kretstype.til,
-            kretsendring.kretsnummer.til,
-        ),
-    )
+    ) to
+        IdentTransformer.Mapping.Simple(
+            kretsIdentType(
+                kretsendring.fylkesnummer.til,
+                kretsendring.kommuneløpenummer.til,
+                kretsendring.kretstype.til,
+                kretsendring.kretsnummer.til,
+            ),
+        )
 }
 
-fun <T> Flow<T>.chunked(size: Int): Flow<List<T>> = flow {
-    val list = ArrayList<T>(size)
-    collect {
-        list.add(it)
-        if (list.size == size) {
+fun <T> Flow<T>.chunked(size: Int): Flow<List<T>> =
+    flow {
+        val list = ArrayList<T>(size)
+        collect {
+            list.add(it)
+            if (list.size == size) {
+                emit(list.toList())
+                list.clear()
+            }
+        }
+        if (list.isNotEmpty()) {
             emit(list.toList())
-            list.clear()
         }
     }
-    if (list.isNotEmpty()) {
-        emit(list.toList())
-    }
-}
