@@ -15,6 +15,7 @@ import no.kartverket.komreg.integration.spi.invoke
 class TransformerVegadresserTest : FunSpec({
     // Faktiske id-typer er irrelevant
     fun vegId(idValue: Long) = Id(TestIdType.Foo, idValue)
+
     fun vegadresseId(idValue: Long) = Id(TestIdType.Foo, idValue)
 
     test("Ignorer uinvolverte") {
@@ -22,24 +23,27 @@ class TransformerVegadresserTest : FunSpec({
 
         val adresseparsellIdentType = getAdresseparsellIdentType()
 
-        val vegSource = mockSource(
-            Entity(
-                id = vegId(1),
-                ident = adresseparsellIdentType(
-                    Fylkesnummer(12),
-                    Kommunenummer.Lopenummer(34),
-                    Adressekode(10100),
+        val vegSource =
+            mockSource(
+                Entity(
+                    id = vegId(1),
+                    ident =
+                        adresseparsellIdentType(
+                            Fylkesnummer(12),
+                            Kommunenummer.Lopenummer(34),
+                            Adressekode(10100),
+                        ),
                 ),
-            ),
-            Entity(
-                id = vegId(2),
-                ident = adresseparsellIdentType(
-                    Fylkesnummer(56),
-                    Kommunenummer.Lopenummer(78),
-                    Adressekode(10100),
+                Entity(
+                    id = vegId(2),
+                    ident =
+                        adresseparsellIdentType(
+                            Fylkesnummer(56),
+                            Kommunenummer.Lopenummer(78),
+                            Adressekode(10100),
+                        ),
                 ),
-            ),
-        )
+            )
 
         val sink = MockSink()
 
@@ -52,7 +56,7 @@ class TransformerVegadresserTest : FunSpec({
                     Vegendring(
                         FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(12))),
                         FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(35))),
-                        FraTil(Adressekode(10100), Adressekode(20100)),
+                        FraEnTilMange(Adressekode(10100), listOf(Adressekode(20100))),
                     ),
                 ),
                 emptyList(),
@@ -76,36 +80,41 @@ class TransformerVegadresserTest : FunSpec({
         val adresseparsellIdentType = getAdresseparsellIdentType()
         val vegadresseIdentType = getVegadresseIdentType()
 
-        val vegSource = mockSource(
-            Entity(
-                id = vegId(1),
-                ident = adresseparsellIdentType(
-                    Fylkesnummer(12),
-                    Kommunenummer.Lopenummer(34),
-                    Adressekode(10100),
+        val vegSource =
+            mockSource(
+                Entity(
+                    id = vegId(1),
+                    ident =
+                        adresseparsellIdentType(
+                            Fylkesnummer(12),
+                            Kommunenummer.Lopenummer(34),
+                            Adressekode(10100),
+                        ),
                 ),
-            ),
-        )
-        val vegadresseSource = mockSource(
-            Entity(
-                id = vegadresseId(10),
-                ident = vegadresseIdentType(
-                    Fylkesnummer(12),
-                    Kommunenummer.Lopenummer(34),
-                    Adressekode(10100),
-                    Adressenummernummer(1),
+            )
+        val vegadresseSource =
+            mockSource(
+                Entity(
+                    id = vegadresseId(10),
+                    ident =
+                        vegadresseIdentType(
+                            Fylkesnummer(12),
+                            Kommunenummer.Lopenummer(34),
+                            Adressekode(10100),
+                            Adressenummernummer(1),
+                        ),
                 ),
-            ),
-            Entity(
-                id = vegadresseId(11),
-                ident = vegadresseIdentType(
-                    Fylkesnummer(12),
-                    Kommunenummer.Lopenummer(34),
-                    Adressekode(10100),
-                    Adressenummernummer(2),
+                Entity(
+                    id = vegadresseId(11),
+                    ident =
+                        vegadresseIdentType(
+                            Fylkesnummer(12),
+                            Kommunenummer.Lopenummer(34),
+                            Adressekode(10100),
+                            Adressenummernummer(2),
+                        ),
                 ),
-            ),
-        )
+            )
 
         val sink = MockSink()
 
@@ -118,7 +127,7 @@ class TransformerVegadresserTest : FunSpec({
                     Vegendring(
                         FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(12))),
                         FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(35))),
-                        FraTil(Adressekode(10100), Adressekode(20100)),
+                        FraEnTilMange(Adressekode(10100), listOf(Adressekode(20100))),
                     ),
                 ),
                 emptyList(),
@@ -180,45 +189,51 @@ class TransformerVegadresserTest : FunSpec({
         val adresseparsellIdentType = getAdresseparsellIdentType()
         val vegadresseIdentType = getVegadresseIdentType()
 
-        val vegSource = mockSource(
-            Entity(
-                id = vegId(1),
-                ident = adresseparsellIdentType(
-                    Fylkesnummer(12),
-                    Kommunenummer.Lopenummer(34),
-                    Adressekode(10100),
+        val vegSource =
+            mockSource(
+                Entity(
+                    id = vegId(1),
+                    ident =
+                        adresseparsellIdentType(
+                            Fylkesnummer(12),
+                            Kommunenummer.Lopenummer(34),
+                            Adressekode(10100),
+                        ),
                 ),
-            ),
-        )
-        val vegadresseSource = mockSource(
-            Entity(
-                id = vegadresseId(10),
-                ident = vegadresseIdentType(
-                    Fylkesnummer(12),
-                    Kommunenummer.Lopenummer(34),
-                    Adressekode(10100),
-                    Adressenummernummer(1),
+            )
+        val vegadresseSource =
+            mockSource(
+                Entity(
+                    id = vegadresseId(10),
+                    ident =
+                        vegadresseIdentType(
+                            Fylkesnummer(12),
+                            Kommunenummer.Lopenummer(34),
+                            Adressekode(10100),
+                            Adressenummernummer(1),
+                        ),
                 ),
-            ),
-            Entity(
-                id = vegadresseId(11),
-                ident = vegadresseIdentType(
-                    Fylkesnummer(12),
-                    Kommunenummer.Lopenummer(34),
-                    Adressekode(10100),
-                    Adressenummernummer(2),
+                Entity(
+                    id = vegadresseId(11),
+                    ident =
+                        vegadresseIdentType(
+                            Fylkesnummer(12),
+                            Kommunenummer.Lopenummer(34),
+                            Adressekode(10100),
+                            Adressenummernummer(2),
+                        ),
                 ),
-            ),
-        )
+            )
 
-        val vegendring = Vegendring(
-            FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(12))),
-            FraEnTilMange(
-                Kommunenummer.Lopenummer(34),
-                listOf(Kommunenummer.Lopenummer(35), Kommunenummer.Lopenummer(36)),
-            ),
-            FraTil(Adressekode(10100), Adressekode(10100)),
-        )
+        val vegendring =
+            Vegendring(
+                FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(12))),
+                FraEnTilMange(
+                    Kommunenummer.Lopenummer(34),
+                    listOf(Kommunenummer.Lopenummer(35), Kommunenummer.Lopenummer(36)),
+                ),
+                FraEnTilMange(Adressekode(10100), listOf(Adressekode(10100))),
+            )
 
         test("Manglende regler for adresser") {
             val idGeneratorManager = mockIdGenerator(101)
