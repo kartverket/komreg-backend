@@ -23,67 +23,67 @@ class IdentTransformerVegTest {
             id = "123",
             ikrafttredelsesdato = ikrafttredelsesdato,
             endringer =
-                listOf(
-                    Kommuneendring(
-                        fylkesnummer =
-                            FraEnTilMange(
-                                fra = Fylkesnummer(2),
-                                til = listOf(Fylkesnummer(3)),
-                            ),
-                        kommuneløpenummer =
-                            FraEnTilMange(
-                                fra = Kommunenummer.Lopenummer(5),
-                                til = listOf(Kommunenummer.Lopenummer(6), Kommunenummer.Lopenummer(7)),
-                            ),
+            listOf(
+                Kommuneendring(
+                    fylkesnummer =
+                    FraEnTilMange(
+                        fra = Fylkesnummer(2),
+                        til = listOf(Fylkesnummer(3)),
                     ),
-                    Vegendring(
-                        fylkesnummer =
-                            FraEnTilMange(
-                                fra = Fylkesnummer(2),
-                                til = listOf(Fylkesnummer(3)),
-                            ),
-                        kommuneløpenummer =
-                            FraEnTilMange(
-                                fra = Kommunenummer.Lopenummer(5),
-                                til =
-                                    listOf(
-                                        Kommunenummer.Lopenummer(6),
-                                    ),
-                            ),
-                        adressekode =
-                            FraEnTilMange(
-                                fra = Adressekode(2500),
-                                til =
-                                    listOf(
-                                        Adressekode(2500),
-                                    ),
-                            ),
-                    ),
-                    Vegendring(
-                        fylkesnummer =
-                            FraEnTilMange(
-                                fra = Fylkesnummer(2),
-                                til = listOf(Fylkesnummer(3)),
-                            ),
-                        kommuneløpenummer =
-                            FraEnTilMange(
-                                fra = Kommunenummer.Lopenummer(5),
-                                til =
-                                    listOf(
-                                        Kommunenummer.Lopenummer(6),
-                                        Kommunenummer.Lopenummer(7),
-                                    ),
-                            ),
-                        adressekode =
-                            FraEnTilMange(
-                                fra = Adressekode(2600),
-                                til =
-                                    listOf(
-                                        Adressekode(2600),
-                                    ),
-                            ),
+                    kommuneløpenummer =
+                    FraEnTilMange(
+                        fra = Kommunenummer.Lopenummer(5),
+                        til = listOf(Kommunenummer.Lopenummer(6), Kommunenummer.Lopenummer(7)),
                     ),
                 ),
+                Vegendring(
+                    fylkesnummer =
+                    FraEnTilMange(
+                        fra = Fylkesnummer(2),
+                        til = listOf(Fylkesnummer(3)),
+                    ),
+                    kommuneløpenummer =
+                    FraEnTilMange(
+                        fra = Kommunenummer.Lopenummer(5),
+                        til =
+                        listOf(
+                            Kommunenummer.Lopenummer(6),
+                        ),
+                    ),
+                    adressekode =
+                    FraEnTilMange(
+                        fra = Adressekode(2500),
+                        til =
+                        listOf(
+                            Adressekode(2500),
+                        ),
+                    ),
+                ),
+                Vegendring(
+                    fylkesnummer =
+                    FraEnTilMange(
+                        fra = Fylkesnummer(2),
+                        til = listOf(Fylkesnummer(3)),
+                    ),
+                    kommuneløpenummer =
+                    FraEnTilMange(
+                        fra = Kommunenummer.Lopenummer(5),
+                        til =
+                        listOf(
+                            Kommunenummer.Lopenummer(6),
+                            Kommunenummer.Lopenummer(7),
+                        ),
+                    ),
+                    adressekode =
+                    FraEnTilMange(
+                        fra = Adressekode(2600),
+                        til =
+                        listOf(
+                            Adressekode(2600),
+                        ),
+                    ),
+                ),
+            ),
             kommuner = listOf(dummyKommune(3, 6), dummyKommune(3, 7)),
             fylker = emptyList(),
         )

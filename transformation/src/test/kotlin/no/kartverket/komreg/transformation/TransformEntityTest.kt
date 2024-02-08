@@ -19,10 +19,10 @@ class TransformEntityTest {
     private val dummyKommune =
         Kommune(
             kommunenummer =
-                Kommunenummer(
-                    Fylkesnummer(3),
-                    Kommunenummer.Lopenummer(6),
-                ),
+            Kommunenummer(
+                Fylkesnummer(3),
+                Kommunenummer.Lopenummer(6),
+            ),
             kommunenavn = Kommunenavn("Dummy"),
             koordinatsystem = Koordinatsystem.UTM32,
             senterpunkt = Koordinat(123.0, 456.0),
@@ -39,57 +39,57 @@ class TransformEntityTest {
             id = "123",
             ikrafttredelsesdato = ikrafttredelsesdato,
             endringer =
-                listOf(
-                    Kommuneendring(
-                        fylkesnummer =
-                            FraEnTilMange(
-                                fra = Fylkesnummer(2),
-                                til = listOf(Fylkesnummer(3)),
-                            ),
-                        kommuneløpenummer =
-                            FraEnTilMange(
-                                fra = Kommunenummer.Lopenummer(5),
-                                til = listOf(Kommunenummer.Lopenummer(6)),
-                            ),
+            listOf(
+                Kommuneendring(
+                    fylkesnummer =
+                    FraEnTilMange(
+                        fra = Fylkesnummer(2),
+                        til = listOf(Fylkesnummer(3)),
                     ),
-                    Kommuneendring(
-                        fylkesnummer =
-                            FraEnTilMange(
-                                fra = Fylkesnummer(5),
-                                til = listOf(Fylkesnummer(5)),
-                            ),
-                        kommuneløpenummer =
-                            FraEnTilMange(
-                                fra = Kommunenummer.Lopenummer(5),
-                                til = listOf(Kommunenummer.Lopenummer(7), Kommunenummer.Lopenummer(8)),
-                            ),
-                    ),
-                    Vegendring(
-                        fylkesnummer =
-                            FraEnTilMange(
-                                fra = Fylkesnummer(2),
-                                til = listOf(Fylkesnummer(3)),
-                            ),
-                        kommuneløpenummer =
-                            FraEnTilMange(
-                                fra = Kommunenummer.Lopenummer(5),
-                                til =
-                                    listOf(
-                                        Kommunenummer.Lopenummer(6),
-                                        Kommunenummer.Lopenummer(7),
-                                    ),
-                            ),
-                        adressekode =
-                            FraEnTilMange(
-                                fra = Adressekode(2500),
-                                til =
-                                    listOf(
-                                        Adressekode(2500),
-                                        Adressekode(2500),
-                                    ),
-                            ),
+                    kommuneløpenummer =
+                    FraEnTilMange(
+                        fra = Kommunenummer.Lopenummer(5),
+                        til = listOf(Kommunenummer.Lopenummer(6)),
                     ),
                 ),
+                Kommuneendring(
+                    fylkesnummer =
+                    FraEnTilMange(
+                        fra = Fylkesnummer(5),
+                        til = listOf(Fylkesnummer(5)),
+                    ),
+                    kommuneløpenummer =
+                    FraEnTilMange(
+                        fra = Kommunenummer.Lopenummer(5),
+                        til = listOf(Kommunenummer.Lopenummer(7), Kommunenummer.Lopenummer(8)),
+                    ),
+                ),
+                Vegendring(
+                    fylkesnummer =
+                    FraEnTilMange(
+                        fra = Fylkesnummer(2),
+                        til = listOf(Fylkesnummer(3)),
+                    ),
+                    kommuneløpenummer =
+                    FraEnTilMange(
+                        fra = Kommunenummer.Lopenummer(5),
+                        til =
+                        listOf(
+                            Kommunenummer.Lopenummer(6),
+                            Kommunenummer.Lopenummer(7),
+                        ),
+                    ),
+                    adressekode =
+                    FraEnTilMange(
+                        fra = Adressekode(2500),
+                        til =
+                        listOf(
+                            Adressekode(2500),
+                            Adressekode(2500),
+                        ),
+                    ),
+                ),
+            ),
             kommuner = listOf(dummyKommune(3, 6), dummyKommune(5, 7), dummyKommune(5, 8), dummyKommune(3, 7)),
             fylker = emptyList(),
         )
@@ -160,10 +160,10 @@ class TransformEntityTest {
             Entity(
                 dummyId(123),
                 associatedIdents =
-                    setOf(
-                        identOfMatrikkelenhet(2, 5, 1),
-                        identOfMatrikkelenhet(2, 5, 2),
-                    ),
+                setOf(
+                    identOfMatrikkelenhet(2, 5, 1),
+                    identOfMatrikkelenhet(2, 5, 2),
+                ),
             )
         runBlocking {
             val result = identTransformer.transform(entity, idGenerator::idFor)
@@ -182,10 +182,10 @@ class TransformEntityTest {
             Entity(
                 dummyId(123),
                 associatedIdents =
-                    setOf(
-                        identOfMatrikkelenhet(2, 5, 1),
-                        identOfMatrikkelenhet(10, 15, 1),
-                    ),
+                setOf(
+                    identOfMatrikkelenhet(2, 5, 1),
+                    identOfMatrikkelenhet(10, 15, 1),
+                ),
             )
         runBlocking {
             val result = identTransformer.transform(entity, idGenerator::idFor)
@@ -204,10 +204,10 @@ class TransformEntityTest {
             Entity(
                 dummyId(123),
                 associatedIdents =
-                    setOf(
-                        identOfMatrikkelenhet(10, 15, 1),
-                        identOfMatrikkelenhet(2, 5, 1),
-                    ),
+                setOf(
+                    identOfMatrikkelenhet(10, 15, 1),
+                    identOfMatrikkelenhet(2, 5, 1),
+                ),
             )
         runBlocking {
             val result = identTransformer.transform(entity, idGenerator::idFor)

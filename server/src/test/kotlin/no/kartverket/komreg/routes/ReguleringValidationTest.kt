@@ -20,15 +20,15 @@ class ReguleringValidationTest : AnnotationSpec() {
                     nyeFylker = emptyList(),
                     nyeKommuner = emptyList(),
                     transformasjoner =
-                        listOf(
-                            FylkeTransformasjonDTO(
-                                fylkesnummer =
-                                    FraEnTilMangeDTO(
-                                        fra = "01",
-                                        til = listOf("02", "03"),
-                                    ),
+                    listOf(
+                        FylkeTransformasjonDTO(
+                            fylkesnummer =
+                            FraEnTilMangeDTO(
+                                fra = "01",
+                                til = listOf("02", "03"),
                             ),
                         ),
+                    ),
                 ),
             )
 
@@ -61,20 +61,20 @@ class ReguleringValidationTest : AnnotationSpec() {
                     nyeFylker = emptyList(),
                     nyeKommuner = emptyList(),
                     transformasjoner =
-                        listOf(
-                            KommuneTransformasjonDTO(
-                                fylkesnummer =
-                                    FraEnTilMangeDTO(
-                                        fra = "01",
-                                        til = listOf("01"),
-                                    ),
-                                kommuneløpenummer =
-                                    FraEnTilMangeDTO(
-                                        fra = "01",
-                                        til = listOf("02", "03"),
-                                    ),
+                    listOf(
+                        KommuneTransformasjonDTO(
+                            fylkesnummer =
+                            FraEnTilMangeDTO(
+                                fra = "01",
+                                til = listOf("01"),
+                            ),
+                            kommuneløpenummer =
+                            FraEnTilMangeDTO(
+                                fra = "01",
+                                til = listOf("02", "03"),
                             ),
                         ),
+                    ),
                 ),
             )
 
@@ -89,12 +89,12 @@ class ReguleringValidationTest : AnnotationSpec() {
         val errors =
             mutableMapOf<String, List<ErrorType>>(
                 "endringId" to
-                    listOf(
-                        ErrorType.KOMMUNEDELING_MANGLER_KRETSER,
-                        ErrorType.KOMMUNEDELING_MANGLER_MATRIKKELENHETER,
-                        ErrorType.KOMMUNEDELING_MANGLER_TEIGER,
-                        ErrorType.KOMMUNEDELING_MANGLER_VEGER,
-                    ),
+                        listOf(
+                            ErrorType.KOMMUNEDELING_MANGLER_KRETSER,
+                            ErrorType.KOMMUNEDELING_MANGLER_MATRIKKELENHETER,
+                            ErrorType.KOMMUNEDELING_MANGLER_TEIGER,
+                            ErrorType.KOMMUNEDELING_MANGLER_VEGER,
+                        ),
             )
 
         assertEquals(errors, ReguleringValidator.validateKommunedeling(regulering))
@@ -113,71 +113,71 @@ class ReguleringValidationTest : AnnotationSpec() {
                     nyeFylker = emptyList(),
                     nyeKommuner = emptyList(),
                     transformasjoner =
-                        listOf(
-                            KommuneTransformasjonDTO(
-                                fylkesnummer =
-                                    FraEnTilMangeDTO(
-                                        fra = "01",
-                                        til = listOf("01"),
-                                    ),
-                                kommuneløpenummer =
-                                    FraEnTilMangeDTO(
-                                        fra = "01",
-                                        til = listOf("02", "03"),
-                                    ),
+                    listOf(
+                        KommuneTransformasjonDTO(
+                            fylkesnummer =
+                            FraEnTilMangeDTO(
+                                fra = "01",
+                                til = listOf("01"),
                             ),
-                            MatrikkelenhetTransformasjonDTO(
-                                fylkesnummer =
-                                    FraTilDTO(
-                                        fra = "01",
-                                        til = "01",
-                                    ),
-                                kommuneløpenummer =
-                                    FraTilDTO(
-                                        fra = "01",
-                                        til = "02",
-                                    ),
-                                gårdsnummer =
-                                    FraTilDTO(
-                                        fra = "01",
-                                        til = "01",
-                                    ),
-                            ),
-                            TeigTransformasjonDTO(
-                                fylkesnummer =
-                                    FraTilDTO(
-                                        fra = "01",
-                                        til = "01",
-                                    ),
-                                kommuneløpenummer =
-                                    FraTilDTO(
-                                        fra = "01",
-                                        til = "02",
-                                    ),
-                                teigId =
-                                    FraTilDTO(
-                                        fra = "01",
-                                        til = "01",
-                                    ),
-                            ),
-                            VegTransformasjonDTO(
-                                fylkesnummer =
-                                    FraEnTilMangeDTO(
-                                        fra = "01",
-                                        til = listOf("01"),
-                                    ),
-                                kommuneløpenummer =
-                                    FraEnTilMangeDTO(
-                                        fra = "01",
-                                        til = listOf("02"),
-                                    ),
-                                adressekode =
-                                    FraEnTilMangeDTO(
-                                        fra = "01",
-                                        til = listOf("01"),
-                                    ),
+                            kommuneløpenummer =
+                            FraEnTilMangeDTO(
+                                fra = "01",
+                                til = listOf("02", "03"),
                             ),
                         ),
+                        MatrikkelenhetTransformasjonDTO(
+                            fylkesnummer =
+                            FraTilDTO(
+                                fra = "01",
+                                til = "01",
+                            ),
+                            kommuneløpenummer =
+                            FraTilDTO(
+                                fra = "01",
+                                til = "02",
+                            ),
+                            gårdsnummer =
+                            FraTilDTO(
+                                fra = "01",
+                                til = "01",
+                            ),
+                        ),
+                        TeigTransformasjonDTO(
+                            fylkesnummer =
+                            FraTilDTO(
+                                fra = "01",
+                                til = "01",
+                            ),
+                            kommuneløpenummer =
+                            FraTilDTO(
+                                fra = "01",
+                                til = "02",
+                            ),
+                            teigId =
+                            FraTilDTO(
+                                fra = "01",
+                                til = "01",
+                            ),
+                        ),
+                        VegTransformasjonDTO(
+                            fylkesnummer =
+                            FraEnTilMangeDTO(
+                                fra = "01",
+                                til = listOf("01"),
+                            ),
+                            kommuneløpenummer =
+                            FraEnTilMangeDTO(
+                                fra = "01",
+                                til = listOf("02"),
+                            ),
+                            adressekode =
+                            FraEnTilMangeDTO(
+                                fra = "01",
+                                til = listOf("01"),
+                            ),
+                        ),
+                    ),
                 ),
             )
 
@@ -192,9 +192,9 @@ class ReguleringValidationTest : AnnotationSpec() {
         val errors =
             mutableMapOf<String, List<ErrorType>>(
                 "endringId" to
-                    listOf(
-                        ErrorType.KOMMUNEDELING_MANGLER_KRETSER,
-                    ),
+                        listOf(
+                            ErrorType.KOMMUNEDELING_MANGLER_KRETSER,
+                        ),
             )
 
         assertEquals(errors, ReguleringValidator.validateKommunedeling(regulering))
@@ -213,25 +213,25 @@ class ReguleringValidationTest : AnnotationSpec() {
                     nyeFylker = emptyList(),
                     nyeKommuner = emptyList(),
                     transformasjoner =
-                        listOf(
-                            VegTransformasjonDTO(
-                                fylkesnummer =
-                                    FraEnTilMangeDTO(
-                                        fra = "01",
-                                        til = listOf("01"),
-                                    ),
-                                kommuneløpenummer =
-                                    FraEnTilMangeDTO(
-                                        fra = "01",
-                                        til = listOf("02", "03"),
-                                    ),
-                                adressekode =
-                                    FraEnTilMangeDTO(
-                                        fra = "01",
-                                        til = listOf("01"),
-                                    ),
+                    listOf(
+                        VegTransformasjonDTO(
+                            fylkesnummer =
+                            FraEnTilMangeDTO(
+                                fra = "01",
+                                til = listOf("01"),
+                            ),
+                            kommuneløpenummer =
+                            FraEnTilMangeDTO(
+                                fra = "01",
+                                til = listOf("02", "03"),
+                            ),
+                            adressekode =
+                            FraEnTilMangeDTO(
+                                fra = "01",
+                                til = listOf("01"),
                             ),
                         ),
+                    ),
                 ),
             )
 

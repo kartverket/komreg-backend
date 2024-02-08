@@ -178,6 +178,7 @@ suspend fun transform(
                         when (err) {
                             is TransformValidationError.ForIdent ->
                                 logger.error("Valideringsfeil {}: {}", err.ident, err.message)
+
                             is TransformValidationError.UncaughtThrowable ->
                                 logger.error("VALIDERING IKKE UTFØRT PGA FEIL: ${err.message}", err.throwable)
                         }
@@ -219,19 +220,19 @@ private suspend fun mapFylkeendring(
         }
 
     return fylkeIdentType(fylkeendring.fylkesnummer.fra) to
-        if (til.size == 1) {
-            val t = til[0]
-            IdentTransformer.Mapping.Replace(
-                t.first,
-                t.second,
-            )
-        } else {
-            IdentTransformer.Mapping.Split(
-                listOf(
-                    Ident.Empty to null, // Ikke sett ny fylke-kobling
-                ) + til,
-            )
-        }
+            if (til.size == 1) {
+                val t = til[0]
+                IdentTransformer.Mapping.Replace(
+                    t.first,
+                    t.second,
+                )
+            } else {
+                IdentTransformer.Mapping.Split(
+                    listOf(
+                        Ident.Empty to null, // Ikke sett ny fylke-kobling
+                    ) + til,
+                )
+            }
 }
 
 private suspend fun mapKommuneendring(
@@ -252,19 +253,19 @@ private suspend fun mapKommuneendring(
         }
 
     return kommuneIdentType(kommuneendring.fylkesnummer.fra, kommuneendring.kommuneløpenummer.fra) to
-        if (til.size == 1) {
-            val t = til[0]
-            IdentTransformer.Mapping.Replace(
-                t.first,
-                t.second,
-            )
-        } else {
-            IdentTransformer.Mapping.Split(
-                listOf(
-                    til[0].first to null, // TODO: Første kommune i input-en blir satt som ny kommune for den utgående kommunen, mulig at dette bør være mer eksplisitt på sikt
-                ) + til,
-            )
-        }
+            if (til.size == 1) {
+                val t = til[0]
+                IdentTransformer.Mapping.Replace(
+                    t.first,
+                    t.second,
+                )
+            } else {
+                IdentTransformer.Mapping.Split(
+                    listOf(
+                        til[0].first to null, // TODO: Første kommune i input-en blir satt som ny kommune for den utgående kommunen, mulig at dette bør være mer eksplisitt på sikt
+                    ) + til,
+                )
+            }
 }
 
 suspend fun mapMatrikkelenhetendring(matrikkelenhetendring: Matrikkelenhetendring): Pair<Ident, IdentTransformer.Mapping> {
@@ -275,13 +276,13 @@ suspend fun mapMatrikkelenhetendring(matrikkelenhetendring: Matrikkelenhetendrin
         matrikkelenhetendring.kommuneløpenummer.fra,
         matrikkelenhetendring.gårdsnummer.fra,
     ) to
-        IdentTransformer.Mapping.Simple(
-            gardsnummerIdentType(
-                matrikkelenhetendring.fylkesnummer.til,
-                matrikkelenhetendring.kommuneløpenummer.til,
-                matrikkelenhetendring.gårdsnummer.til,
-            ),
-        )
+            IdentTransformer.Mapping.Simple(
+                gardsnummerIdentType(
+                    matrikkelenhetendring.fylkesnummer.til,
+                    matrikkelenhetendring.kommuneløpenummer.til,
+                    matrikkelenhetendring.gårdsnummer.til,
+                ),
+            )
 }
 
 suspend fun mapTeig(teigendring: Teigendring): Pair<Ident, IdentTransformer.Mapping> {
@@ -292,13 +293,13 @@ suspend fun mapTeig(teigendring: Teigendring): Pair<Ident, IdentTransformer.Mapp
         teigendring.kommuneløpenummer.fra,
         teigendring.teigId.fra,
     ) to
-        IdentTransformer.Mapping.Simple(
-            teigIdentType(
-                teigendring.fylkesnummer.til,
-                teigendring.kommuneløpenummer.til,
-                teigendring.teigId.til,
-            ),
-        )
+            IdentTransformer.Mapping.Simple(
+                teigIdentType(
+                    teigendring.fylkesnummer.til,
+                    teigendring.kommuneløpenummer.til,
+                    teigendring.teigId.til,
+                ),
+            )
 }
 
 suspend fun mapVegendring(vegendring: Vegendring): Pair<Ident, IdentTransformer.Mapping> {
@@ -328,15 +329,15 @@ suspend fun mapVegendring(vegendring: Vegendring): Pair<Ident, IdentTransformer.
         vegendring.kommuneløpenummer.fra,
         vegendring.adressekode.fra,
     ) to
-        if (til.size == 1) {
-            val t = til[0]
-            IdentTransformer.Mapping.Simple(
-                t.first,
-                t.second,
-            )
-        } else {
-            IdentTransformer.Mapping.Split(til)
-        }
+            if (til.size == 1) {
+                val t = til[0]
+                IdentTransformer.Mapping.Simple(
+                    t.first,
+                    t.second,
+                )
+            } else {
+                IdentTransformer.Mapping.Split(til)
+            }
 }
 
 suspend fun mapVegadresseendring(vegadresseendring: Vegadresseendring): Pair<Ident, IdentTransformer.Mapping> {
@@ -348,14 +349,14 @@ suspend fun mapVegadresseendring(vegadresseendring: Vegadresseendring): Pair<Ide
         vegadresseendring.adressekode.fra,
         vegadresseendring.adressenummer.fra,
     ) to
-        IdentTransformer.Mapping.Simple(
-            vegadresseIdentType(
-                vegadresseendring.fylkesnummer.til,
-                vegadresseendring.kommuneløpenummer.til,
-                vegadresseendring.adressekode.til,
-                vegadresseendring.adressenummer.til,
-            ),
-        )
+            IdentTransformer.Mapping.Simple(
+                vegadresseIdentType(
+                    vegadresseendring.fylkesnummer.til,
+                    vegadresseendring.kommuneløpenummer.til,
+                    vegadresseendring.adressekode.til,
+                    vegadresseendring.adressenummer.til,
+                ),
+            )
 }
 
 suspend fun mapKretsendring(kretsendring: Kretsendring): Pair<Ident, IdentTransformer.Mapping> {
@@ -367,14 +368,14 @@ suspend fun mapKretsendring(kretsendring: Kretsendring): Pair<Ident, IdentTransf
         kretsendring.kretstype.fra,
         kretsendring.kretsnummer.fra,
     ) to
-        IdentTransformer.Mapping.Simple(
-            kretsIdentType(
-                kretsendring.fylkesnummer.til,
-                kretsendring.kommuneløpenummer.til,
-                kretsendring.kretstype.til,
-                kretsendring.kretsnummer.til,
-            ),
-        )
+            IdentTransformer.Mapping.Simple(
+                kretsIdentType(
+                    kretsendring.fylkesnummer.til,
+                    kretsendring.kommuneløpenummer.til,
+                    kretsendring.kretstype.til,
+                    kretsendring.kretsnummer.til,
+                ),
+            )
 }
 
 fun <T> Flow<T>.chunked(size: Int): Flow<List<T>> =

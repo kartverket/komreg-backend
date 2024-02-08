@@ -28,20 +28,20 @@ class TransformerVegadresserTest : FunSpec({
                 Entity(
                     id = vegId(1),
                     ident =
-                        adresseparsellIdentType(
-                            Fylkesnummer(12),
-                            Kommunenummer.Lopenummer(34),
-                            Adressekode(10100),
-                        ),
+                    adresseparsellIdentType(
+                        Fylkesnummer(12),
+                        Kommunenummer.Lopenummer(34),
+                        Adressekode(10100),
+                    ),
                 ),
                 Entity(
                     id = vegId(2),
                     ident =
-                        adresseparsellIdentType(
-                            Fylkesnummer(56),
-                            Kommunenummer.Lopenummer(78),
-                            Adressekode(10100),
-                        ),
+                    adresseparsellIdentType(
+                        Fylkesnummer(56),
+                        Kommunenummer.Lopenummer(78),
+                        Adressekode(10100),
+                    ),
                 ),
             )
 
@@ -85,11 +85,11 @@ class TransformerVegadresserTest : FunSpec({
                 Entity(
                     id = vegId(1),
                     ident =
-                        adresseparsellIdentType(
-                            Fylkesnummer(12),
-                            Kommunenummer.Lopenummer(34),
-                            Adressekode(10100),
-                        ),
+                    adresseparsellIdentType(
+                        Fylkesnummer(12),
+                        Kommunenummer.Lopenummer(34),
+                        Adressekode(10100),
+                    ),
                 ),
             )
         val vegadresseSource =
@@ -97,22 +97,22 @@ class TransformerVegadresserTest : FunSpec({
                 Entity(
                     id = vegadresseId(10),
                     ident =
-                        vegadresseIdentType(
-                            Fylkesnummer(12),
-                            Kommunenummer.Lopenummer(34),
-                            Adressekode(10100),
-                            Adressenummernummer(1),
-                        ),
+                    vegadresseIdentType(
+                        Fylkesnummer(12),
+                        Kommunenummer.Lopenummer(34),
+                        Adressekode(10100),
+                        Adressenummernummer(1),
+                    ),
                 ),
                 Entity(
                     id = vegadresseId(11),
                     ident =
-                        vegadresseIdentType(
-                            Fylkesnummer(12),
-                            Kommunenummer.Lopenummer(34),
-                            Adressekode(10100),
-                            Adressenummernummer(2),
-                        ),
+                    vegadresseIdentType(
+                        Fylkesnummer(12),
+                        Kommunenummer.Lopenummer(34),
+                        Adressekode(10100),
+                        Adressenummernummer(2),
+                    ),
                 ),
             )
 
@@ -194,11 +194,11 @@ class TransformerVegadresserTest : FunSpec({
                 Entity(
                     id = vegId(1),
                     ident =
-                        adresseparsellIdentType(
-                            Fylkesnummer(12),
-                            Kommunenummer.Lopenummer(34),
-                            Adressekode(10100),
-                        ),
+                    adresseparsellIdentType(
+                        Fylkesnummer(12),
+                        Kommunenummer.Lopenummer(34),
+                        Adressekode(10100),
+                    ),
                 ),
             )
         val vegadresseSource =
@@ -206,22 +206,22 @@ class TransformerVegadresserTest : FunSpec({
                 Entity(
                     id = vegadresseId(10),
                     ident =
-                        vegadresseIdentType(
-                            Fylkesnummer(12),
-                            Kommunenummer.Lopenummer(34),
-                            Adressekode(10100),
-                            Adressenummernummer(1),
-                        ),
+                    vegadresseIdentType(
+                        Fylkesnummer(12),
+                        Kommunenummer.Lopenummer(34),
+                        Adressekode(10100),
+                        Adressenummernummer(1),
+                    ),
                 ),
                 Entity(
                     id = vegadresseId(11),
                     ident =
-                        vegadresseIdentType(
-                            Fylkesnummer(12),
-                            Kommunenummer.Lopenummer(34),
-                            Adressekode(10100),
-                            Adressenummernummer(2),
-                        ),
+                    vegadresseIdentType(
+                        Fylkesnummer(12),
+                        Kommunenummer.Lopenummer(34),
+                        Adressekode(10100),
+                        Adressenummernummer(2),
+                    ),
                 ),
             )
 
