@@ -1,7 +1,6 @@
 package no.kartverket.komreg.transformation
 
 import io.mockk.coEvery
-import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.toKotlinLocalDate
@@ -19,57 +18,75 @@ import java.time.LocalDate
 class IdentTransformerVegTest {
     private val ikrafttredelsesdato = LocalDate.now().toKotlinLocalDate()
 
-    private val reguleringsInput = Reguleringsinput(
-        id = "123",
-        ikrafttredelsesdato = ikrafttredelsesdato,
-        endringer = listOf(
-            Kommuneendring(
-                fylkesnummer = FraEnTilMange(
-                    fra = Fylkesnummer(2),
-                    til = listOf(Fylkesnummer(3)),
-                ),
-                kommuneløpenummer = FraEnTilMange(
-                    fra = Kommunenummer.Lopenummer(5),
-                    til = listOf(Kommunenummer.Lopenummer(6), Kommunenummer.Lopenummer(7)),
-                ),
-            ),
-            Vegendring(
-                fylkesnummer = FraEnTilMange(
-                    fra = Fylkesnummer(2),
-                    til = listOf(Fylkesnummer(3)),
-                ),
-                kommuneløpenummer = FraEnTilMange(
-                    fra = Kommunenummer.Lopenummer(5),
-                    til = listOf(
-                        Kommunenummer.Lopenummer(6),
+    private val reguleringsInput =
+        Reguleringsinput(
+            id = "123",
+            ikrafttredelsesdato = ikrafttredelsesdato,
+            endringer =
+            listOf(
+                Kommuneendring(
+                    fylkesnummer =
+                    FraEnTilMange(
+                        fra = Fylkesnummer(2),
+                        til = listOf(Fylkesnummer(3)),
+                    ),
+                    kommuneløpenummer =
+                    FraEnTilMange(
+                        fra = Kommunenummer.Lopenummer(5),
+                        til = listOf(Kommunenummer.Lopenummer(6), Kommunenummer.Lopenummer(7)),
                     ),
                 ),
-                adressekode = FraTil(
-                    fra = Adressekode(2500),
-                    til = Adressekode(2500),
-                ),
-            ),
-            Vegendring(
-                fylkesnummer = FraEnTilMange(
-                    fra = Fylkesnummer(2),
-                    til = listOf(Fylkesnummer(3)),
-                ),
-                kommuneløpenummer = FraEnTilMange(
-                    fra = Kommunenummer.Lopenummer(5),
-                    til = listOf(
-                        Kommunenummer.Lopenummer(6),
-                        Kommunenummer.Lopenummer(7),
+                Vegendring(
+                    fylkesnummer =
+                    FraEnTilMange(
+                        fra = Fylkesnummer(2),
+                        til = listOf(Fylkesnummer(3)),
+                    ),
+                    kommuneløpenummer =
+                    FraEnTilMange(
+                        fra = Kommunenummer.Lopenummer(5),
+                        til =
+                        listOf(
+                            Kommunenummer.Lopenummer(6),
+                        ),
+                    ),
+                    adressekode =
+                    FraEnTilMange(
+                        fra = Adressekode(2500),
+                        til =
+                        listOf(
+                            Adressekode(2500),
+                        ),
                     ),
                 ),
-                adressekode = FraTil(
-                    fra = Adressekode(2600),
-                    til = Adressekode(2600),
+                Vegendring(
+                    fylkesnummer =
+                    FraEnTilMange(
+                        fra = Fylkesnummer(2),
+                        til = listOf(Fylkesnummer(3)),
+                    ),
+                    kommuneløpenummer =
+                    FraEnTilMange(
+                        fra = Kommunenummer.Lopenummer(5),
+                        til =
+                        listOf(
+                            Kommunenummer.Lopenummer(6),
+                            Kommunenummer.Lopenummer(7),
+                        ),
+                    ),
+                    adressekode =
+                    FraEnTilMange(
+                        fra = Adressekode(2600),
+                        til =
+                        listOf(
+                            Adressekode(2600),
+                        ),
+                    ),
                 ),
             ),
-        ),
-        kommuner = listOf(dummyKommune(3, 6), dummyKommune(3, 7)),
-        fylker = emptyList(),
-    )
+            kommuner = listOf(dummyKommune(3, 6), dummyKommune(3, 7)),
+            fylker = emptyList(),
+        )
     private val mappings = runBlocking { mapInput(reguleringsInput) }
     private val identTransformer = IdentTransformer(*mappings.toTypedArray())
 
@@ -82,10 +99,11 @@ class IdentTransformerVegTest {
 
     @Test
     fun `Transformasjon av identer skal endres dersom en enkel ident matcher`() {
-        val entity = Entity(
-            dummyId(123),
-            identOfVeg(2, 5, 2500),
-        )
+        val entity =
+            Entity(
+                dummyId(123),
+                identOfVeg(2, 5, 2500),
+            )
         runBlocking {
             val result = identTransformer.transform(entity, idGenerator::idFor)
             val expected1 = identOfVeg(3, 6, 2500)
@@ -96,10 +114,11 @@ class IdentTransformerVegTest {
 
     @Test
     fun `Transformasjon av identer skal endres dersom flere identer matcher`() {
-        val entity = Entity(
-            dummyId(123),
-            identOfVeg(2, 5, 2600),
-        )
+        val entity =
+            Entity(
+                dummyId(123),
+                identOfVeg(2, 5, 2600),
+            )
         runBlocking {
             val result = identTransformer.transform(entity, idGenerator::idFor)
             val expected1 = identOfVeg(3, 6, 2600)
@@ -110,7 +129,11 @@ class IdentTransformerVegTest {
     }
 }
 
-private fun identOfVeg(fylkesnummer: Int, lopenummer: Int, adressekode: Int) = runBlocking {
+private fun identOfVeg(
+    fylkesnummer: Int,
+    lopenummer: Int,
+    adressekode: Int,
+) = runBlocking {
     Ident(
         Fylkesnummer(fylkesnummer.toLong()),
         Kommunenummer.Lopenummer(lopenummer.toByte()),

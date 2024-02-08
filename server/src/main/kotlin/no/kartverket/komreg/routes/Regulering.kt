@@ -18,12 +18,14 @@ data class Regulering(
         return Reguleringsinput(
             id,
             dato,
-            endringer = endringer.flatMap { endring ->
+            endringer =
+            endringer.flatMap { endring ->
                 endring.transformasjoner.map { transformasjon ->
                     when (transformasjon) {
                         is FylkeTransformasjonDTO -> {
                             Fylkeendring(
-                                fylkesnummer = FraEnTilMange(
+                                fylkesnummer =
+                                FraEnTilMange(
                                     fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
                                     til = transformasjon.fylkesnummer.til.map { Fylkesnummer(it.toLong()) },
                                 ),
@@ -32,11 +34,13 @@ data class Regulering(
 
                         is KommuneTransformasjonDTO -> {
                             Kommuneendring(
-                                fylkesnummer = FraEnTilMange(
+                                fylkesnummer =
+                                FraEnTilMange(
                                     fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
                                     til = transformasjon.fylkesnummer.til.map { Fylkesnummer(it.toLong()) },
                                 ),
-                                kommuneløpenummer = FraEnTilMange(
+                                kommuneløpenummer =
+                                FraEnTilMange(
                                     fra = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.fra.toByte()),
                                     til = transformasjon.kommuneløpenummer.til.map { Kommunenummer.Lopenummer(it.toByte()) },
                                 ),
@@ -45,15 +49,18 @@ data class Regulering(
 
                         is MatrikkelenhetTransformasjonDTO -> {
                             Matrikkelenhetendring(
-                                fylkesnummer = FraTil(
+                                fylkesnummer =
+                                FraTil(
                                     fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
                                     til = Fylkesnummer(transformasjon.fylkesnummer.til.toLong()),
                                 ),
-                                kommuneløpenummer = FraTil(
+                                kommuneløpenummer =
+                                FraTil(
                                     fra = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.fra.toByte()),
                                     til = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.til.toByte()),
                                 ),
-                                gårdsnummer = FraTil(
+                                gårdsnummer =
+                                FraTil(
                                     fra = Matrikkelnummer.Gardsnummer(transformasjon.gårdsnummer.fra.toInt()),
                                     til = Matrikkelnummer.Gardsnummer(transformasjon.gårdsnummer.til.toInt()),
                                 ),
@@ -62,19 +69,23 @@ data class Regulering(
 
                         is KretsTransformasjonDTO -> {
                             Kretsendring(
-                                fylkesnummer = FraTil(
+                                fylkesnummer =
+                                FraTil(
                                     fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
                                     til = Fylkesnummer(transformasjon.fylkesnummer.til.toLong()),
                                 ),
-                                kommuneløpenummer = FraTil(
+                                kommuneløpenummer =
+                                FraTil(
                                     fra = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.fra.toByte()),
                                     til = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.til.toByte()),
                                 ),
-                                kretsnummer = FraTil(
+                                kretsnummer =
+                                FraTil(
                                     fra = Kretsnummer(transformasjon.kretsnummer.fra.toLong()),
                                     til = Kretsnummer(transformasjon.kretsnummer.til.toLong()),
                                 ),
-                                kretstype = FraTil(
+                                kretstype =
+                                FraTil(
                                     fra = Kretstype(transformasjon.kretstype.fra),
                                     til = Kretstype(transformasjon.kretstype.til),
                                 ),
@@ -83,32 +94,38 @@ data class Regulering(
 
                         is VegTransformasjonDTO -> {
                             Vegendring(
-                                fylkesnummer = FraEnTilMange(
+                                fylkesnummer =
+                                FraEnTilMange(
                                     fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
                                     til = transformasjon.fylkesnummer.til.map { Fylkesnummer(it.toLong()) },
                                 ),
-                                kommuneløpenummer = FraEnTilMange(
+                                kommuneløpenummer =
+                                FraEnTilMange(
                                     fra = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.fra.toByte()),
                                     til = transformasjon.kommuneløpenummer.til.map { Kommunenummer.Lopenummer(it.toByte()) },
                                 ),
-                                adressekode = FraTil(
+                                adressekode =
+                                FraEnTilMange(
                                     fra = Adressekode(transformasjon.adressekode.fra.toInt()),
-                                    til = Adressekode(transformasjon.adressekode.til.toInt()),
+                                    til = transformasjon.adressekode.til.map { Adressekode(it.toInt()) },
                                 ),
                             )
                         }
 
                         is TeigTransformasjonDTO -> {
                             Teigendring(
-                                fylkesnummer = FraTil(
+                                fylkesnummer =
+                                FraTil(
                                     fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
                                     til = Fylkesnummer(transformasjon.fylkesnummer.til.toLong()),
                                 ),
-                                kommuneløpenummer = FraTil(
+                                kommuneløpenummer =
+                                FraTil(
                                     fra = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.fra.toByte()),
                                     til = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.til.toByte()),
                                 ),
-                                teigId = FraTil(
+                                teigId =
+                                FraTil(
                                     fra = TeigId(transformasjon.teigId.fra.toLong()),
                                     til = TeigId(transformasjon.teigId.til.toLong()),
                                 ),
@@ -117,19 +134,23 @@ data class Regulering(
 
                         is VegadresseTransformasjonDTO -> {
                             Vegadresseendring(
-                                fylkesnummer = FraTil(
+                                fylkesnummer =
+                                FraTil(
                                     fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
                                     til = Fylkesnummer(transformasjon.fylkesnummer.til.toLong()),
                                 ),
-                                kommuneløpenummer = FraTil(
+                                kommuneløpenummer =
+                                FraTil(
                                     fra = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.fra.toByte()),
                                     til = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.til.toByte()),
                                 ),
-                                adressekode = FraTil(
+                                adressekode =
+                                FraTil(
                                     fra = Adressekode(transformasjon.adressekode.fra.toInt()),
                                     til = Adressekode(transformasjon.adressekode.til.toInt()),
                                 ),
-                                adressenummer = FraTil(
+                                adressenummer =
+                                FraTil(
                                     fra = Adressenummernummer(transformasjon.adressenummer.fra.toShort()),
                                     til = Adressenummernummer(transformasjon.adressenummer.til.toShort()),
                                 ),
@@ -138,7 +159,8 @@ data class Regulering(
                     }
                 }
             },
-            fylker = endringer.flatMap { endring ->
+            fylker =
+            endringer.flatMap { endring ->
                 endring.nyeFylker.map {
                     Fylke(
                         fylkesnummer = Fylkesnummer(it.fylkesnummer.toLong()),
@@ -147,23 +169,27 @@ data class Regulering(
                     )
                 }
             },
-            kommuner = endringer.flatMap { endring ->
+            kommuner =
+            endringer.flatMap { endring ->
                 endring.nyeKommuner.map { kommune ->
                     Kommune(
-                        kommunenummer = Kommunenummer(
+                        kommunenummer =
+                        Kommunenummer(
                             Fylkesnummer(kommune.fylkesnummer.toLong()),
                             Kommunenummer.Lopenummer(kommune.kommunenummer.toByte()),
                         ),
                         kommunenavn = Kommunenavn(kommune.navn),
                         gyldigTilDato = null,
                         koordinatsystem = kommune.koordinatsystem,
-                        senterpunkt = Koordinat(
+                        senterpunkt =
+                        Koordinat(
                             x = kommune.senterpunkt.x,
                             y = kommune.senterpunkt.y,
                         ),
                         nedsattKonsesjonsgrense = kommune.nedsattKonsesjonsgrense,
                         godkjenteGardsnumre = kommune.godkjenteGardsnumre.joinToString(",") { serie -> serie.join() },
-                        adresse = kommune.adresse?.let {
+                        adresse =
+                        kommune.adresse?.let {
                             Postadresse(
                                 adresselinje1 = it.adresselinje1,
                                 adresselinje2 = it.adresselinje2,
@@ -171,7 +197,8 @@ data class Regulering(
                                 poststed = it.poststed,
                             )
                         },
-                        standardRekvirent = kommune.standardRekvirent?.let {
+                        standardRekvirent =
+                        kommune.standardRekvirent?.let {
                             StandardRekvirent(it.orgnummer, it.navn)
                         },
                         // TODO: Vil feile i sinken dersom kommunevåpen ikke er satt
@@ -233,7 +260,7 @@ data class KretsTransformasjonDTO(
 data class VegTransformasjonDTO(
     val fylkesnummer: FraEnTilMangeDTO,
     val kommuneløpenummer: FraEnTilMangeDTO,
-    val adressekode: FraTilDTO,
+    val adressekode: FraEnTilMangeDTO,
 ) : TransformasjonDTO()
 
 @Serializable
