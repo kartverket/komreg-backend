@@ -306,10 +306,20 @@ suspend fun mapVegendring(vegendring: Vegendring): Pair<Ident, IdentTransformer.
 
     val til =
         vegendring.kommuneløpenummer.til.map { tilKlnr ->
+            val tilAdr =
+                if (vegendring.adressekode.til.size == 1) {
+                    vegendring.adressekode.til.single()
+                } else {
+                    vegendring.adressekode.til[
+                        vegendring.kommuneløpenummer.til.indexOf(
+                            tilKlnr,
+                        ),
+                    ]
+                }
             adresseparsellIdentType(
                 vegendring.fylkesnummer.til.single(),
                 tilKlnr,
-                vegendring.adressekode.til[vegendring.kommuneløpenummer.til.indexOf(tilKlnr)],
+                tilAdr,
             ) to null
         }
 
