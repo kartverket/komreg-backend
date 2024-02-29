@@ -79,7 +79,7 @@ dependencies {
     implementation(libs.arrow.fx.stm)
 
     runtimeOnly(libs.ojdbc11)
-    implementation("org.rocksdb:rocksdbjni:8.10.0")
+    implementation("org.rocksdb:rocksdbjni:8.11.3")
     implementation(libs.logback.classic)
 
     implementation(libs.ktor.server.core)
