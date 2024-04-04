@@ -1,0 +1,37 @@
+# nonk8s
+apiVersion: "backstage.io/v1alpha1"
+kind: "Component"
+metadata:
+  name: "komreg-backend"
+  tags:
+  - "internal"
+  - "private"
+  links:
+  - url: "https://github.com/kartverket/komreg-backend"
+    title: "komreg-backend på GitHub"
+spec:
+  type: "service"
+  lifecycle: "production"
+  owner: "komreg"
+  system: "komreg"
+  dependsOn:
+  - "resource:default/SKIP"
+  providesApis:
+  - "komreg-backend-api"
+---
+apiVersion: "backstage.io/v1alpha1"
+kind: "API"
+metadata:
+  name: "komreg-backend"
+  tags:
+  - "internal"
+spec:
+  type: "openapi"
+  lifecycle: "production"
+  owner: "komreg"
+  system: "komreg"
+  definition: |
+    openapi: "3.0.0"
+    info:
+        title: komreg-backend API
+    paths:
