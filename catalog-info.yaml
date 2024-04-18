@@ -6,23 +6,45 @@ metadata:
   tags:
   - "internal"
   - "private"
-  links:
-  - url: "https://github.com/kartverket/komreg-backend"
-    title: "komreg-backend på GitHub"
 spec:
   type: "service"
   lifecycle: "production"
   owner: "komreg"
   system: "komreg"
-  dependsOn:
-  - "resource:default/SKIP"
   providesApis:
   - "komreg-backend-api"
 ---
 apiVersion: "backstage.io/v1alpha1"
-kind: "API"
+kind: "Group"
+metadata:
+  name: "security_champion_komreg-backend"
+  title: "Security Champion komreg-backend"
+spec:
+  type: "security_champion"
+  parent: "eiendom_security_champions"
+  members:
+  - "dhlon"
+  children:
+  - "resource:komreg-backend"
+---
+apiVersion: "backstage.io/v1alpha1"
+kind: "Resource"
 metadata:
   name: "komreg-backend"
+  links:
+  - url: "https://github.com/kartverket/komreg-backend"
+    title: "komreg-backend på GitHub"
+spec:
+  type: "repo"
+  owner: "security_champion_komreg-backend"
+  system: "komreg"
+  dependencyOf:
+  - "component:komreg-backend"
+---
+apiVersion: "backstage.io/v1alpha1"
+kind: "API"
+metadata:
+  name: "komreg-backend-api"
   tags:
   - "internal"
 spec:
