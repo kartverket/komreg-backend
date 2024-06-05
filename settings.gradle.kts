@@ -109,7 +109,7 @@ dependencyResolutionManagement {
                 "micrometer-registry-prometheus",
             ).versionRef("micrometer-prometheus")
 
-            library("postgresql", "org.postgresql:postgresql:42.7.1")
+            library("postgresql", "org.postgresql:postgresql:42.7.3")
             library("flyway-core", "org.flywaydb:flyway-core:9.22.3")
             library("hikari", "com.zaxxer:HikariCP:5.1.0")
 
