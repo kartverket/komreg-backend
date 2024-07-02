@@ -97,7 +97,7 @@ dependencyResolutionManagement {
             library("hamcrest", "org.hamcrest", "hamcrest").versionRef("hamcrest")
             library("hamcrest-library", "org.hamcrest", "hamcrest-library").versionRef("hamcrest")
 
-            library("assertk", "com.willowtreeapps.assertk:assertk:0.28.0")
+            library("assertk", "com.willowtreeapps.assertk:assertk:0.28.1")
 
             library("slf4j-api", "org.slf4j", "slf4j-api").version("2.0.7")
             library("logback-classic", "ch.qos.logback", "logback-classic").versionRef("logback")
