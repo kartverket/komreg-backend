@@ -1,5 +1,3 @@
-@file:Suppress("UnstableApiUsage")
-
 rootProject.name = "komreg-backend"
 
 pluginManagement {

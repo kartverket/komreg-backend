@@ -31,7 +31,6 @@ jobs:
       - name: Build with Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
-          gradle-version: 7.5.1
           arguments: build integrationTest
         env:
           GH_USERNAME: ${{ secrets.GH_USERNAME }}
