@@ -32,7 +32,7 @@ testing {
             testType.set(TestSuiteType.INTEGRATION_TEST)
 
             dependencies {
-                implementation(project)
+                implementation(project.dependencies.create(project))
             }
 
             targets {
@@ -52,7 +52,6 @@ testing {
 
 val integrationTestImplementation by configurations.getting
 
-@Suppress("UnstableApiUsage")
 dependencies {
     implementation(project(":core-api"))
     implementation(project(":transformation"))
@@ -132,7 +131,7 @@ val buildDockerContext = tasks.create<Sync>("buildDockerContext") {
 
     inputs.property("startScriptPath", startScriptPath)
 
-    destinationDir = File(buildDir, "docker")
+    destinationDir = layout.buildDirectory.get().dir("docker").asFile
 
     from(File(projectDir, dockerfileTemplate)) {
         rename(dockerfileTemplate, "Dockerfile")
