@@ -1,0 +1,74 @@
+[versions]
+kotlinx-cli = "0.3.5"
+kotlinx-datetime = "0.4.0"
+kotlinx-coroutines = "1.6.4"
+kotlinx-serialization = "1.5.1"
+mockk = "1.13.2"
+junit = "5.9.0"
+spek = "2.0.19"
+kotest = "5.7.2"
+ktor = "2.3.5"
+hamcrest = "2.2"
+logback = "1.4.12"
+micrometer-prometheus = "1.10.3"
+testcontainers = "1.19.1"
+
+[libraries]
+kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
+kotlinx-cli = { module = "org.jetbrains.kotlinx:kotlinx-cli", version.ref = "kotlinx-cli" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
+kotlinx-collections-immutable-jvm = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm", version = "0.3.7" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-jdk9 = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-jdk9", version.ref = "kotlinx-coroutines" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+kotlinx-serialization-protobuf = { module = "org.jetbrains.kotlinx:kotlinx-serialization-protobuf", version.ref = "kotlinx-serialization" }
+
+ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
+ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
+ktor-server-cors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor" }
+ktor-server-metrics-micrometer = { module = "io.ktor:ktor-server-metrics-micrometer", version.ref = "ktor" }
+ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+ktor-server-websockets = { module = "io.ktor:ktor-server-websockets", version.ref = "ktor" }
+ktor-client-websockets = { module = "io.ktor:ktor-client-websockets", version.ref = "ktor" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
+ktor-server-cors-jvm = { module = "io.ktor:ktor-server-cors-jvm", version.ref = "ktor" }
+
+arrow-stack = { module = "io.arrow-kt:arrow-stack", version = "1.2.0" }
+arrow-core = { module = "io.arrow-kt:arrow-core" }
+arrow-fx-coroutines = { module = "io.arrow-kt:arrow-fx-coroutines" }
+arrow-fx-stm = { module = "io.arrow-kt:arrow-fx-stm" }
+
+typesafe-config = { module = "com.typesafe:config", version = "1.4.3" }
+
+junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
+junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
+
+spek-dsl-jvm = { module = "org.spekframework.spek2:spek-dsl-jvm", version.ref = "spek" }
+spek-runner-junit5 = { module = "org.spekframework.spek2:spek-runner-junit5", version.ref = "spek" }
+
+kotest-runner = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
+kotest-extensions-arrow = { module = "io.kotest.extensions:kotest-assertions-arrow", version = "1.4.0" }
+
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+
+hamcrest = { module = "org.hamcrest:hamcrest", version.ref = "hamcrest" }
+hamcrest-library = { module = "org.hamcrest:hamcrest-library", version.ref = "hamcrest" }
+
+assertk = { module = "com.willowtreeapps.assertk:assertk", version = "0.28.1" }
+
+slf4j-api = { module = "org.slf4j:slf4j-api", version = "2.0.7" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+logback-classic-db = { module = "ch.qos.logback.db:logback-classic-db", version = "1.2.11.1" }
+
+micrometer-registry-prometheus = { module = "io.micrometer:micrometer-registry-prometheus", version.ref = "micrometer-prometheus" }
+
+postgresql = { module = "org.postgresql:postgresql", version = "42.7.3" }
+flyway-core = { module = "org.flywaydb:flyway-core", version = "9.22.3" }
+hikari = { module = "com.zaxxer:HikariCP", version = "5.1.0" }
+
+testcontainers-core = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
+testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
+
+ojdbc11 = { module = "com.oracle.database.jdbc:ojdbc11", version = "23.3.0.23.09" }
+
