@@ -95,7 +95,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: kartverket/smia-apps
-          ref: main
           token: ${{ steps.octo-sts.outputs.token }}
       - name: Update version
         run: |
