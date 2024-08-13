@@ -78,7 +78,7 @@ jobs:
         with:
           image_url: ${{ needs.build.outputs.image_url}}
 
-  argo:
+  sts:
     name: Update version in apps-repo
     needs: build
     permissions:
@@ -91,16 +91,14 @@ jobs:
         with:
           scope: kartverket/smia-apps
           identity: komreg
-      - name: Checkout apps-repo
-        uses: actions/checkout@v4
-        with:
-          repository: kartverket/smia-apps
-          token: ${{ steps.octo-sts.outputs.token }}
-      - name: Update version
-        run: |
-          env_type="dev"
-          echo "\"${{ needs.build.outputs.image_url }}\"" > "${env_type}/komreg-main/${{ env.argo_version_file }}"
-          git config --global user.email "noreply@kartverket.no"
-          git config --global user.name "Komreg CI"
-          git commit -am "Update Komreg ${{ env.argo_version_file }}"
-          git push
+
+  deploy-argo:
+    needs: [ pharos, sts ]
+    uses: kartverket/smia-apps/.github/workflows/release-app.yml@main
+    with:
+      application: komreg-backend
+      version: ${{ needs.build.outputs.version }}
+      deploy_dev: true
+      deploy_prod: false
+    secrets:
+      PAT_TOKEN: ${{ needs.sts.octo-sts.outputs.token }}
