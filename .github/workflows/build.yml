@@ -81,14 +81,22 @@ jobs:
   argo:
     name: Update version in apps-repo
     needs: build
+    permissions:
+      id-token: write
     runs-on: ubuntu-latest
     steps:
+      - name: Octo STS
+        uses: octo-sts/action@v1.0.0
+        id: octo-sts
+        with:
+          scope: kartverket/smia-apps
+          identity: komreg
       - name: Checkout apps-repo
         uses: actions/checkout@v4
         with:
-          repository: kartverket/komreg-apps
+          repository: kartverket/smia-apps
           ref: main
-          token: ${{ secrets.PAT_APPS_REPO }}
+          token: ${{ steps.octo-sts.outputs.token }}
       - name: Update version
         run: |
           env_type="dev"
