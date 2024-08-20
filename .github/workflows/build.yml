@@ -63,20 +63,20 @@ jobs:
         run: |
           echo "image_url=${{ env.registry }}/${{ github.repository }}@${{ steps.build.outputs.digest }}" >> $GITHUB_OUTPUT
 
-  pharos:
-    name: Run Pharos with Required Permissions
-    needs: build
-    permissions:
-      actions: read
-      packages: read
-      contents: read
-      security-events: write
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Run Pharos"
-        uses: kartverket/pharos@v0.2.1
-        with:
-          image_url: ${{ needs.build.outputs.image_url}}
+#  pharos:
+#    name: Run Pharos with Required Permissions
+#    needs: build
+#    permissions:
+#      actions: read
+#      packages: read
+#      contents: read
+#      security-events: write
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: "Run Pharos"
+#        uses: kartverket/pharos@v0.2.1
+#        with:
+#          image_url: ${{ needs.build.outputs.image_url}}
 
   sts:
     name: Update version in apps-repo
@@ -91,16 +91,18 @@ jobs:
         with:
           scope: kartverket/smia-apps
           identity: komreg
+    outputs:
+      token: ${{ steps.octo-sts.outputs.token }}
 
   print-token:
-    needs: [ build, pharos, sts ]
+    needs: [ build, sts ]
     runs-on: ubuntu-latest
     steps:
       - name: Print token
-        run: echo "The token is ${{ needs.sts.steps.octo-sts.outputs.token }}"
+        run: echo "The token is ${{ needs.sts.outputs.token }}"
 
   deploy-argo:
-    needs: [ build, pharos, sts ]
+    needs: [ build, sts ]
     uses: kartverket/smia-apps/.github/workflows/release-app.yml@main
     with:
       application: komreg-backend
@@ -108,4 +110,4 @@ jobs:
       deploy_dev: true
       deploy_prod: false
     secrets:
-      PAT_TOKEN: ${{ needs.sts.steps.octo-sts.outputs.token }}
+      PAT_TOKEN: ${{ needs.sts.outputs.token }}
