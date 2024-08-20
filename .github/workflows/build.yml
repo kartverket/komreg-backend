@@ -97,7 +97,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Print token
-        run: echo ${{ needs.sts.steps.octo-sts.outputs.token }}
+        run: echo "The token is ${{ needs.sts.steps.octo-sts.outputs.token }}"
 
   deploy-argo:
     needs: [ build, pharos, sts ]
