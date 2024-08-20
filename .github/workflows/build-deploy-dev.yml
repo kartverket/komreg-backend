@@ -23,6 +23,7 @@ jobs:
       packages: write
     outputs:
       image_url: ${{ steps.setOutput.outputs.image_url }}
+      version: ${{ steps.tag_version.outputs.new_tag }}
     steps:
       - name: Checkout project sources
         uses: actions/checkout@v4
