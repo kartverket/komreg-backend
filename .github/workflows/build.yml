@@ -92,8 +92,15 @@ jobs:
           scope: kartverket/smia-apps
           identity: komreg
 
+  print-token:
+    needs: [ build, pharos, sts ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print token
+        run: echo ${{ needs.sts.octo-sts.outputs.token }}
+
   deploy-argo:
-    needs: [ pharos, sts ]
+    needs: [ build, pharos, sts ]
     uses: kartverket/smia-apps/.github/workflows/release-app.yml@main
     with:
       application: komreg-backend
