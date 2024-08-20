@@ -78,27 +78,12 @@ jobs:
         with:
           image_url: ${{ needs.build.outputs.image_url}}
 
-  sts:
-    name: Update version in apps-repo
-    needs: build
-    permissions:
-      id-token: write
-    runs-on: ubuntu-latest
-    steps:
-      - name: Octo STS
-        uses: octo-sts/action@v1.0.0
-        id: octo-sts
-        with:
-          scope: kartverket/smia-apps
-          identity: komreg
-
   deploy-argo:
-    needs: [ pharos, sts ]
-    uses: kartverket/smia-apps/.github/workflows/release-app.yml@main
+    needs: [ build, pharos ]
+    uses: kartverket/smia-apps/.github/workflows/release-app-octo-sts.yml@main
     with:
       application: komreg-backend
       version: ${{ needs.build.outputs.version }}
       deploy_dev: true
       deploy_prod: false
-    secrets:
-      PAT_TOKEN: ${{ needs.sts.octo-sts.outputs.token }}
+      identity: komreg-backend
