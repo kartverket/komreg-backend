@@ -70,5 +70,5 @@ hikari = { module = "com.zaxxer:HikariCP", version = "5.1.0" }
 testcontainers-core = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
 testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
 
-ojdbc11 = { module = "com.oracle.database.jdbc:ojdbc11", version = "23.3.0.23.09" }
+ojdbc11 = { module = "com.oracle.database.jdbc:ojdbc11", version = "23.5.0.24.07" }
 
