@@ -78,6 +78,13 @@ jobs:
         with:
           image_url: ${{ needs.build.outputs.image_url}}
 
+  print-version:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print version
+        run: echo "version=$(cat ${{ needs.build.outputs.version }})"
+
   deploy-argo:
     needs: [ build, pharos ]
     uses: kartverket/smia-apps/.github/workflows/release-app-octo-sts.yml@main
