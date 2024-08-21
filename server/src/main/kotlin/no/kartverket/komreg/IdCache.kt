@@ -46,7 +46,7 @@ class IdCache(
         private val idType: IdType<V, Self>,
         private val idGenerator: IdGenerator)  {
 
-        val idTypeJson = json.encodeToString(idType)
+//        val idTypeJson = json.encodeToString(idType)
 
         @OptIn(ExperimentalSerializationApi::class)
         suspend fun generateIds(hints: NonEmptyList<String?>): List<Pair<String?, Id>> {
