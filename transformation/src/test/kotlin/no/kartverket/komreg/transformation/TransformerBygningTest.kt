@@ -147,7 +147,8 @@ class TransformerBygningTest : FunSpec({
                 Matrikkelenhetendring(
                     FraTil(Fylkesnummer(12), Fylkesnummer(13)),
                     FraTil(Kommunenummer.Lopenummer(34), Kommunenummer.Lopenummer(24)),
-                    FraTil(Matrikkelnummer.Gardsnummer(1), Matrikkelnummer.Gardsnummer(1)),
+                    Matrikkelnummer.Gardsnummer(1),
+                    Matrikkelnummer.Gardsnummer(1)
                 ),
             ),
             emptyList(),

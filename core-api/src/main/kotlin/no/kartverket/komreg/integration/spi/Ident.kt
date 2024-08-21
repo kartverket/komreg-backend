@@ -1202,3 +1202,14 @@ class IdentSerializer : KSerializer<Ident> {
         }
     }
 }
+
+fun <C : Ident, D : Comparable<D>>
+        Ident?.convertToOrNull(identType: IdentType<C, D>): And<C, D>? =
+    when (this) {
+        is And<*,*> -> this.convertToOrNull(identType)
+        else -> null
+    }
+
+fun <A : Ident, B : Comparable<B>, C : Ident, D : Comparable<D>>
+        And<A, B>?.convertToOrNull(identType: IdentType<C, D>): And<C, D>? =
+    this?.type?.createMapper(identType)?.invoke(this)

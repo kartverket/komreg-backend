@@ -2,6 +2,8 @@ package no.kartverket.komreg.transformation
 
 import kotlinx.datetime.LocalDate
 import no.kartverket.komreg.core.domain.*
+import no.kartverket.komreg.core.domain.Matrikkelnummer.Bruksnummer
+import no.kartverket.komreg.core.domain.Matrikkelnummer.Gardsnummer
 
 data class Reguleringsinput(
     val id: String,
@@ -13,15 +15,17 @@ data class Reguleringsinput(
 
 sealed class Endring
 
+sealed interface FraEn<out T>
+
 data class FraTil<out T>(
     val fra: T,
     val til: T,
-)
+) : FraEn<T>
 
 data class FraEnTilMange<out T>(
     val fra: T,
     val til: List<T>,
-)
+) : FraEn<T>
 
 data class Fylkeendring(
     val fylkesnummer: FraEnTilMange<Fylkesnummer>,
@@ -35,8 +39,16 @@ data class Kommuneendring(
 data class Matrikkelenhetendring(
     val fylkesnummer: FraTil<Fylkesnummer>,
     val kommuneløpenummer: FraTil<Kommunenummer.Lopenummer>,
-    val gårdsnummer: FraTil<Matrikkelnummer.Gardsnummer>,
-) : Endring()
+    val fraGardsnummer: Gardsnummer,
+    val tilGardsnummer: Gardsnummer?,
+    val bruksnummer: Map<Bruksnummer, GrunneiendomIdent> = emptyMap()
+) : Endring() {
+    init {
+        require(tilGardsnummer != null || bruksnummer.isNotEmpty()) {
+            "Either tilGardsnummer or bruksnummer must be set"
+        }
+    }
+}
 
 data class Kretsendring(
     val fylkesnummer: FraTil<Fylkesnummer>,

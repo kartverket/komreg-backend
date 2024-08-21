@@ -1,7 +1,11 @@
 package no.kartverket.komreg.core.domain
 
+import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
+import no.kartverket.komreg.integration.spi.Ident1
+import no.kartverket.komreg.integration.spi.IdentType1
+import no.kartverket.komreg.integration.spi.identTypeOf1
 
 @Serializable
 data class Fylke(
@@ -10,6 +14,9 @@ data class Fylke(
     val gyldigTilDato: LocalDate?,
 ) {
     companion object {
+        val Ident: IdentType1<Fylkesnummer> = runBlocking {
+            identTypeOf1<Fylkesnummer>()
+        }
         operator fun invoke(
             fylkesnummer: Long,
             fylkesnavn: String,
@@ -22,6 +29,8 @@ data class Fylke(
             )
     }
 }
+
+typealias FylkeIdent = Ident1<Fylkesnummer>
 
 fun Fylke.tilFylkesdata(): Fylkesdata =
     Fylkesdata(
