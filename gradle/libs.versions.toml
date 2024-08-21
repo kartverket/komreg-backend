@@ -1,5 +1,5 @@
 [versions]
-kotlinx-cli = "0.3.5"
+kotlinx-cli = "0.3.6"
 kotlinx-datetime = "0.6.0"
 kotlinx-coroutines = "1.6.4"
 kotlinx-serialization = "1.7.1"
