@@ -88,3 +88,4 @@ jobs:
       deploy_dev: true
       deploy_prod: false
       identity: komreg-backend
+      namespace: komreg-main
