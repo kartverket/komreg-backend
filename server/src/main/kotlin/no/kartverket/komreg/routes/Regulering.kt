@@ -4,6 +4,9 @@ import kotlinx.datetime.LocalDate
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.domain.*
+import no.kartverket.komreg.core.domain.Matrikkelnummer.Bruksnummer
+import no.kartverket.komreg.core.domain.Matrikkelnummer.Gardsnummer
+import no.kartverket.komreg.integration.spi.invoke
 import no.kartverket.komreg.transformation.*
 import java.util.Base64
 
@@ -48,22 +51,35 @@ data class Regulering(
                         }
 
                         is MatrikkelenhetTransformasjonDTO -> {
+                            val tilFylkesnummer = Fylkesnummer(transformasjon.fylkesnummer.til.toLong())
+                            val tilKommunenummer = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.til.toByte())
+                            val tilGardsnummer = transformasjon.gårdsnummer.til
+                                .toInt()
+                                .takeIf { it > 0 }
+                                ?.let(Matrikkelnummer::Gardsnummer)
+
+                            val tilBruksnummer: Map<Bruksnummer, GrunneiendomIdent> =
+                                (transformasjon.bruksnummer ?: emptyMap()).entries.associate { (fraBruksnr, dto) ->
+                                    Bruksnummer(fraBruksnr) to Matrikkelenhet.GrunneiendomIdent(
+                                        dto.fylkesnummer?.let(::Fylkesnummer) ?: tilFylkesnummer,
+                                        dto.kommunelopenummer?.let(Kommunenummer::Lopenummer) ?: tilKommunenummer,
+                                        dto.gardsnummer?.let(::Gardsnummer) ?: tilGardsnummer
+                                        ?: throw IllegalArgumentException("Gårdsnummer må være satt"),
+                                        Bruksnummer(dto.bruksnummer),
+                                    )
+                                }
                             Matrikkelenhetendring(
-                                fylkesnummer =
-                                FraTil(
+                                fylkesnummer = FraTil(
                                     fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
-                                    til = Fylkesnummer(transformasjon.fylkesnummer.til.toLong()),
+                                    til = tilFylkesnummer
                                 ),
-                                kommuneløpenummer =
-                                FraTil(
+                                kommuneløpenummer = FraTil(
                                     fra = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.fra.toByte()),
-                                    til = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.til.toByte()),
+                                    til = tilKommunenummer,
                                 ),
-                                gårdsnummer =
-                                FraTil(
-                                    fra = Matrikkelnummer.Gardsnummer(transformasjon.gårdsnummer.fra.toInt()),
-                                    til = Matrikkelnummer.Gardsnummer(transformasjon.gårdsnummer.til.toInt()),
-                                ),
+                                fraGardsnummer = Gardsnummer(transformasjon.gårdsnummer.fra.toInt()),
+                                tilGardsnummer = tilGardsnummer,
+                                bruksnummer = tilBruksnummer,
                             )
                         }
 
@@ -244,6 +260,7 @@ data class MatrikkelenhetTransformasjonDTO(
     val fylkesnummer: FraTilDTO,
     val kommuneløpenummer: FraTilDTO,
     val gårdsnummer: FraTilDTO,
+    val bruksnummer: Map<Short, TilGrunneiendomDTO>? = null,
 ) : TransformasjonDTO()
 
 @Serializable
@@ -359,6 +376,14 @@ data class AdresseDTO(
 data class StandardRekvirentDTO(
     val orgnummer: String,
     val navn: String,
+)
+
+@Serializable
+data class TilGrunneiendomDTO(
+    val fylkesnummer: Long? = null,
+    val kommunelopenummer: Byte? = null,
+    val gardsnummer: Int? = null,
+    val bruksnummer: Short,
 )
 
 fun godkjenteGardsnumreTilListe(godkjenteGardsnumre: String?): List<Gardsnummerserie> {

@@ -1,11 +1,15 @@
 package no.kartverket.komreg.transformation
 
+import arrow.core.NonEmptyList
 import arrow.core.getOrElse
 import arrow.core.mapOrAccumulate
+import arrow.core.toNonEmptyListOrNull
 import kotlinx.coroutines.flow.*
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toJavaLocalDate
 import no.kartverket.komreg.core.domain.*
+import no.kartverket.komreg.core.domain.Matrikkelenhet.GardsnummerserieIdent
+import no.kartverket.komreg.core.domain.Matrikkelenhet.GrunneiendomIdent
 import no.kartverket.komreg.integration.spi.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -193,15 +197,15 @@ suspend fun mapInput(input: Reguleringsinput): List<Pair<Ident, IdentTransformer
     val kommuneMap = input.kommuner.associateBy { it.kommunenummer }
     val fylkeMap = input.fylker.associateBy { it.fylkesnummer }
 
-    return input.endringer.map { m ->
+    return input.endringer.flatMap { m ->
         when (m) {
-            is Fylkeendring -> mapFylkeendring(m, fylkeMap)
-            is Kommuneendring -> mapKommuneendring(m, kommuneMap, input.ikrafttredelsesdato)
-            is Kretsendring -> mapKretsendring(m)
+            is Fylkeendring -> listOf(mapFylkeendring(m, fylkeMap))
+            is Kommuneendring -> listOf(mapKommuneendring(m, kommuneMap, input.ikrafttredelsesdato))
+            is Kretsendring -> listOf(mapKretsendring(m))
             is Matrikkelenhetendring -> mapMatrikkelenhetendring(m)
-            is Teigendring -> mapTeig(m)
-            is Vegadresseendring -> mapVegadresseendring(m)
-            is Vegendring -> mapVegendring(m)
+            is Teigendring -> listOf(mapTeig(m))
+            is Vegadresseendring -> listOf(mapVegadresseendring(m))
+            is Vegendring -> listOf(mapVegendring(m))
         }
     }
 }
@@ -268,21 +272,55 @@ private suspend fun mapKommuneendring(
             }
 }
 
-suspend fun mapMatrikkelenhetendring(matrikkelenhetendring: Matrikkelenhetendring): Pair<Ident, IdentTransformer.Mapping> {
-    val gardsnummerIdentType = identTypeOf3<Fylkesnummer, Kommunenummer.Lopenummer, Matrikkelnummer.Gardsnummer>()
+fun mapMatrikkelenhetendring(matrikkelenhetendring: Matrikkelenhetendring): NonEmptyList<Pair<Ident, IdentTransformer.Mapping>> {
 
-    return gardsnummerIdentType(
+    val fraGardnummerserieIdent: GardsnummerserieIdent = GardsnummerserieIdent(
         matrikkelenhetendring.fylkesnummer.fra,
         matrikkelenhetendring.kommuneløpenummer.fra,
-        matrikkelenhetendring.gårdsnummer.fra,
-    ) to
-            IdentTransformer.Mapping.Simple(
-                gardsnummerIdentType(
-                    matrikkelenhetendring.fylkesnummer.til,
-                    matrikkelenhetendring.kommuneløpenummer.til,
-                    matrikkelenhetendring.gårdsnummer.til,
-                ),
-            )
+        matrikkelenhetendring.fraGardsnummer,
+    )
+
+    val tilGardsnummerserie: GardsnummerserieIdent? = if (matrikkelenhetendring.tilGardsnummer != null) {
+        GardsnummerserieIdent(
+            matrikkelenhetendring.fylkesnummer.til,
+            matrikkelenhetendring.kommuneløpenummer.til,
+            matrikkelenhetendring.tilGardsnummer
+        )
+    } else {
+        null
+    }
+
+    val result = ArrayList<Pair<Ident, IdentTransformer.Mapping>>()
+    if (tilGardsnummerserie == null || fraGardnummerserieIdent != tilGardsnummerserie) {
+        val tilAndreGardsnummerserieIdents: MutableSet<GardsnummerserieIdent> = matrikkelenhetendring.bruksnummer
+            .mapTo(HashSet()) { (_, tilGrunneiendomIdent) -> tilGrunneiendomIdent.dropLast() }
+            .apply { if (tilGardsnummerserie != null) add(tilGardsnummerserie) }
+
+        if (tilAndreGardsnummerserieIdents.contains(fraGardnummerserieIdent)) {
+            throw IllegalArgumentException(
+                "Matrikkelendringen er ugyldig, gårdsnummeret bevares for noen bruksnummer, men gårdsnummerserien er " +
+                        "satt til å endres: " +
+                        "$fraGardnummerserieIdent går til $tilGardsnummerserie")
+        }
+
+        if (matrikkelenhetendring.bruksnummer.isEmpty()
+            || tilGardsnummerserie != null
+            && tilAndreGardsnummerserieIdents.size == 1
+            && tilAndreGardsnummerserieIdents.single() == tilGardsnummerserie) {
+            result.add(fraGardnummerserieIdent to IdentTransformer.Mapping.Simple(tilAndreGardsnummerserieIdents.single()))
+        } else {
+            // Vi MÅ bruke split, hvis gårdsnummerserien har flere enn ett element, ellers så vil ikke
+            // (bl.a.?) matrikkelnummerreservasjoner virke. Det betyr at vi må lage parameretere for ALLE bruksnummere for
+            // gårdsnummerserien
+            result.add(fraGardnummerserieIdent to IdentTransformer.Mapping.Split(tilAndreGardsnummerserieIdents.map { it to null }))
+        }
+    }
+
+    for ((fraBruksnummer, tilGrunneiendom) in matrikkelenhetendring.bruksnummer) {
+        result.add(fraGardnummerserieIdent.appendWith(GrunneiendomIdent, fraBruksnummer) to IdentTransformer.Mapping.Simple(tilGrunneiendom))
+    }
+
+    return result.toNonEmptyListOrNull() ?: throw IllegalArgumentException("No mappings generated for matrikkelenhetendring")
 }
 
 suspend fun mapTeig(teigendring: Teigendring): Pair<Ident, IdentTransformer.Mapping> {

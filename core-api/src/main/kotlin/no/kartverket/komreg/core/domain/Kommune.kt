@@ -1,7 +1,10 @@
 package no.kartverket.komreg.core.domain
 
+import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
+import no.kartverket.komreg.integration.spi.Ident2
+import no.kartverket.komreg.integration.spi.IdentType2
 
 @Serializable
 data class Kommune(
@@ -17,6 +20,10 @@ data class Kommune(
     val kommunevapen: ByteArray?, // TODO: Tilbakeføring har ingen håndtering av at denne kan være null. Sette påkrevd?
 ) {
     companion object {
+        val KommuneIdent : IdentType2<Fylkesnummer, Kommunenummer.Lopenummer> = runBlocking {
+            Fylke.Ident.append<Kommunenummer.Lopenummer>()
+        }
+
         operator fun invoke(
             kommunenummer: Long,
             kommunenavn: String,
@@ -63,6 +70,8 @@ data class Kommune(
         return result
     }
 }
+
+typealias KommuneIdent = Ident2<Fylkesnummer, Kommunenummer.Lopenummer>
 
 @Serializable
 data class Koordinat(
@@ -111,3 +120,6 @@ fun Kommune.tilKommunedata(ikrafttredelsesdato: LocalDate): Kommunedata =
         kommunevapen = kommunevapen,
         ikrafttredelsesdato = ikrafttredelsesdato,
     )
+
+operator fun FylkeIdent.div(kommuneIdent: Kommunenummer.Lopenummer): KommuneIdent =
+    appendWith(Kommune.KommuneIdent, kommuneIdent)
