@@ -1,6 +1,6 @@
 [versions]
 kotlinx-cli = "0.3.6"
-kotlinx-datetime = "0.6.0"
+kotlinx-datetime = "0.6.1"
 kotlinx-coroutines = "1.6.4"
 kotlinx-serialization = "1.7.1"
 mockk = "1.13.2"
