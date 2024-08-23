@@ -65,6 +65,8 @@ micrometer-registry-prometheus = { module = "io.micrometer:micrometer-registry-p
 
 postgresql = { module = "org.postgresql:postgresql", version = "42.7.3" }
 flyway-core = { module = "org.flywaydb:flyway-core", version = "10.17.2" }
+postgresql = { module = "org.postgresql:postgresql", version = "42.7.4" }
+flyway-core = { module = "org.flywaydb:flyway-core", version = "10.17.1" }
 hikari = { module = "com.zaxxer:HikariCP", version = "5.1.0" }
 
 testcontainers-core = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
