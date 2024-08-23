@@ -63,7 +63,7 @@ logback-classic-db = { module = "ch.qos.logback.db:logback-classic-db", version 
 
 micrometer-registry-prometheus = { module = "io.micrometer:micrometer-registry-prometheus", version.ref = "micrometer-prometheus" }
 
-postgresql = { module = "org.postgresql:postgresql", version = "42.7.3" }
+postgresql = { module = "org.postgresql:postgresql", version = "42.7.4" }
 flyway-core = { module = "org.flywaydb:flyway-core", version = "10.17.1" }
 hikari = { module = "com.zaxxer:HikariCP", version = "5.1.0" }
 
