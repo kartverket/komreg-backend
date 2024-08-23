@@ -103,7 +103,7 @@ dependencies {
     implementation(libs.hikari)
     implementation(libs.logback.classic.db)
 
-    runtimeOnly("org.flywaydb:flyway-database-postgresql:10.17.1")
+    runtimeOnly("org.flywaydb:flyway-database-postgresql:10.17.2")
 
     testImplementation(kotlin("test"))
     testImplementation(libs.junit.jupiter.api)
