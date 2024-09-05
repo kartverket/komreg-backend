@@ -36,7 +36,6 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build integrationTest
         env:
-          GH_USERNAME: ${{ secrets.GH_USERNAME }}
           GH_PACKAGES_PAT: ${{ secrets.GH_PACKAGES_PAT }}
 
 ## TODO: Gjør noe mer enn å bygge med Gradle på feature branches?

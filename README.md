@@ -21,8 +21,8 @@ Denne finner du [her](https://miro.com/app/board/uXjVN68gwSc=/)
 | config-fil for database-oppsett | `.env`                                |
 | http request eksempel           | `./http/local/runTransformation.http` |
 
-Lag en `gradle.properties` fra en kopi av `gradle.properties.example`. Sett `GH_USERNAME`
-til ditt Github-brukernavn og `GH_PACKAGES_PAT` til en PAT du har generert her:
+Lag en `gradle.properties` fra en kopi av `gradle.properties.example`. 
+Sett`GH_PACKAGES_PAT` til en PAT du har generert her: 
 https://github.com/settings/tokens (du trenger bare `read:packages`).
 
 Når man kjører opp løsningen lokalt trenger man å lage en kopi av `.env.template` på rot, og kalle den `.env`.

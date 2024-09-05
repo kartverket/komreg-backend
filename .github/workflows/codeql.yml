@@ -46,14 +46,12 @@ jobs:
 #      - name: Autobuild
 #        uses: github/codeql-action/autobuild@v2
 #        env:
-#          GH_USERNAME: ${{ secrets.GH_USERNAME }}
 #          GH_PACKAGES_PAT: ${{ secrets.GH_PACKAGES_PAT }}
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
       - name: Build with Gradle
         run: ./gradlew build
         env:
-          GH_USERNAME: ${{ secrets.GH_USERNAME }}
           GH_PACKAGES_PAT: ${{ secrets.GH_PACKAGES_PAT }}
 
       - name: Perform CodeQL Analysis
