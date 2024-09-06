@@ -4,7 +4,8 @@ registries:
   maven-matrikkel:
     type: maven-repository
     url: https://maven.pkg.github.com/kartverket/matrikkel
-    token: ${{ secrets.GH_PACKAGES_PAT }}
+    username: ${{ secrets.GH_USERNAME }}
+    password: ${{ secrets.GH_PACKAGES_PAT }}
 
 updates:
   # Enable version updates for gradle
@@ -15,6 +16,8 @@ updates:
     schedule:
       interval: daily
     open-pull-requests-limit: 10
+    registries:
+      - maven-matrikkel
 
   - package-ecosystem: "github-actions"
     directory: "/"
