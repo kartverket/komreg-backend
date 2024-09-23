@@ -86,5 +86,5 @@ jobs:
       version: ${{ needs.build.outputs.version }}
       deploy_dev: true
       deploy_prod: false
-      identity: komreg-backend
+      identity: komreg
       namespace: komreg-main
