@@ -5,4 +5,4 @@
 # Virksomhetsapplikasjon:
 
 # * @kartverket/komreg
-/.sikkerhet/ @dhlon
+/.security/ @dhlon
