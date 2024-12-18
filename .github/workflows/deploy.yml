@@ -3,19 +3,16 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        type: string
-        required: true
         description: 'Version to deploy'
+        required: true
       deploy_prod:
-        type: boolean
+        description: 'Deploy to production'
         required: true
         default: false
-        description: 'Deploy to production'
       deploy_dev:
-        type: boolean
+        description: 'Deploy to development'
         required: true
         default: true
-        description: 'Deploy to development'
 
 permissions:
   id-token: write
@@ -26,7 +23,7 @@ jobs:
     with:
       application: komreg-backend
       version: ${{ github.event.inputs.version }}
-      deploy_dev: ${{ github.event.inputs.deploy_prod == true }}
-      deploy_prod: ${{ github.event.inputs.deploy_prod == true }}
+      deploy_dev: ${{ github.event.inputs.deploy_dev && 'true' || 'false' }}
+      deploy_prod: ${{ github.event.inputs.deploy_prod && 'true' || 'false' }}
       identity: komreg
       namespace: komreg-main
