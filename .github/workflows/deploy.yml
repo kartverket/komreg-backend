@@ -24,8 +24,8 @@ jobs:
     uses: kartverket/smia-apps/.github/workflows/release-app-octo-sts.yml@main
     with:
       application: komreg-backend
-      version: ${{ github.event.inputs.version }}
-      deploy_dev: false
-      deploy_prod: true
+      version: ${{ inputs.version }}
+      deploy_dev: ${{ inputs.deploy_dev }}
+      deploy_prod: ${{ inputs.deploy_prod }}
       identity: komreg
       namespace: komreg-main
