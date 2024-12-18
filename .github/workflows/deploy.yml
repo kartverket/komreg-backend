@@ -7,10 +7,12 @@ on:
         required: true
       deploy_prod:
         description: 'Deploy to production'
+        type: boolean
         required: true
         default: false
       deploy_dev:
         description: 'Deploy to development'
+        type: boolean
         required: true
         default: true
 
