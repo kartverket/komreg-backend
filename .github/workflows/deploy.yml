@@ -1,0 +1,32 @@
+name: Deploy
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        type: string
+        required: true
+        description: 'Version to deploy'
+      deploy_prod:
+        type: boolean
+        required: true
+        default: false
+        description: 'Deploy to production'
+      deploy_dev:
+        type: boolean
+        required: true
+        default: true
+        description: 'Deploy to development'
+
+permissions:
+  id-token: write
+
+jobs:
+  deploy-argo:
+    uses: kartverket/smia-apps/.github/workflows/release-app-octo-sts.yml@main
+    with:
+      application: komreg-backend
+      version: ${{ github.event.inputs.version }}
+      deploy_dev: ${{ !github.event.inputs.deploy_prod }}
+      deploy_prod: ${{ github.event.inputs.deploy_prod }}
+      identity: komreg
+      namespace: komreg-main
