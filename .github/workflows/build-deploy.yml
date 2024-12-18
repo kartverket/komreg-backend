@@ -1,6 +1,12 @@
-name: Build and deploy to dev
+name: Build and deploy
 on:
   workflow_dispatch:
+    inputs:
+      deploy_prod:
+        description: 'Deploy to production'
+        required: false
+        default: false
+        type: boolean
   push:
     branches:
       - main
@@ -85,7 +91,7 @@ jobs:
     with:
       application: komreg-backend
       version: ${{ needs.build.outputs.version }}
-      deploy_dev: true
-      deploy_prod: false
+      deploy_dev: ${{ !github.event.inputs.deploy_prod }}
+      deploy_prod: ${{ github.event.inputs.deploy_prod }}
       identity: komreg
       namespace: komreg-main
