@@ -25,7 +25,7 @@ jobs:
     with:
       application: komreg-backend
       version: ${{ github.event.inputs.version }}
-      deploy_dev: ${{ github.event.inputs.deploy_dev && 'true' || 'false' }}
-      deploy_prod: ${{ github.event.inputs.deploy_prod && 'true' || 'false' }}
+      deploy_dev: ${{ github.event.inputs.deploy_dev }} && true || false
+      deploy_prod: ${{ github.event.inputs.deploy_prod }} && true || false
       identity: komreg
       namespace: komreg-main
