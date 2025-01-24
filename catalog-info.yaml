@@ -9,7 +9,7 @@ metadata:
 spec:
   type: "service"
   lifecycle: "production"
-  owner: "komreg"
+  owner: "smia"
   system: "komreg"
   providesApis:
   - "komreg-backend-api"
@@ -23,7 +23,7 @@ metadata:
 spec:
   type: "openapi"
   lifecycle: "production"
-  owner: "komreg"
+  owner: "smia"
   definition: |
     openapi: "3.0.0"
     info:
