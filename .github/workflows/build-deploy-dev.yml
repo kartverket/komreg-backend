@@ -74,13 +74,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "Run Pharos"
-        uses: kartverket/pharos@v0.2.1
+        uses: kartverket/pharos@v0.3.0
         with:
           image_url: ${{ needs.build.outputs.image_url}}
 
   deploy-argo:
-#    needs: [ build, pharos ]
-    needs: [ build ]
+    needs: [ build, pharos ]
     uses: kartverket/smia-apps/.github/workflows/release-app-octo-sts.yml@main
     with:
       application: komreg-backend
