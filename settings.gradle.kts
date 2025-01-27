@@ -3,7 +3,7 @@ rootProject.name = "komreg-backend"
 pluginManagement {
 
     plugins {
-        val kotlinVersion = "2.0.20"
+        val kotlinVersion = "2.1.0"
 
         kotlin("jvm") version kotlinVersion
         kotlin("plugin.serialization") version kotlinVersion
