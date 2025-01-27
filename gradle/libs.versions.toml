@@ -11,7 +11,7 @@ kotlinx-collections = "0.3.8"
 ktor = "3.0.3"
 logback = "1.5.16"
 micrometer-prometheus = "1.14.3"
-mockk = "1.13.12"
+mockk = "1.13.16"
 spek = "2.0.19"
 testcontainers = "1.20.4"
 
