@@ -50,7 +50,7 @@ spek-dsl-jvm = { module = "org.spekframework.spek2:spek-dsl-jvm", version.ref = 
 spek-runner-junit5 = { module = "org.spekframework.spek2:spek-runner-junit5", version.ref = "spek" }
 
 kotest-runner = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
-kotest-extensions-arrow = { module = "io.kotest.extensions:kotest-assertions-arrow", version = "1.4.0" }
+kotest-extensions-arrow = { module = "io.kotest.extensions:kotest-assertions-arrow", version = "2.0.0" }
 
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 
