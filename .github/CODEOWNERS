@@ -1,8 +1,7 @@
 #------------------------------------------------------------------------------
 #
-# Denne koden forvaltes av:   Team Komreg
+# Denne koden forvaltes av:   Team Smia
 # Dokumentasjon:              https://kartverket.atlassian.net/wiki/spaces/TKR/overview
-# Virksomhetsapplikasjon:
 
-# * @kartverket/komreg
-/.security/ @dhlon
+* @kartverket/smia
+/.security/ @AleksanderWK
