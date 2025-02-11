@@ -61,7 +61,7 @@ dependencies {
         isChanging = true
         exclude(group = "com.oracle.database.jdbc")
     }
-    implementation("io.netty:netty-codec-http2:4.1.117.Final")
+    implementation("io.netty:netty-codec-http2:4.1.118.Final")
 
     implementation(libs.kotlin.reflect)
 
