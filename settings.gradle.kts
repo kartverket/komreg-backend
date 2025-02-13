@@ -7,7 +7,7 @@ pluginManagement {
 
         kotlin("jvm") version kotlinVersion
         kotlin("plugin.serialization") version kotlinVersion
-        id("io.ktor.plugin") version "3.0.3"
+        id("io.ktor.plugin") version "3.1.0"
     }
 }
 
