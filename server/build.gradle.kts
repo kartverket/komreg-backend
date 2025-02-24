@@ -92,7 +92,7 @@ dependencies {
 
     implementation(libs.ktor.server.cors.jvm)
 
-    implementation("io.github.cdimascio:dotenv-kotlin:6.5.0")
+    implementation("io.github.cdimascio:dotenv-kotlin:6.5.1")
 
     implementation("net.logstash.logback:logstash-logback-encoder:8.0")
 
