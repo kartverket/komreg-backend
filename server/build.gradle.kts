@@ -94,7 +94,7 @@ dependencies {
 
     implementation("io.github.cdimascio:dotenv-kotlin:6.5.1")
 
-    implementation("net.logstash.logback:logstash-logback-encoder:8.0")
+    implementation("net.logstash.logback:logstash-logback-encoder:8.1")
 
     implementation(libs.ktor.server.metrics.micrometer)
     implementation(libs.micrometer.registry.prometheus)
