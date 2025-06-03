@@ -13,7 +13,7 @@ logback = "1.5.18"
 micrometer-prometheus = "1.15.0"
 mockk = "1.14.2"
 spek = "2.0.19"
-testcontainers = "1.21.0"
+testcontainers = "1.21.1"
 
 [libraries]
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
