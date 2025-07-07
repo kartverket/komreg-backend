@@ -26,9 +26,10 @@ jobs:
         uses: gradle/actions/dependency-submission@v4
 
       - name: 'Dependency Review'
-        uses: actions/dependency-review-action@v4.6.0
+        uses: actions/dependency-review-action@v4.7.1
         if: github.event_name == 'pull_request'
         with:
           comment-summary-in-pr: always
-          allow-licenses: MIT, Apache-2.0, EPL-2.0, BSD-3-Clause, BSD-2-Clause, CPL-1.0, LicenseRef-scancode-w3c-docs-20021231
-          
+          fail-on-severity: high
+          fail-on-scopes: runtime
+          deny-licenses: GPL-2.0, GPL-3.0, AGPL-3.0, GPL-2.0-only, GPL-3.0-only, AGPL-3.0-only, SSPL-1.0

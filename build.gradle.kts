@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id("org.jetbrains.kotlin.jvm") apply false
@@ -36,9 +37,9 @@ subprojects {
         }
 
         tasks.withType<KotlinCompile> {
-            kotlinOptions.jvmTarget = javaVersion.majorVersion
+            compilerOptions {
+                jvmTarget.set(JvmTarget.fromTarget(javaVersion.majorVersion))
+            }
         }
     }
 }
-
-
