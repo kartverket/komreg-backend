@@ -12,9 +12,12 @@ updates:
   - package-ecosystem: gradle
     # Look for build.gradle files from the `root` directory
     directory: "/"
-    # Check for updates every day (weekdays)
+    # Check for updates weekly on Monday at 03:02 EU time
     schedule:
-      interval: daily
+      interval: weekly
+      day: monday
+      time: "03:02"
+      timezone: "Europe/Oslo"
     open-pull-requests-limit: 10
     registries:
       - maven-matrikkel
@@ -22,9 +25,15 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: daily
+      interval: weekly
+      day: monday
+      time: "03:02"
+      timezone: "Europe/Oslo"
 
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
-      interval: daily
+      interval: weekly
+      day: monday
+      time: "03:02"
+      timezone: "Europe/Oslo"
