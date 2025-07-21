@@ -41,7 +41,7 @@ arrow-core = { module = "io.arrow-kt:arrow-core" }
 arrow-fx-coroutines = { module = "io.arrow-kt:arrow-fx-coroutines" }
 arrow-fx-stm = { module = "io.arrow-kt:arrow-fx-stm" }
 
-typesafe-config = { module = "com.typesafe:config", version = "1.4.3" }
+typesafe-config = { module = "com.typesafe:config", version = "1.4.4" }
 
 junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
