@@ -1,7 +1,7 @@
 [versions]
 flywayVersion = "11.10.3"
 hamcrest = "3.0"
-junit = "5.13.3"
+junit = "5.13.4"
 kotest = "5.9.1"
 kotlinx-cli = "0.3.6"
 kotlinx-datetime = "0.7.1-0.6.x-compat"
