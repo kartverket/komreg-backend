@@ -1,5 +1,5 @@
 [versions]
-flywayVersion = "11.10.3"
+flywayVersion = "11.10.4"
 hamcrest = "3.0"
 junit = "5.13.4"
 kotest = "5.9.1"
