@@ -21,6 +21,11 @@ updates:
     open-pull-requests-limit: 10
     registries:
       - maven-matrikkel
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
 
   - package-ecosystem: "github-actions"
     directory: "/"
