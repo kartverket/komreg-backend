@@ -48,7 +48,7 @@ jobs:
 #        env:
 #          GH_PACKAGES_PAT: ${{ secrets.GH_PACKAGES_PAT }}
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v5
       - name: Build with Gradle
         run: ./gradlew build
         env:
