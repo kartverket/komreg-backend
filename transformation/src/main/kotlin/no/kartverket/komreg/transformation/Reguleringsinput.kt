@@ -29,11 +29,13 @@ data class FraEnTilMange<out T>(
 
 data class Fylkeendring(
     val fylkesnummer: FraEnTilMange<Fylkesnummer>,
+    val sammenslaaing: Boolean? = false,
 ) : Endring()
 
 data class Kommuneendring(
     val fylkesnummer: FraEnTilMange<Fylkesnummer>,
     val kommuneløpenummer: FraEnTilMange<Kommunenummer.Lopenummer>,
+    val sammenslaaing: Boolean? = false,
 ) : Endring()
 
 data class Matrikkelenhetendring(

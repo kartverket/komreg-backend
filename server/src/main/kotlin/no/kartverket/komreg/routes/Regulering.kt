@@ -32,6 +32,7 @@ data class Regulering(
                                     fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
                                     til = transformasjon.fylkesnummer.til.map { Fylkesnummer(it.toLong()) },
                                 ),
+                                sammenslaaing = transformasjon.sammenslaa,
                             )
                         }
 
@@ -47,6 +48,7 @@ data class Regulering(
                                     fra = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.fra.toByte()),
                                     til = transformasjon.kommuneløpenummer.til.map { Kommunenummer.Lopenummer(it.toByte()) },
                                 ),
+                                sammenslaaing = transformasjon.sammenslaa,
                             )
                         }
 
@@ -245,6 +247,7 @@ sealed class TransformasjonDTO
 @SerialName("fylke")
 data class FylkeTransformasjonDTO(
     val fylkesnummer: FraEnTilMangeDTO,
+    val sammenslaa: Boolean? = false,
 ) : TransformasjonDTO()
 
 @Serializable
@@ -252,6 +255,7 @@ data class FylkeTransformasjonDTO(
 data class KommuneTransformasjonDTO(
     val fylkesnummer: FraEnTilMangeDTO,
     val kommuneløpenummer: FraEnTilMangeDTO,
+    val sammenslaa: Boolean? = false,
 ) : TransformasjonDTO()
 
 @Serializable
