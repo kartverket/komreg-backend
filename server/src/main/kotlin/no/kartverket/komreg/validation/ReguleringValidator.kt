@@ -4,10 +4,12 @@ import no.kartverket.komreg.routes.*
 
 enum class ErrorType {
     FYLKESDELING_MANGLER_KOMMUNER,
+    FYLKESDELING_KAN_IKKE_HA_SAMMENSLAAING,
     KOMMUNEDELING_MANGLER_MATRIKKELENHETER,
     KOMMUNEDELING_MANGLER_KRETSER,
     KOMMUNEDELING_MANGLER_TEIGER,
     KOMMUNEDELING_MANGLER_VEGER,
+    KOMMUNEDELING_KAN_IKKE_HA_SAMMENSLAAING,
     VEGDELING_MANGLER_VEGADRESSER,
 }
 
@@ -21,10 +23,23 @@ class ReguleringValidator {
                 val isFylkesdeling = endring.transformasjoner.any {
                     it is FylkeTransformasjonDTO && it.fylkesnummer.til.size > 1
                 }
-
-                if (isFylkesdeling && !hasKommunetransformasjon(endring)) {
-                    errors[endring.id] = listOf(ErrorType.FYLKESDELING_MANGLER_KOMMUNER)
+                val isFylkesdelingMedSammenslaaing = endring.transformasjoner.any {
+                    it is FylkeTransformasjonDTO && it.fylkesnummer.til.size > 1 && it.sammenslaa == true
                 }
+
+                if (isFylkesdeling) {
+                    var existingErrors = errors.getOrDefault(endring.id, emptyList())
+
+                    if (isFylkesdelingMedSammenslaaing) {
+                        existingErrors = existingErrors.plus(ErrorType.FYLKESDELING_KAN_IKKE_HA_SAMMENSLAAING)
+                    }
+                    if (!hasKommunetransformasjon(endring)) {
+                        existingErrors = existingErrors.plus(ErrorType.FYLKESDELING_MANGLER_KOMMUNER)
+                    }
+
+                    errors[endring.id] = existingErrors
+                }
+
             }
 
             return errors
@@ -37,11 +52,17 @@ class ReguleringValidator {
                 val isKommunedeling = endring.transformasjoner.any {
                     it is KommuneTransformasjonDTO && it.kommuneløpenummer.til.size > 1
                 }
+                val isKommunedelingMedSammenslaaing = endring.transformasjoner.any {
+                    it is KommuneTransformasjonDTO && it.kommuneløpenummer.til.size > 1 && it.sammenslaa == true
+                }
 
                 if (isKommunedeling) {
                     var existingErrors = errors.getOrDefault(endring.id, emptyList())
 
-                    if (!hasKretstrasformasjon(endring)) {
+                    if (isKommunedelingMedSammenslaaing) {
+                        existingErrors = existingErrors.plus(ErrorType.KOMMUNEDELING_KAN_IKKE_HA_SAMMENSLAAING)
+                    }
+                    if (!hasKretstransformasjon(endring)) {
                         existingErrors = existingErrors.plus(ErrorType.KOMMUNEDELING_MANGLER_KRETSER)
                     }
                     if (!hasMatrikkelenhettransformasjon(endring)) {
@@ -91,7 +112,7 @@ class ReguleringValidator {
         private fun hasKommunetransformasjon(endring: EndringDTO) =
             endring.transformasjoner.any { it is KommuneTransformasjonDTO }
 
-        private fun hasKretstrasformasjon(endring: EndringDTO) =
+        private fun hasKretstransformasjon(endring: EndringDTO) =
             endring.transformasjoner.any { it is KretsTransformasjonDTO }
 
         private fun hasMatrikkelenhettransformasjon(endring: EndringDTO) =
