@@ -229,6 +229,7 @@ private suspend fun mapFylkeendring(
                 IdentTransformer.Mapping.Replace(
                     t.first,
                     t.second,
+                    fylkeendring.sammenslaaing,
                 )
             } else {
                 IdentTransformer.Mapping.Split(
@@ -258,10 +259,15 @@ private suspend fun mapKommuneendring(
 
     return kommuneIdentType(kommuneendring.fylkesnummer.fra, kommuneendring.kommuneløpenummer.fra) to
             if (til.size == 1) {
+                // Kun en til-kommuneident. Fra-kommune skal byttes ut med til-kommune, med kommunedata i til.second.
+                // Dvs fra-kommune skal settes utgått, og til-kommune skal opprettes
+                // Brukes også for sammenslåing av kommuner, men sammenslaaing=true,
+                // for at matrikkelen ikke skal opprette samme kommune flere ganger
                 val t = til[0]
                 IdentTransformer.Mapping.Replace(
                     t.first,
                     t.second,
+                    kommuneendring.sammenslaaing,
                 )
             } else {
                 IdentTransformer.Mapping.Split(

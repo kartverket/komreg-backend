@@ -40,9 +40,12 @@ class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
         entity: Entity,
         idProvider: suspend (IdType<*, *>, Any?) -> Id,
     ): List<Transformation>? {
-        val primaryTransform = entity.ident?.transformIdent()
+        val transformIdentMedEvtSammenslaaingsflagg = entity.ident?.transformIdent()
+        val primaryTransform = transformIdentMedEvtSammenslaaingsflagg?.first
+        val sammenslaaingsflagg = transformIdentMedEvtSammenslaaingsflagg?.second
+
         val transformedAssociatedIdents = entity.associatedIdents?.flatMap {
-            it.transformIdent().map { it.first }
+            it.transformIdent().first.map { it.first }
         }?.toSet()
 
         return if (primaryTransform != null) {
@@ -54,6 +57,7 @@ class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
                             sourceEntity = entity,
                             transformedIdent = null,
                             transformedAssociatedIdents = transformedAssociatedIdents,
+                            sammenslaaing = sammenslaaingsflagg,
                         ),
                     )
                 }
@@ -68,6 +72,7 @@ class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
                                 transformedIdent = transform.first,
                                 transformedAssociatedIdents = transformedAssociatedIdents,
                                 resultObject = transform.second,
+                                sammenslaaing = sammenslaaingsflagg,
                             ),
                         )
                     } else {
@@ -88,6 +93,7 @@ class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
                             transformedIdent = transform.first,
                             transformedAssociatedIdents = transformedAssociatedIdents,
                             resultObject = transform.second,
+                            sammenslaaing = sammenslaaingsflagg,
                         )
                     }
                 }
@@ -100,6 +106,7 @@ class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
                         sourceEntity = entity,
                         transformedIdent = null,
                         transformedAssociatedIdents = transformedAssociatedIdents,
+                        sammenslaaing = sammenslaaingsflagg,
                     ),
                 )
             } else {
@@ -108,7 +115,7 @@ class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
         }
     }
 
-    private suspend fun Ident.transformIdent(): List<Pair<Ident, Payload?>> {
+    private suspend fun Ident.transformIdent(): Pair<List<Pair<Ident, Payload?>>, Boolean> {
         val fylkesnummer = getOrNull<Fylkesnummer>()
         val kommunelopenummer = getOrNull<Kommunenummer.Lopenummer>()
         val mappings = if (fylkesnummer != null && kommunelopenummer != null) {
@@ -123,7 +130,9 @@ class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
             andreRegler
         }
 
-        return mappings.map { mapping ->
+        var sammenslaing = false
+
+        val returmap = mappings.mapNotNull { mapping ->
             val source = mapping.first
             val matches = source.type.types.mapNotNull { componentType ->
                 type.bottomTypes[componentType]?.let { it to getOrThrow(it) }
@@ -134,7 +143,6 @@ class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
                 null
             }
         }
-            .filterNotNull()
             .groupByTo(TreeMap()) { it.second.size }
             .lastEntry()
             ?.let { (_, mappingMatches) ->
@@ -161,6 +169,9 @@ class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
 
                         if (matches.size == type.size) {
                             // Perfect match: Replace it
+                            // Det er kun når det er full match at sammenslåingsflagget videreføres
+                            // Altså for fylke eller kommune, og ikke for f.eks matrikkelenhet uten egen parameter
+                            sammenslaing = target.sammenslaaing ?: false
                             listOf(
                                 result to null,
                                 result to target.payload,
@@ -213,6 +224,8 @@ class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
                     }
                 }
             } ?: listOf(this to null)
+
+        return Pair(returmap, sammenslaing)
     }
 
     companion object {
@@ -222,6 +235,8 @@ class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
     sealed interface Mapping {
         fun checkIdentType(identType: IdentOrEmptyType<*>)
 
+        // Simple er de som blir oppdatert med ny kommune (og evt andre identfelt),
+        // som vegadresse, krets og teig for mnr mangler
         data class Simple(var ident: Ident, var payload: Payload? = null) : Mapping {
             override fun checkIdentType(identType: IdentOrEmptyType<*>) {
                 if (identType != ident.type) {
@@ -230,7 +245,12 @@ class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
             }
         }
 
-        data class Replace(var ident: Ident, var payload: Payload? = null) : Mapping {
+        // Replace er når en kommune erstattes av en annen,
+        // som ved fylkessplitting da Ringerike i Viken ble til Ringerike i Buskerud
+        // Det er også implementert for fylke.
+        // Brukes også for sammenslåing av fylker og kommuner. Når samenslåingsflagget er true,
+        // kan samme kommune/fylke forekomme flere ganger som til-kommune/fylke
+        data class Replace(var ident: Ident, var payload: Payload? = null, var sammenslaaing: Boolean? = false) : Mapping {
             override fun checkIdentType(identType: IdentOrEmptyType<*>) {
                 if (identType != ident.type) {
                     throw IllegalArgumentException("${ident.type} != $identType")
@@ -238,6 +258,9 @@ class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
             }
         }
 
+        // Split er når ett fylke splittes i flere (som Viken), eller en kommune i flere kommuner (som Ålesund)
+        // Også brukt når bruksnumre under et gårdsnummer splittes til flere gårdsnumre
+        // Også brukt når en veg splittes i flere veger
         data class Split(var into: List<Pair<Ident, Payload?>>) : Mapping {
             override fun checkIdentType(identType: IdentOrEmptyType<*>) {
                 val type = into.map { it.first.type }

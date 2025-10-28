@@ -24,6 +24,7 @@ data class Transformation(
     val transformedIdent: Ident?,
     val transformedAssociatedIdents: Set<Ident>? = null,
     val resultObject: Payload? = null,
+    val sammenslaaing: Boolean? = false,
 )
 
 interface EntitySource {
