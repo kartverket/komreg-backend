@@ -36,7 +36,7 @@ ktor-client-websockets = { module = "io.ktor:ktor-client-websockets", version.re
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-server-cors-jvm = { module = "io.ktor:ktor-server-cors-jvm", version.ref = "ktor" }
 
-arrow-stack = { module = "io.arrow-kt:arrow-stack", version = "2.1.2" }
+arrow-stack = { module = "io.arrow-kt:arrow-stack", version = "2.2.0" }
 arrow-core = { module = "io.arrow-kt:arrow-core" }
 arrow-fx-coroutines = { module = "io.arrow-kt:arrow-fx-coroutines" }
 arrow-fx-stm = { module = "io.arrow-kt:arrow-fx-stm" }
@@ -73,5 +73,5 @@ hikari = { module = "com.zaxxer:HikariCP", version = "7.0.2" }
 testcontainers-core = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
 testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
 
-ojdbc11 = { module = "com.oracle.database.jdbc:ojdbc11", version = "23.9.0.25.07" }
+ojdbc11 = { module = "com.oracle.database.jdbc:ojdbc11", version = "23.26.0.0.0" }
 
