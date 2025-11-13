@@ -39,7 +39,7 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build integrationTest
         env:
-          GH_PACKAGES_PAT: ${{ secrets.GH_PACKAGES_PAT }}
+          GH_PACKAGES_PAT: ${{ secrets.SHARED_PACKAGES_READ_TOKEN }}
 
 ## TODO: Gjør noe mer enn å bygge med Gradle på feature branches?
 
