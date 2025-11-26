@@ -156,10 +156,10 @@ Dette gjør at kun autentiserte og autoriserte brukere kan gjøre kall mot dev- 
 ### Autorisering
 
 For å være autorisert til å hente accesstoken og gjøre kall mot komreg må du være medlem av en autorisert gruppe:
-* aktv3-dev: AAD_TF_TEAM_SMIA
+* atkv3-dev: AAD_TF_TEAM_SMIA
 * atkv3-prod: AAD_KOMREG_PROD_USERS
 
-Du kan sjekke om du er medlem ved å gå inn på EntraID og søke på gruppen under "Groups". 
+Du kan sjekke om du er medlem ved å gå inn på [Entra](https://entra.microsoft.com) og søke på gruppen under "Groups". 
 Hvis du ikke er medlem og mener du skal være det i noen av disse gruppene, ta kontakt med Team SMIA.
 
 ### Autentisering
