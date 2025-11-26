@@ -160,7 +160,7 @@ For å være autorisert til å hente accesstoken og gjøre kall mot komreg må d
 * atkv3-prod: AAD_KOMREG_PROD_USERS
 
 Du kan sjekke om du er medlem ved å gå inn på EntraID og søke på gruppen under "Groups". 
-Hvis du ikker er medlem og mener du skal være det i noen av disse gruppene, ta kontakt med Team SMIA.
+Hvis du ikke er medlem og mener du skal være det i noen av disse gruppene, ta kontakt med Team SMIA.
 
 ### Autentisering
 
