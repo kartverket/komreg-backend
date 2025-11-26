@@ -8,6 +8,7 @@
 
 * [Lokalt oppsett](#lokalt-oppsett)
 * [Miljøvariabler](#oppsett-av-miljøvariabler)
+* [Tilgangsstyring](#tilgangsstyring)
 
 # Kom i gang
 
@@ -147,3 +148,37 @@ docker context use colima
 ```bash
 colima start --memory 8 --arch x86_64
 ```
+## Tilgangsstyring
+
+Applikasjonen kjører på SKIP med tilgangsstyring vha. ztoperator. 
+Dette gjør at kun autentiserte og autoriserte brukere kan gjøre kall mot dev- og prod-miljø.
+
+### Autorisering
+
+For å være autorisert til å hente accesstoken og gjøre kall mot komreg må du være medlem av en autorisert gruppe:
+* aktv3-dev: AAD_TF_TEAM_SMIA
+* atkv3-prod: AAD_KOMREG_PROD_USERS
+
+Du kan sjekke om du er medlem ved å gå inn på EntraID og søke på gruppen under "Groups". 
+Hvis du ikker er medlem og mener du skal være det i noen av disse gruppene, ta kontakt med Team SMIA.
+
+### Autentisering
+
+Gitt at du er autorisert må du bruke [az-cli](https://learn.microsoft.com/en-us/cli/azure/?view=azure-cli-latest) til å hente ut accesstoken. 
+Følg dokumentasjonen til Microsoft for å finne ut hvordan du laster det ned for din maskin.
+
+Når du har az-cli installert kan du starte med å logge inn:
+
+```
+az login --allow-no-subscriptions
+```
+
+Nå skal du være autentisert, og kan hente ut accesstoken fra en komreg-klientregistrering du er autorisert til å få token fra. 
+Du finner klientregistreringen under "App registrations" i Entra. Søk etter "komreg". Så finner du CLIENT_ID på forsiden til klientregistreringen.
+
+```
+az account get-access-token --scope <CLIENT_ID>/.default
+```
+
+Hvis alt er som det skal fikk du et accesstoken i respons. 
+Anbefaler å bruke postman til å enkelt sette opp kall mot komreg-backend med token.
