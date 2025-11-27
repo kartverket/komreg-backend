@@ -1,0 +1,19 @@
+allprojects {
+    if (project.path == ':komreg') {
+        plugins.withId('maven-publish') {
+            logger.lifecycle('Applying publish to komreg-backend configuration for project {}', project.layout.projectDirectory)
+            publishing {
+                repositories {
+                    maven {
+                        name = "KomregBackend"
+                        url = uri("https://maven.pkg.github.com/kartverket/komreg-backend")
+                        credentials {
+                            username = System.getenv("GITHUB_ACTOR")
+                            password = System.getenv("GITHUB_TOKEN")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
