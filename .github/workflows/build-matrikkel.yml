@@ -1,0 +1,35 @@
+name: Build and Publish Matrikkel Komreg
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to publish'
+        required: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-matrikkel:
+    name: Bygg matrikkel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          path: komreg-backend
+      - uses: actions/checkout@v6
+        with:
+          repository: kartverket/matrikkel
+          ref: refs/tags/${{ github.event.inputs.tag }}
+          path: matrikkel
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v5
+      - name: Build with Gradle
+        working-directory: matrikkel
+        run: ./gradlew --init-script ../komreg-backend/matrikkel-komreg-publish.init.gradle -Pmatrikkel_artifact_versjon=${{ github.event.inputs.tag }} publishKomregMatrikkelPublicationToKomregBackendRepository
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
