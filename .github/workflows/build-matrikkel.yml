@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           path: komreg-backend
-      - uses: octo-sts/action@v1
+      - uses: octo-sts/action@d6c70ad3b9ac85df6da6b9749014d7283987cfec # v1.0.3
         id: octo-sts
         with:
           scope: kartverket/matrikkel
