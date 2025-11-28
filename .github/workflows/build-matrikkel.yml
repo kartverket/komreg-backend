@@ -9,6 +9,7 @@ on:
 permissions:
   contents: read
   packages: write
+  id-token: write
 
 jobs:
   build-matrikkel:
@@ -18,11 +19,17 @@ jobs:
       - uses: actions/checkout@v6
         with:
           path: komreg-backend
+      - uses: octo-sts/action@v1
+        id: octo-sts
+        with:
+          scope: kartverket/matrikkel
+          identity: komreg-checkout-code
       - uses: actions/checkout@v6
         with:
           repository: kartverket/matrikkel
           ref: refs/tags/${{ github.event.inputs.tag }}
           path: matrikkel
+          token: ${{ steps.octo-sts.outputs.token }}
       - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
