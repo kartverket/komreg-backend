@@ -34,6 +34,12 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: 17
+      - name: Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:github-runner
       - uses: gradle/actions/setup-gradle@v5
       - name: Build with Gradle
         working-directory: matrikkel
