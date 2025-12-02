@@ -16,6 +16,12 @@ jobs:
     name: Bygg matrikkel
     runs-on: ubuntu-latest
     steps:
+      - name: Sett opp Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:github-runner
       - uses: actions/checkout@v6
         with:
           path: komreg-backend
@@ -34,13 +40,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: 17
-      - name: Sett opp Tailscale
-        uses: tailscale/github-action@v3
-        with:
-          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
-          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
-          version: "1.48.1"
-          tags: tag:github-runner
       - uses: gradle/actions/setup-gradle@v5
       - name: Build with Gradle
         working-directory: matrikkel
