@@ -22,6 +22,8 @@ jobs:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tags: tag:github-runner
+          version: latest
+          ping: 'nexus.statkart.no'
       - uses: actions/checkout@v6
         with:
           path: komreg-backend
