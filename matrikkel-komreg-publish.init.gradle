@@ -13,6 +13,12 @@ allprojects {
                         }
                     }
                 }
+                publications {
+                    named('komregMatrikkel').configure {
+                        artifactId = 'komreg-matrikkel' // Byttet navn pga. mulig GitHub Packages
+                                                        // begrensning på unike artifactId innenfor en owner???
+                    }
+                }
             }
         }
     }
