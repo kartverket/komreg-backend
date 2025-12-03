@@ -10,15 +10,27 @@ plugins {
     `jvm-test-suite`
 }
 
+repositories {
+    maven {
+        url = uri("https://maven.pkg.github.com/kartverket/komreg-backend")
+        val ghPackagesToken = project.findProperty("GH_PACKAGES_PAT") as String? ?: System.getenv("GH_PACKAGES_PAT")
+        if (!ghPackagesToken.isNullOrBlank()) {
+            credentials(HttpHeaderCredentials::class) {
+                name = "Authorization"
+                value = "Bearer $ghPackagesToken"
+            }
+            authentication {
+                create("header", HttpHeaderAuthentication::class)
+            }
+        } else {
+            logger.warn("GH_PACKAGES_PAT er ikke satt: Kan ikke hente avhengigheter fra GitHub Packages")
+        }
+    }
+}
+
 application {
     mainClass.set("no.kartverket.komreg.ApplicationKt")
     applicationName = "komreg-server"
-}
-
-configurations.all {
-    resolutionStrategy {
-        cacheChangingModulesFor(0, "seconds")
-    }
 }
 
 @Suppress("UnstableApiUsage")
@@ -57,8 +69,7 @@ dependencies {
     implementation(project(":transformation"))
 
     // Skulle egentlig vært runtimeOnly, men har ikke funnet på noe ordentlig grensesnitt for SSR-generering
-    implementation("no.statkart.matrikkel:matrikkel-komreg:4.19-SNAPSHOT") {
-        isChanging = true
+    implementation("no.kartverket.komreg:komreg-matrikkel:2025.11.07-09.55-a512396") {
         exclude(group = "com.oracle.database.jdbc")
     }
     implementation("io.netty:netty-codec-http2:4.2.7.Final")
