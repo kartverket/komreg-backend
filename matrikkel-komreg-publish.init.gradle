@@ -14,10 +14,11 @@ allprojects {
                     }
                 }
                 afterEvaluate {
-                    publishing.publications.named('komregMatrikkel') {
+                    publishing.publications.withType(MavenPublication).named('komregMatrikkel') {
                         logger.lifecycle('Renaming {} publication to komreg-matrikkel', artifactId)
                         artifactId = 'komreg-matrikkel' // Byttet navn pga. mulig GitHub Packages
                                                         // begrensning på unike artifactId innenfor en owner???
+                        groupId = 'no.kartverket.komreg'
                     }
                 }
             }
