@@ -138,12 +138,12 @@ class TransformerKommuneTest : FunSpec({
                     Kommuneendring(
                         FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(13))),
                         FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(35))),
-                        sammenslaaing = true,
+                        sammenslaaing = false,
                     ),
                     Kommuneendring(
                         FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(13))),
                         FraEnTilMange(Kommunenummer.Lopenummer(36), listOf(Kommunenummer.Lopenummer(35))),
-                        sammenslaaing = true,
+                        sammenslaaing = true, //sammenslåing = true for kommune nr 2 som skal slås inn i en annen kommune
                     ),
                 ),
                 emptyList(),
@@ -172,7 +172,7 @@ class TransformerKommuneTest : FunSpec({
         )
 
         assertThat(sink::transformations).apply {
-            hasSize(6)
+            hasSize(5)
             index(0).all {
                 prop(Transformation::id).isEqualTo(Id(TestIdType.Kommune, 1335))
                 prop(Transformation::transformedIdent).isEqualTo(kommuneIdentType(Fylkesnummer(13), Kommunenummer.Lopenummer(35)))
@@ -188,32 +188,18 @@ class TransformerKommuneTest : FunSpec({
                     }
             }
             index(1).all {
-                prop(Transformation::id).isEqualTo(Id(TestIdType.Kommune, 1335))
-                prop(Transformation::transformedIdent).isEqualTo(kommuneIdentType(Fylkesnummer(13), Kommunenummer.Lopenummer(35)))
-                prop(Transformation::transformedAssociatedIdents).isNull()
-                prop(Transformation::resultObject)
-                    .isNotNull()
-                    .isInstanceOf(Kommunedata::class)
-                    .all {
-                        prop(Kommunedata::navn).isEqualTo("NY KOMMUNE")
-                        prop(Kommunedata::koordinatsystem).isEqualTo(Koordinatsystem.UTM32)
-                        prop(Kommunedata::senterpunkt).isEqualTo(Koordinat(569682.0, 6670739.0))
-                        prop(Kommunedata::godkjenteGardsnumre).isEqualTo("1-10")
-                    }
-            }
-            index(2).all {
                 prop(Transformation::id).isEqualTo(Id(TestIdType.Kommune, 1234))
                 prop(Transformation::transformedIdent).isEqualTo(kommuneIdentType(Fylkesnummer(13), Kommunenummer.Lopenummer(35)))
                 prop(Transformation::transformedAssociatedIdents).isNull()
                 prop(Transformation::resultObject).isNull()
             }
-            index(3).all {
+            index(2).all {
                 prop(Transformation::id).isEqualTo(Id(TestIdType.Kommune, 1236))
                 prop(Transformation::transformedIdent).isEqualTo(kommuneIdentType(Fylkesnummer(13), Kommunenummer.Lopenummer(35)))
                 prop(Transformation::transformedAssociatedIdents).isNull()
                 prop(Transformation::resultObject).isNull()
             }
-            index(4).all {
+            index(3).all {
                 prop(Transformation::id).isEqualTo(Id(TestIdType.Foo, 1))
                 prop(Transformation::transformedIdent).isEqualTo(matrikkelenhetIdentType(
                     Fylkesnummer(13),
@@ -226,7 +212,7 @@ class TransformerKommuneTest : FunSpec({
                 prop(Transformation::transformedAssociatedIdents).isNull()
                 prop(Transformation::resultObject).isNull()
             }
-            index(5).all {
+            index(4).all {
                 prop(Transformation::id).isEqualTo(Id(TestIdType.Foo, 2))
                 prop(Transformation::transformedIdent).isEqualTo(matrikkelenhetIdentType(
                     Fylkesnummer(13),

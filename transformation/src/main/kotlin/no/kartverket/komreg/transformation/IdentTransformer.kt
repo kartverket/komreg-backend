@@ -172,10 +172,18 @@ class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
                             // Det er kun når det er full match at sammenslåingsflagget videreføres
                             // Altså for fylke eller kommune, og ikke for f.eks matrikkelenhet uten egen parameter
                             sammenslaing = target.sammenslaaing ?: false
-                            listOf(
-                                result to null,
-                                result to target.payload,
-                            )
+                            if (sammenslaing) {
+                                // Hvis sammenslåingsflagg er satt, er det for kommune eller fylke nr 2 (eller høyere)
+                                // Skal ikke lage opprettingsparameter for kommunen/fylket flere ganger
+                                listOf(
+                                    result to null,
+                                )
+                            } else {
+                                listOf(
+                                    result to null,
+                                    result to target.payload,
+                                )
+                            }
                         } else {
                             // Imperfect match: Transform
                             listOf(
