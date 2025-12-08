@@ -24,8 +24,16 @@ data class Transformation(
     val transformedIdent: Ident?,
     val transformedAssociatedIdents: Set<Ident>? = null,
     val resultObject: Payload? = null,
-    val sammenslaaing: Boolean? = false,
-)
+    val sammenslaaing: Boolean?
+) {
+    constructor(
+        id: Id,
+        sourceEntity: Entity?,
+        transformedIdent: Ident?,
+        transformedAssociatedIdents: Set<Ident>? = null,
+        resultObject: Payload? = null
+    ) : this(id, sourceEntity, transformedIdent, transformedAssociatedIdents, resultObject, false)
+}
 
 interface EntitySource {
     val id: String
