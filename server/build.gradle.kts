@@ -72,7 +72,7 @@ dependencies {
     implementation("no.kartverket.komreg:komreg-matrikkel:2025.11.07-09.55-a512396") {
         exclude(group = "com.oracle.database.jdbc")
     }
-    implementation("io.netty:netty-codec-http2:4.2.7.Final")
+    implementation("io.netty:netty-codec-http2:4.2.8.Final")
 
     implementation(libs.kotlin.reflect)
 
