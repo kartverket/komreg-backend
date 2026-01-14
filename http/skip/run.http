@@ -1,0 +1,18 @@
+### Kjør regulering
+# Før denne kjøres:
+# 1. Må man ha installert Azure CLI
+# 2. Må være logget inn på azure med
+#    az login --allow-no-subscriptions
+
+# Regulering som skal kjøres
+@regulering_id = 'regulering_som_skal_kjores'
+
+
+< {%
+    let cmd = "az account get-access-token --scope " + client.variables.environment.get("entra_id_scope") + "/.default --query accessToken --output tsv"
+    let token = execSync(cmd, { "encoding": 'string' });
+    console.log("Token: " + token)
+    client.variables.global.set("azure_token", token);
+%}
+GET https://{{server}}/run/{{regulering_id}}
+Authorization: Bearer {{azure_token}}
