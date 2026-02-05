@@ -6,12 +6,12 @@ kotest = "5.9.1"
 kotlinx-cli = "0.3.6"
 kotlinx-datetime = "0.7.1-0.6.x-compat"
 kotlinx-coroutines = "1.10.2"
-kotlinx-serialization = "1.9.0"
+kotlinx-serialization = "1.10.0"
 kotlinx-collections = "0.4.0"
-ktor = "3.3.3"
-logback = "1.5.24"
-micrometer-prometheus = "1.16.1"
-mockk = "1.14.7"
+ktor = "3.4.0"
+logback = "1.5.27"
+micrometer-prometheus = "1.16.2"
+mockk = "1.14.9"
 spek = "2.0.19"
 testcontainers = "1.21.4"
 
@@ -65,7 +65,7 @@ logback-classic-db = { module = "ch.qos.logback.db:logback-classic-db", version 
 
 micrometer-registry-prometheus = { module = "io.micrometer:micrometer-registry-prometheus", version.ref = "micrometer-prometheus" }
 
-postgresql = { module = "org.postgresql:postgresql", version = "42.7.8" }
+postgresql = { module = "org.postgresql:postgresql", version = "42.7.9" }
 flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flywayVersion" }
 flyway-postgres = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flywayVersion" }
 hikari = { module = "com.zaxxer:HikariCP", version = "7.0.2" }
@@ -73,5 +73,5 @@ hikari = { module = "com.zaxxer:HikariCP", version = "7.0.2" }
 testcontainers-core = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
 testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
 
-ojdbc11 = { module = "com.oracle.database.jdbc:ojdbc11", version = "23.26.0.0.0" }
+ojdbc11 = { module = "com.oracle.database.jdbc:ojdbc11", version = "23.26.1.0.0" }
 
