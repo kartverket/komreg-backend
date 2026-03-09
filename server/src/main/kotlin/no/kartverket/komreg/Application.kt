@@ -24,10 +24,8 @@ import no.kartverket.komreg.routes.*
 import no.kartverket.komreg.services.KjoringService
 import no.kartverket.komreg.services.ReguleringService
 import org.flywaydb.core.Flyway
-import org.rocksdb.RocksDB
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.util.concurrent.ForkJoinPool
 
 val env = dotenv {
     ignoreIfMissing = true
@@ -39,12 +37,7 @@ val logger: Logger = LoggerFactory.getLogger(object {}::class.java)
 var mottakerUsername: String? = null
 var mottakerPassword: String? = null
 
-fun main(args: Array<String>) =
-    ForkJoinPool.commonPool().execute {
-        RocksDB.loadLibrary()
-    }.also {
-        EngineMain.main(args)
-    }
+fun main(args: Array<String>) = EngineMain.main(args)
 
 @Suppress("unused") // Referenced in application.conf
 fun Application.module() {
