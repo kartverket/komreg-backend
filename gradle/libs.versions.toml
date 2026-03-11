@@ -3,17 +3,23 @@ flywayVersion = "11.20.1"
 hamcrest = "3.0"
 junit = "6.0.3"
 kotest = "5.9.1"
+kotlin = "2.3.10"
 kotlinx-cli = "0.3.6"
 kotlinx-datetime = "0.7.1-0.6.x-compat"
 kotlinx-coroutines = "1.10.2"
 kotlinx-serialization = "1.10.0"
 kotlinx-collections = "0.4.0"
-ktor = "3.4.0"
+ktor = "3.4.0"             # Se også netty-codec
+ktor-netty = "4.2.9.Final" # Bumpes til samme versjon som ktor bruker
 logback = "1.5.32"
 micrometer-prometheus = "1.16.3"
 mockk = "1.14.9"
 spek = "2.0.19"
 testcontainers = "1.21.4"
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 
 [libraries]
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
@@ -35,8 +41,9 @@ ktor-server-websockets = { module = "io.ktor:ktor-server-websockets", version.re
 ktor-client-websockets = { module = "io.ktor:ktor-client-websockets", version.ref = "ktor" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-server-cors-jvm = { module = "io.ktor:ktor-server-cors-jvm", version.ref = "ktor" }
+netty-codec-http2 = { module = "io.netty:netty-codec-http2", version.ref = "ktor-netty" }
 
-arrow-stack = { module = "io.arrow-kt:arrow-stack", version = "1.2.0" }
+arrow-stack = { module = "io.arrow-kt:arrow-stack", version = "1.2.0" } # Må være på samme versjon som i M22
 arrow-core = { module = "io.arrow-kt:arrow-core" }
 arrow-fx-coroutines = { module = "io.arrow-kt:arrow-fx-coroutines" }
 arrow-fx-stm = { module = "io.arrow-kt:arrow-fx-stm" }
@@ -75,3 +82,10 @@ testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.
 
 ojdbc11 = { module = "com.oracle.database.jdbc:ojdbc11", version = "23.26.1.0.0" }
 
+logstash-logback-encoder = { module = "net.logstash.logback:logstash-logback-encoder", version = "9.0" }
+
+dotenv-kotlin = { module = "io.github.cdimascio:dotenv-kotlin", version = "6.5.1" }
+
+guava = { module = "com.google.guava:guava", version = "33.5.0-jre" }
+
+matrikkel-komreg = { module = "no.kartverket.komreg:komreg-matrikkel", version = "2025.11.07-09.55-a512396" }

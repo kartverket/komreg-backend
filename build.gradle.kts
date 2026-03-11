@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") apply false
+    alias(libs.plugins.kotlin.jvm) apply false
 }
 
 subprojects {

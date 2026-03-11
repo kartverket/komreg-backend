@@ -1,6 +1,6 @@
 plugins {
-    kotlin("jvm")
-    kotlin("plugin.serialization")
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.plugin.serialization)
     `java-library`
 }
 
@@ -14,7 +14,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.datetime)
 
-    api("com.google.guava:guava:33.5.0-jre")
+    api(libs.guava)
     implementation(kotlin("reflect"))
 
     // Testing
