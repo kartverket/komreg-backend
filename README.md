@@ -41,7 +41,7 @@ det er ingen fare for å sjekke den inn.
 | `DB_KOMREG_PASSWORD`            |
 |                                 |
 
-Verdiene for disse variablene er påkrevd, og må eksistere i `.env`-filen din. Verdiene du skal sette for du tak i ved å
+Verdiene for disse variablene er påkrevd, og må eksistere i `.env`-filen din. Verdiene du skal sette får du tak i ved å
 spørre Smia. I dev, test og prod-miljøene er variablene allerede satt på GCP.
 
 ### Førstegangsoppsett:
@@ -85,7 +85,7 @@ Komreg-databasen skal nå være tilgjengelig.
 
 Start komreg-backend ved å kjøre main metoden i `Application.kt` i `server`-modulen. Siden transformasjonsprosessen
 krever ekstremt mye minne er det lurt å benytte seg av denne configen som du kan importere til Intellij. Denne allokerer
-40Gb til transformasjonsprosessen.
+40Gb til transformasjonsprosessen. I din run configuration kan du åpne opp VM-parameterts, og lime inn "-Xmx40G". Dette tilsvarer:
 
 ```xml
 
@@ -102,6 +102,11 @@ krever ekstremt mye minne er det lurt å benytte seg av denne configen som du ka
     </configuration>
 </component>
 ```
+
+**MERK**: Hvis du har på "Development Mode" i din run-config vil du mest sannsynlig få denne feilen ved oppstart: 
+`java.util.ServiceConfigurationError: no.kartverket.komreg.integration.spi.RegisterSerialization: no.statkart.matrikkel.komreg.RegisterMatrikkelSerialization not a subtype`
+Årsaken til dette er at Ktor i development mode bruker en egen child classloader som **KUN** tar seg av klasser fra prosjektet, altså ikke klasser fra dependencies (som f.eks. matrikke-komreg.jar).
+Dette gjør at RegisterMatrikkelSerialization arver fra default classloader (siden den er fra dependency), men komreg forventer at den arver fra child-classloader, og dermed ikke klarer å håndtere klassen.
 
 **MERK**: Første gangen du kjører applikasjonen kjører flyways migrasjonsfiler. Du vil du få en `RuntimeException` som
 sier `Ingen ledige mottakerskjema`. Dette må løses annerledes i fremtiden, men er for øyeblikket en sikkerhetssperre mot
