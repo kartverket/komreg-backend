@@ -41,8 +41,6 @@ testing {
         }
 
         val integrationTest by registering(JvmTestSuite::class) {
-            testType.set(TestSuiteType.INTEGRATION_TEST)
-
             dependencies {
                 implementation(project.dependencies.create(project))
             }
@@ -135,7 +133,7 @@ dependencies {
 }
 
 
-val buildDockerContext = tasks.create<Sync>("buildDockerContext") {
+val buildDockerContext = tasks.register<Sync>("buildDockerContext") {
     val dockerfileTemplate = "template.Dockerfile"
     val startScriptPath = tasks
         .named<CreateStartScripts>(ApplicationPlugin.TASK_START_SCRIPTS_NAME)
