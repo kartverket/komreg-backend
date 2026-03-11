@@ -52,10 +52,10 @@ testing {
                     }
                 }
             }
+        }
 
-            tasks.named("check").configure {
-                dependsOn(sources.classesTaskName)
-            }
+        tasks.named("check").configure {
+            dependsOn(integrationTest)
         }
     }
 }
