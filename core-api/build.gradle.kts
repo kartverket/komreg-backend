@@ -2,8 +2,8 @@ group = "no.kartverket.komreg"
 version = "0.2.0-SNAPSHOT"
 
 plugins {
-    kotlin("jvm")
-    kotlin("plugin.serialization")
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.plugin.serialization)
     `maven-publish`
 }
 

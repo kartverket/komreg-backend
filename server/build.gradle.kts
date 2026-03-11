@@ -4,8 +4,8 @@ group = "no.kartverket.komreg"
 version = "1.0-SNAPSHOT"
 
 plugins {
-    kotlin("jvm")
-    kotlin("plugin.serialization")
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.plugin.serialization)
     application
     `jvm-test-suite`
 }
@@ -41,8 +41,6 @@ testing {
         }
 
         val integrationTest by registering(JvmTestSuite::class) {
-            testType.set(TestSuiteType.INTEGRATION_TEST)
-
             dependencies {
                 implementation(project.dependencies.create(project))
             }
@@ -54,10 +52,10 @@ testing {
                     }
                 }
             }
+        }
 
-            tasks.named("check").configure {
-                dependsOn(sources.classesTaskName)
-            }
+        tasks.named("check").configure {
+            dependsOn(integrationTest)
         }
     }
 }
@@ -69,10 +67,10 @@ dependencies {
     implementation(project(":transformation"))
 
     // Skulle egentlig vært runtimeOnly, men har ikke funnet på noe ordentlig grensesnitt for SSR-generering
-    implementation("no.kartverket.komreg:komreg-matrikkel:2025.11.07-09.55-a512396") {
+    implementation(libs.matrikkel.komreg) {
         exclude(group = "com.oracle.database.jdbc")
     }
-    implementation("io.netty:netty-codec-http2:4.2.10.Final")
+    implementation(libs.netty.codec.http2)
 
     implementation(libs.kotlin.reflect)
 
@@ -89,7 +87,6 @@ dependencies {
     implementation(libs.arrow.fx.stm)
 
     runtimeOnly(libs.ojdbc11)
-    implementation("org.rocksdb:rocksdbjni:10.4.2")
     implementation(libs.logback.classic)
 
     implementation(libs.ktor.server.core)
@@ -103,9 +100,9 @@ dependencies {
 
     implementation(libs.ktor.server.cors.jvm)
 
-    implementation("io.github.cdimascio:dotenv-kotlin:6.5.1")
+    implementation(libs.dotenv.kotlin)
 
-    implementation("net.logstash.logback:logstash-logback-encoder:9.0")
+    implementation(libs.logstash.logback.encoder)
 
     implementation(libs.ktor.server.metrics.micrometer)
     implementation(libs.micrometer.registry.prometheus)
@@ -136,7 +133,7 @@ dependencies {
 }
 
 
-val buildDockerContext = tasks.create<Sync>("buildDockerContext") {
+val buildDockerContext = tasks.register<Sync>("buildDockerContext") {
     val dockerfileTemplate = "template.Dockerfile"
     val startScriptPath = tasks
         .named<CreateStartScripts>(ApplicationPlugin.TASK_START_SCRIPTS_NAME)
