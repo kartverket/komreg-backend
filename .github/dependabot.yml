@@ -21,6 +21,10 @@ updates:
     open-pull-requests-limit: 10
     registries:
       - maven-matrikkel
+    ignore:
+      # Arrow må være på samme versjon som i Matrikkelen (p.t. 1.2.0).
+      # Ulik versjon gir runtime-feil. Se docs/delte-biblioteker.md.
+      - dependency-name: "io.arrow-kt:*"
     groups:
       minor-and-patch:
         update-types:
