@@ -9,8 +9,7 @@ kotlinx-datetime = "0.7.1-0.6.x-compat"
 kotlinx-coroutines = "1.10.2"
 kotlinx-serialization = "1.10.0"
 kotlinx-collections = "0.4.0"
-ktor = "3.4.1"             # Se også netty-codec
-ktor-netty = "4.2.9.Final" # Bumpes til samme versjon som ktor bruker
+ktor = "3.4.1"
 logback = "1.5.32"
 micrometer-prometheus = "1.16.4"
 mockk = "1.14.9"
@@ -41,7 +40,6 @@ ktor-server-websockets = { module = "io.ktor:ktor-server-websockets", version.re
 ktor-client-websockets = { module = "io.ktor:ktor-client-websockets", version.ref = "ktor" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-server-cors-jvm = { module = "io.ktor:ktor-server-cors-jvm", version.ref = "ktor" }
-netty-codec-http2 = { module = "io.netty:netty-codec-http2", version.ref = "ktor-netty" }
 
 arrow-stack = { module = "io.arrow-kt:arrow-stack", version = "1.2.0" } # Må være på samme versjon som i M22
 arrow-core = { module = "io.arrow-kt:arrow-core" }
