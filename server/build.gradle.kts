@@ -70,8 +70,6 @@ dependencies {
     implementation(libs.matrikkel.komreg) {
         exclude(group = "com.oracle.database.jdbc")
     }
-    implementation(libs.netty.codec.http2)
-
     implementation(libs.kotlin.reflect)
 
     implementation(libs.kotlinx.cli)
