@@ -28,6 +28,8 @@ matrikkel.db.username=MATRIKKEL_KOMREG
 docker run --name matrikkel-db -p 1521:1521 -p 5500:5500 -d nexus.statkart.no:8082/matrikkel-oracle-xe-onedb:latest
 ```
 
+Alternativt kan du bruke `./lokal-dev/start-db.sh` som starter både matrikkel-db og komreg-db.
+
 ## 3. Konfigurer `.env` for M22-testing
 
 Kopier `.env.template` til `.env` (se [README](../README.md)) og sett følgende verdier:
@@ -88,6 +90,8 @@ For å resette til dette snapshottet:
 docker rm matrikkel-db
 docker run --name matrikkel-db -p 1521:1521 -p 5500:5500 -d matrikkel-test-db:latest
 ```
+
+Alternativt kan du bruke `./lokal-dev/db-snapshot.sh save` og `./lokal-dev/db-snapshot.sh restore` som gjør det samme.
 
 ## Tips: Sjekk endringslogg før/etter KomReg-kjøring
 

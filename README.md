@@ -55,6 +55,8 @@ docker run --name local-postgres -e POSTGRES_USER=komreg -e POSTGRES_PASSWORD=pa
 ```
 (Bytt ut XX så du bruker en ledig port på maskinen din.)
 
+Alternativt kan du bruke `./lokal-dev/start-db.sh` som starter både komreg-db (PostgreSQL på port 5432) og matrikkel-db (Oracle). Se [M22-oppsett](docs/oppsettM22.md) for mer info.
+
 #### Legg til komreg-db som en datasource i IntelliJ hvis du vil:
 
 Bruk URL `jdbc:postgresql://localhost:54XX/komreg-db`
