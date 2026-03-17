@@ -16,6 +16,12 @@ import no.kartverket.komreg.core.domain.Koordinatsystem
 import no.kartverket.komreg.repositories.ReguleringRepo
 import no.kartverket.komreg.routes.*
 
+private enum class RegType {
+    SAMMENSLAAING,
+    GRENSEJUSTERING,
+    SPLITTING,
+}
+
 fun main() {
     val env = dotenv {
         ignoreIfMissing = true
@@ -33,91 +39,138 @@ fun main() {
     HikariDataSource(hikariConfig).use { pool ->
         val reguleringRepo = ReguleringRepo(pool)
 
-        val name = "Nittedal og Fredrikstad test"
-        val endring = EndringDTO(
-            id = UUID.nameUUIDFromBytes(name.toByteArray()).toString().substring(0, 6),
-            navn = name,
-            type = "kommune",
-            utgåendeFylker = listOf(),
-            utgåendeKommuner = listOf(
-                EnkelKommuneDTO(
-                    navn = "Nittedal",
-                    fylkesnummer = "1000002",
-                    kommunenummer = "01"
-                ),
-                EnkelKommuneDTO(
-                    navn = "Fredrikstad",
-                    fylkesnummer = "1000001",
-                    kommunenummer = "06"
-                )
-            ),
-            nyeFylker = listOf(),
-            nyeKommuner = listOf(
-                KommuneDTO(
-                    navn = name,
-                    fylkesnummer = "99",
-                    kommunenummer = "90",
-                    gyldigTilDato = null,
-                    koordinatsystem = Koordinatsystem.UTM33,
-                    senterpunkt = KoordinatDTO(273342.7677, 6655574.2402),
-                    nedsattKonsesjonsgrense = false,
-                    godkjenteGardsnumre = listOf(
-                        Gardsnummerserie(fra = 3, til = 4),
-                    ),
-                    adresse = AdresseDTO(
-                        adresselinje1 = "Postboks 123",
-                        adresselinje2 = "",
-                        postnummer = "1350",
-                        poststed = "LOMMEDALEN"
-                    ),
-                    standardRekvirent = StandardRekvirentDTO(
-                        orgnummer = "773210000",
-                        navn = "Panco AS"
-                    ),
-                    kommunevapen = createKommunevapenImage('K')
-                )
-            ),
-            transformasjoner = listOf(
-                KommuneTransformasjonDTO(
-                    fylkesnummer = FraEnTilMangeDTO(fra = "1000001", til = listOf("99")),
-                    kommuneløpenummer = FraEnTilMangeDTO(fra = "06", til = listOf("90")),
-                    sammenslaa = true
-                ),
-                KommuneTransformasjonDTO(
-                    fylkesnummer = FraEnTilMangeDTO(fra = "1000002", til = listOf("99")),
-                    kommuneløpenummer = FraEnTilMangeDTO(fra = "01", til = listOf("90"))
-                ),
-                MatrikkelenhetTransformasjonDTO(
-                    fylkesnummer = FraTilDTO("1000002", "99"),
-                    kommuneløpenummer = FraTilDTO("01", "90"),
-                    gårdsnummer = FraTilDTO("2", "3"),
-                    bruksnummer = null
-                ),
-                MatrikkelenhetTransformasjonDTO(
-                    fylkesnummer = FraTilDTO("1000001", "99"),
-                    kommuneløpenummer = FraTilDTO("06", "90"),
-                    gårdsnummer = FraTilDTO("426", "4"),
-                    bruksnummer = null
-                ),
-            )
-        )
-
-        val regulering = Regulering(
-            id = "sammenslaa_test",
-            navn = "Sammenslåing av mockup Nittedal og mockup Fredrikstad",
-            dato = LocalDate(2028, 1, 1),
-            endringer = listOf(endring),
-        )
+        val regTypeToGenerate = RegType.valueOf(env["GENERATE_REG_TYPE"])
+        val regulering = when (regTypeToGenerate) {
+            RegType.SAMMENSLAAING -> createSammenslaaingRegulering()
+            RegType.GRENSEJUSTERING -> createGrensejusteringRegulering()
+            RegType.SPLITTING -> createSplittingRegulering()
+        }
 
         try {
             reguleringRepo.insertRegulering(regulering)
             println("${regulering.id} ble lagt inn i reguleringstabellen")
-        }catch (e: Exception) {
+        } catch (e: Exception) {
             println("Det skjedde en feil ved innsending av ${regulering.id}: ${e.message}")
         }
-
-
     }
+}
+
+private fun createSammenslaaingRegulering(): Regulering {
+    val name = "Sammenslåing av Nittedal og Fredrikstad"
+    val endring = EndringDTO(
+        id = UUID.nameUUIDFromBytes(name.toByteArray()).toString().substring(0, 6),
+        navn = name,
+        type = "kommune",
+        utgåendeFylker = listOf(),
+        utgåendeKommuner = listOf(
+            EnkelKommuneDTO(
+                navn = "Nittedal",
+                fylkesnummer = "1000002",
+                kommunenummer = "01"
+            ),
+            EnkelKommuneDTO(
+                navn = "Fredrikstad",
+                fylkesnummer = "1000001",
+                kommunenummer = "06"
+            )
+        ),
+        nyeFylker = listOf(),
+        nyeKommuner = listOf(
+            KommuneDTO(
+                navn = name,
+                fylkesnummer = "99",
+                kommunenummer = "90",
+                gyldigTilDato = null,
+                koordinatsystem = Koordinatsystem.UTM33,
+                senterpunkt = KoordinatDTO(273342.7677, 6655574.2402),
+                nedsattKonsesjonsgrense = false,
+                godkjenteGardsnumre = listOf(
+                    Gardsnummerserie(fra = 3, til = 4),
+                ),
+                adresse = AdresseDTO(
+                    adresselinje1 = "Postboks 123",
+                    adresselinje2 = "",
+                    postnummer = "1350",
+                    poststed = "LOMMEDALEN"
+                ),
+                standardRekvirent = StandardRekvirentDTO(
+                    orgnummer = "773210000",
+                    navn = "Panco AS"
+                ),
+                kommunevapen = createKommunevapenImage('K')
+            )
+        ),
+        transformasjoner = listOf(
+            KommuneTransformasjonDTO(
+                fylkesnummer = FraEnTilMangeDTO(fra = "1000001", til = listOf("99")),
+                kommuneløpenummer = FraEnTilMangeDTO(fra = "06", til = listOf("90")),
+                sammenslaa = true
+            ),
+            KommuneTransformasjonDTO(
+                fylkesnummer = FraEnTilMangeDTO(fra = "1000002", til = listOf("99")),
+                kommuneløpenummer = FraEnTilMangeDTO(fra = "01", til = listOf("90"))
+            ),
+            MatrikkelenhetTransformasjonDTO(
+                fylkesnummer = FraTilDTO("1000002", "99"),
+                kommuneløpenummer = FraTilDTO("01", "90"),
+                gårdsnummer = FraTilDTO("2", "3"),
+                bruksnummer = null
+            ),
+            MatrikkelenhetTransformasjonDTO(
+                fylkesnummer = FraTilDTO("1000001", "99"),
+                kommuneløpenummer = FraTilDTO("06", "90"),
+                gårdsnummer = FraTilDTO("426", "4"),
+                bruksnummer = null
+            ),
+        )
+    )
+
+    return Regulering(
+        id = "sammenslaa_test",
+        navn = name,
+        dato = LocalDate(2028, 1, 1),
+        endringer = listOf(endring),
+    )
+}
+
+private fun createGrensejusteringRegulering(): Regulering {
+    val name = "Grensejustering mellom kommune X og Y"
+    val endring = EndringDTO(
+        id = UUID.nameUUIDFromBytes(name.toByteArray()).toString().substring(0, 6),
+        navn = name,
+        type = "kommune",
+        utgåendeFylker = listOf(),
+        utgåendeKommuner = listOf(),
+        nyeFylker = listOf(),
+        nyeKommuner = listOf(),
+        transformasjoner = listOf()
+    )
+    return Regulering(
+        id = "grensejustering",
+        navn = name,
+        dato = LocalDate(2028, 1, 1),
+        endringer = listOf(endring),
+    )
+}
+
+private fun createSplittingRegulering(): Regulering {
+    val name = "Splitting av kommune X og Y"
+    val endring = EndringDTO(
+        id = UUID.nameUUIDFromBytes(name.toByteArray()).toString().substring(0, 6),
+        navn = name,
+        type = "kommune",
+        utgåendeFylker = listOf(),
+        utgåendeKommuner = listOf(),
+        nyeFylker = listOf(),
+        nyeKommuner = listOf(),
+        transformasjoner = listOf()
+    )
+    return Regulering(
+        id = "splitting",
+        navn = name,
+        dato = LocalDate(2028, 1, 1),
+        endringer = listOf(endring),
+    )
 }
 
 private fun createKommunevapenImage(char: Char): String {
