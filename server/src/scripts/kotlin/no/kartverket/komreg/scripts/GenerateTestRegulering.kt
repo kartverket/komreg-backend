@@ -39,7 +39,11 @@ fun main() {
     HikariDataSource(hikariConfig).use { pool ->
         val reguleringRepo = ReguleringRepo(pool)
 
-        val regTypeToGenerate = RegType.valueOf(env["GENERATE_REG_TYPE"])
+        val regTypeToGenerate = try {
+            RegType.valueOf(env["GENERATE_REG_TYPE"])
+        } catch (e: Exception) {
+            error("Invalid or missing GENERATE_REG_TYPE: ${e.message}")
+        }
         val regulering = when (regTypeToGenerate) {
             RegType.SAMMENSLAAING -> createSammenslaaingRegulering()
             RegType.GRENSEJUSTERING -> createGrensejusteringRegulering()
