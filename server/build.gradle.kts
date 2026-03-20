@@ -60,6 +60,21 @@ testing {
     }
 }
 
+val scripts by sourceSets.creating {
+    compileClasspath += sourceSets.main.get().output
+    runtimeClasspath += sourceSets.main.get().output
+}
+
+configurations[scripts.implementationConfigurationName].extendsFrom(configurations.implementation.get())
+configurations[scripts.runtimeOnlyConfigurationName].extendsFrom(configurations.runtimeOnly.get())
+
+tasks.register<JavaExec>("generateTestRegulering") {
+    group = "scripts"
+    description = "Generates a test regulering and inserts it into the local database"
+    classpath = scripts.runtimeClasspath
+    mainClass.set("no.kartverket.komreg.scripts.GenerateTestReguleringKt")
+}
+
 val integrationTestImplementation by configurations.getting
 
 dependencies {
