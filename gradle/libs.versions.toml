@@ -1,15 +1,15 @@
 [versions]
-flywayVersion = "12.1.0"
+flywayVersion = "12.3.0"
 hamcrest = "3.0"
 junit = "6.0.3"
 kotest = "5.9.1"
-kotlin = "2.3.10"
+kotlin = "2.3.20"
 kotlinx-cli = "0.3.6"
 kotlinx-datetime = "0.7.1-0.6.x-compat"
 kotlinx-coroutines = "1.10.2"
 kotlinx-serialization = "1.10.0"
 kotlinx-collections = "0.4.0"
-ktor = "3.4.1"
+ktor = "3.4.2"
 logback = "1.5.32"
 micrometer-prometheus = "1.16.4"
 mockk = "1.14.9"
@@ -66,7 +66,7 @@ assertk = { module = "com.willowtreeapps.assertk:assertk", version = "0.28.1" }
 
 slf4j-api = { module = "org.slf4j:slf4j-api", version = "2.0.17" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
-logback-classic-db = { module = "ch.qos.logback.db:logback-classic-db", version = "1.2.11.1" }
+logback-classic-db = { module = "ch.qos.logback.db:logback-classic-db", version = "1.5.32" }
 
 micrometer-registry-prometheus = { module = "io.micrometer:micrometer-registry-prometheus", version.ref = "micrometer-prometheus" }
 
