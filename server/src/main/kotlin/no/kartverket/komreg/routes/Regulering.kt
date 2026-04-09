@@ -8,6 +8,7 @@ import no.kartverket.komreg.core.domain.Matrikkelnummer.Bruksnummer
 import no.kartverket.komreg.core.domain.Matrikkelnummer.Gardsnummer
 import no.kartverket.komreg.integration.spi.invoke
 import no.kartverket.komreg.transformation.*
+import no.statkart.matrikkel.komreg.kilde.kommunenummer
 import java.util.Base64
 
 @Serializable
@@ -147,6 +148,23 @@ data class Regulering(
                                     fra = TeigId(transformasjon.teigId.fra.toLong()),
                                     til = TeigId(transformasjon.teigId.til.toLong()),
                                 ),
+                            )
+                        }
+
+                        is KulturminneTransformasjonDTO -> {
+                            Kulturminneendring(
+                                fylkesnummer = FraTil(
+                                    fra = Fylkesnummer(transformasjon.fylkesnummer.fra.toLong()),
+                                    til = Fylkesnummer(transformasjon.fylkesnummer.til.toLong()),
+                                ),
+                                kommuneløpenummer = FraTil(
+                                    fra = Kommunenummer.Lopenummer(transformasjon.fylkesnummer.fra.toByte()),
+                                    til = Kommunenummer.Lopenummer(transformasjon.fylkesnummer.til.toByte()),
+                                ),
+                                kulturminneId = FraTil(
+                                    fra = KulturminneId(transformasjon.kulturminneId.fra.toLong()),
+                                    til = KulturminneId(transformasjon.kulturminneId.til.toLong())
+                                )
                             )
                         }
 
@@ -291,6 +309,14 @@ data class TeigTransformasjonDTO(
     val kommuneløpenummer: FraTilDTO,
     val teigId: FraTilDTO,
 ) : TransformasjonDTO()
+
+@Serializable
+@SerialName("Kulturminne")
+data class KulturminneTransformasjonDTO(
+    val fylkesnummer: FraTilDTO,
+    val kommuneløpenummer: FraTilDTO,
+    val kulturminneId: FraTilDTO,
+): TransformasjonDTO()
 
 @Serializable
 @SerialName("vegadresse")

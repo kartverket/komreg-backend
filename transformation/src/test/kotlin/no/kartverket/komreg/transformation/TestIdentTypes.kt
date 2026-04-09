@@ -32,6 +32,13 @@ typealias TeigIdentType = IdentType7<
 suspend fun getTeigIdentType(): TeigIdentType = identTypeOf7()
 
 
+typealias KulturminneIdentType = IdentType7<Fylkesnummer, Kommunenummer.Lopenummer,
+        Matrikkelnummer.Gardsnummer, Matrikkelnummer.Bruksnummer, Matrikkelnummer.Festenummer, Matrikkelnummer.Seksjonsnummer,
+        KulturminneId
+        >
+suspend fun getKulturminneIdentType(): KulturminneIdentType = identTypeOf7()
+
+
 typealias BygningIdentType = IdentType3<Fylkesnummer, Kommunenummer.Lopenummer, Bygningsnummer>
 
 suspend fun getBygningIdentType(): BygningIdentType = identTypeOf3()

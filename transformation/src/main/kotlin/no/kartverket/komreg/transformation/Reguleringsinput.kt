@@ -71,6 +71,12 @@ data class Teigendring(
     val teigId: FraTil<TeigId>,
 ) : Endring()
 
+data class Kulturminneendring(
+    val fylkesnummer: FraTil<Fylkesnummer>,
+    val kommuneløpenummer: FraTil<Kommunenummer.Lopenummer>,
+    val kulturminneId: FraTil<KulturminneId>
+) : Endring()
+
 data class Vegadresseendring(
     val fylkesnummer: FraTil<Fylkesnummer>,
     val kommuneløpenummer: FraTil<Kommunenummer.Lopenummer>,
