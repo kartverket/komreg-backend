@@ -1,9 +1,11 @@
-POST http://localhost:8080/run HTTP/1.1
+@regId = sammenslaa-km
+
+POST http://localhost:8080/reguleringer
 Content-Type: application/json
 
 {
   "id": "a76f0227b61e",
-  "navn": "Statustest",
+  "navn": "sammenslaaKMTest",
   "dato": "2023-04-28",
   "endringer": [
     {
@@ -33,3 +35,6 @@ Content-Type: application/json
     }
   ]
 }
+
+### Kjør reguleringen
+GET http://localhost:8080/run/{{regId}}
