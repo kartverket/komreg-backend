@@ -158,8 +158,8 @@ data class Regulering(
                                     til = Fylkesnummer(transformasjon.fylkesnummer.til.toLong()),
                                 ),
                                 kommuneløpenummer = FraTil(
-                                    fra = Kommunenummer.Lopenummer(transformasjon.fylkesnummer.fra.toByte()),
-                                    til = Kommunenummer.Lopenummer(transformasjon.fylkesnummer.til.toByte()),
+                                    fra = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.fra.toByte()),
+                                    til = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.til.toByte()),
                                 ),
                                 kulturminneId = FraTil(
                                     fra = KulturminneId(transformasjon.kulturminneId.fra.toLong()),
