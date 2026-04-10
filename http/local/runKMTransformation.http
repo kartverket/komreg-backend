@@ -1,4 +1,4 @@
-@regId = sammenslaa-km-5
+@regId = sammenslaa-km-10
 
 POST http://localhost:8080/reguleringer
 Content-Type: application/json
@@ -6,16 +6,16 @@ Content-Type: application/json
 {
   "id": "{{regId}}",
   "dato": "2028-01-01",
-  "navn": "Sammenslåing av Nittedal og Frogn",
+  "navn": "Sammenslåing av Nittedal og Bærum",
   "endringer": [
     {
       "id": "f8d8e2",
-      "navn": "Sammenslåing av Nittedal og Frogn",
+      "navn": "Sammenslåing av Nittedal og Bærum",
       "type": "kommune",
       "nyeFylker": [],
       "nyeKommuner": [
         {
-          "navn": "Sammenslåing av Nittedal og Frogn",
+          "navn": "Sammenslåing av Nittedal og Bærum",
           "adresse": {
             "poststed": "LOMMEDALEN",
             "postnummer": "1350",
@@ -26,7 +26,7 @@ Content-Type: application/json
             "x": 273342.7677,
             "y": 6655574.2402
           },
-          "fylkesnummer": "30",
+          "fylkesnummer": "1000002",
           "kommunevapen": "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",
           "gyldigTilDato": null,
           "kommunenummer": "90",
@@ -50,13 +50,13 @@ Content-Type: application/json
           "type": "kommune",
           "sammenslaa": true,
           "fylkesnummer": {
-            "fra": "30",
+            "fra": "1000002",
             "til": [
-              "30"
+              "1000002"
             ]
           },
           "kommuneløpenummer": {
-            "fra": "03",
+            "fra": "19",
             "til": [
               "90"
             ]
@@ -65,9 +65,9 @@ Content-Type: application/json
         {
           "type": "kommune",
           "fylkesnummer": {
-            "fra": "30",
+            "fra": "1000002",
             "til": [
-              "30"
+              "1000002"
             ]
           },
           "kommuneløpenummer": {
@@ -80,12 +80,12 @@ Content-Type: application/json
         {
           "type": "kulturminne",
           "fylkesnummer": {
-            "fra": "30",
+            "fra": "1000002",
             "til":
-              "30"
+            "1000002"
           },
           "kommuneløpenummer": {
-            "fra": "100000201",
+            "fra": "01",
             "til":
               "90"
 
@@ -99,13 +99,13 @@ Content-Type: application/json
       "utgåendeKommuner": [
         {
           "navn": "Nittedal",
-          "fylkesnummer": "30",
+          "fylkesnummer": "1000002",
           "kommunenummer": "100000201"
         },
         {
-          "navn": "Sarpsborg",
-          "fylkesnummer": "30",
-          "kommunenummer": "3003"
+          "navn": "Bærum",
+          "fylkesnummer": "1000002",
+          "kommunenummer": "100000219"
         }
       ]
     }
