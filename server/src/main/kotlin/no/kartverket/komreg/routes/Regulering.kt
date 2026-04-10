@@ -311,7 +311,7 @@ data class TeigTransformasjonDTO(
 ) : TransformasjonDTO()
 
 @Serializable
-@SerialName("Kulturminne")
+@SerialName("kulturminne")
 data class KulturminneTransformasjonDTO(
     val fylkesnummer: FraTilDTO,
     val kommuneløpenummer: FraTilDTO,
