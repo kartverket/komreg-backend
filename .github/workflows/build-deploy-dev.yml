@@ -79,7 +79,7 @@ jobs:
           image_url: ${{ needs.build.outputs.image_url}}
 
   deploy-argo:
-    needs: [ build, pharos ]
+    needs: [ build ]
     uses: kartverket/smia-apps/.github/workflows/release-app-octo-sts.yml@main
     with:
       application: komreg-backend
