@@ -30,6 +30,10 @@ updates:
         update-types:
           - "minor"
           - "patch"
+        # CodeQL feiler ofte ved ny versjon av Kotlin.
+        exclude-patterns:
+          - "org.jetbrains.kotlin*"
+          - "io.ktor*"
 
   - package-ecosystem: "github-actions"
     directory: "/"
