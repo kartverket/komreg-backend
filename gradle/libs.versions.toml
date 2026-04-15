@@ -1,5 +1,5 @@
 [versions]
-flywayVersion = "12.1.0"
+flywayVersion = "12.4.0"
 hamcrest = "3.0"
 junit = "6.0.3"
 kotest = "5.9.1"
@@ -11,7 +11,7 @@ kotlinx-serialization = "1.10.0"
 kotlinx-collections = "0.4.0"
 ktor = "3.4.1"
 logback = "1.5.32"
-micrometer-prometheus = "1.16.4"
+micrometer-prometheus = "1.16.5"
 mockk = "1.14.9"
 spek = "2.0.19"
 testcontainers = "1.21.4"
@@ -66,7 +66,7 @@ assertk = { module = "com.willowtreeapps.assertk:assertk", version = "0.28.1" }
 
 slf4j-api = { module = "org.slf4j:slf4j-api", version = "2.0.17" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
-logback-classic-db = { module = "ch.qos.logback.db:logback-classic-db", version = "1.2.11.1" }
+logback-classic-db = { module = "ch.qos.logback.db:logback-classic-db", version = "1.5.32" }
 
 micrometer-registry-prometheus = { module = "io.micrometer:micrometer-registry-prometheus", version.ref = "micrometer-prometheus" }
 
@@ -84,6 +84,6 @@ logstash-logback-encoder = { module = "net.logstash.logback:logstash-logback-enc
 
 dotenv-kotlin = { module = "io.github.cdimascio:dotenv-kotlin", version = "6.5.1" }
 
-guava = { module = "com.google.guava:guava", version = "33.5.0-jre" }
+guava = { module = "com.google.guava:guava", version = "33.6.0-jre" }
 
 matrikkel-komreg = { module = "no.kartverket.komreg:komreg-matrikkel", version = "2025.11.07-09.55-a512396" }
