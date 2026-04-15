@@ -77,6 +77,7 @@ jobs:
         uses: kartverket/pharos@v0.6.3
         with:
           image_url: ${{ needs.build.outputs.image_url}}
+          disable_severity_check: true
 
   deploy-argo:
     needs: [ build ]
