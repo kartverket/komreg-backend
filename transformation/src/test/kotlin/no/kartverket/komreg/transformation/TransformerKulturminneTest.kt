@@ -14,7 +14,7 @@ import no.kartverket.komreg.integration.spi.Transformation
 import no.kartverket.komreg.integration.spi.invoke
 
 class TransformerKulturminneTest: FunSpec({
-    fun kulturminneId(idValue: Long) = Id(TestIdType.Foo, idValue) // Faktisk id-type er irrelevant
+    fun lokalitetsnummer(idValue: Long) = Id(TestIdType.Foo, idValue) // Faktisk id-type er irrelevant
 
     test("Slå sammen mnr mangler") {
         val idGeneratorManager = mockIdGenerator()
@@ -33,7 +33,7 @@ class TransformerKulturminneTest: FunSpec({
                 ident = kommuneIdentType(Fylkesnummer(13), Kommunenummer.Lopenummer(36)),
             ),
             Entity(
-                id = kulturminneId(1),
+                id = lokalitetsnummer(1),
                 ident = kulturminneIdentType(
                     Fylkesnummer(13),
                     Kommunenummer.Lopenummer(34),
@@ -41,11 +41,11 @@ class TransformerKulturminneTest: FunSpec({
                     Matrikkelnummer.Bruksnummer(0),
                     Matrikkelnummer.Festenummer(0),
                     Matrikkelnummer.Seksjonsnummer(0),
-                    KulturminneId(1),
+                    Lokalitetsnummer(1),
                 ),
             ),
             Entity(
-                id = kulturminneId(3),
+                id = lokalitetsnummer(3),
                 ident = kulturminneIdentType(
                     Fylkesnummer(13),
                     Kommunenummer.Lopenummer(36),
@@ -53,7 +53,7 @@ class TransformerKulturminneTest: FunSpec({
                     Matrikkelnummer.Bruksnummer(0),
                     Matrikkelnummer.Festenummer(0),
                     Matrikkelnummer.Seksjonsnummer(0),
-                    KulturminneId(3),
+                    Lokalitetsnummer(3),
                 ),
             ),
         )
@@ -79,13 +79,13 @@ class TransformerKulturminneTest: FunSpec({
                     Kulturminneendring(
                         FraTil(Fylkesnummer(13), Fylkesnummer(13)),
                         FraTil(Kommunenummer.Lopenummer(34), Kommunenummer.Lopenummer(35)),
-                        FraTil(KulturminneId(1), KulturminneId(1))
+                        FraTil(Lokalitetsnummer(1), Lokalitetsnummer(1))
 
                     ),
                     Kulturminneendring(
                         FraTil(Fylkesnummer(13), Fylkesnummer(13)),
                         FraTil(Kommunenummer.Lopenummer(36), Kommunenummer.Lopenummer(35)),
-                        FraTil(KulturminneId(3), KulturminneId(3))
+                        FraTil(Lokalitetsnummer(3), Lokalitetsnummer(3))
                     ),
                 ),
                 emptyList(),
@@ -154,7 +154,7 @@ class TransformerKulturminneTest: FunSpec({
                         Matrikkelnummer.Bruksnummer(0),
                         Matrikkelnummer.Festenummer(0),
                         Matrikkelnummer.Seksjonsnummer(0),
-                        KulturminneId(1),
+                        Lokalitetsnummer(1),
                     ),
                 )
                 prop(Transformation::transformedAssociatedIdents).isNull()
@@ -169,7 +169,7 @@ class TransformerKulturminneTest: FunSpec({
                         Matrikkelnummer.Bruksnummer(0),
                         Matrikkelnummer.Festenummer(0),
                         Matrikkelnummer.Seksjonsnummer(0),
-                        KulturminneId(3),
+                        Lokalitetsnummer(3),
                     ),
                 )
                 prop(Transformation::transformedAssociatedIdents).isNull()
