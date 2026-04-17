@@ -8,6 +8,7 @@ import no.kartverket.komreg.core.domain.Matrikkelnummer.Bruksnummer
 import no.kartverket.komreg.core.domain.Matrikkelnummer.Gardsnummer
 import no.kartverket.komreg.integration.spi.invoke
 import no.kartverket.komreg.transformation.*
+import no.statkart.matrikkel.komreg.kilde.kommunenummer
 import java.util.Base64
 
 @Serializable
@@ -160,9 +161,9 @@ data class Regulering(
                                     fra = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.fra.toByte()),
                                     til = Kommunenummer.Lopenummer(transformasjon.kommuneløpenummer.til.toByte()),
                                 ),
-                                lokalitetsnummer = FraTil(
-                                    fra = Lokalitetsnummer(transformasjon.kulturminneId.fra.toLong()),
-                                    til = Lokalitetsnummer(transformasjon.kulturminneId.til.toLong())
+                                kulturminneId = FraTil(
+                                    fra = KulturminneId(transformasjon.kulturminneId.fra.toLong()),
+                                    til = KulturminneId(transformasjon.kulturminneId.til.toLong())
                                 )
                             )
                         }

@@ -77,7 +77,8 @@ suspend fun transform(
             val transformResult =
                 flow
                     .mapNotNull { entity ->
-                        transformer.transform(entity, idGeneratorManager::idFor)
+                        val result = transformer.transform(entity, idGeneratorManager::idFor)
+                        result
                     }
 
             val transformResultFlow =
@@ -347,17 +348,17 @@ suspend fun mapTeig(teigendring: Teigendring): Pair<Ident, IdentTransformer.Mapp
 }
 
 suspend fun mapKulturminneendring(kulturminneendring: Kulturminneendring): Pair<Ident, IdentTransformer.Mapping> {
-    val kulturminneIdentType = identTypeOf3<Fylkesnummer, Kommunenummer.Lopenummer, Lokalitetsnummer>()
+    val kulturminneIdentType = identTypeOf3<Fylkesnummer, Kommunenummer.Lopenummer, KulturminneId>()
 
     return kulturminneIdentType(
         kulturminneendring.fylkesnummer.fra,
         kulturminneendring.kommuneløpenummer.fra,
-        kulturminneendring.lokalitetsnummer.fra
+        kulturminneendring.kulturminneId.fra
     ) to IdentTransformer.Mapping.Simple(
         kulturminneIdentType(
             kulturminneendring.fylkesnummer.til,
             kulturminneendring.kommuneløpenummer.til,
-            kulturminneendring.lokalitetsnummer.til,
+            kulturminneendring.kulturminneId.til,
         )
     )
 }

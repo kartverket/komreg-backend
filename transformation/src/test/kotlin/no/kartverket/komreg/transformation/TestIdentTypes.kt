@@ -34,7 +34,7 @@ suspend fun getTeigIdentType(): TeigIdentType = identTypeOf7()
 
 typealias KulturminneIdentType = IdentType7<Fylkesnummer, Kommunenummer.Lopenummer,
         Matrikkelnummer.Gardsnummer, Matrikkelnummer.Bruksnummer, Matrikkelnummer.Festenummer, Matrikkelnummer.Seksjonsnummer,
-        Lokalitetsnummer
+        KulturminneId
         >
 suspend fun getKulturminneIdentType(): KulturminneIdentType = identTypeOf7()
 

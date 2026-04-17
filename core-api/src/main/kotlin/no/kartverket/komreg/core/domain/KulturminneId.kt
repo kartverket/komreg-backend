@@ -9,9 +9,9 @@ import kotlinx.serialization.Serializable
  * splittinger og grensejusteringer.
  */
 @Serializable
-@SerialName("Lokalitetsnummer")
-data class Lokalitetsnummer(val id: Long) : Comparable<Lokalitetsnummer> {
-    override fun compareTo(other: Lokalitetsnummer): Int {
+@SerialName("KulturminneId")
+data class KulturminneId(val id: Long) : Comparable<KulturminneId> {
+    override fun compareTo(other: KulturminneId): Int {
         return id.compareTo(other.id)
     }
 }

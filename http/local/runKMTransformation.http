@@ -1,4 +1,4 @@
-@regId = sammenslaa-km-11
+@regId = sammenslaa-km-10
 
 POST http://localhost:8080/reguleringer
 Content-Type: application/json
@@ -90,7 +90,7 @@ Content-Type: application/json
               "90"
 
           },
-          "lokalitetsnummer": {
+          "kulturminneId": {
             "fra": "1001",
             "til": "1001"
           }
