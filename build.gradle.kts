@@ -10,6 +10,9 @@ subprojects {
     version = "1.0-SNAPSHOT"
 
     repositories {
+        flatDir {
+            dirs("libs")
+        }
         mavenCentral()
     }
 

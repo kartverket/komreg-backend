@@ -1,0 +1,25 @@
+import org.gradle.api.tasks.compile.JavaCompile
+
+// TODO: Finn ut om denne faktisk er brukt
+allprojects {
+    if (project.path == ':komreg') {
+        plugins.withId('maven-publish') {
+            logger.lifecycle('Applying local publish configuration for project {}', project.layout.projectDirectory)
+            publishing {
+                afterEvaluate {
+                    publishing.publications.withType(MavenPublication).named('komregMatrikkel') {
+                        logger.lifecycle('Publishing {} as no.kartverket.komreg:komreg-matrikkel:{} to mavenLocal', artifactId, version)
+                        artifactId = 'komreg-matrikkel'
+                        groupId = 'no.kartverket.komreg'
+                    }
+                }
+            }
+        }
+    }
+
+    tasks.withType(JavaCompile).configureEach { task ->
+        if (task.options.compilerArgs?.contains('-Werror')) {
+            task.options.compilerArgs = task.options.compilerArgs.findAll { it != '-Werror' }
+        }
+    }
+}
