@@ -1,0 +1,45 @@
+@regId = juster-km-13
+
+POST http://localhost:8080/reguleringer
+Content-Type: application/json
+
+{
+  "id": "{{regId}}",
+  "dato": "2028-01-01",
+  "navn": "Flytt én matrikkelenhet mellom kommuner",
+  "endringer": [
+    {
+      "id": "endring-1",
+      "navn": "Flytt KM",
+      "type": "kommune",
+      "nyeFylker": [],
+      "nyeKommuner": [],
+      "utgåendeFylker": [],
+      "transformasjoner": [
+        {
+          "type": "kulturminne",
+          "fylkesnummer": {
+            "fra": "1000002",
+            "til":  "1000002"
+          },
+          "kommuneløpenummer": {
+            "fra": "01",
+            "til": "19"
+          },
+          "gardsnummer":{
+            "fra": "0",
+            "til": "0"
+          },
+          "kulturminneId": {
+            "fra": "1001",
+            "til": "1001"
+          }
+        }
+      ],
+      "utgåendeKommuner": []
+    }
+  ]
+}
+
+### Kjør reguleringen
+GET http://localhost:8080/run/{{regId}}

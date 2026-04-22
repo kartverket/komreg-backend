@@ -37,10 +37,6 @@ class TransformerKulturminneTest: FunSpec({
                 ident = kulturminneIdentType(
                     Fylkesnummer(13),
                     Kommunenummer.Lopenummer(34),
-                    Matrikkelnummer.Gardsnummer(0),
-                    Matrikkelnummer.Bruksnummer(0),
-                    Matrikkelnummer.Festenummer(0),
-                    Matrikkelnummer.Seksjonsnummer(0),
                     KulturminneId(1),
                 ),
             ),
@@ -49,10 +45,6 @@ class TransformerKulturminneTest: FunSpec({
                 ident = kulturminneIdentType(
                     Fylkesnummer(13),
                     Kommunenummer.Lopenummer(36),
-                    Matrikkelnummer.Gardsnummer(0),
-                    Matrikkelnummer.Bruksnummer(0),
-                    Matrikkelnummer.Festenummer(0),
-                    Matrikkelnummer.Seksjonsnummer(0),
                     KulturminneId(3),
                 ),
             ),
@@ -150,10 +142,6 @@ class TransformerKulturminneTest: FunSpec({
                     kulturminneIdentType(
                         Fylkesnummer(13),
                         Kommunenummer.Lopenummer(35),
-                        Matrikkelnummer.Gardsnummer(0),
-                        Matrikkelnummer.Bruksnummer(0),
-                        Matrikkelnummer.Festenummer(0),
-                        Matrikkelnummer.Seksjonsnummer(0),
                         KulturminneId(1),
                     ),
                 )
@@ -165,10 +153,6 @@ class TransformerKulturminneTest: FunSpec({
                     kulturminneIdentType(
                         Fylkesnummer(13),
                         Kommunenummer.Lopenummer(35),
-                        Matrikkelnummer.Gardsnummer(0),
-                        Matrikkelnummer.Bruksnummer(0),
-                        Matrikkelnummer.Festenummer(0),
-                        Matrikkelnummer.Seksjonsnummer(0),
                         KulturminneId(3),
                     ),
                 )

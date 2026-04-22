@@ -1,4 +1,4 @@
-@regId = sammenslaa-km-22
+@regId = sammenslaa-km-28
 
 POST http://localhost:8080/reguleringer
 Content-Type: application/json

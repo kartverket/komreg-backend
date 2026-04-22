@@ -43,7 +43,76 @@ class ReguleringValidationTest : AnnotationSpec() {
         val errors = mutableMapOf("endringId" to listOf(ErrorType.FYLKESDELING_MANGLER_KOMMUNER))
         assertEquals(errors, ReguleringValidator.validateFylkesdeling(regulering))
     }
-
+//    @Test
+//    fun `sammenslåing`() {
+//        val endringer =
+//            listOf(
+//                EndringDTO(
+//                    id = "endringId",
+//                    navn = "Fylkesdeling",
+//                    type = "fylke",
+//                    utgåendeFylker = emptyList(),
+//                    utgåendeKommuner = emptyList(),
+//                    nyeFylker = emptyList(),
+//                    nyeKommuner = emptyList(),
+//                    transformasjoner =
+//                        listOf(
+//                            KommuneTransformasjonDTO(
+//                                fylkesnummer =
+//                                    FraEnTilMangeDTO(
+//                                        fra = "1000002",
+//                                        til = listOf("1000002"),
+//                                    ),
+//                                kommuneløpenummer =
+//                                    FraEnTilMangeDTO(
+//                                        fra = "01",
+//                                        til = listOf("90"),
+//                                    ),
+//                                sammenslaa = true
+//                            ),
+//                            KommuneTransformasjonDTO(
+//                                fylkesnummer =
+//                                    FraEnTilMangeDTO(
+//                                        fra = "1000002",
+//                                        til = listOf("1000002"),
+//                                    ),
+//                                kommuneløpenummer =
+//                                    FraEnTilMangeDTO(
+//                                        fra = "19",
+//                                        til = listOf("90"),
+//                                    ),
+//                            ),
+//                            KulturminneTransformasjonDTO(
+//                                fylkesnummer =
+//                                    FraTilDTO(
+//                                        fra = "1000002",
+//                                        til = "1000002",
+//                                    ),
+//                                kommuneløpenummer =
+//                                    FraTilDTO(
+//                                        fra = "01",
+//                                        til = "90",
+//                                    ),
+//                                kulturminneId = FraTilDTO(
+//                                    fra = "1001",
+//                                    til = "1001",
+//                                )
+//                            )
+//                        ),
+//                ),
+//            )
+//
+//        val regulering =
+//            Regulering(
+//                "regId",
+//                "regulering sammenslaaing",
+//                LocalDate(2026, 12, 12),
+//                endringer,
+//            )
+//
+//        val errors = mutableMapOf("endringId" to listOf(ErrorType.FYLKESDELING_KAN_IKKE_HA_SAMMENSLAAING))
+//        assertEquals(errors, ReguleringValidator.validateFylkesdeling(regulering))
+//    }
     @Test
     fun `Fylkesdeling kan ikke samtidig ha sammenslåing`() {
         val endringer =

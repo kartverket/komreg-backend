@@ -1,0 +1,52 @@
+@regId = splitt-km-28
+
+
+
+
+POST http://localhost:8080/reguleringer
+Content-Type: application/json
+
+{
+  "id": "flytt-matrikkelenhet-1",
+  "dato": "2026-03-17",
+  "navn": "Flytt én matrikkelenhet mellom kommuner",
+  "endringer": [
+    {
+      "id": "endring-1",
+      "navn": "Flytt gnr 40 bnr 1 fra kommune 1234 til 1235",
+      "type": "kommune",
+      "nyeFylker": [],
+      "nyeKommuner": [],
+      "utgåendeFylker": [],
+      "transformasjoner": [
+        {
+          "type": "matrikkelenhet",
+          "bruksnummer": {
+            "1": {
+              "bruksnummer": 1,
+              "gardsnummer": 40,
+              "fylkesnummer": 12,
+              "kommunelopenummer": 35
+            }
+          },
+          "fylkesnummer": {
+            "fra": "12",
+            "til": "12"
+          },
+          "gårdsnummer": {
+            "fra": "40",
+            "til": "40"
+          },
+          "kommuneløpenummer": {
+            "fra": "34",
+            "til": "34"
+          }
+        }
+      ],
+      "utgåendeKommuner": []
+    }
+  ]
+}
+
+### Kjør reguleringen
+GET http://localhost:8080/run/{{regId}}
