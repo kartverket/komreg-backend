@@ -7,6 +7,10 @@ on:
         description: 'Sett versjon. Default er "YYYY.MM.DD-HH.MM-git-commit-hash"'
         required: false
         default: ''
+  push:
+    branches:
+      - 'TS-2778-publish-to-gh-packages'
+
 
 jobs:
   calculate-version:
@@ -48,7 +52,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Publish to GitHub Packages
-        run: ./gradlew publish -p core-api -Pmatrikkel_artifact_versjon=${{ needs.calculate-version.outputs.version }}
+        run: ./gradlew clean publish -p core-api -Pmatrikkel_artifact_versjon=${{ needs.calculate-version.outputs.version }}
         env:
           GH_PACKAGES_PAT: ${{ secrets.SHARED_PACKAGES_READ_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
