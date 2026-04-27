@@ -7,9 +7,6 @@ on:
         description: 'Sett versjon. Default er "local-YYYY.MM.DD-HH.MM-git-commit-hash"'
         required: false
         default: ''
-  push:
-    branches:
-      - main
 
 
 jobs:
