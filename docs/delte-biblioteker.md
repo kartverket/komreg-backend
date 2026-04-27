@@ -34,15 +34,15 @@ matrikkel-komreg lastes inn via Java ServiceLoader.
 
 ## Publisering
 
-| Bibliotek        | Publiseres til  | Jobb                                                                         |
-|------------------|-----------------|------------------------------------------------------------------------------|
-| core-api         | Nexus           | [Jenkins: *Publish Komreg core-api lib to Nexus*](https://jenkins.matrikkel.no/job/komreg/job/Publish%20Komreg%20core-api%20lib%20to%20Nexus/) |
+| Bibliotek        | Publiseres til  | Jobb                                                                                                                                       |
+|------------------|-----------------|--------------------------------------------------------------------------------------------------------------------------------------------|
+| core-api         | Nexus           | [Github Actions: *Publish core-api to GH-packages*](https://github.com/kartverket/komreg-backend/actions/workflows/publish-core-api.yml)   |
 | matrikkel-komreg | GitHub Packages | [GitHub Actions: *Build and Publish Matrikkel Komreg*](https://github.com/kartverket/komreg-backend/actions/workflows/build-matrikkel.yml) |
 
 Publiseringsflyten er:
 
 - core-api utvikles og bygges i komreg-backend
-- core-api-artefakten publiseres til Nexus, slik at Matrikkelen kan bruke den
+- core-api-artefakten publiseres til Github Packages, slik at Matrikkelen kan bruke den
 - matrikkel-komreg bygges i matrikkel med core-api som avhengighet
 - matrikkel-komreg-artefakten publiseres til GitHub Packages
 - server i komreg-backend bruker matrikkel-komreg
