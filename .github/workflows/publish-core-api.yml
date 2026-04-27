@@ -78,7 +78,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Publish to GitHub Packages
-        run: ./gradlew publish -p core-api -Pmatrikkel_artifact_versjon=${{ needs.calculate-version.outputs.version }}
+        run: ./gradlew clean publish -p core-api -Pmatrikkel_artifact_versjon=${{ needs.calculate-version.outputs.version }}
         env:
           GH_PACKAGES_PAT: ${{ secrets.SHARED_PACKAGES_READ_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
