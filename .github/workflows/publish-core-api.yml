@@ -54,7 +54,7 @@ jobs:
       - name: Build
         run: ./gradlew clean build -p core-api
         env:
-          PACKAGES_TOKEN: ${{ secrets.SHARED_PACKAGES_READ_TOKEN }}
+          GH_PACKAGES_PAT: ${{ secrets.SHARED_PACKAGES_READ_TOKEN }}
 
   publish:
     name: Publish to GitHub Packages
@@ -80,5 +80,5 @@ jobs:
       - name: Publish to GitHub Packages
         run: ./gradlew publish -p core-api -Pmatrikkel_artifact_versjon=${{ needs.calculate-version.outputs.version }}
         env:
-          PACKAGES_TOKEN: ${{ secrets.SHARED_PACKAGES_READ_TOKEN }}
+          GH_PACKAGES_PAT: ${{ secrets.SHARED_PACKAGES_READ_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
