@@ -1,4 +1,4 @@
-name: publish-core-api.yml
+name: Publish core-api to GH-packages
 
 on:
   workflow_dispatch:
