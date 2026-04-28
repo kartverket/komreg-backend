@@ -1,5 +1,5 @@
 group = "no.kartverket.komreg"
-version = "0.2.0-SNAPSHOT"
+version = project.findProperty("matrikkel_artifact_versjon")?.toString() ?: "0.2.0-SNAPSHOT"
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
@@ -12,6 +12,16 @@ java {
 }
 
 publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/kartverket/komreg-backend")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
     publications {
         create<MavenPublication>("maven") {
             from(components["java"])
