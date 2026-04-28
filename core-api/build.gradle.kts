@@ -1,5 +1,4 @@
 group = "no.kartverket.komreg"
-version = project.findProperty("matrikkel_artifact_versjon")?.toString() ?: "0.2.0-SNAPSHOT"
 
 plugins {
     alias(libs.plugins.kotlin.jvm)

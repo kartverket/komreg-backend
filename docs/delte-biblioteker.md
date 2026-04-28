@@ -34,15 +34,15 @@ matrikkel-komreg lastes inn via Java ServiceLoader.
 
 ## Publisering
 
-| Bibliotek        | Publiseres til  | Jobb                                                                         |
-|------------------|-----------------|------------------------------------------------------------------------------|
-| core-api         | Nexus           | [Jenkins: *Publish Komreg core-api lib to Nexus*](https://jenkins.matrikkel.no/job/komreg/job/Publish%20Komreg%20core-api%20lib%20to%20Nexus/) |
+| Bibliotek        | Publiseres til  | Jobb                                                                                                                                       |
+|------------------|-----------------|--------------------------------------------------------------------------------------------------------------------------------------------|
+| core-api         | Github Packages | [Github Actions: *Publish core-api to GH-packages*](https://github.com/kartverket/komreg-backend/actions/workflows/publish-core-api.yml)   |
 | matrikkel-komreg | GitHub Packages | [GitHub Actions: *Build and Publish Matrikkel Komreg*](https://github.com/kartverket/komreg-backend/actions/workflows/build-matrikkel.yml) |
 
 Publiseringsflyten er:
 
 - core-api utvikles og bygges i komreg-backend
-- core-api-artefakten publiseres til Nexus, slik at Matrikkelen kan bruke den
+- core-api-artefakten publiseres til Github Packages, slik at Matrikkelen kan bruke den
 - matrikkel-komreg bygges i matrikkel med core-api som avhengighet
 - matrikkel-komreg-artefakten publiseres til GitHub Packages
 - server i komreg-backend bruker matrikkel-komreg
@@ -64,12 +64,11 @@ Hvis man gjør endringer i matrikkel-komreg, f.eks. ved å legge til eller endre
 
 ## Endringer i core-api
 
-Hvis man gjør endringer i core-api, f.eks. for å gjøre endringer på `Ident`:
+Hvis man gjør endringer i core-api, f.eks. for å gjøre endringer på `Ident`: 
 
-1. Bump versjonsnummeret i `core-api/build.gradle.kts`.
-2. Kjør Jenkins-jobben *Publish Komreg core-api lib to Nexus*.
-3. Oppdater versjonsnummeret for avhengigheten i Matrikkelen, i `komreg/komreg.gradle`.
-4. Gjør det som står i [Endringer i matrikkel-komreg](#endringer-i-matrikkel-komreg).
+1. Kjør workflow publish-core-api.yml med nytt versjonsnummer.
+2. Oppdater versjonsnummeret for avhengigheten i Matrikkelen, i `komreg/komreg.gradle`.
+3. Gjør det som står i [Endringer i matrikkel-komreg](#endringer-i-matrikkel-komreg).
 
 ## Avhengigheter som må holdes i synk
 
