@@ -66,7 +66,9 @@ Hvis man gjør endringer i matrikkel-komreg, f.eks. ved å legge til eller endre
 
 Hvis man gjør endringer i core-api, f.eks. for å gjøre endringer på `Ident`: 
 
-- Kjør workflow publish-core-api.yml med nytt versjonsnummer.
+1. Kjør workflow publish-core-api.yml med nytt versjonsnummer.
+2. Oppdater versjonsnummeret for avhengigheten i Matrikkelen, i `komreg/komreg.gradle`.
+3. Gjør det som står i [Endringer i matrikkel-komreg](#endringer-i-matrikkel-komreg).
 
 ## Avhengigheter som må holdes i synk
 
