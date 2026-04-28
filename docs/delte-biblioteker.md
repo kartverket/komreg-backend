@@ -36,7 +36,7 @@ matrikkel-komreg lastes inn via Java ServiceLoader.
 
 | Bibliotek        | Publiseres til  | Jobb                                                                                                                                       |
 |------------------|-----------------|--------------------------------------------------------------------------------------------------------------------------------------------|
-| core-api         | Nexus           | [Github Actions: *Publish core-api to GH-packages*](https://github.com/kartverket/komreg-backend/actions/workflows/publish-core-api.yml)   |
+| core-api         | Github Packages | [Github Actions: *Publish core-api to GH-packages*](https://github.com/kartverket/komreg-backend/actions/workflows/publish-core-api.yml)   |
 | matrikkel-komreg | GitHub Packages | [GitHub Actions: *Build and Publish Matrikkel Komreg*](https://github.com/kartverket/komreg-backend/actions/workflows/build-matrikkel.yml) |
 
 Publiseringsflyten er:
@@ -64,12 +64,9 @@ Hvis man gjør endringer i matrikkel-komreg, f.eks. ved å legge til eller endre
 
 ## Endringer i core-api
 
-Hvis man gjør endringer i core-api, f.eks. for å gjøre endringer på `Ident`:
+Hvis man gjør endringer i core-api, f.eks. for å gjøre endringer på `Ident`: 
 
-1. Bump versjonsnummeret i `core-api/build.gradle.kts`.
-2. Kjør Jenkins-jobben *Publish Komreg core-api lib to Nexus*.
-3. Oppdater versjonsnummeret for avhengigheten i Matrikkelen, i `komreg/komreg.gradle`.
-4. Gjør det som står i [Endringer i matrikkel-komreg](#endringer-i-matrikkel-komreg).
+- Kjør workflow publish-core-api.yml med nytt versjonsnummer.
 
 ## Avhengigheter som må holdes i synk
 
