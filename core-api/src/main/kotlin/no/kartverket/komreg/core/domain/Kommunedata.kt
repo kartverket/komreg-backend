@@ -2,7 +2,6 @@ package no.kartverket.komreg.core.domain
 
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
-import no.kartverket.komreg.integration.spi.Payload
 
 /**
  * Ekstra data for ny kommune.
@@ -18,7 +17,7 @@ data class Kommunedata(
     val standardRekvirentOrgnummer: String?,
     val ikrafttredelsesdato: LocalDate,
     val kommunevapen: ByteArray?,
-) : Payload {
+) : TypedPayload<Kommunenummer> {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

@@ -13,6 +13,7 @@ import no.kartverket.komreg.core.domain.Matrikkelenhet.GardsnummerserieIdent
 import no.kartverket.komreg.core.domain.Matrikkelenhet.GrunneiendomIdent
 import no.kartverket.komreg.core.domain.Matrikkelnummer.Bruksnummer
 import no.kartverket.komreg.core.domain.Matrikkelnummer.Gardsnummer
+import no.kartverket.komreg.core.domain.ident.div
 import no.kartverket.komreg.integration.spi.*
 
 class TransformerMatrikkelenhetTest : FunSpec({

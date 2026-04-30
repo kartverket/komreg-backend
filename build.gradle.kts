@@ -24,6 +24,14 @@ subprojects {
         tasks.withType<KotlinCompile> {
             compilerOptions {
                 jvmTarget.set(JvmTarget.fromTarget(javaVersion.majorVersion))
+                freeCompilerArgs.add("-Xconsistent-data-class-copy-visibility")
+            }
+        }
+
+        plugins.withType<MavenPublishPlugin> {
+            extensions.configure<JavaPluginExtension> {
+                withSourcesJar()
+                withJavadocJar()
             }
         }
     }

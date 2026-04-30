@@ -1,33 +1,36 @@
 package no.kartverket.komreg.transformation
 
+import arrow.core.getOrElse
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import no.kartverket.komreg.core.domain.Bygningsnummer
-import no.kartverket.komreg.core.domain.Fylkesnummer
 import no.kartverket.komreg.core.domain.Kommunenummer
 import no.kartverket.komreg.core.domain.Matrikkelnummer
 import no.kartverket.komreg.integration.spi.Entity
 import no.kartverket.komreg.integration.spi.IdGeneratorManager
 import no.kartverket.komreg.integration.spi.Ident
+import no.kartverket.komreg.parameter.op.*
+import no.kartverket.komreg.parameter.op.SubOp.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
+import no.kartverket.komreg.core.domain.Bygningsnummer as Bygg
+import no.kartverket.komreg.core.domain.Fylkesnummer as Fylke
+import no.kartverket.komreg.core.domain.Kommunenummer.Lopenummer as Kommune
+
+import no.kartverket.komreg.parameter.data.tuple.syntax.*
 
 class IdentTransformerBygningTest {
-    private val mapping = listOf(
-        identOfMatrikkelenhet(2, 5, 1) to IdentTransformer.Mapping.Replace(
-            identOfMatrikkelenhet(2, 6, 1)
-        ),
-        identOfKommune(2, 5) to IdentTransformer.Mapping.Split(
-            listOf(
-                identOfKommune(2, 7) to null,
-                identOfKommune(2, 8) to null
-            )
-        ),
-    )
-    private val identTransformer = IdentTransformer(*mapping.toTypedArray())
+    private val mapping = LoOpProgram
+        .compile(
+            Adjust(Fylke(2), listOf(
+                Split(Kommune(5), listOf(
+                    Move(Matrikkelnummer.Gardsnummer(1), +Fylke(2) / Kommune(6) / Matrikkelnummer.Gardsnummer(1)),
+                ))
+            )),
+        ).getOrElse { err -> throw IllegalStateException("Failed to compile: ${err.joinToString("\n\t - ", "\n\t - ")}") }
+    private val identTransformer = IdentTransformer(mapping)
     private val idGenerator = mockk<IdGeneratorManager>()
 
     @BeforeEach
@@ -80,7 +83,7 @@ class IdentTransformerBygningTest {
     private fun identOfMatrikkelenhet(fylkesnummer: Int, lopenummer: Int, gardsnummer: Int) =
         runBlocking {
             Ident(
-                Fylkesnummer(fylkesnummer.toLong()),
+                Fylke(fylkesnummer.toLong()),
                 Kommunenummer.Lopenummer(lopenummer.toByte()),
                 Matrikkelnummer.Gardsnummer(gardsnummer),
             )
@@ -89,18 +92,18 @@ class IdentTransformerBygningTest {
     private fun identOfBygning(fylkesnummer: Long, lopenummer: Int, bygningsnummer: Long) =
         runBlocking {
             Ident(
-                Fylkesnummer(fylkesnummer),
+                Fylke(fylkesnummer),
                 Kommunenummer.Lopenummer(lopenummer.toByte()),
-                Bygningsnummer(bygningsnummer),
+                Bygg(bygningsnummer),
             )
         }
 
     private fun identOfBygningUtenFylkeOgKommune(bygningsnummer: Long) =
         runBlocking {
-            Ident(Bygningsnummer(bygningsnummer))
+            Ident(Bygg(bygningsnummer))
         }
 
     private fun identOfKommune(fylkesnummer: Int, lopenummer: Int) = runBlocking {
-        Ident(Fylkesnummer(fylkesnummer.toLong()), Kommunenummer.Lopenummer(lopenummer.toByte()))
+        Ident(Fylke(fylkesnummer.toLong()), Kommunenummer.Lopenummer(lopenummer.toByte()))
     }
 }
