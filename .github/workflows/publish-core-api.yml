@@ -4,9 +4,8 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Sett versjon. Default er "YYYY.MM.DD-HH.MM-git-commit-hash"'
-        required: false
-        default: ''
+        description: 'Ønsket versjonsnummer på pakke'
+        required: true
 
 jobs:
   calculate-version:
@@ -20,11 +19,7 @@ jobs:
           id: version-string
           shell: bash
           run: |
-            if [[ -n "${{ inputs.version }}" ]]; then
-                version="${{ inputs.version }}"
-            else
-                version="$(date -u '+%Y.%m.%d-%H.%M')-$(echo "${GITHUB_SHA}" | cut -c1-7)"
-            fi
+            version="${{ inputs.version }}-$(date -u '+%Y.%m.%d-%H.%M')-$(echo "${GITHUB_SHA}" | cut -c1-7)"
             echo "version=${version}" >> "$GITHUB_OUTPUT"
 
   publish:
