@@ -20,10 +20,10 @@ matrikkel-komreg lastes inn via Java ServiceLoader.
 ```
 ┌─────────────────────────┐          ┌─────────────────────────┐
 │     komreg-backend      │          │       matrikkel         │
-│                         │          │                         │
-│  ┌───────────┐          │  Nexus   │                         │
+│                         │    GH    │                         │
+│  ┌───────────┐GH Actions│ Packages │                         │
 │  │ core-api  │──────────┼─────────►│  komreg/komreg.gradle   │
-│  └───────────┘ Jenkins  │          │    (bruker core-api)    │
+│  └───────────┘          │          │    (bruker core-api)    │
 │                         │          │                         │
 │                         │  GitHub  │  ┌─────────────────┐    │
 │  server/               ◄┼──Packages── │ matrikkel-komreg│    │
