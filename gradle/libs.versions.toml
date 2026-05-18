@@ -1,5 +1,5 @@
 [versions]
-flywayVersion = "12.6.0"
+flywayVersion = "12.6.1"
 hamcrest = "3.0"
 junit = "6.0.3"
 kotest = "5.9.1"
@@ -64,7 +64,7 @@ hamcrest-library = { module = "org.hamcrest:hamcrest-library", version.ref = "ha
 
 assertk = { module = "com.willowtreeapps.assertk:assertk", version = "0.28.1" }
 
-slf4j-api = { module = "org.slf4j:slf4j-api", version = "2.0.17" }
+slf4j-api = { module = "org.slf4j:slf4j-api", version = "2.0.18" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 logback-classic-db = { module = "ch.qos.logback.db:logback-classic-db", version = "1.5.32" }
 
@@ -78,7 +78,7 @@ hikari = { module = "com.zaxxer:HikariCP", version = "7.0.2" }
 testcontainers-core = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
 testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
 
-ojdbc11 = { module = "com.oracle.database.jdbc:ojdbc11", version = "23.26.1.0.0" }
+ojdbc11 = { module = "com.oracle.database.jdbc:ojdbc11", version = "23.26.2.0.0" }
 
 logstash-logback-encoder = { module = "net.logstash.logback:logstash-logback-encoder", version = "9.0" }
 
