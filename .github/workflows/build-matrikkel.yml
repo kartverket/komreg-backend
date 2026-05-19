@@ -6,14 +6,13 @@ on:
         description: 'Tag to publish'
         required: true
 
-permissions:
-  contents: read
-  packages: write
-  id-token: write
-
 jobs:
   build-matrikkel:
     name: Bygg matrikkel
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
     runs-on: ubuntu-latest
     steps:
       - name: Sett opp Tailscale

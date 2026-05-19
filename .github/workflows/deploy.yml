@@ -16,16 +16,19 @@ on:
         required: true
         default: true
 
-permissions:
-  id-token: write
-
 jobs:
   deploy-argo:
-    uses: kartverket/smia-apps/.github/workflows/release-app-octo-sts.yml@main
-    with:
-      application: komreg-backend
-      version: ${{ inputs.version }}
-      deploy_dev: ${{ inputs.deploy_dev }}
-      deploy_prod: ${{ inputs.deploy_prod }}
-      identity: komreg
-      namespace: komreg-main
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Deploy to Argo
+        uses: kartverket/smia-apps/.github/workflows/release-app-octo-sts.yml@main
+        with:
+          application: komreg-backend
+          version: ${{ inputs.version }}
+          deploy_dev: ${{ inputs.deploy_dev }}
+          deploy_prod: ${{ inputs.deploy_prod }}
+          identity: komreg
+          namespace: komreg-main

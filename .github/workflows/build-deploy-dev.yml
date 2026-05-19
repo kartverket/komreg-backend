@@ -5,10 +5,6 @@ on:
     branches:
       - main
 
-permissions:
-  id-token: write
-  contents: write
-
 env:
   registry: ghcr.io
   image_name: ${{ github.repository }}
@@ -81,11 +77,16 @@ jobs:
 
   deploy-argo:
     needs: [ build ]
-    uses: kartverket/smia-apps/.github/workflows/release-app-octo-sts.yml@main
-    with:
-      application: komreg-backend
-      version: ${{ needs.build.outputs.version }}
-      deploy_dev: true
-      deploy_prod: false
-      identity: komreg
-      namespace: komreg-main
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Deploy to Argo
+        uses: kartverket/smia-apps/.github/workflows/release-app-octo-sts.yml@main
+        with:
+          application: komreg-backend
+          version: ${{ needs.build.outputs.version }}
+          deploy_dev: true
+          deploy_prod: false
+          identity: komreg
