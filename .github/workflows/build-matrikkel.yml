@@ -16,32 +16,36 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Sett opp Tailscale
-        uses: tailscale/github-action@v4
+        uses: tailscale/github-action@306e68a486fd2350f2bfc3b19fcd143891a4a2d8 # v4.1.2
         with:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tags: tag:github-runner
           version: latest
           ping: 'nexus.statkart.no'
-      - uses: actions/checkout@v6
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           path: komreg-backend
+
       - uses: octo-sts/action@f603d3be9d8dd9871a265776e625a27b00effe05 # v1.1.1
         id: octo-sts
         with:
           scope: kartverket/matrikkel
           identity: komreg-checkout-code
-      - uses: actions/checkout@v6
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           repository: kartverket/matrikkel
           ref: refs/tags/${{ github.event.inputs.tag }}
           path: matrikkel
           token: ${{ steps.octo-sts.outputs.token }}
-      - uses: actions/setup-java@v5
+
+      - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           distribution: 'temurin'
           java-version: 17
-      - uses: gradle/actions/setup-gradle@v6
+      - uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # 6.1.0
       - name: Build with Gradle
         working-directory: matrikkel
         run: ./gradlew --console=plain --configure-on-demand --init-script ../komreg-backend/matrikkel-komreg-publish.init.gradle -Pmatrikkel_artifact_versjon=${{ github.event.inputs.tag }} :komreg:publishKomregMatrikkelPublicationToKomregBackendRepository
