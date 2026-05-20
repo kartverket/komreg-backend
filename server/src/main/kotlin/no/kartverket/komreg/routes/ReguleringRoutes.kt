@@ -2,8 +2,6 @@ package no.kartverket.komreg.routes
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
-import io.ktor.server.application.application
-import io.ktor.server.application.call
 import io.ktor.server.application.log
 import io.ktor.server.request.receive
 import io.ktor.server.request.receiveText
@@ -174,12 +172,9 @@ fun Application.reguleringRoutes(reguleringService: ReguleringService, regulerin
 
                 val regId = call.parameters["regId"]
                 val endringId = call.parameters["endringId"]
-                println("POST /reguleringer/$regId/endringer/$endringId/kommunedata")
 
                 val dto = call.receiveText()
                 val oppdatertKommune = Json.decodeFromString<OppdaterKommuneDTO>(dto)
-
-                println(dto)
 
                 if (regId != null && endringId != null) {
                     val kommuneDTO = reguleringRepo.getNyKommuneFromEndring(
@@ -205,8 +200,6 @@ fun Application.reguleringRoutes(reguleringService: ReguleringService, regulerin
                 val endringId = call.parameters["endringId"]
                 val dto = call.receiveText()
                 val oppdatertKommuneDTO = Json.decodeFromString<OppdaterKommuneDTO>(dto)
-
-                println(oppdatertKommuneDTO)
 
                 val tidligereEndring = reguleringRepo.getEndringFromRegulering(regId!!, endringId!!)
                     ?: throw IllegalArgumentException("KommuneDTO not found")
