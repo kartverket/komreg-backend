@@ -78,7 +78,7 @@ fun Application.kjoringroutes(
                 } catch (e: Exception) {
                     when (e) {
                         is NotFoundException -> {
-                            logger.warn("Not found: ${e.message}")
+                            logger.error("Not found: ${e.message}")
                             call.respond(HttpStatusCode.NotFound, "Not found exception: ${e.message}")
                         }
 
@@ -88,7 +88,7 @@ fun Application.kjoringroutes(
                         }
 
                         is ReguleringAlreadyFinishedException -> {
-                            logger.warn("${e::class.simpleName}: ${e.message}")
+                            logger.error("${e::class.simpleName}: ${e.message}")
                             call.respond(HttpStatusCode.Conflict, "${e::class.simpleName}: ${e.message}")
                         }
 
