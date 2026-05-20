@@ -184,7 +184,7 @@ suspend fun transform(
                                 logger.error("Valideringsfeil {}: {}", err.ident, err.message)
 
                             is TransformValidationError.UncaughtThrowable ->
-                                logger.error("VALIDERING IKKE UTFØRT PGA FEIL: ${err.message}", err.throwable)
+                                logger.error("VALIDERING IKKE UTFØRT PGA FEIL: $err", err.throwable)
                         }
                     }
                 }

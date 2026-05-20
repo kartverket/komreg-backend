@@ -8,6 +8,7 @@ import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
+import no.kartverket.komreg.logger
 import no.kartverket.komreg.repositories.ReguleringRepo
 import no.kartverket.komreg.services.ReguleringService
 
@@ -49,8 +50,8 @@ fun Application.reguleringRoutes(reguleringService: ReguleringService, regulerin
                     reguleringRepo.insertRegulering(regulering)
                     call.respond(HttpStatusCode.OK, "Regulering JSON received and saved successfully.")
                 } catch (e: Exception) {
-                    application.log.error("${e.message}")
                     call.respond(HttpStatusCode.InternalServerError, "Failed to save Regulering.")
+                    logger.error("Unexpected exception: $e")
                 }
             }
         }
@@ -78,7 +79,6 @@ fun Application.reguleringRoutes(reguleringService: ReguleringService, regulerin
                     reguleringService.deleteReguleringById(regId!!)
                     call.respond(HttpStatusCode.OK, "Slettet regulering $regId")
                 } catch (e: Exception) {
-                    application.log.error("${e.message}")
                     call.respond(HttpStatusCode.InternalServerError, e.message.toString())
                 }
             }
