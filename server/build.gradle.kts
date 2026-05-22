@@ -110,6 +110,7 @@ dependencies {
     implementation(libs.ktor.server.websockets)
     implementation(libs.ktor.client.websockets)
     implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.server.call.logging)
 
     implementation(libs.ktor.server.cors.jvm)
 

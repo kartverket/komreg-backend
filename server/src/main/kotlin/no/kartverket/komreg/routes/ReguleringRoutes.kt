@@ -2,14 +2,13 @@ package no.kartverket.komreg.routes
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
-import io.ktor.server.application.application
-import io.ktor.server.application.call
 import io.ktor.server.application.log
 import io.ktor.server.request.receive
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
+import no.kartverket.komreg.logger
 import no.kartverket.komreg.repositories.ReguleringRepo
 import no.kartverket.komreg.services.ReguleringService
 
@@ -51,8 +50,8 @@ fun Application.reguleringRoutes(reguleringService: ReguleringService, regulerin
                     reguleringRepo.insertRegulering(regulering)
                     call.respond(HttpStatusCode.OK, "Regulering JSON received and saved successfully.")
                 } catch (e: Exception) {
-                    application.log.error("${e.message}")
                     call.respond(HttpStatusCode.InternalServerError, "Failed to save Regulering.")
+                    logger.error("Unexpected exception: $e")
                 }
             }
         }
@@ -80,7 +79,6 @@ fun Application.reguleringRoutes(reguleringService: ReguleringService, regulerin
                     reguleringService.deleteReguleringById(regId!!)
                     call.respond(HttpStatusCode.OK, "Slettet regulering $regId")
                 } catch (e: Exception) {
-                    application.log.error("${e.message}")
                     call.respond(HttpStatusCode.InternalServerError, e.message.toString())
                 }
             }
@@ -174,12 +172,9 @@ fun Application.reguleringRoutes(reguleringService: ReguleringService, regulerin
 
                 val regId = call.parameters["regId"]
                 val endringId = call.parameters["endringId"]
-                println("POST /reguleringer/$regId/endringer/$endringId/kommunedata")
 
                 val dto = call.receiveText()
                 val oppdatertKommune = Json.decodeFromString<OppdaterKommuneDTO>(dto)
-
-                println(dto)
 
                 if (regId != null && endringId != null) {
                     val kommuneDTO = reguleringRepo.getNyKommuneFromEndring(
@@ -205,8 +200,6 @@ fun Application.reguleringRoutes(reguleringService: ReguleringService, regulerin
                 val endringId = call.parameters["endringId"]
                 val dto = call.receiveText()
                 val oppdatertKommuneDTO = Json.decodeFromString<OppdaterKommuneDTO>(dto)
-
-                println(oppdatertKommuneDTO)
 
                 val tidligereEndring = reguleringRepo.getEndringFromRegulering(regId!!, endringId!!)
                     ?: throw IllegalArgumentException("KommuneDTO not found")

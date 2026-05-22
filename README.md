@@ -155,6 +155,15 @@ docker context use colima
 ```bash
 colima start --memory 8 --arch x86_64
 ```
+
+## Logging
+
+Vi bruker Logback som loggingsrammeverk med SLF4J som grensesnitt. Lokalt logges det i lesbart tekstformat, mens på skip brukes strukturert JSON-format som kan søkes i.
+
+Loggnivåer brukes konsekvent: `ERROR` for feil som hindrer normal kjøring og krever oppfølging, og `INFO` for normale hendelser av betydning. Alle HTTP-kall logges automatisk via Ktors `CallLogging`-plugin med metode, sti, statuskode og responstid.
+
+Alle exceptions som returnerer feilkoder til klienten logges på `ERROR`-nivå med full stack trace, siden disse indikerer at noe i applikasjonen ikke fungerer som forventet.
+
 ## Tilgangsstyring
 
 Applikasjonen kjører på SKIP med tilgangsstyring vha. ztoperator. 

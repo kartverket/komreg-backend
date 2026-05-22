@@ -15,12 +15,16 @@ import kotlinx.datetime.LocalDate
 import no.kartverket.komreg.core.domain.Koordinatsystem
 import no.kartverket.komreg.repositories.ReguleringRepo
 import no.kartverket.komreg.routes.*
+import org.slf4j.LoggerFactory
+import org.slf4j.Logger
 
 private enum class RegType {
     SAMMENSLAAING,
     GRENSEJUSTERING,
     SPLITTING,
 }
+
+val logger: Logger = LoggerFactory.getLogger(object {}::class.java)
 
 fun main() {
     val env = dotenv {
@@ -52,9 +56,9 @@ fun main() {
 
         try {
             reguleringRepo.insertRegulering(regulering)
-            println("${regulering.id} ble lagt inn i reguleringstabellen")
+            logger.info("${regulering.id} ble lagt inn i reguleringstabellen")
         } catch (e: Exception) {
-            println("Det skjedde en feil ved innsending av ${regulering.id}: ${e.message}")
+            logger.info("Det skjedde en feil ved innsending av ${regulering.id}: ${e.message}")
         }
     }
 }

@@ -2,7 +2,6 @@ package no.kartverket.komreg.routes
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
-import io.ktor.server.application.call
 import io.ktor.server.plugins.NotFoundException
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
@@ -76,25 +75,27 @@ fun Application.kjoringroutes(
                         logger.info("Starter ny kjøring med id: $kjoringId, og regId: $regId")
                         call.respond(HttpStatusCode.OK, "Starter ny kjøring med id: $kjoringId, og regId: $regId")
                     }
-                } catch (t: Exception) {
-                    logger.error("Feil under serialisering", t)
-                    when (t) {
-                        is NotFoundException -> call.respond(
-                            HttpStatusCode.NotFound,
-                            "Not found exception: ${t.message}",
-                        )
+                } catch (e: Exception) {
+                    when (e) {
+                        is NotFoundException -> {
+                            logger.error("Not found: ${e.message}")
+                            call.respond(HttpStatusCode.NotFound, "Not found exception: ${e.message}")
+                        }
 
-                        is SQLException -> call.respond(
-                            HttpStatusCode.InternalServerError,
-                            "SQL exception: ${t.message}",
-                        )
+                        is SQLException -> {
+                            logger.error("SQL exception", e)
+                            call.respond(HttpStatusCode.InternalServerError, "SQL exception: ${e.message}")
+                        }
 
-                        is ReguleringAlreadyFinishedException -> call.respond(
-                            HttpStatusCode.Conflict,
-                            "${t::class.simpleName}: ${t.message}",
-                        )
+                        is ReguleringAlreadyFinishedException -> {
+                            logger.error("${e::class.simpleName}: ${e.message}")
+                            call.respond(HttpStatusCode.Conflict, "${e::class.simpleName}: ${e.message}")
+                        }
 
-                        else -> call.respond(HttpStatusCode.InternalServerError, "Internal server error: ${t.message}")
+                        else -> {
+                            call.respond(HttpStatusCode.InternalServerError, "Internal server error: ${e.message}")
+                            logger.error("Unexpected exception: $e")
+                        }
                     }
                 }
             }
@@ -110,8 +111,9 @@ fun Application.kjoringroutes(
                     logger.info("Mottaker satt til: ${kjoringRepo.hentMottakerSkjema().mottaker}")
                     call.respond(HttpStatusCode.OK, "Mottaker satt til: ${kjoringRepo.hentMottakerSkjema().mottaker}")
                 } catch (e: Exception) {
-                    logger.error("${e.message}")
-                    call.respond(HttpStatusCode.InternalServerError, "Failed to save Mottaker skjema.")
+                    val msg = "Failed to save Mottaker skjema"
+                    logger.error(msg, e)
+                    call.respond(HttpStatusCode.InternalServerError, msg)
                 }
             }
         }

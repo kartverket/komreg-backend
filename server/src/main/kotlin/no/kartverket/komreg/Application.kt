@@ -11,8 +11,10 @@ import io.ktor.server.application.ApplicationStopping
 import io.ktor.server.application.install
 import io.ktor.server.metrics.micrometer.MicrometerMetrics
 import io.ktor.server.netty.EngineMain
+import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
+import io.ktor.server.request.path
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.kartverket.komreg.integration.SchemaManager
@@ -26,6 +28,7 @@ import no.kartverket.komreg.services.ReguleringService
 import org.flywaydb.core.Flyway
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.slf4j.event.Level
 
 val env = dotenv {
     ignoreIfMissing = true
@@ -87,6 +90,11 @@ fun Application.module() {
 
     install(MicrometerMetrics) {
         registry = metricsRegistry
+    }
+    install(CallLogging){
+        level = Level.INFO
+        // flitrerer bort kall mot helseendepunkter
+        filter { call -> !call.request.path().startsWith("/actuator") }
     }
 
     logger.info("Current environment: ${System.getenv("environment")}")
