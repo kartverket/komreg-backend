@@ -1,7 +1,7 @@
 [versions]
-flywayVersion = "12.6.1"
+flywayVersion = "12.6.2"
 hamcrest = "3.0"
-junit = "6.0.3"
+junit = "6.1.0"
 kotest = "5.9.1"
 kotlin = "2.3.21"
 kotlinx-cli = "0.3.6"
