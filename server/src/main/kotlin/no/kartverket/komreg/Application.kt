@@ -3,8 +3,6 @@ package no.kartverket.komreg
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.github.cdimascio.dotenv.dotenv
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStopping
@@ -13,7 +11,6 @@ import io.ktor.server.metrics.micrometer.MicrometerMetrics
 import io.ktor.server.netty.EngineMain
 import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.request.path
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
@@ -91,7 +88,7 @@ fun Application.module() {
     install(MicrometerMetrics) {
         registry = metricsRegistry
     }
-    install(CallLogging){
+    install(CallLogging) {
         level = Level.INFO
         // flitrerer bort kall mot helseendepunkter
         filter { call -> !call.request.path().startsWith("/actuator") }
@@ -106,17 +103,6 @@ fun Application.module() {
 
     install(ContentNegotiation) {
         json()
-    }
-
-    install(CORS) {
-        allowMethod(HttpMethod.Options)
-        allowHost("localhost:3000")
-        allowHost("komreg.dev.skip.statkart.no", schemes = listOf("http", "https"))
-        allowHost("komreg.test.skip.statkart.no", schemes = listOf("http", "https"))
-        allowHost("komreg.prod.skip.statkart.no", schemes = listOf("http", "https"))
-        allowHeader(HttpHeaders.ContentType)
-        allowMethod(HttpMethod.Delete)
-        allowMethod(HttpMethod.Put)
     }
 
     // TODO: PoC for uthenting av fordelingsparametre for kommune
