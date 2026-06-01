@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    name: CI Build and run Integration Tests
+    name: Build and run Integration Tests
     runs-on: ubuntu-latest
     permissions:
       contents: read
