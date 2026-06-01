@@ -1,0 +1,15 @@
+info:
+  name: "En endring i en regulering "
+  type: http
+  seq: 4
+
+http:
+  method: GET
+  url: "{{baseUrl}}/reguleringer/vest_lofoten/endringer/b4f1d2"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

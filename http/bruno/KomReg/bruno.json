@@ -1,0 +1,15 @@
+{
+  "version": "1",
+  "name": "KomReg",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ],
+  "scripts": {
+    "moduleWhitelist": ["child_process"],
+    "filesystemAccess": {
+      "allow": true
+    }
+  }
+}
