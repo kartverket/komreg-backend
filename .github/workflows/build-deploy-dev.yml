@@ -81,16 +81,13 @@ jobs:
 
   deploy-argo:
     needs: [ build ]
-    runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
-    steps:
-      - name: Deploy to Argo
-        uses: kartverket/smia-apps/.github/workflows/release-app-octo-sts.yml@main
-        with:
-          application: komreg-backend
-          version: ${{ needs.build.outputs.version }}
-          deploy_dev: true
-          deploy_prod: false
-          identity: komreg
+    uses: kartverket/smia-apps/.github/workflows/release-app-octo-sts.yml@main
+    with:
+      application: komreg-backend
+      version: ${{ needs.build.outputs.version }}
+      deploy_dev: true
+      deploy_prod: false
+      identity: komreg
