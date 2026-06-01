@@ -1,0 +1,10 @@
+name: dev
+variables:
+  - secret: true
+    name: clientId
+  - secret: true
+    name: baseUrl
+  - secret: true
+    name: accessToken
+  - secret: true
+    name: accessTokenFetchedAt

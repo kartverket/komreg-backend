@@ -1,0 +1,50 @@
+opencollection: 1.0.0
+
+info:
+  name: KomReg
+config:
+  proxy:
+    inherit: true
+    config:
+      protocol: http
+      hostname: ""
+      port: ""
+      auth:
+        username: ""
+        password: ""
+      bypassProxy: ""
+
+request:
+  scripts:
+    - type: before-request
+      code: |-
+        const { execSync } = require('child_process');
+
+        if (bru.getEnvName() !== 'local') {
+          const clientId = bru.getEnvVar('clientId');
+          if (!clientId) {
+            throw new Error('clientId mangler i Bruno-environmentet');
+          }
+
+          const cachedAt = Number(bru.getEnvVar('accessTokenFetchedAt') || 0);
+          const ageMs = Date.now() - cachedAt;
+          const FIFTY_MIN = 50 * 60 * 1000;
+
+          if (!bru.getEnvVar('accessToken') || ageMs > FIFTY_MIN) {
+            const token = execSync(
+              `az account get-access-token --scope ${clientId}/.default --query accessToken -o tsv`,
+              { encoding: 'utf8' }
+            ).trim();
+
+            bru.setEnvVar('accessToken', token);
+            bru.setEnvVar('accessTokenFetchedAt', String(Date.now()));
+          }
+
+          req.setHeader('Authorization', `Bearer ${bru.getEnvVar('accessToken')}`);
+        }
+bundled: false
+extensions:
+  bruno:
+    ignore:
+      - node_modules
+      - .git
