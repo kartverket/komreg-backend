@@ -1,7 +1,8 @@
 name: CI - PR Validation and Test
+
 on:
-  push:
-    branches-ignore:
+  pull_request:
+    branches:
       - main
 
 jobs:
