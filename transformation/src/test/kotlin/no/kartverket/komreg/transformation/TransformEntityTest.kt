@@ -31,7 +31,7 @@ class TransformEntityTest {
             gyldigTilDato = null,
             adresse = null,
             standardRekvirent = null,
-            kommunevapen = null,
+            kommunevapen = createDummyKommunevaapenImage('K'),
         )
 
     private val reguleringsInput =

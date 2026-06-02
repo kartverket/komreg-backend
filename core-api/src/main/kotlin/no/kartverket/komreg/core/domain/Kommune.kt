@@ -17,7 +17,7 @@ data class Kommune(
     val godkjenteGardsnumre: String,
     val adresse: Postadresse?,
     val standardRekvirent: StandardRekvirent?,
-    val kommunevapen: ByteArray?, // TODO: Tilbakeføring har ingen håndtering av at denne kan være null. Sette påkrevd?
+    val kommunevapen: ByteArray,
 ) {
     companion object {
         val KommuneIdent : IdentType2<Fylkesnummer, Kommunenummer.Lopenummer> = runBlocking {
@@ -34,7 +34,7 @@ data class Kommune(
             godkjenteGardsnumre: String,
             adresse: Postadresse?,
             standardRekvirent: StandardRekvirent?,
-            kommunevapen: ByteArray?,
+            kommunevapen: ByteArray,
         ): Kommune =
             Kommune(
                 Kommunenummer(kommunenummer),

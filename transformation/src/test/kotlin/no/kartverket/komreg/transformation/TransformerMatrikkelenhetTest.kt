@@ -73,7 +73,7 @@ class TransformerMatrikkelenhetTest : FunSpec({
                         "",
                         null,
                         null,
-                        null,
+                        createDummyKommunevaapenImage('K'),
                     ),
                 ),
             ),
@@ -170,7 +170,7 @@ class TransformerMatrikkelenhetTest : FunSpec({
                 "",
                 null,
                 null,
-                null,
+                createDummyKommunevaapenImage('K'),
             ),
             Kommune(
                 Kommunenummer(1236),
@@ -182,7 +182,7 @@ class TransformerMatrikkelenhetTest : FunSpec({
                 "",
                 null,
                 null,
-                null,
+                createDummyKommunevaapenImage('K'),
             ),
         )
 
@@ -360,7 +360,7 @@ class TransformerMatrikkelenhetTest : FunSpec({
                 "",
                 null,
                 null,
-                null,
+                createDummyKommunevaapenImage('K'),
             )
         )
 
