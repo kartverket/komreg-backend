@@ -99,7 +99,6 @@ enum class Koordinatsystem {
     UTM32,
     UTM33,
     UTM35,
-    UKJENT,
 }
 
 fun Kommune.tilKommunedata(ikrafttredelsesdato: LocalDate): Kommunedata =
