@@ -140,7 +140,6 @@ suspend fun transform(
         }
 
         // Kjør ut resten
-        // TODO: Hva med "slettinger"
         entitySinks.forEach { sink ->
             if (gjenvarendeSinkerForErstattendeEntiteter.contains(sink.id)) {
                 try {
@@ -272,7 +271,7 @@ private suspend fun mapKommuneendring(
             } else {
                 IdentTransformer.Mapping.Split(
                     listOf(
-                        til[0].first to null, // TODO: Første kommune i input-en blir satt som ny kommune for den utgående kommunen, mulig at dette bør være mer eksplisitt på sikt
+                        til[0].first to null,
                     ) + til,
                 )
             }
