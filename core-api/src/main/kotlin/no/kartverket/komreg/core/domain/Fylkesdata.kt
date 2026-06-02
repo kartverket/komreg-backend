@@ -1,7 +1,6 @@
 package no.kartverket.komreg.core.domain
 
 import kotlinx.serialization.Serializable
-import no.kartverket.komreg.integration.spi.Payload
 
 /**
  * Data for nytt fylke.
@@ -9,4 +8,4 @@ import no.kartverket.komreg.integration.spi.Payload
 @Serializable
 data class Fylkesdata(
     val navn: String,
-) : Payload
+) : TypedPayload<Fylkesnummer>

@@ -47,8 +47,8 @@ class IdentTransformerVegadresseTest {
         fylker = emptyList(),
     )
 
-    private val mappings = runBlocking { mapInput(reguleringsInput) }
-    private val identTransformer = IdentTransformer(*mappings.toTypedArray())
+//    private val mappings = runBlocking { mapInput(reguleringsInput) }
+    private val identTransformer = IdentTransformer(TODO())
 
     private val idGenerator = mockk<IdGeneratorManager>()
 

@@ -2,6 +2,7 @@ package no.kartverket.komreg.core.domain
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import no.kartverket.komreg.core.data.PartialNext
 
 @Serializable
 @SerialName("Kommunenummer")
@@ -17,8 +18,14 @@ data class Kommunenummer(val fylkesnummer: Fylkesnummer, val lopenummer: Lopenum
 
     @Serializable
     @SerialName("Kommunelopenummer")
-    data class Lopenummer(val value: Byte) : Comparable<Lopenummer> {
+    data class Lopenummer(val value: Byte) : PartialNext<Lopenummer> {
         override fun compareTo(other: Lopenummer): Int = value.compareTo(other.value)
+        override val next: Lopenummer?
+            get() = if (value <= 0 || value == 99.toByte()) null else Lopenummer((value + 1).toByte())
+
+        override fun toString(): String {
+            return "Kommune(${verdi()})"
+        }
     }
 
     companion object {

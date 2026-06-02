@@ -13,6 +13,7 @@ dependencies {
 
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.datetime)
+    implementation(project(":lib:komreg-parameter"))
 
     api(libs.guava)
     implementation(kotlin("reflect"))

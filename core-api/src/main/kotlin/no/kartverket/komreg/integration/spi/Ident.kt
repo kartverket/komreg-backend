@@ -50,7 +50,7 @@ sealed class Ident private constructor() {
         suspend inline operator fun <reified A> invoke(
             a: A
         ): Ident1<A> where A : Comparable<A> =
-            identTypeOf1<A>()(a)
+            identTypeOf1<A>().invoke(a)
 
         @Deprecated("Create an identTypeOf2(), and use invoke on that instead")
         suspend inline operator fun <reified A, reified B> invoke(
@@ -727,6 +727,9 @@ private data class OfExactly1<A>(
     override fun compareTo(other: And<Empty, A>): Int =
         last.compareTo((other as OfExactly1).last)
 
+    override fun toString(): String {
+        return "(${last})"
+    }
 }
 
 private sealed class OfAtLeast2<T : Ident, A, B> :
@@ -758,6 +761,10 @@ private data class OfExactly2<A, B>(
         val that = other as OfExactly2
         return n2.compareTo(that.n2).takeIf { it != 0 }
             ?: last.compareTo(that.last)
+    }
+
+    override fun toString(): String {
+        return "($n2, $last)"
     }
 }
 
@@ -797,6 +804,10 @@ private data class OfExactly3<A, B, C>(
         return n3.compareTo(that.n3).takeIf { it != 0 }
             ?: n2.compareTo(that.n2).takeIf { it != 0 }
             ?: last.compareTo(that.last)
+    }
+
+    override fun toString(): String {
+        return "($n3, $n2, $last)"
     }
 }
 
@@ -841,6 +852,10 @@ private data class OfExactly4<A, B, C, D>(
             ?: n3.compareTo(that.n3).takeIf { it != 0 }
             ?: n2.compareTo(that.n2).takeIf { it != 0 }
             ?: last.compareTo(that.last)
+    }
+
+    override fun toString(): String {
+        return "($n4, $n3, $n2, $last)"
     }
 }
 

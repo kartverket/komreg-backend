@@ -30,7 +30,7 @@ data class Fylke(
     }
 }
 
-typealias FylkeIdent = Ident1<Fylkesnummer>
+
 
 fun Fylke.tilFylkesdata(): Fylkesdata =
     Fylkesdata(
