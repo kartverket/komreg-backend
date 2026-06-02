@@ -50,6 +50,7 @@ jobs:
         working-directory: matrikkel
         run: ./gradlew --console=plain --configure-on-demand --init-script ../komreg-backend/matrikkel-komreg-publish.init.gradle -Pmatrikkel_artifact_versjon=${{ github.event.inputs.tag }} :komreg:publishKomregMatrikkelPublicationToKomregBackendRepository
         env:
-          GH_PACKAGES_PAT: ${{ secrets.SHARED_PACKAGES_READ_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
+          GITHUB_ACTOR: ${{ github.actor }}
+          PACKAGES_TOKEN: ${{ secrets.SHARED_PACKAGES_READ_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.SHARED_PACKAGES_READ_TOKEN }}
+          GH_PACKAGES_PAT: ${{ secrets.GITHUB_TOKEN }}
