@@ -75,7 +75,7 @@ class TransformerBygningTest : FunSpec({
                         "",
                         null,
                         null,
-                        null,
+                        createDummyKommunevaapenImage('K'),
                     ),
                 ),
             ),
@@ -163,7 +163,7 @@ class TransformerBygningTest : FunSpec({
                     "",
                     null,
                     null,
-                    null,
+                    createDummyKommunevaapenImage('K'),
                 ),
                 Kommune(
                     Kommunenummer(1325),
@@ -175,7 +175,7 @@ class TransformerBygningTest : FunSpec({
                     "",
                     null,
                     null,
-                    null,
+                    createDummyKommunevaapenImage('K'),
                 ),
             ),
         )

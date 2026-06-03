@@ -105,21 +105,9 @@ fun Application.module() {
         json()
     }
 
-    // TODO: PoC for uthenting av fordelingsparametre for kommune
-    fun createMatrikkelDataSource(): HikariDataSource {
-        val hikariConfig = HikariConfig()
-        hikariConfig.poolName = "db-connection"
-        hikariConfig.driverClassName = "oracle.jdbc.OracleDriver"
-        hikariConfig.jdbcUrl = env["DB_MATRIKKEL_JDBC_URL"]
-        hikariConfig.username = env[mottakerUsername]
-        hikariConfig.password = env[mottakerPassword]
-        return HikariDataSource(hikariConfig)
-    }
-
     internalRoutes(metricsRegistry)
     reguleringRoutes(reguleringService, reguleringsRepo)
     kjoringroutes(transformationRepo, kjoringRepo, tilbakeføringsstatusRepo, reguleringService, komregDbPool)
-    grunndataRoutes(createMatrikkelDataSource())
     stedsnavnRoutes(reguleringsRepo, kjoringRepo, transformationRepo)
 
     enableFagLogging(komregDbPool)

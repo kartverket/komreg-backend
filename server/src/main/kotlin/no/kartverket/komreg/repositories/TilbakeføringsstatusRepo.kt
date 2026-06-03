@@ -91,7 +91,6 @@ class TilbakeføringsstatusRepo(private val dataSource: DataSource) {
         val sinkIder = mutableListOf<String>()
 
         dataSource.connection.use { connection ->
-            // TODO - Fjern OR endringer = 'TILBAKEFØRER' når vi er sikre på at status alltid blir satt til FEILET ved feil
             val selectStatement =
                 connection.prepareStatement(
                     "SELECT sink FROM tilbakeføringsstatus WHERE kjoringid = ? AND (opprettinger = 'FEILET' OR opprettinger = 'IKKE_STARTET' OR opprettinger = 'TILBAKEFØRER')",
@@ -109,7 +108,6 @@ class TilbakeføringsstatusRepo(private val dataSource: DataSource) {
     fun hentSinkerSomSkalGjenopptasForErstattendeEntiteter(kjoringId: Int): List<String> {
         val sinkIder = mutableListOf<String>()
         dataSource.connection.use { connection ->
-            // TODO - Fjern OR endringer = 'TILBAKEFØRER' når vi er sikre på at status alltid blir satt til FEILET ved feil
             val selectStatement =
                 connection.prepareStatement("SELECT sink FROM tilbakeføringsstatus  WHERE kjoringid = ? AND (endringer = 'FEILET' OR endringer = 'IKKE_STARTET' OR endringer = 'TILBAKEFØRER')")
             selectStatement.setInt(1, kjoringId)

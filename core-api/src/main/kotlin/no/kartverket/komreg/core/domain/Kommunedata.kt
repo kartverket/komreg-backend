@@ -10,7 +10,7 @@ import no.kartverket.komreg.integration.spi.Payload
 @Serializable
 data class Kommunedata(
     val navn: String,
-    val koordinatsystem: Koordinatsystem, // TODO: Bytt med en egen enum som ikke har UKJENT
+    val koordinatsystem: Koordinatsystem,
     val senterpunkt: Koordinat,
     val nedsattKonsesjonsgrense: Boolean,
     val godkjenteGardsnumre: String,
