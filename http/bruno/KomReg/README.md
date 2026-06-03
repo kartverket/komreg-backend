@@ -2,6 +2,26 @@
 
 Az-cli må være satt opp, se README.
 
+### Gjør az tilgjengelig for Bruno (Mac)
+
+På mac kan det hende at Bruno desktop appen ikke finner pathen til az. 
+Kjør denne kommandoen for å gjøre az tilgjengelig i en shell path som er synlig for desktop appen (gitt at det er installert med homebrew): 
+
+```bash
+sudo sh -c 'echo "#!/bin/bash\n/opt/homebrew/bin/az \"\$@\"" > /usr/local/bin/az && chmod +x /usr/local/bin/az'
+```
+
+### Åpne collection i Bruno
+
+Åpne Bruno og åpne `http/bruno/KomReg` som collection
+
+### Aktiver Developer Mode
+
+Bruno v3 kjører som standard i Safe Mode, som ikke støtter native Node.js-moduler, inkl. 'child_process' modulen vi bruker. 
+Oppe i høyre hjørne er det en badge som kan trykkes på for å endre til Developer Mode
+
+<img src="devmodeknapp.png" width="400"/>
+
 ### Finn miljøinnstillingene
 
 Åpne Bruno og naviger til Environments (oppe til høyre) ➔ Settings.
