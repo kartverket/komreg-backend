@@ -15,15 +15,6 @@ jobs:
       id-token: write
     runs-on: ubuntu-latest
     steps:
-      - name: Sett opp Tailscale
-        uses: tailscale/github-action@306e68a486fd2350f2bfc3b19fcd143891a4a2d8 # v4.1.2
-        with:
-          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
-          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
-          tags: tag:github-runner
-          version: latest
-          ping: 'nexus.statkart.no'
-
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           path: komreg-backend
