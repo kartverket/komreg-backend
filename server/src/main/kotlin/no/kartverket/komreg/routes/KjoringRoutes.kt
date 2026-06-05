@@ -117,6 +117,23 @@ fun Application.kjoringroutes(
                 }
             }
         }
+        route("/is-running"){
+            get{
+                try {
+                    val hasActiveKjoring = kjoringRepo.getKjoringer().any {
+                        it.status == Kjoringstatus.KJØRER ||
+                        it.status == Kjoringstatus.STARTET_TILBAKEFØRING ||
+                        it.status == Kjoringstatus.IKKE_TILBAKEFØRT
+                    }
+                    call.respond(HttpStatusCode.OK, hasActiveKjoring)
+                }
+                catch (ex: Exception){
+                    val msg = "Failed to get is-running status"
+                    logger.error(msg, ex)
+                    call.respond(HttpStatusCode.InternalServerError, msg)
+                }
+            }
+        }
     }
 }
 
