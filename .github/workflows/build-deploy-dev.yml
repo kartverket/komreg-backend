@@ -79,8 +79,12 @@ jobs:
           image_url: ${{ needs.build.outputs.image_url}}
           disable_severity_check: true
 
+  should-deploy-argo:
+    uses: kartverket/komreg-backend/.github/workflows/check-is-komreg-running.yml
+
   deploy-argo:
-    needs: [ build ]
+    if: ${{ needs.should-deploy-argo.output.isRunning == false }}
+    needs: [ build, should-deploy-argo ]
     permissions:
       id-token: write
       contents: read
