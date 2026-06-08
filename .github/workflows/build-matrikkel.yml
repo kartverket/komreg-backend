@@ -39,8 +39,9 @@ jobs:
       - uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # 6.1.0
       - name: Build with Gradle
         working-directory: matrikkel
-        run: ./gradlew --console=plain --configure-on-demand --init-script ../komreg-backend/matrikkel-komreg-publish.init.gradle -Pmatrikkel_artifact_versjon=${{ github.event.inputs.tag }} :komreg:publishKomregMatrikkelPublicationToKomregBackendRepository
+        run: ./gradlew --console=plain --configure-on-demand --init-script ../komreg-backend/matrikkel-komreg-publish.init.gradle -Pmatrikkel_artifact_versjon="$TAG_INPUT" :komreg:publishKomregMatrikkelPublicationToKomregBackendRepository
         env:
+          TAG_INPUT: ${{ inputs.tag }}
           GITHUB_ACTOR: ${{ github.actor }}
           PACKAGES_TOKEN: ${{ secrets.SHARED_PACKAGES_READ_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.SHARED_PACKAGES_READ_TOKEN }}
