@@ -7,7 +7,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
-import no.kartverket.komreg.KjoringContextImpl
 import no.kartverket.komreg.core.domain.Fylkesnummer
 import no.kartverket.komreg.core.domain.Id
 import no.kartverket.komreg.core.domain.Kommunenummer
@@ -19,7 +18,7 @@ import no.kartverket.komreg.jsonSerializer
 import no.kartverket.komreg.routes.Regulering
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.postgresql.PostgreSQLContainer
 import javax.sql.DataSource
 
 class TransformationRepoTest {
