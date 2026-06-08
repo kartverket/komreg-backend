@@ -1,5 +1,9 @@
 # KomReg
 
+KomReg er Kartverkets system for større kommune- og fylkesendringer i matrikkelen. Når kommuner slås
+sammen, deles opp eller bytter fylke, sørger KomReg for at alle berørte matrikkelenheter, adresser
+og identer blir riktig omnummerert.
+
 # Innholdsfortegnelse
 
 1. [Kom i gang](#kom-i-gang)
