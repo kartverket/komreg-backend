@@ -8,7 +8,7 @@ fun flyway(database: PostgreSQLContainer) {
         .loggers("slf4j")
         .schemas("komreg")
         .dataSource(
-            database.getJdbcUrl(),
+            database.jdbcUrl,
             database.username,
             database.password,
         )
