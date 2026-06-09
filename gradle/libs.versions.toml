@@ -84,4 +84,5 @@ dotenv-kotlin = { module = "io.github.cdimascio:dotenv-kotlin", version = "6.5.1
 
 guava = { module = "com.google.guava:guava", version = "33.6.0-jre" }
 
-matrikkel-komreg = { module = "no.kartverket.komreg:komreg-matrikkel", version = "2026.06.05-09.36-252867e" }
+#matrikkel-komreg = { module = "no.kartverket.komreg:komreg-matrikkel", version = "2026.06.05-09.36-252867e" }
+matrikkel-komreg = { module = "no.statkart.matrikkel:matrikkel-komreg", version = "local-SNAPSHOT" }
