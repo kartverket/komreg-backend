@@ -34,10 +34,10 @@ matrikkel-komreg lastes inn via Java ServiceLoader.
 
 ## Publisering
 
-| Bibliotek        | Publiseres til  | Jobb                                                                                                                                       |
-|------------------|-----------------|--------------------------------------------------------------------------------------------------------------------------------------------|
-| core-api         | Github Packages | [Github Actions: *Publish core-api to GH-packages*](https://github.com/kartverket/komreg-backend/actions/workflows/publish-core-api.yml)   |
-| matrikkel-komreg | GitHub Packages | [GitHub Actions: *Build and Publish Matrikkel Komreg*](https://github.com/kartverket/komreg-backend/actions/workflows/build-matrikkel.yml) |
+| Bibliotek        | Publiseres til  | Jobb                                                                                                               |
+|------------------|-----------------|--------------------------------------------------------------------------------------------------------------------|
+| core-api         | Github Packages | [Github Actions: *Publish core-api to GH-packages*](https://github.com/kartverket/komreg-backend/actions/workflows/publish-core-api.yml) |
+| matrikkel-komreg | GitHub Packages | [GitHub Actions: *Build and Publish - Komreg*](https://github.com/kartverket/matrikkel/blob/main/.github/workflows/build-publish-komreg.yml) |
 
 Publiseringsflyten er:
 
@@ -51,11 +51,11 @@ Publiseringsflyten er:
 
 Hvis man gjør endringer i matrikkel-komreg, f.eks. ved å legge til eller endre en source eller sink:
 
-1. Kjør GitHub Actions-workflowen *Build and Publish Matrikkel Komreg* (`build-matrikkel.yml`), som publiserer biblioteket til GitHub Packages.
-2. Hvis Matrikkelen har bumpet versjon, oppdater versjonsnummeret i komreg-backend sin versjonskatalog:
+1. Kjør GitHub Actions-workflowen *Build and Publish - Komreg* (`build-publish-komreg.yml`) i matrikkel repo, som publiserer biblioteket til GitHub Packages.
+2. Oppdater versjonsnummeret i komreg-backend sin versjonskatalog:
    ```
    # gradle/libs.versions.toml
-   matrikkel-komreg = { module = "no.kartverket.komreg:komreg-matrikkel", version = "..." }
+   matrikkel-komreg = { module = "no.statkart.matrikkel:matrikkel-komreg", version = "..." }
    ```
    Avhengigheten brukes i `server/build.gradle.kts`.
 3. Hvis versjonen er en SNAPSHOT-versjon, må man sannsynligvis tvinge byggingen til å refreshe dependencies:
