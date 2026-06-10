@@ -35,7 +35,7 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build integrationTest --info
         env:
-          GH_PACKAGES_PAT: ${{ secrets.SHARED_PACKAGES_READ_TOKEN }}
+          GH_PACKAGES_PAT: ${{ secrets.GH_PACKAGES_PAT}}
 
       - name: Login to Github Container Registry
         uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
@@ -80,15 +80,45 @@ jobs:
           disable_severity_check: true
 
   deploy-argo:
-    needs: [ build ]
     permissions:
       id-token: write
-      contents: read
-    uses: kartverket/smia-apps/.github/workflows/release-app-octo-sts.yml@main
-    with:
-      application: komreg-backend
-      version: ${{ needs.build.outputs.version }}
-      deploy_dev: true
-      deploy_prod: false
-      identity: komreg
-      namespace: komreg-main
+    needs: build
+    runs-on: ubuntu-latest
+    concurrency: smia-deploy
+    steps:
+      - name: Octo STS
+        uses: octo-sts/action@f603d3be9d8dd9871a265776e625a27b00effe05 # v1.1.1
+        id: octo-sts
+        with:
+          scope: kartverket/smia-apps
+          identity: komreg
+
+      - name: Checkout the repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          repository: kartverket/smia-apps
+          ref: main
+          token: ${{ steps.octo-sts.outputs.token }}
+
+      - name: Update smia-apps and push
+        run: |
+          git config --global user.email "smia@kartverket.no"
+          git config --global user.name "SMIA CI"
+          git pull --ff-only origin main
+
+          IMAGEURL="${{ env.registry}}/${{ env.image_name}}:${{ needs.build.outputs.version }}"
+
+          echo "### Deploying \"$IMAGEURL\"" >> $GITHUB_STEP_SUMMARY
+          echo 'Deploy to dev? true' >> $GITHUB_STEP_SUMMARY
+
+          # Write the new version to the dev environment file
+          echo "\"$IMAGEURL\"" > "$SMIA_APPS_VERSION_FILE"
+
+          git add "$SMIA_APPS_VERSION_FILE"
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Releaser komreg-backend:${{ needs.build.outputs.version }}"
+            git push origin HEAD:main
+          fi
+
