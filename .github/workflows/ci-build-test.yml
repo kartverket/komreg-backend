@@ -29,4 +29,4 @@ jobs:
       - name: Build and run Integration Test with Gradle
         run: ./gradlew build integrationTest
         env:
-          GH_PACKAGES_PAT: ${{ secrets.SHARED_PACKAGES_READ_TOKEN }}
+          GH_PACKAGES_PAT: ${{ secrets.GH_PACKAGES_PAT}}
