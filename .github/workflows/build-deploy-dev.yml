@@ -8,7 +8,7 @@ on:
 env:
   registry: ghcr.io
   image_name: ${{ github.repository }}
-  argo_version_file: backend-version
+  SMIA_APPS_VERSION_FILE: env/atkv3-dev/komreg-main/komreg-backend-version
 
 jobs:
   build:
