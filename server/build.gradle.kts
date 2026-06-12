@@ -87,9 +87,6 @@ dependencies {
     }
     implementation(libs.kotlin.reflect)
 
-    implementation(libs.kotlinx.cli)
-
-    implementation(libs.kotlinx.coroutines.jdk9)
     implementation(libs.kotlinx.collections.immutable.jvm)
 
     implementation(libs.kotlinx.serialization.protobuf)
