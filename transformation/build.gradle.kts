@@ -13,8 +13,6 @@ dependencies {
 
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.datetime)
-
-    api(libs.guava)
     implementation(kotlin("reflect"))
 
     // Testing
