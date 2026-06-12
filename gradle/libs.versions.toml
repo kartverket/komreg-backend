@@ -1,6 +1,5 @@
 [versions]
 flywayVersion = "12.8.1"
-hamcrest = "3.0"
 junit = "6.1.0"
 kotest = "5.9.1"
 kotlin = "2.3.21"
@@ -53,9 +52,6 @@ kotest-runner = { module = "io.kotest:kotest-runner-junit5", version.ref = "kote
 kotest-extensions-arrow = { module = "io.kotest.extensions:kotest-assertions-arrow", version = "1.4.0" }
 
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
-
-hamcrest = { module = "org.hamcrest:hamcrest", version.ref = "hamcrest" }
-hamcrest-library = { module = "org.hamcrest:hamcrest-library", version.ref = "hamcrest" }
 
 assertk = { module = "com.willowtreeapps.assertk:assertk", version = "0.28.1" }
 

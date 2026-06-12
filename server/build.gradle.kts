@@ -128,8 +128,6 @@ dependencies {
     testImplementation(libs.junit.jupiter.api)
     testRuntimeOnly(libs.junit.jupiter.engine)
     testImplementation(libs.mockk)
-    testImplementation(libs.hamcrest)
-    testImplementation(libs.hamcrest.library)
     testImplementation(libs.kotest.runner)
 
     integrationTestImplementation(libs.testcontainers.core)
