@@ -1,0 +1,27 @@
+name: check-is-komreg-dev-running.yml
+on:
+  workflow_call:
+    outputs:
+      isRunning:
+          description: "Whether the routine is running"
+          value: ${{ jobs.check.outputs.isRunning }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      isRunning: ${{ steps.check-step.outputs.isRunning }}
+    steps:
+      - name: Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:github-runner
+
+      - name: Check if komreg is running
+        id: check-step
+        run: |
+          IS_RUNNING=$(curl https://komreg-backend.atkv3-dev.kartverket-intern.cloud/is-running)
+          echo "isRunning=$IS_RUNNING" >> $GITHUB_OUTPUT
+
