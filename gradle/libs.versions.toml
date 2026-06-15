@@ -1,5 +1,5 @@
 [versions]
-flywayVersion = "12.7.0"
+flywayVersion = "12.8.1"
 hamcrest = "3.0"
 junit = "6.1.0"
 kotest = "5.9.1"
@@ -8,13 +8,13 @@ kotlinx-cli = "0.3.6"
 kotlinx-datetime = "0.8.0-0.6.x-compat"
 kotlinx-coroutines = "1.11.0"
 kotlinx-serialization = "1.11.0"
-kotlinx-collections = "0.4.0"
+kotlinx-collections = "0.5.0"
 ktor = "3.5.0"
-logback = "1.5.33"
-micrometer-prometheus = "1.16.5"
+logback = "1.5.34"
+micrometer-prometheus = "1.17.0"
 mockk = "1.14.11"
 spek = "2.0.19"
-testcontainers = "1.21.4"
+testcontainers = "2.0.5"
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
@@ -45,7 +45,7 @@ arrow-core = { module = "io.arrow-kt:arrow-core" }
 arrow-fx-coroutines = { module = "io.arrow-kt:arrow-fx-coroutines" }
 arrow-fx-stm = { module = "io.arrow-kt:arrow-fx-stm" }
 
-typesafe-config = { module = "com.typesafe:config", version = "1.4.8" }
+typesafe-config = { module = "com.typesafe:config", version = "1.4.9" }
 
 junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
@@ -72,11 +72,10 @@ micrometer-registry-prometheus = { module = "io.micrometer:micrometer-registry-p
 postgresql = { module = "org.postgresql:postgresql", version = "42.7.11" }
 flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flywayVersion" }
 flyway-postgres = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flywayVersion" }
-hikari = { module = "com.zaxxer:HikariCP", version = "7.0.2" }
+hikari = { module = "com.zaxxer:HikariCP", version = "7.1.0" }
 
 testcontainers-core = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
-testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
-
+testcontainers-postgresql = { module = "org.testcontainers:testcontainers-postgresql", version.ref = "testcontainers" }
 ojdbc11 = { module = "com.oracle.database.jdbc:ojdbc11", version = "23.26.2.0.0" }
 
 logstash-logback-encoder = { module = "net.logstash.logback:logstash-logback-encoder", version = "9.0" }
@@ -85,4 +84,4 @@ dotenv-kotlin = { module = "io.github.cdimascio:dotenv-kotlin", version = "6.5.1
 
 guava = { module = "com.google.guava:guava", version = "33.6.0-jre" }
 
-matrikkel-komreg = { module = "no.kartverket.komreg:komreg-matrikkel", version = "2026.06.05-09.36-252867e" }
+matrikkel-komreg = { module = "no.statkart.matrikkel:matrikkel-komreg", version = "local-2026.06.09-06.13-0c04280" }

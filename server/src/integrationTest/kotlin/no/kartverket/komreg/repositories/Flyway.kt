@@ -1,14 +1,14 @@
 package no.kartverket.komreg.repositories
 
 import org.flywaydb.core.Flyway
-import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.postgresql.PostgreSQLContainer
 
-fun flyway(database: PostgreSQLContainer<*>) {
+fun flyway(database: PostgreSQLContainer) {
     val flyway = Flyway.configure()
         .loggers("slf4j")
         .schemas("komreg")
         .dataSource(
-            database.getJdbcUrl(),
+            database.jdbcUrl,
             database.username,
             database.password,
         )
