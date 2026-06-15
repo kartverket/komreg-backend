@@ -1,8 +1,6 @@
-
 plugins {
     id("komreg.published-library")
 }
-
 
 dependencies {
     api(platform(libs.arrow.stack))

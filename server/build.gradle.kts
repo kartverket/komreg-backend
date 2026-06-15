@@ -1,6 +1,5 @@
 import org.apache.tools.ant.filters.ReplaceTokens
 
-
 plugins {
     id("komreg.kotlin-common")
     application

@@ -1,4 +1,3 @@
-
 plugins {
     id("komreg.kotlin-common")
     `maven-publish`
