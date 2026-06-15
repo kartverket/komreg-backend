@@ -203,6 +203,7 @@ suspend fun mapInput(input: Reguleringsinput): List<Pair<Ident, IdentTransformer
             is Kretsendring -> listOf(mapKretsendring(m))
             is Matrikkelenhetendring -> mapMatrikkelenhetendring(m)
             is Teigendring -> listOf(mapTeig(m))
+            is Kulturminneendring -> listOf(mapKulturminneendring(m))
             is Vegadresseendring -> listOf(mapVegadresseendring(m))
             is Vegendring -> listOf(mapVegendring(m))
         }
@@ -343,6 +344,22 @@ suspend fun mapTeig(teigendring: Teigendring): Pair<Ident, IdentTransformer.Mapp
                     teigendring.teigId.til,
                 ),
             )
+}
+
+suspend fun mapKulturminneendring(kulturminneendring: Kulturminneendring): Pair<Ident, IdentTransformer.Mapping> {
+    val kulturminneIdentType = identTypeOf3<Fylkesnummer, Kommunenummer.Lopenummer, KulturminneId>()
+
+    return kulturminneIdentType(
+        kulturminneendring.fylkesnummer.fra,
+        kulturminneendring.kommuneløpenummer.fra,
+        kulturminneendring.kulturminneId.fra
+    ) to IdentTransformer.Mapping.Simple(
+        kulturminneIdentType(
+            kulturminneendring.fylkesnummer.til,
+            kulturminneendring.kommuneløpenummer.til,
+            kulturminneendring.kulturminneId.til,
+        )
+    )
 }
 
 suspend fun mapVegendring(vegendring: Vegendring): Pair<Ident, IdentTransformer.Mapping> {

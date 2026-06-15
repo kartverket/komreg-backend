@@ -11,6 +11,7 @@ plugins {
 }
 
 repositories {
+    mavenLocal()
     maven {
         url = uri("https://maven.pkg.github.com/kartverket/komreg-backend")
         val ghPackagesToken = project.findProperty("GH_PACKAGES_PAT") as String? ?: System.getenv("GH_PACKAGES_PAT")
