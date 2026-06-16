@@ -35,7 +35,7 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build integrationTest --info
         env:
-          GH_PACKAGES_PAT: ${{ secrets.GH_PACKAGES_PAT}}
+          GH_PACKAGES_PAT: ${{ secrets.GH_PACKAGES_PAT }}
 
       - name: Login to Github Container Registry
         uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
