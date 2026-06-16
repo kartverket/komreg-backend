@@ -8,7 +8,7 @@ on:
 env:
   registry: ghcr.io
   image_name: ${{ github.repository }}
-  argo_version_file: backend-version
+  SMIA_APPS_VERSION_FILE: env/atkv3-dev/komreg-main/komreg-backend-version
 
 jobs:
   build:
@@ -22,7 +22,7 @@ jobs:
       version: ${{ steps.tag_version.outputs.new_tag }}
     steps:
       - name: Checkout project sources
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
@@ -30,12 +30,12 @@ jobs:
           java-version: '17'
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
 
       - name: Build with Gradle
         run: ./gradlew build integrationTest --info
         env:
-          GH_PACKAGES_PAT: ${{ secrets.SHARED_PACKAGES_READ_TOKEN }}
+          GH_PACKAGES_PAT: ${{ secrets.GH_PACKAGES_PAT}}
 
       - name: Login to Github Container Registry
         uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
@@ -80,10 +80,11 @@ jobs:
           disable_severity_check: true
 
   should-deploy-argo:
-    uses: kartverket/komreg-backend/.github/workflows/check-is-komreg-running.yml
+    uses: ./.github/workflows/check-is-komreg-dev-running.yml
+    secrets: inherit
 
   deploy-argo:
-    if: ${{ needs.should-deploy-argo.output.isRunning == false }}
+    if: ${{ needs.should-deploy-argo.outputs.isRunning == 'false' }}
     needs: [ build, should-deploy-argo ]
     permissions:
       id-token: write
