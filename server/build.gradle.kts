@@ -87,9 +87,6 @@ dependencies {
     }
     implementation(libs.kotlin.reflect)
 
-    implementation(libs.kotlinx.cli)
-
-    implementation(libs.kotlinx.coroutines.jdk9)
     implementation(libs.kotlinx.collections.immutable.jvm)
 
     implementation(libs.kotlinx.serialization.protobuf)
@@ -127,11 +124,7 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation(libs.junit.jupiter.api)
     testRuntimeOnly(libs.junit.jupiter.engine)
-    testImplementation(libs.spek.dsl.jvm)
-    testRuntimeOnly(libs.spek.runner.junit5)
     testImplementation(libs.mockk)
-    testImplementation(libs.hamcrest)
-    testImplementation(libs.hamcrest.library)
     testImplementation(libs.kotest.runner)
 
     integrationTestImplementation(libs.testcontainers.core)
