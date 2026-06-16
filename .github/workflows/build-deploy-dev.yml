@@ -79,13 +79,14 @@ jobs:
           image_url: ${{ needs.build.outputs.image_url}}
           disable_severity_check: true
 
-  should-deploy-argo:
-    uses: ./.github/workflows/check-is-komreg-dev-running.yml
-    secrets: inherit
+#  should-deploy-argo:
+#    uses: ./.github/workflows/check-is-komreg-dev-running.yml
+#    secrets: inherit
 
   deploy-argo:
-    if: ${{ needs.should-deploy-argo.outputs.isRunning == 'false' }}
-    needs: [ build, should-deploy-argo ]
+#    if: ${{ needs.should-deploy-argo.outputs.isRunning == 'false' }}
+#    needs: [ build, should-deploy-argo ]
+    needs: build
     permissions:
       id-token: write
     runs-on: ubuntu-latest
