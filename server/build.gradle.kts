@@ -1,11 +1,7 @@
 import org.apache.tools.ant.filters.ReplaceTokens
 
-group = "no.kartverket.komreg"
-version = "1.0-SNAPSHOT"
-
 plugins {
-    alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.kotlin.plugin.serialization)
+    id("komreg.kotlin-common")
     application
     `jvm-test-suite`
 }

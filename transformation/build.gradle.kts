@@ -1,11 +1,6 @@
 plugins {
-    alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.kotlin.plugin.serialization)
+    id("komreg.kotlin-common")
     `java-library`
-}
-
-tasks.test {
-    useJUnitPlatform()
 }
 
 dependencies {
