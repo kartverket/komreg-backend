@@ -1,0 +1,58 @@
+package regulering.parameterfil
+
+import kotlinx.datetime.LocalDate
+import no.kartverket.komreg.repositories.ReguleringRepo
+import no.kartverket.komreg.routes.EndringDTO
+import no.kartverket.komreg.routes.Regulering
+import no.kartverket.komreg.routes.TransformasjonDTO
+import regulering.model.SheetType
+
+object ParameterfilProcessor {
+
+    fun lesOgTransformer(resourcePath: String, separator: String = ";"): List<TransformasjonDTO> {
+        val sheet = lesSheet(resourcePath, separator)
+        return when (sheet.type) {
+            SheetType.VEG -> lesVegRader(sheet).flatMap { byggVegTransformasjoner(it) }
+            SheetType.KRETS -> lesKretsRader(sheet).map { byggKretsTransformasjon(it) }
+            SheetType.TEIG -> lesTeigRader(sheet).map { byggTeigTransformasjon(it) }
+            SheetType.MATRIKKEL -> lesMatrikkelRader(sheet).map { byggMatrikkelTransformasjon(it) }
+        }
+    }
+
+    fun lesOgTransformerMappe(resourceFolder: String, separator: String = ";"): List<TransformasjonDTO> {
+        val filenames = finnCSVFilnavn(resourceFolder)
+        if (filenames.isEmpty()) error("Fant ingen CSV-filer i: $resourceFolder")
+        return filenames.flatMap { lesOgTransformer("$resourceFolder/$it", separator) }
+    }
+
+    fun genererParameterfil(
+        reguleringRepo: ReguleringRepo,
+        inputMappe: String,
+        id: String,
+        dato: LocalDate,
+        navn: String,
+        separator: String = ";",
+    ) {
+        val transformasjoner = lesOgTransformerMappe(inputMappe, separator)
+
+        val endring = EndringDTO(
+            id = id,
+            navn = navn,
+            type = "kommune",
+            utgåendeFylker = emptyList(),
+            utgåendeKommuner = emptyList(),
+            nyeFylker = emptyList(),
+            nyeKommuner = emptyList(),
+            transformasjoner = transformasjoner,
+        )
+
+        val regulering = Regulering(
+            id = id,
+            navn = navn,
+            dato = dato,
+            endringer = listOf(endring),
+        )
+
+        reguleringRepo.insertRegulering(regulering)
+    }
+}
