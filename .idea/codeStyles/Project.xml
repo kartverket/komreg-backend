@@ -19,7 +19,7 @@
     <ScalaCodeStyleSettings>
       <option name="FORMATTER" value="1" />
     </ScalaCodeStyleSettings>
-    <SqlCodeStyleSettings version="7">
+    <SqlCodeStyleSettings version="6">
       <option name="KEYWORD_CASE" value="2" />
       <option name="IDENTIFIER_CASE" value="1" />
       <option name="TYPE_CASE" value="4" />
