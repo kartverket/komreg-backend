@@ -116,6 +116,7 @@ fun Application.module() {
 
     ParameterfilProcessor.genererParameterfil(
         reguleringRepo = reguleringsRepo,
+        kjoringRepo = kjoringRepo,
         inputMappe = "genererParameter/inputSheets",
     )
 }

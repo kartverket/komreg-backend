@@ -1,7 +1,7 @@
 package regulering.parameterfil
 
-import kotlinx.datetime.LocalDate
 import no.kartverket.komreg.repositories.ReguleringRepo
+import no.kartverket.komreg.repositories.KjoringRepo
 import no.kartverket.komreg.routes.EndringDTO
 import no.kartverket.komreg.routes.Regulering
 import no.kartverket.komreg.routes.TransformasjonDTO
@@ -27,6 +27,7 @@ object ParameterfilProcessor {
 
     fun genererParameterfil(
         reguleringRepo: ReguleringRepo,
+        kjoringRepo: KjoringRepo,
         inputMappe: String,
         separator: String = ";",
     ) {
@@ -51,6 +52,14 @@ object ParameterfilProcessor {
             endringer = listOf(endring),
         )
 
+        // Thrower om det er en kjøring for reguleringen,
+        // ellers updater/inserter vi regulering på nytt
+        kjoringRepo.getStatusForKjoringMedReguleringsId(metadata.id)?.let {
+            error("Det finnes allerede en kjøring for regulering med id: ${metadata.id}. status: ${it}")
+        }
+        reguleringRepo.getReguleringById(metadata.id)?.let {
+            reguleringRepo.updateRegulering(regulering)
+        }
         reguleringRepo.insertRegulering(regulering)
     }
 }
