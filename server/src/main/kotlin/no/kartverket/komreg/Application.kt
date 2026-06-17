@@ -117,8 +117,5 @@ fun Application.module() {
     ParameterfilProcessor.genererParameterfil(
         reguleringRepo = reguleringsRepo,
         inputMappe = "genererParameter/inputSheets",
-        id = "regulering",
-        dato = LocalDate.parse("2028-01-01"),
-        navn = "regulering",
     )
 }

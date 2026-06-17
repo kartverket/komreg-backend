@@ -28,16 +28,14 @@ object ParameterfilProcessor {
     fun genererParameterfil(
         reguleringRepo: ReguleringRepo,
         inputMappe: String,
-        id: String,
-        dato: LocalDate,
-        navn: String,
         separator: String = ";",
     ) {
+        val metadata = lesMetadata(inputMappe)
         val transformasjoner = lesOgTransformerMappe(inputMappe, separator)
 
         val endring = EndringDTO(
-            id = id,
-            navn = navn,
+            id = metadata.id,
+            navn = metadata.navn,
             type = "kommune",
             utgåendeFylker = emptyList(),
             utgåendeKommuner = emptyList(),
@@ -47,9 +45,9 @@ object ParameterfilProcessor {
         )
 
         val regulering = Regulering(
-            id = id,
-            navn = navn,
-            dato = dato,
+            id = metadata.id,
+            navn = metadata.navn,
+            dato = metadata.dato,
             endringer = listOf(endring),
         )
 
