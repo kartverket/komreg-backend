@@ -54,9 +54,11 @@ object ParameterfilProcessor {
 
         // Thrower om det er en kjøring for reguleringen,
         // ellers updater/inserter vi regulering på nytt
-        kjoringRepo.getStatusForKjoringMedReguleringsId(metadata.id)?.let {
-            error("Det finnes allerede en kjøring for regulering med id: ${metadata.id}. status: ${it}")
-        }
+        kjoringRepo.getStatusForKjoringMedReguleringsId(metadata.id)
+            ?.takeIf { it.isNotEmpty() }
+            ?.let {
+                error("Det finnes allerede en kjøring for regulering med id: ${metadata.id}. status: ${it}")
+            }
         reguleringRepo.getReguleringById(metadata.id)?.let {
             reguleringRepo.updateRegulering(regulering)
         }
