@@ -14,6 +14,7 @@ import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.path
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import kotlinx.datetime.LocalDate
 import no.kartverket.komreg.integration.SchemaManager
 import no.kartverket.komreg.repositories.KjoringRepo
 import no.kartverket.komreg.repositories.ReguleringRepo
@@ -26,6 +27,7 @@ import org.flywaydb.core.Flyway
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
+import regulering.parameterfil.ParameterfilProcessor
 
 val env = dotenv {
     ignoreIfMissing = true
@@ -111,4 +113,10 @@ fun Application.module() {
     stedsnavnRoutes(reguleringsRepo, kjoringRepo, transformationRepo)
 
     enableFagLogging(komregDbPool)
+
+    ParameterfilProcessor.genererParameterfil(
+        reguleringRepo = reguleringsRepo,
+        kjoringRepo = kjoringRepo,
+        inputMappe = "genererParameter/inputSheets",
+    )
 }

@@ -222,3 +222,16 @@ az account get-access-token --scope <CLIENT_ID>/.default
 
 Hvis alt er som det skal fikk du et accesstoken i respons. Anbefaler å bruke postman til å enkelt
 sette opp kall mot komreg-backend med token.
+
+
+## Generere regulering
+Gitt at mal for grensejustering er brukt kan regulering genereres direkte fra csv. 
+Følg disse stegene for å gjøre det:
+1. Eksporter hvert ark fra excel dokumentet som en egen csv (csv håndterer ikke flere ark i samme fil).
+2. Legg csv-filene i [`server/src/main/resources/genererParameter/inputSheets`](./server/src/main/resources/genererParameter/inputSheets). Dersom det allerede ligger csv-filer der, 
+må disse fjernes. Per nå er det ikke lagt opp til å lagre flere reguleringer i input mappa, så  
+alle csver i mappa blir inkludert i reguleringen.
+3. Oppdater [`metadata.json`](./server/src/main/resources/genererParameter/inputSheets/metadata.json) i samme mappe 
+med id, navn, og dato.
+4. Kjør komreg-backend (eller push til miljø der den skal kjøres), og regulering vil bli generer og 
+lagt inn i databasen som et av oppstartsstegene i [`Application.kt`](./server/src/main/kotlin/no/kartverket/komreg/Application.kt).
