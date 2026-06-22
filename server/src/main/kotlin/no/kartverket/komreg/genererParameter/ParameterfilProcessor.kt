@@ -59,9 +59,10 @@ object ParameterfilProcessor {
             ?.let {
                 error("Det finnes allerede en kjøring for regulering med id: ${metadata.id}. status: ${it}")
             }
-        reguleringRepo.getReguleringById(metadata.id)?.let {
+        if (reguleringRepo.getReguleringById(metadata.id) != null) {
             reguleringRepo.updateRegulering(regulering)
+        } else {
+            reguleringRepo.insertRegulering(regulering)
         }
-        reguleringRepo.insertRegulering(regulering)
     }
 }
