@@ -38,8 +38,22 @@ fun Application.kjoringroutes(
 
                     val regulering = reguleringsService.getOrThrowRegulering(regId)
 
-                    logger.info("Starter transformasjon for regulering: $regId")
+                    // Vi ønsker kun å gjenoppta stoppede kjøringer. Hvis reguleringen har en kjøring med annen status ønsker vi ikke å kjøre den igjen.
+                    kjoringRepo.getStatusForKjoringMedReguleringsId(regulering.id)
+                        .takeIf { it.isNotEmpty() }
+                        ?.let {
+                            if (it.any{ kjoring ->
+                                    kjoring.status != Kjoringstatus.STOPPET
+                                }) {
+                                call.respond(
+                                    HttpStatusCode.Conflict,
+                                    "Det finnes allerede en kjøring for regulering med id: ${regulering.id}. status: $it. " +
+                                            "Tilbakestill databasen hvis du ønsker å kjøre denne reguleringen på nytt"
+                                )
+                            }
+                        }
 
+                    logger.info("Starter transformasjon for regulering: $regId")
                     val kjoringsomskalgjenopptas = kjoringRepo.finnStoppetKjøringForRegulering(regId)
 
                     if (kjoringsomskalgjenopptas != null) {
