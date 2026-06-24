@@ -4,14 +4,14 @@
 ;;;;;;;;;;;;;;;;
 ;Veger;;;;;;;;;;;Arkenreferanse: [Legg inn nummer her];;;;
 ;Dagens kommunenummer;Dagens adressekode;Dagens adressenavn;(Dagens adressenummer);(Dagens bokstav);Nytt kommunenummer;Ny adressekode;Nytt adressenavn;(Nytt adressenummer);(Ny bokstav);Status;Kommentar;;;;
-;3209;10118;Skinnstudumpa;23;Ingen;3240;10118;Skinnstudumpa;23;;Validert;Ingen andre endringer enn kommunenummer. Adressering var allerede sammenhengende over kommunegrense. Derfor ingen Arken-referanse;;;;
+;3209;10118;Skinnstudumpa;23;;3240;10118;Skinnstudumpa;23;;Validert;Ingen andre endringer enn kommunenummer. Adressering var allerede sammenhengende over kommunegrense. Derfor ingen Arken-referanse;;;;
 ;3209;10118;Skinnstudumpa;25;;3240;10118;Skinnstudumpa;25;;;;;;;
 ;3209;10118;Skinnstudumpa;27;;3240;10118;Skinnstudumpa;27;;;;;;;
 ;3209;10118;Skinnstudumpa;29;;3240;10118;Skinnstudumpa;29;;;;;;;
 ;3209;10118;Skinnstudumpa;35;;3240;10118;Skinnstudumpa;35;;;;;;;
 ;3209;10118;Skinnstudumpa;37;;3240;10118;Skinnstudumpa;37;;;;;;;
 ;3209;10118;Skinnstudumpa;39;;3240;10118;Skinnstudumpa;39;;;;;;;
-;3209;6640;Kolonivegen;Ingen;;3240;10177;Kolonivegen;Ingen;;;Adressenumrene ligger utenfor området som skal overføres til Eidsvoll;;;;
+;3209;6640;Kolonivegen;;;3240;10177;Kolonivegen;;;;Adressenumrene ligger utenfor området som skal overføres til Eidsvoll;;;;
 ;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;

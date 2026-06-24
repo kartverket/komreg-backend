@@ -12,7 +12,7 @@ object ParameterfilProcessor {
     fun lesOgTransformer(resourcePath: String, separator: String = ";"): List<TransformasjonDTO> {
         val sheet = lesSheet(resourcePath, separator)
         return when (sheet.type) {
-            SheetType.VEG -> lesVegRader(sheet).flatMap { byggVegTransformasjoner(it) }
+            SheetType.VEG -> lesVegRader(sheet).map { byggVegTransformasjoner(it) }
             SheetType.KRETS -> lesKretsRader(sheet).map { byggKretsTransformasjon(it) }
             SheetType.TEIG -> lesTeigRader(sheet).map { byggTeigTransformasjon(it) }
             SheetType.MATRIKKEL -> lesMatrikkelRader(sheet).map { byggMatrikkelTransformasjon(it) }
