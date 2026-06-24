@@ -40,28 +40,26 @@ private fun FraTil.tilLøpenummerDTO(): FraTil =
         til = til?.let { splitKommunenummer(it).løpenummer },
     )
 
-fun byggVegTransformasjoner(rad: VegRad): List<TransformasjonDTO> {
+fun byggVegTransformasjoner(rad: VegRad): TransformasjonDTO {
     val fylke = rad.kommunenummer.tilFylkesnummerDTO()
     val løp = rad.kommunenummer.tilLøpenummerDTO()
 
-    val vegendring = VegTransformasjonDTO(
-        fylkesnummer = fylke.tilFraEnTilMangeDTO("fylkesnummer"),
-        kommuneløpenummer = løp.tilFraEnTilMangeDTO("kommuneløpenummer"),
-        adressekode = rad.adressekode.tilFraEnTilMangeDTO("adressekode"),
-    )
-
     val harAdressenummer = rad.adressenummer.fra != null || rad.adressenummer.til != null
 
-    val vegadresseendring = if (harAdressenummer) {
+    val transformasjon = if(harAdressenummer){
         VegadresseTransformasjonDTO(
             fylkesnummer = fylke.tilFraTilDTO("fylkesnummer"),
             kommuneløpenummer = løp.tilFraTilDTO("kommuneløpenummer"),
             adressekode = rad.adressekode.tilFraTilDTO("adressekode"),
             adressenummer = rad.adressenummer.tilFraTilDTO("adressenummer"),
         )
-    } else null
+    } else VegTransformasjonDTO(
+        fylkesnummer = fylke.tilFraEnTilMangeDTO("fylkesnummer"),
+        kommuneløpenummer = løp.tilFraEnTilMangeDTO("kommuneløpenummer"),
+        adressekode = rad.adressekode.tilFraEnTilMangeDTO("adressekode"),
+    )
 
-    return listOfNotNull(vegendring, vegadresseendring)
+    return transformasjon
 }
 
 fun byggKretsTransformasjon(rad: KretsRad): TransformasjonDTO {
