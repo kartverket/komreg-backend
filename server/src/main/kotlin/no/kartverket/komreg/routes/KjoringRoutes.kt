@@ -39,6 +39,7 @@ fun Application.kjoringroutes(
                     val regulering = reguleringsService.getOrThrowRegulering(regId)
 
                     logger.info("Starter transformasjon for regulering: $regId")
+
                     val kjoringsomskalgjenopptas = kjoringRepo.finnStoppetKjøringForRegulering(regId)
 
                     if (kjoringsomskalgjenopptas != null) {
