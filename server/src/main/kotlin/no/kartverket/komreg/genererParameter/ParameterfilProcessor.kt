@@ -27,7 +27,6 @@ object ParameterfilProcessor {
 
     fun genererParameterfil(
         reguleringRepo: ReguleringRepo,
-        kjoringRepo: KjoringRepo,
         inputMappe: String,
         separator: String = ";",
     ) {
@@ -52,13 +51,6 @@ object ParameterfilProcessor {
             endringer = listOf(endring),
         )
 
-        // Thrower om det er en kjøring for reguleringen,
-        // ellers updater/inserter vi regulering på nytt
-        kjoringRepo.getStatusForKjoringMedReguleringsId(metadata.id)
-            ?.takeIf { it.isNotEmpty() }
-            ?.let {
-                error("Det finnes allerede en kjøring for regulering med id: ${metadata.id}. status: ${it}")
-            }
         if (reguleringRepo.getReguleringById(metadata.id) != null) {
             reguleringRepo.updateRegulering(regulering)
         } else {
