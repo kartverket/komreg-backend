@@ -45,6 +45,7 @@ jobs:
         run: ./gradlew classes testClasses
         env:
           GH_PACKAGES_PAT: ${{ secrets.GH_PACKAGES_PAT}}
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g"
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # 4.36.2
