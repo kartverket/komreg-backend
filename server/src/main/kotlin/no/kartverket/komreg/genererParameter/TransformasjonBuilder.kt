@@ -88,11 +88,19 @@ fun byggTeigTransformasjon(rad: TeigRad): TransformasjonDTO {
 private fun MatrikkelRad.tilBruksnummerMap(): Map<Short, TilGrunneiendomDTO> {
     val dagens = bruksnummer.fra ?: error("Mangler 'Dagens bruksnummer'")
     val nytt = bruksnummer.til ?: error("Mangler 'Nytt bruksnummer'")
+    val nyttKommunenummer = kommunenummer.til ?: error("Mangler 'Nytt Kommunenummer'")
 
-    val dagensShort = dagens.toShortOrNull() ?: error("Ugyldig dagens bruksnummer: '$dagens'")
-    val nyttShort = nytt.toShortOrNull() ?: error("Ugyldig nytt bruksnummer: '$nytt'")
+    val dagensShort = dagens.toShort()
 
-    return mapOf(dagensShort to TilGrunneiendomDTO(bruksnummer = nyttShort))
+    val nyttKommunelopenummer = splitKommunenummer(nyttKommunenummer).løpenummer.toByteOrNull()
+    val nyttGardsnummer = gardsnummer.til?.toIntOrNull()
+    val nyttShort = nytt.toShort()
+
+    return mapOf(dagensShort to TilGrunneiendomDTO(
+        kommunelopenummer = nyttKommunelopenummer,
+        gardsnummer = nyttGardsnummer,
+        bruksnummer = nyttShort
+    ))
 }
 
 fun byggMatrikkelTransformasjon(rad: MatrikkelRad): TransformasjonDTO {
