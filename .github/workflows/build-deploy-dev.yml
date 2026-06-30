@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main
+      - TS-2945
 
 env:
   registry: ghcr.io
@@ -86,45 +86,15 @@ jobs:
   deploy-argo:
 #    if: ${{ needs.should-deploy-argo.outputs.isRunning == 'false' }}
 #    needs: [ build, should-deploy-argo ]
-    needs: build
-    permissions:
-      id-token: write
-    runs-on: ubuntu-latest
-    concurrency: smia-deploy
-    steps:
-      - name: Octo STS
-        uses: octo-sts/action@f603d3be9d8dd9871a265776e625a27b00effe05 # v1.1.1
-        id: octo-sts
-        with:
-          scope: kartverket/smia-apps
-          identity: komreg
-
-      - name: Checkout the repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          repository: kartverket/smia-apps
-          ref: main
-          token: ${{ steps.octo-sts.outputs.token }}
-
-      - name: Update smia-apps and push
-        run: |
-          git config --global user.email "smia@kartverket.no"
-          git config --global user.name "SMIA CI"
-          git pull --ff-only origin main
-
-          IMAGEURL="${{ env.registry}}/${{ env.image_name}}:${{ needs.build.outputs.version }}"
-
-          echo "### Deploying \"$IMAGEURL\"" >> $GITHUB_STEP_SUMMARY
-          echo 'Deploy to dev? true' >> $GITHUB_STEP_SUMMARY
-
-          # Write the new version to the dev environment file
-          echo "\"$IMAGEURL\"" > "$SMIA_APPS_VERSION_FILE"
-
-          git add "$SMIA_APPS_VERSION_FILE"
-          if git diff --cached --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "Releaser komreg-backend:${{ needs.build.outputs.version }}"
-            git push origin HEAD:main
-          fi
-
+      needs: [ build ]
+      permissions:
+        id-token: write
+        contents: read
+      uses: kartverket/smia-workflows/.github/workflows/release-app-octo-sts.yml@TS-2945
+      with:
+        application: komreg-backend
+        version: ${{ needs.build.outputs.version }}
+        deploy_dev: true
+        deploy_prod: false
+        identity: komreg
+        namespace: komreg-main
