@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - TS-2945
+      - main
 
 env:
   registry: ghcr.io
@@ -90,7 +90,7 @@ jobs:
       permissions:
         id-token: write
         contents: read
-      uses: kartverket/smia-workflows/.github/workflows/release-app-octo-sts.yml@TS-2945
+      uses: kartverket/smia-workflows/.github/workflows/release-app-octo-sts.yml@main
       with:
         application: komreg-backend
         version: ${{ needs.build.outputs.version }}
