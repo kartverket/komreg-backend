@@ -1,5 +1,5 @@
 [versions]
-flywayVersion = "12.9.0"
+flywayVersion = "12.10.0"
 junit = "6.1.1"
 kotest = "5.9.1"
 kotlin = "2.3.21"
@@ -56,7 +56,7 @@ logback-classic-db = { module = "ch.qos.logback.db:logback-classic-db", version 
 
 micrometer-registry-prometheus = { module = "io.micrometer:micrometer-registry-prometheus", version.ref = "micrometer-prometheus" }
 
-postgresql = { module = "org.postgresql:postgresql", version = "42.7.11" }
+postgresql = { module = "org.postgresql:postgresql", version = "42.7.12" }
 flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flywayVersion" }
 flyway-postgres = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flywayVersion" }
 hikari = { module = "com.zaxxer:HikariCP", version = "7.1.0" }
