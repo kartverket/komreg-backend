@@ -1,7 +1,14 @@
 package no.kartverket.komreg.core.domain
 
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import no.kartverket.komreg.parameter.data.CombinableType
+import no.kartverket.komreg.parameter.data.FinalType
+import no.kartverket.komreg.parameter.data.FinalType.Companion.invoke
+import no.kartverket.komreg.parameter.data.KeyCombinableType
 
 @Serializable
 @SerialName("Kommunenummer")
@@ -19,6 +26,25 @@ data class Kommunenummer(val fylkesnummer: Fylkesnummer, val lopenummer: Lopenum
     @SerialName("Kommunelopenummer")
     data class Lopenummer(val value: Byte) : Comparable<Lopenummer> {
         override fun compareTo(other: Lopenummer): Int = value.compareTo(other.value)
+        override fun toString(): String {
+            return "Kommune($value)"
+        }
+
+        companion object
+        object Type : KeyCombinableType<Lopenummer, Kommunedata> {
+            override val valueType: CombinableType<Kommunedata> = object : CombinableType<Kommunedata> {
+                override fun combine(
+                    a: Kommunedata,
+                    b: Kommunedata
+                ): Either<String, Kommunedata> {
+                    return if (a == b) a.right() else "Uncombinable: $a and $b".left()
+                }
+
+                override val finalType: FinalType<Kommunedata> = FinalType<Kommunedata>()
+
+            }
+            override val finalType: FinalType<Lopenummer> = FinalType<Lopenummer>()
+        }
     }
 
     companion object {

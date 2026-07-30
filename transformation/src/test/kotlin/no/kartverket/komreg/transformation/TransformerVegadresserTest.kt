@@ -49,19 +49,6 @@ class TransformerVegadresserTest : FunSpec({
 
         transform(
             1,
-            Reguleringsinput(
-                "abc",
-                Clock.System.todayIn(TimeZone.currentSystemDefault()),
-                listOf(
-                    Vegendring(
-                        FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(12))),
-                        FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(35))),
-                        FraEnTilMange(Adressekode(10100), listOf(Adressekode(20100))),
-                    ),
-                ),
-                emptyList(),
-                emptyList(),
-            ),
             emptyList(),
             listOf(vegSource),
             emptyList(),
@@ -69,6 +56,42 @@ class TransformerVegadresserTest : FunSpec({
             idGeneratorManager,
             TestStorage(),
             true,
+            identTransformerImpl = IdentTransformerImpl(
+                mapInput(
+                    Reguleringsinput(
+                        "abc",
+                        Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                        listOf(
+                            Vegendring(
+                                FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(12))),
+                                FraEnTilMange(
+                                    Kommunenummer.Lopenummer(34),
+                                    listOf(Kommunenummer.Lopenummer(35))
+                                ),
+                                FraEnTilMange(Adressekode(10100), listOf(Adressekode(20100))),
+                            ),
+                        ),
+                        emptyList(),
+                        emptyList(),
+                    )
+                )
+            ),
+            date = Reguleringsinput(
+                "abc",
+                Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                listOf(
+                    Vegendring(
+                        FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(12))),
+                        FraEnTilMange(
+                            Kommunenummer.Lopenummer(34),
+                            listOf(Kommunenummer.Lopenummer(35))
+                        ),
+                        FraEnTilMange(Adressekode(10100), listOf(Adressekode(20100))),
+                    ),
+                ),
+                emptyList(),
+                emptyList(),
+            ).ikrafttredelsesdato,
         )
 
         assertThat(sink::transformations).single().prop(Transformation::id).isEqualTo(vegId(1))
@@ -120,19 +143,6 @@ class TransformerVegadresserTest : FunSpec({
 
         transform(
             1,
-            Reguleringsinput(
-                "abc",
-                Clock.System.todayIn(TimeZone.currentSystemDefault()),
-                listOf(
-                    Vegendring(
-                        FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(12))),
-                        FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(35))),
-                        FraEnTilMange(Adressekode(10100), listOf(Adressekode(20100))),
-                    ),
-                ),
-                emptyList(),
-                emptyList(),
-            ),
             emptyList(),
             listOf(vegSource, vegadresseSource),
             emptyList(),
@@ -140,6 +150,42 @@ class TransformerVegadresserTest : FunSpec({
             idGeneratorManager,
             TestStorage(),
             true,
+            identTransformerImpl = IdentTransformerImpl(
+                mapInput(
+                    Reguleringsinput(
+                        "abc",
+                        Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                        listOf(
+                            Vegendring(
+                                FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(12))),
+                                FraEnTilMange(
+                                    Kommunenummer.Lopenummer(34),
+                                    listOf(Kommunenummer.Lopenummer(35))
+                                ),
+                                FraEnTilMange(Adressekode(10100), listOf(Adressekode(20100))),
+                            ),
+                        ),
+                        emptyList(),
+                        emptyList(),
+                    )
+                )
+            ),
+            date = Reguleringsinput(
+                "abc",
+                Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                listOf(
+                    Vegendring(
+                        FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(12))),
+                        FraEnTilMange(
+                            Kommunenummer.Lopenummer(34),
+                            listOf(Kommunenummer.Lopenummer(35))
+                        ),
+                        FraEnTilMange(Adressekode(10100), listOf(Adressekode(20100))),
+                    ),
+                ),
+                emptyList(),
+                emptyList(),
+            ).ikrafttredelsesdato,
         )
 
         assertThat(sink::transformations).all {
@@ -241,15 +287,6 @@ class TransformerVegadresserTest : FunSpec({
 
             transform(
                 1,
-                Reguleringsinput(
-                    "abc",
-                    Clock.System.todayIn(TimeZone.currentSystemDefault()),
-                    listOf(
-                        vegendring,
-                    ),
-                    emptyList(),
-                    emptyList(),
-                ),
                 emptyList(),
                 listOf(vegSource, vegadresseSource),
                 emptyList(),
@@ -257,6 +294,28 @@ class TransformerVegadresserTest : FunSpec({
                 idGeneratorManager,
                 TestStorage(),
                 true,
+                identTransformerImpl = IdentTransformerImpl(
+                    mapInput(
+                        Reguleringsinput(
+                            "abc",
+                            Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                            listOf(
+                                vegendring,
+                            ),
+                            emptyList(),
+                            emptyList(),
+                        )
+                    )
+                ),
+                date = Reguleringsinput(
+                    "abc",
+                    Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                    listOf(
+                        vegendring,
+                    ),
+                    emptyList(),
+                    emptyList(),
+                ).ikrafttredelsesdato,
             )
 
             val unresolvedVegadresseIdentType = getUnresolvedVegadresseIdentType()
@@ -316,7 +375,45 @@ class TransformerVegadresserTest : FunSpec({
 
             transform(
                 1,
-                Reguleringsinput(
+                emptyList(),
+                listOf(vegSource, vegadresseSource),
+                emptyList(),
+                listOf(sink),
+                idGeneratorManager,
+                TestStorage(),
+                true,
+                identTransformerImpl = IdentTransformerImpl(
+                    mapInput(
+                        Reguleringsinput(
+                            "abc",
+                            Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                            listOf(
+                                vegendring,
+                                Vegadresseendring(
+                                    FraTil(Fylkesnummer(12), Fylkesnummer(12)),
+                                    FraTil(
+                                        Kommunenummer.Lopenummer(34),
+                                        Kommunenummer.Lopenummer(35)
+                                    ),
+                                    FraTil(Adressekode(10100), Adressekode(10100)),
+                                    FraTil(Adressenummernummer(1), Adressenummernummer(1)),
+                                ),
+                                Vegadresseendring(
+                                    FraTil(Fylkesnummer(12), Fylkesnummer(12)),
+                                    FraTil(
+                                        Kommunenummer.Lopenummer(34),
+                                        Kommunenummer.Lopenummer(36)
+                                    ),
+                                    FraTil(Adressekode(10100), Adressekode(10100)),
+                                    FraTil(Adressenummernummer(2), Adressenummernummer(1)),
+                                ),
+                            ),
+                            emptyList(),
+                            emptyList(),
+                        )
+                    )
+                ),
+                date = Reguleringsinput(
                     "abc",
                     Clock.System.todayIn(TimeZone.currentSystemDefault()),
                     listOf(
@@ -336,14 +433,7 @@ class TransformerVegadresserTest : FunSpec({
                     ),
                     emptyList(),
                     emptyList(),
-                ),
-                emptyList(),
-                listOf(vegSource, vegadresseSource),
-                emptyList(),
-                listOf(sink),
-                idGeneratorManager,
-                TestStorage(),
-                true,
+                ).ikrafttredelsesdato,
             )
 
             assertThat(sink::transformations).all {

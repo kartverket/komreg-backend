@@ -54,13 +54,55 @@ class TransformerBygningTest : FunSpec({
 
         transform(
             1,
-            Reguleringsinput(
+            emptyList(),
+            listOf(byggSource),
+            emptyList(),
+            listOf(sink),
+            idGeneratorManager,
+            TestStorage(),
+            true,
+            identTransformerImpl = IdentTransformerImpl(
+                mapInput(
+                    Reguleringsinput(
+                        "abc",
+                        Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                        listOf(
+                            Kommuneendring(
+                                FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(13))),
+                                FraEnTilMange(
+                                    Kommunenummer.Lopenummer(34),
+                                    listOf(Kommunenummer.Lopenummer(24))
+                                ),
+                            ),
+                        ),
+                        emptyList(),
+                        listOf(
+                            Kommune(
+                                Kommunenummer(1324),
+                                Kommunenavn("Ny kommune"),
+                                null,
+                                Koordinatsystem.UTM32,
+                                Koordinat(0.0, 0.0),
+                                false,
+                                "",
+                                null,
+                                null,
+                                createDummyKommunevaapenImage('K'),
+                            ),
+                        ),
+                    )
+                )
+            ),
+            date = Reguleringsinput(
                 "abc",
                 Clock.System.todayIn(TimeZone.currentSystemDefault()),
                 listOf(
                     Kommuneendring(
                         FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(13))),
-                        FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(24))),
+                        FraEnTilMange(
+                            Kommunenummer.Lopenummer(34),
+                            listOf(Kommunenummer.Lopenummer(24))
+                        ),
                     ),
                 ),
                 emptyList(),
@@ -78,14 +120,7 @@ class TransformerBygningTest : FunSpec({
                         createDummyKommunevaapenImage('K'),
                     ),
                 ),
-            ),
-            emptyList(),
-            listOf(byggSource),
-            emptyList(),
-            listOf(sink),
-            idGeneratorManager,
-            TestStorage(),
-            true,
+            ).ikrafttredelsesdato,
         )
 
         assertThat(sink::transformations).all {
@@ -198,7 +233,6 @@ class TransformerBygningTest : FunSpec({
 
             transform(
                 1,
-                input,
                 emptyList(),
                 listOf(byggSource),
                 emptyList(),
@@ -206,6 +240,8 @@ class TransformerBygningTest : FunSpec({
                 idGeneratorManager,
                 TestStorage(),
                 true,
+                identTransformerImpl = IdentTransformerImpl(mapInput(input)),
+                date = input.ikrafttredelsesdato,
             )
 
             assertThat(sink::transformations).all {
@@ -249,7 +285,6 @@ class TransformerBygningTest : FunSpec({
 
             transform(
                 1,
-                input,
                 emptyList(),
                 listOf(byggSource),
                 emptyList(),
@@ -257,6 +292,8 @@ class TransformerBygningTest : FunSpec({
                 idGeneratorManager,
                 TestStorage(),
                 true,
+                identTransformerImpl = IdentTransformerImpl(mapInput(input)),
+                date = input.ikrafttredelsesdato,
             )
 
             assertThat(sink::transformations).all {

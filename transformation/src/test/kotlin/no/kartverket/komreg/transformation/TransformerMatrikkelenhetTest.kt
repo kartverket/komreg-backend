@@ -52,13 +52,55 @@ class TransformerMatrikkelenhetTest : FunSpec({
 
         transform(
             1,
-            Reguleringsinput(
+            emptyList(),
+            listOf(source),
+            emptyList(),
+            listOf(sink),
+            idGeneratorManager,
+            TestStorage(),
+            true,
+            identTransformerImpl = IdentTransformerImpl(
+                mapInput(
+                    Reguleringsinput(
+                        "abc",
+                        Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                        listOf(
+                            Kommuneendring(
+                                FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(13))),
+                                FraEnTilMange(
+                                    Kommunenummer.Lopenummer(34),
+                                    listOf(Kommunenummer.Lopenummer(24))
+                                ),
+                            ),
+                        ),
+                        emptyList(),
+                        listOf(
+                            Kommune(
+                                Kommunenummer(1324),
+                                Kommunenavn("Ny kommune"),
+                                null,
+                                Koordinatsystem.UTM32,
+                                Koordinat(0.0, 0.0),
+                                false,
+                                "",
+                                null,
+                                null,
+                                createDummyKommunevaapenImage('K'),
+                            ),
+                        ),
+                    )
+                )
+            ),
+            date = Reguleringsinput(
                 "abc",
                 Clock.System.todayIn(TimeZone.currentSystemDefault()),
                 listOf(
                     Kommuneendring(
                         FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(13))),
-                        FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(24))),
+                        FraEnTilMange(
+                            Kommunenummer.Lopenummer(34),
+                            listOf(Kommunenummer.Lopenummer(24))
+                        ),
                     ),
                 ),
                 emptyList(),
@@ -76,14 +118,7 @@ class TransformerMatrikkelenhetTest : FunSpec({
                         createDummyKommunevaapenImage('K'),
                     ),
                 ),
-            ),
-            emptyList(),
-            listOf(source),
-            emptyList(),
-            listOf(sink),
-            idGeneratorManager,
-            TestStorage(),
-            true,
+            ).ikrafttredelsesdato,
         )
 
         assertThat(sink::transformations).all {
@@ -193,7 +228,36 @@ class TransformerMatrikkelenhetTest : FunSpec({
 
             transform(
                 1,
-                Reguleringsinput(
+                emptyList(),
+                listOf(source),
+                emptyList(),
+                listOf(sink),
+                idGeneratorManager,
+                TestStorage(),
+                true,
+                identTransformerImpl = IdentTransformerImpl(
+                    mapInput(
+                        Reguleringsinput(
+                            "abc",
+                            Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                            listOf(
+                                kommuneendring,
+                                Matrikkelenhetendring(
+                                    FraTil(Fylkesnummer(12), Fylkesnummer(12)),
+                                    FraTil(
+                                        Kommunenummer.Lopenummer(34),
+                                        Kommunenummer.Lopenummer(35)
+                                    ),
+                                    Gardsnummer(1),
+                                    Gardsnummer(1)
+                                ),
+                            ),
+                            emptyList(),
+                            nyeKommuner,
+                        )
+                    )
+                ),
+                date = Reguleringsinput(
                     "abc",
                     Clock.System.todayIn(TimeZone.currentSystemDefault()),
                     listOf(
@@ -207,14 +271,7 @@ class TransformerMatrikkelenhetTest : FunSpec({
                     ),
                     emptyList(),
                     nyeKommuner,
-                ),
-                emptyList(),
-                listOf(source),
-                emptyList(),
-                listOf(sink),
-                idGeneratorManager,
-                TestStorage(),
-                true,
+                ).ikrafttredelsesdato,
             )
 
             assertThat(sink::transformations).all {
@@ -255,7 +312,45 @@ class TransformerMatrikkelenhetTest : FunSpec({
 
             transform(
                 1,
-                Reguleringsinput(
+                emptyList(),
+                listOf(source),
+                emptyList(),
+                listOf(sink),
+                idGeneratorManager,
+                TestStorage(),
+                true,
+                identTransformerImpl = IdentTransformerImpl(
+                    mapInput(
+                        Reguleringsinput(
+                            "abc",
+                            Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                            listOf(
+                                kommuneendring,
+                                Matrikkelenhetendring(
+                                    FraTil(Fylkesnummer(12), Fylkesnummer(12)),
+                                    FraTil(
+                                        Kommunenummer.Lopenummer(34),
+                                        Kommunenummer.Lopenummer(35)
+                                    ),
+                                    Gardsnummer(1),
+                                    Gardsnummer(1),
+                                ),
+                                Matrikkelenhetendring(
+                                    FraTil(Fylkesnummer(12), Fylkesnummer(12)),
+                                    FraTil(
+                                        Kommunenummer.Lopenummer(34),
+                                        Kommunenummer.Lopenummer(36)
+                                    ),
+                                    Gardsnummer(2),
+                                    Gardsnummer(2),
+                                ),
+                            ),
+                            emptyList(),
+                            nyeKommuner,
+                        )
+                    )
+                ),
+                date = Reguleringsinput(
                     "abc",
                     Clock.System.todayIn(TimeZone.currentSystemDefault()),
                     listOf(
@@ -275,14 +370,7 @@ class TransformerMatrikkelenhetTest : FunSpec({
                     ),
                     emptyList(),
                     nyeKommuner,
-                ),
-                emptyList(),
-                listOf(source),
-                emptyList(),
-                listOf(sink),
-                idGeneratorManager,
-                TestStorage(),
-                true,
+                ).ikrafttredelsesdato,
             )
 
             assertThat(sink::transformations).all {
@@ -391,7 +479,6 @@ class TransformerMatrikkelenhetTest : FunSpec({
 
             transform(
                 1,
-                reguleringsInput,
                 emptyList(),
                 listOf(
                     mockSource(
@@ -404,7 +491,9 @@ class TransformerMatrikkelenhetTest : FunSpec({
                 listOf(sink),
                 idGeneratorManager,
                 TestStorage(),
-                true
+                true,
+                identTransformerImpl = IdentTransformerImpl(mapInput(reguleringsInput)),
+                date = reguleringsInput.ikrafttredelsesdato
             )
         }
 

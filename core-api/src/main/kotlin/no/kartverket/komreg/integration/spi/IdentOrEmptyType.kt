@@ -35,6 +35,8 @@ class IdentType<T : Ident, A : Comparable<A>> private constructor(
     val prefix: IdentOrEmptyType<T>,
     last: KType
 ) : IdentOrEmptyType<Ident.And<T, A>>() {
+
+
     companion object {
         private class CacheEntry<T : IdentType<*, *>>(type: T) : WeakReference<T>(type, refQueue) {
             val kotlinTypes = type.types
@@ -168,6 +170,19 @@ class IdentType<T : Ident, A : Comparable<A>> private constructor(
 
     override fun toString(): String {
         return this::class.simpleName + ": " + types.toString()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as IdentType<*, *>
+
+        return types == other.types
+    }
+
+    override fun hashCode(): Int {
+        return types.hashCode()
     }
 }
 

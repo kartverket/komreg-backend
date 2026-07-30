@@ -7,6 +7,7 @@ dependencies {
     api(libs.arrow.core)
     api(libs.typesafe.config)
     api(libs.slf4j.api)
+    api(project(":lib:komreg-param-api"))
 
     implementation(libs.kotlinx.serialization.json)
     api(libs.kotlinx.coroutines.core)

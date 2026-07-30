@@ -29,13 +29,55 @@ class TransformerKommuneTest : FunSpec({
 
         transform(
             1,
-            Reguleringsinput(
+            emptyList(),
+            listOf(source),
+            emptyList(),
+            listOf(sink),
+            idGeneratorManager,
+            TestStorage(),
+            true,
+            identTransformerImpl = IdentTransformerImpl(
+                mapInput(
+                    Reguleringsinput(
+                        "abc",
+                        Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                        listOf(
+                            Kommuneendring(
+                                FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(13))),
+                                FraEnTilMange(
+                                    Kommunenummer.Lopenummer(34),
+                                    listOf(Kommunenummer.Lopenummer(35))
+                                ),
+                            ),
+                        ),
+                        emptyList(),
+                        listOf(
+                            Kommune(
+                                Kommunenummer(1335),
+                                Kommunenavn("Ny kommune"),
+                                null,
+                                Koordinatsystem.UTM32,
+                                Koordinat(569682.0, 6670739.0),
+                                false,
+                                "1-10",
+                                null,
+                                null,
+                                createDummyKommunevaapenImage('K'),
+                            ),
+                        ),
+                    )
+                )
+            ),
+            date = Reguleringsinput(
                 "abc",
                 Clock.System.todayIn(TimeZone.currentSystemDefault()),
                 listOf(
                     Kommuneendring(
                         FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(13))),
-                        FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(35))),
+                        FraEnTilMange(
+                            Kommunenummer.Lopenummer(34),
+                            listOf(Kommunenummer.Lopenummer(35))
+                        ),
                     ),
                 ),
                 emptyList(),
@@ -53,14 +95,7 @@ class TransformerKommuneTest : FunSpec({
                         createDummyKommunevaapenImage('K'),
                     ),
                 ),
-            ),
-            emptyList(),
-            listOf(source),
-            emptyList(),
-            listOf(sink),
-            idGeneratorManager,
-            TestStorage(),
-            true,
+            ).ikrafttredelsesdato,
         )
 
         assertThat(sink::transformations).apply {
@@ -131,18 +166,72 @@ class TransformerKommuneTest : FunSpec({
 
         transform(
             1,
-            Reguleringsinput(
+            emptyList(),
+            listOf(source),
+            emptyList(),
+            listOf(sink),
+            idGeneratorManager,
+            TestStorage(),
+            true,
+            identTransformerImpl = IdentTransformerImpl(
+                mapInput(
+                    Reguleringsinput(
+                        "abc",
+                        Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                        listOf(
+                            Kommuneendring(
+                                FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(13))),
+                                FraEnTilMange(
+                                    Kommunenummer.Lopenummer(34),
+                                    listOf(Kommunenummer.Lopenummer(35))
+                                ),
+                                sammenslaaing = false,
+                            ),
+                            Kommuneendring(
+                                FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(13))),
+                                FraEnTilMange(
+                                    Kommunenummer.Lopenummer(36),
+                                    listOf(Kommunenummer.Lopenummer(35))
+                                ),
+                                sammenslaaing = true, //sammenslåing = true for kommune nr 2 som skal slås inn i en annen kommune
+                            ),
+                        ),
+                        emptyList(),
+                        listOf(
+                            Kommune(
+                                Kommunenummer(1335),
+                                Kommunenavn("Ny kommune"),
+                                null,
+                                Koordinatsystem.UTM32,
+                                Koordinat(569682.0, 6670739.0),
+                                false,
+                                "1-10",
+                                null,
+                                null,
+                                createDummyKommunevaapenImage('K'),
+                            ),
+                        ),
+                    )
+                )
+            ),
+            date = Reguleringsinput(
                 "abc",
                 Clock.System.todayIn(TimeZone.currentSystemDefault()),
                 listOf(
                     Kommuneendring(
                         FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(13))),
-                        FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(35))),
+                        FraEnTilMange(
+                            Kommunenummer.Lopenummer(34),
+                            listOf(Kommunenummer.Lopenummer(35))
+                        ),
                         sammenslaaing = false,
                     ),
                     Kommuneendring(
                         FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(13))),
-                        FraEnTilMange(Kommunenummer.Lopenummer(36), listOf(Kommunenummer.Lopenummer(35))),
+                        FraEnTilMange(
+                            Kommunenummer.Lopenummer(36),
+                            listOf(Kommunenummer.Lopenummer(35))
+                        ),
                         sammenslaaing = true, //sammenslåing = true for kommune nr 2 som skal slås inn i en annen kommune
                     ),
                 ),
@@ -161,14 +250,7 @@ class TransformerKommuneTest : FunSpec({
                         createDummyKommunevaapenImage('K'),
                     ),
                 ),
-            ),
-            emptyList(),
-            listOf(source),
-            emptyList(),
-            listOf(sink),
-            idGeneratorManager,
-            TestStorage(),
-            true,
+            ).ikrafttredelsesdato,
         )
 
         assertThat(sink::transformations).apply {
@@ -244,7 +326,61 @@ class TransformerKommuneTest : FunSpec({
 
         transform(
             1,
-            Reguleringsinput(
+            emptyList(),
+            listOf(source),
+            emptyList(),
+            listOf(sink),
+            idGeneratorManager,
+            TestStorage(),
+            true,
+            identTransformerImpl = IdentTransformerImpl(
+                mapInput(
+                    Reguleringsinput(
+                        "abc",
+                        Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                        listOf(
+                            Kommuneendring(
+                                FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(12))),
+                                FraEnTilMange(
+                                    Kommunenummer.Lopenummer(34),
+                                    listOf(
+                                        Kommunenummer.Lopenummer(35),
+                                        Kommunenummer.Lopenummer(36),
+                                    ),
+                                ),
+                            ),
+                        ),
+                        emptyList(),
+                        listOf(
+                            Kommune(
+                                Kommunenummer(1235),
+                                Kommunenavn("Ny kommune 1"),
+                                null,
+                                Koordinatsystem.UTM32,
+                                Koordinat(569682.0, 6670739.0),
+                                false,
+                                "1-10",
+                                null,
+                                null,
+                                createDummyKommunevaapenImage('K'),
+                            ),
+                            Kommune(
+                                Kommunenummer(1236),
+                                Kommunenavn("Ny kommune 2"),
+                                null,
+                                Koordinatsystem.UTM32,
+                                Koordinat(569682.0, 6671739.0),
+                                false,
+                                "11-20",
+                                null,
+                                null,
+                                createDummyKommunevaapenImage('K'),
+                            ),
+                        ),
+                    )
+                )
+            ),
+            date = Reguleringsinput(
                 "abc",
                 Clock.System.todayIn(TimeZone.currentSystemDefault()),
                 listOf(
@@ -286,14 +422,7 @@ class TransformerKommuneTest : FunSpec({
                         createDummyKommunevaapenImage('K'),
                     ),
                 ),
-            ),
-            emptyList(),
-            listOf(source),
-            emptyList(),
-            listOf(sink),
-            idGeneratorManager,
-            TestStorage(),
-            true,
+            ).ikrafttredelsesdato,
         )
 
         assertThat(sink::transformations).apply {

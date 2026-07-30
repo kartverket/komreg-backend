@@ -1,54 +1,35 @@
 package no.kartverket.komreg.transformation
 
 import io.mockk.coEvery
-import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.toKotlinLocalDate
 import no.kartverket.komreg.core.domain.Adressekode
 import no.kartverket.komreg.core.domain.Adressenummernummer
-import no.kartverket.komreg.core.domain.Fylkesnummer
-import no.kartverket.komreg.core.domain.Kommunenummer
 import no.kartverket.komreg.integration.spi.Entity
 import no.kartverket.komreg.integration.spi.IdGeneratorManager
 import no.kartverket.komreg.integration.spi.Ident
+import no.kartverket.komreg.parameter.compat.Parameters
+import no.kartverket.komreg.parameter.data.HList
+import no.kartverket.komreg.parameter.data.times
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.time.LocalDate
+import no.kartverket.komreg.core.domain.Fylkesnummer as Fylke
+import no.kartverket.komreg.core.domain.Kommunenummer.Lopenummer as Kommune
 
-class IdentTransformerVegadresseTest {
-    private val ikrafttredelsesdato = LocalDate.now().toKotlinLocalDate()
-
-    private val reguleringsInput = Reguleringsinput(
-        id = "123",
-        ikrafttredelsesdato = ikrafttredelsesdato,
-        endringer = listOf(
-            Vegadresseendring(
-                fylkesnummer = FraTil(
-                    fra = Fylkesnummer(2),
-                    til = Fylkesnummer(3),
-                ),
-                kommuneløpenummer = FraTil(
-                    fra = Kommunenummer.Lopenummer(5),
-                    til = Kommunenummer.Lopenummer(6),
-                ),
-                adressekode = FraTil(
-                    fra = Adressekode(2600),
-                    til = Adressekode(2600),
-                ),
-                adressenummer = FraTil(
-                    fra = Adressenummernummer(10),
-                    til = Adressenummernummer(10),
-                ),
-            ),
-        ),
-        kommuner = emptyList(),
-        fylker = emptyList(),
-    )
-
-    private val mappings = runBlocking { mapInput(reguleringsInput) }
-    private val identTransformer = IdentTransformer(*mappings.toTypedArray())
+class IdentTransformerImplVegadresseTest {
+    private val identTransformer = Parameters {
+        adjust(Fylke(2)) {
+            adjust(Kommune(5)) {
+                adjust(Adressekode(2600)) {
+                    move(
+                        Adressenummernummer(10),
+                        HList * Fylke(3) * Kommune(6) * Adressekode(2600) * Adressenummernummer(10)
+                    )
+                }
+            }
+        }
+    }
 
     private val idGenerator = mockk<IdGeneratorManager>()
 
@@ -80,8 +61,8 @@ private fun identOfVegadresse(
 ) =
     runBlocking {
         Ident(
-            Fylkesnummer(fylkesnummer.toLong()),
-            Kommunenummer.Lopenummer(lopenummer.toByte()),
+            Fylke(fylkesnummer.toLong()),
+            Kommune(lopenummer.toByte()),
             Adressekode(adressekode),
             Adressenummernummer(adressenummer),
         )

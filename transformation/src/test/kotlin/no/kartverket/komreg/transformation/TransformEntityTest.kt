@@ -95,7 +95,7 @@ class TransformEntityTest {
         )
 
     private val mappings = runBlocking { mapInput(reguleringsInput) }
-    private val identTransformer = IdentTransformer(*mappings.toTypedArray())
+    private val IdentTransformerImpl = IdentTransformerImpl(*mappings.toTypedArray())
 
     private val idGenerator = mockk<IdGeneratorManager>()
 
@@ -112,7 +112,7 @@ class TransformEntityTest {
                 identOfKommune(2, 5),
             )
         runBlocking {
-            val result = identTransformer.transform(entity, idGenerator::idFor)
+            val result = IdentTransformerImpl.transform(entity, idGenerator::idFor)
             val expected = identOfKommune(3, 6)
 
             assertEquals(null, result!![0].resultObject)
@@ -129,7 +129,7 @@ class TransformEntityTest {
                 identOfKommune(5, 5),
             )
         runBlocking {
-            val result = identTransformer.transform(entity, idGenerator::idFor)
+            val result = IdentTransformerImpl.transform(entity, idGenerator::idFor)
 
             val expected = identOfKommune(5, 7)
             val expected2 = identOfKommune(5, 8)
@@ -149,7 +149,7 @@ class TransformEntityTest {
                 identOfKommune(10, 50),
             )
         runBlocking {
-            val result = identTransformer.transform(entity, idGenerator::idFor)
+            val result = IdentTransformerImpl.transform(entity, idGenerator::idFor)
             assertEquals(null, result)
         }
     }
@@ -166,7 +166,7 @@ class TransformEntityTest {
                 ),
             )
         runBlocking {
-            val result = identTransformer.transform(entity, idGenerator::idFor)
+            val result = IdentTransformerImpl.transform(entity, idGenerator::idFor)
             val expected =
                 setOf(
                     identOfMatrikkelenhet(3, 6, 1),
@@ -188,7 +188,7 @@ class TransformEntityTest {
                 ),
             )
         runBlocking {
-            val result = identTransformer.transform(entity, idGenerator::idFor)
+            val result = IdentTransformerImpl.transform(entity, idGenerator::idFor)
             val expected =
                 setOf(
                     identOfMatrikkelenhet(3, 6, 1),
@@ -210,7 +210,7 @@ class TransformEntityTest {
                 ),
             )
         runBlocking {
-            val result = identTransformer.transform(entity, idGenerator::idFor)
+            val result = IdentTransformerImpl.transform(entity, idGenerator::idFor)
             val expected =
                 setOf(
                     identOfMatrikkelenhet(10, 15, 1),

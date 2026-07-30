@@ -1,7 +1,6 @@
 package no.kartverket.komreg.transformation
 
 import io.mockk.coEvery
-import io.mockk.every
 import io.mockk.mockk
 import no.kartverket.komreg.core.domain.Fylkesnummer
 import no.kartverket.komreg.core.domain.Id

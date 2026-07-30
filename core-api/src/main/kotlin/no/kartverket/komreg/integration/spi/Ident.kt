@@ -640,7 +640,13 @@ operator fun <A, B, C, D, E, F, G, H> IdentType<Ident7<A, B, C, D, E, F, G>, H>.
 fun identWithTypeOrThrow(type: IdentType<*, *>, vararg values: Comparable<*>): Ident {
     val vals = type
         .rawTypes
-        .mapIndexed { i, kClass -> kClass.cast(values[i]) }
+        .mapIndexed { i, kClass ->
+            try {
+                kClass.cast(values[i])
+            } catch (c: ClassCastException) {
+                throw c;
+            }
+        }
     if (type.size != values.size) throw IllegalArgumentException("Expected ${type.size} values, got ${values.size}")
     return when (type.size) {
         0 -> Empty
