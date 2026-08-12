@@ -42,6 +42,10 @@ updates:
       day: monday
       time: "03:02"
       timezone: "Europe/Oslo"
+    groups:
+      codeql:
+        patterns:
+          - "github/codeql-action*"
 
   - package-ecosystem: "docker"
     directory: "/server"
