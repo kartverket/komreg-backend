@@ -8,7 +8,6 @@ on:
 env:
   registry: ghcr.io
   image_name: ${{ github.repository }}
-  SMIA_APPS_VERSION_FILE: env/atkv3-dev/komreg-main/komreg-backend-version
 
 jobs:
   build:
@@ -19,7 +18,8 @@ jobs:
       packages: write
     outputs:
       image_url: ${{ steps.setOutput.outputs.image_url }}
-      version: ${{ steps.tag_version.outputs.new_tag }}
+      digest: ${{ steps.setOutput.outputs.digest }}
+      version: ${{ steps.setOutput.outputs.version }}
     steps:
       - name: Checkout project sources
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -61,7 +61,9 @@ jobs:
       - name: Set output with build values
         id: setOutput
         run: |
-          echo "image_url=${{ env.registry }}/${{ github.repository }}@${{ steps.build.outputs.digest }}" >> $GITHUB_OUTPUT
+          echo "version=${{ steps.tag_version.outputs.new_tag }}" >> $GITHUB_OUTPUT
+          echo "digest=${{ steps.build.outputs.digest }}" >> $GITHUB_OUTPUT
+          echo "image_url=${{ env.registry }}/${{ env.image_name }}:${{ steps.tag_version.outputs.new_tag }}" >> $GITHUB_OUTPUT
 
   pharos:
     name: Run Pharos with Required Permissions
@@ -94,7 +96,7 @@ jobs:
       with:
         application: komreg-backend
         version: ${{ needs.build.outputs.version }}
-        deploy_dev: true
-        deploy_prod: false
+        digest: ${{ needs.build.outputs.digest }}
+        environment: dev
         identity: komreg
         namespace: komreg-main
