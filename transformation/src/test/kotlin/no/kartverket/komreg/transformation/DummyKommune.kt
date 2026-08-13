@@ -1,5 +1,6 @@
 package no.kartverket.komreg.transformation
 
+import kotlinx.datetime.LocalDate
 import no.kartverket.komreg.core.domain.*
 import java.awt.Color
 import java.awt.Font
@@ -23,6 +24,20 @@ fun dummyKommune(fylkesnummer: Int, lopenummer: Int): Kommune {
         adresse = null,
         standardRekvirent = null,
         kommunevapen = createDummyKommunevaapenImage('K'),
+    )
+}
+
+fun dummyKommunedata(): Kommunedata {
+    return Kommunedata(
+        navn = "Dummy",
+        koordinatsystem = Koordinatsystem.UTM32,
+        senterpunkt = Koordinat(123.0, 456.0),
+        nedsattKonsesjonsgrense = false,
+        godkjenteGardsnumre = "1,2,3",
+        adresse = null,
+        standardRekvirentOrgnummer = null,
+        ikrafttredelsesdato = LocalDate(2020,1,1),
+        kommunevapen = createDummyKommunevaapenImage('K')
     )
 }
 

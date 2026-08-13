@@ -74,12 +74,6 @@ data class Kommune(
 typealias KommuneIdent = Ident2<Fylkesnummer, Kommunenummer.Lopenummer>
 
 @Serializable
-data class Koordinat(
-    val x: Double,
-    val y: Double,
-)
-
-@Serializable
 data class Postadresse(
     val adresselinje1: String?,
     val adresselinje2: String?,
@@ -93,13 +87,6 @@ data class StandardRekvirent(
     val orgnummer: String,
     val navn: String,
 )
-
-@Serializable
-enum class Koordinatsystem {
-    UTM32,
-    UTM33,
-    UTM35,
-}
 
 fun Kommune.tilKommunedata(ikrafttredelsesdato: LocalDate): Kommunedata =
     Kommunedata(

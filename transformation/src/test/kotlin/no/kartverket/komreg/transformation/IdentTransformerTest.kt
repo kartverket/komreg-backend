@@ -3,13 +3,21 @@ package no.kartverket.komreg.transformation
 import assertk.all
 import assertk.assertThat
 import assertk.assertions.*
-import io.kotest.assertions.failure
+import assertk.fail
 import io.kotest.core.spec.style.BehaviorSpec
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.LocalDate
 import no.kartverket.komreg.core.domain.*
 import no.kartverket.komreg.integration.spi.*
+import no.kartverket.komreg.parameter.compat.IdentTransformer
+import no.kartverket.komreg.parameter.compat.Parameters
+import no.kartverket.komreg.parameter.data.HList
+import no.kartverket.komreg.parameter.data.times
 import java.util.concurrent.atomic.AtomicLong
+import no.kartverket.komreg.core.domain.Fylkesnummer as Fylke
+import no.kartverket.komreg.core.domain.Kommunenummer.Lopenummer as Kommune
+import no.kartverket.komreg.core.domain.Matrikkelnummer.Gardsnummer as Gard
 
 class IdentTransformerTest : BehaviorSpec({
     val kommuneIdentType: KommuneIdentType = runBlocking { identTypeOf2() }
@@ -18,76 +26,56 @@ class IdentTransformerTest : BehaviorSpec({
     val gardsnummerIdentType: GardsnummerIdentType = runBlocking { identTypeOf3() }
     val adresseparsellIdentType: AdresseparsellIdentType = runBlocking { identTypeOf3() }
     val vegadresseIdentType: VegadresseIdentType = runBlocking { identTypeOf4() }
-    val unresolvedVegadresseIdentType: UnresolvedVegadresseIdentType = runBlocking { identTypeOf1() }
+    val unresolvedVegadresseIdentType: UnresolvedVegadresseIdentType =
+        runBlocking { identTypeOf1() }
     val nextId = AtomicLong(1)
 
     fun idProvider(idType: IdType<*, *>, @Suppress("UNUSED_PARAMETER") hint: Any?): Id {
         return when (idType) {
             is TestIdType -> Id(idType, nextId.getAndIncrement())
-            else -> throw failure("Unknown id type $idType")
+            else -> fail("Unknown id type $idType")
         }
     }
 
-    fun flyttKommune() = IdentTransformer(
-        kommuneIdentType(
-            Fylkesnummer(12),
-            Kommunenummer.Lopenummer(34)
-        ) to IdentTransformer.Mapping.Replace(
-            kommuneIdentType(
-                Fylkesnummer(12),
-                Kommunenummer.Lopenummer(35)
-            ),
-            MockKommuneinfo("Ny kommune")
-        )
-    )
-
-    fun splittKommuneUtenKobling() = IdentTransformer(
-        kommuneIdentType(
-            Fylkesnummer(12),
-            Kommunenummer.Lopenummer(34)
-        ) to IdentTransformer.Mapping.Split(
-            listOf(
-                Ident.Empty to null,
-                kommuneIdentType(
-                    Fylkesnummer(12),
-                    Kommunenummer.Lopenummer(35)
-                ) to MockKommuneinfo("Ny kommune 1"),
-                kommuneIdentType(
-                    Fylkesnummer(12),
-                    Kommunenummer.Lopenummer(36)
-                ) to MockKommuneinfo("Ny kommune 2"),
+    fun flyttKommune(): IdentTransformer = Parameters {
+        adjust(Fylke(12)) {
+            create(
+                `as` = Kommune(35),
+                from = HList * Fylke(12) * Kommune(34),
+                patchData = MockKommuneinfo("Ny kommune")
             )
-        )
-    )
+        }
+    }
 
-    fun splittKommuneMedKobling() = IdentTransformer(
-        kommuneIdentType(
-            Fylkesnummer(12),
-            Kommunenummer.Lopenummer(34)
-        ) to IdentTransformer.Mapping.Split(
-            listOf(
-                kommuneIdentType(
-                    Fylkesnummer(12),
-                    Kommunenummer.Lopenummer(35)
-                ) to null,
-                kommuneIdentType(
-                    Fylkesnummer(12),
-                    Kommunenummer.Lopenummer(35)
-                ) to MockKommuneinfo("Ny kommune 1"),
-                kommuneIdentType(
-                    Fylkesnummer(12),
-                    Kommunenummer.Lopenummer(36)
-                ) to MockKommuneinfo("Ny kommune 2"),
-            )
-        )
-    )
+    // TODO: Dette går ikke an med de nye parameterene, der opprettelesen av kommune
+    //       ikke er en del av splitten, så det vil ikke opprettes noen kommuner
+    //       da det ikke er noen ting som "trigger" det
+//    fun splittKommuneUtenKobling() = Parameters {
+//        adjust(Fylke(12)) {
+//            split(Kommune(34)) {
+//                to(HList * Fylke(12) * Kommune(35), MockKommuneinfo("Ny kommune 1"))
+//                to(HList * Fylke(12) * Kommune(36), MockKommuneinfo("Ny kommune 2"))
+//            }
+//        }
+//    }
+
+    fun splittKommuneMedKobling() = Parameters {
+        adjust(Fylke(12)) {
+            split(Kommune(34)) {
+                to(HList * Fylke(12) * Kommune(35), MockKommuneinfo("Ny kommune 1"))
+                to(HList * Fylke(12) * Kommune(36), MockKommuneinfo("Ny kommune 2"))
+                move(Gard(1), HList * Fylke(12) * Kommune(35) * Gard(1))
+                move(Gard(2), HList * Fylke(12) * Kommune(36) * Gard(1))
+            }
+        }
+    }
 
     Given("transformasjon med to regler") {
         val matrikkelenhetIdentType = getMatrikkelenhetIdentType()
         val idGeneratorManager = mockk<IdGeneratorManager>()
 
-        val fnr = Fylkesnummer(12)
-        val klnr = Kommunenummer.Lopenummer(34)
+        val fnr = Fylke(12)
+        val klnr = Kommune(34)
 
         val entity = Entity(
             id = Id(TestIdType.Foo, 1L),
@@ -101,26 +89,37 @@ class IdentTransformerTest : BehaviorSpec({
             )
         )
 
-
-        val transformation = IdentTransformer(
-            kommuneIdentType(fnr, klnr) to IdentTransformer.Mapping.Split(
-                listOf(
-                    kommuneIdentType(fnr, klnr) to null,
-                    kommuneIdentType(fnr, Kommunenummer.Lopenummer(22)) to null,
-                )
-            ),
-            gardsnummerIdentType(fnr, klnr, Matrikkelnummer.Gardsnummer(4)) to IdentTransformer.Mapping.Simple(
-                gardsnummerIdentType(Fylkesnummer(43), Kommunenummer.Lopenummer(21), Matrikkelnummer.Gardsnummer(5))
-            )
-        )
-            .transform(entity, idGeneratorManager::idFor)
+//        val transformation = IdentTransformerImpl(
+//            kommuneIdentType(fnr, klnr) to IdentTransformerImpl.Mapping.Split(
+//                listOf(
+//                    kommuneIdentType(fnr, klnr) to null,
+//                    kommuneIdentType(fnr, Kommune(22)) to null,
+//                )
+//            ),
+//            gardsnummerIdentType(
+//                fnr,
+//                klnr,
+//                Matrikkelnummer.Gardsnummer(4)
+//            ) to IdentTransformerImpl.Mapping.Simple(
+//                gardsnummerIdentType(Fylke(43), Kommune(21), Matrikkelnummer.Gardsnummer(5))
+//            )
+//        )
+//            .transform(entity, idGeneratorManager::idFor)
+        val transformation = Parameters{
+            adjust(fnr) {
+                split(klnr) {
+                    move(Gard(1), HList * Fylke(43) * Kommune(22) * Gard(5))
+                    move(Gard(4), HList * Fylke(43) * Kommune(21) * Gard(5))
+                }
+            }
+        }.transform(entity, idGeneratorManager::idFor)
 
         Then("lengste regel brukes") {
             assertThat(transformation?.singleOrNull()?.transformedIdent, "transformedIdent")
                 .isEqualTo(
                     matrikkelenhetIdentType(
-                        Fylkesnummer(43),
-                        Kommunenummer.Lopenummer(21),
+                        Fylke(43),
+                        Kommune(21),
                         Matrikkelnummer.Gardsnummer(5),
                         Matrikkelnummer.Bruksnummer(3),
                         Matrikkelnummer.Festenummer(2),
@@ -134,8 +133,8 @@ class IdentTransformerTest : BehaviorSpec({
         val entity = Entity(
             id = idProvider(TestIdType.Foo, null),
             ident = kommuneIdentType(
-                Fylkesnummer(12),
-                Kommunenummer.Lopenummer(34),
+                Fylke(12),
+                Kommune(34),
             )
         )
 
@@ -154,8 +153,8 @@ class IdentTransformerTest : BehaviorSpec({
                             prop(Transformation::transformedIdent)
                                 .isEqualTo(
                                     kommuneIdentType(
-                                        Fylkesnummer(12),
-                                        Kommunenummer.Lopenummer(35)
+                                        Fylke(12),
+                                        Kommune(35)
                                     )
                                 )
                             prop(Transformation::transformedAssociatedIdents)
@@ -167,8 +166,8 @@ class IdentTransformerTest : BehaviorSpec({
                             prop(Transformation::transformedIdent)
                                 .isEqualTo(
                                     kommuneIdentType(
-                                        Fylkesnummer(12),
-                                        Kommunenummer.Lopenummer(35)
+                                        Fylke(12),
+                                        Kommune(35)
                                     )
                                 )
                             prop(Transformation::transformedAssociatedIdents)
@@ -179,53 +178,53 @@ class IdentTransformerTest : BehaviorSpec({
             }
         }
 
-        When("kommune splittes uten ny kommune-kobling") {
-            val transformer = splittKommuneUtenKobling()
-
-            Then("eksisterende kommune settes utgått og to nye opprettes") {
-                val result = transformer.transform(entity, ::idProvider)
-
-                assertThat(result, "result")
-                    .isNotNull()
-                    .apply {
-                        hasSize(3)
-                        index(0).all {
-                            prop(Transformation::id).isEqualTo(entity.id)
-                            prop(Transformation::transformedIdent)
-                                .isEqualTo(Ident.Empty)
-                            prop(Transformation::transformedAssociatedIdents)
-                                .isNull()
-                            prop(Transformation::resultObject).isNull()
-                        }
-                        index(1).all {
-                            prop(Transformation::id).isNotEqualTo(entity.id)
-                            prop(Transformation::transformedIdent)
-                                .isEqualTo(
-                                    kommuneIdentType(
-                                        Fylkesnummer(12),
-                                        Kommunenummer.Lopenummer(35)
-                                    )
-                                )
-                            prop(Transformation::transformedAssociatedIdents)
-                                .isNull()
-                            prop(Transformation::resultObject).isEqualTo(MockKommuneinfo("Ny kommune 1"))
-                        }
-                        index(2).all {
-                            prop(Transformation::id).isNotEqualTo(entity.id)
-                            prop(Transformation::transformedIdent)
-                                .isEqualTo(
-                                    kommuneIdentType(
-                                        Fylkesnummer(12),
-                                        Kommunenummer.Lopenummer(36)
-                                    )
-                                )
-                            prop(Transformation::transformedAssociatedIdents)
-                                .isNull()
-                            prop(Transformation::resultObject).isEqualTo(MockKommuneinfo("Ny kommune 2"))
-                        }
-                    }
-            }
-        }
+//        When("kommune splittes uten ny kommune-kobling") {
+//            val transformer = splittKommuneUtenKobling()
+//
+//            Then("eksisterende kommune settes utgått og to nye opprettes") {
+//                val result = transformer.transform(entity, ::idProvider)
+//
+//                assertThat(result, "result")
+//                    .isNotNull()
+//                    .apply {
+//                        hasSize(3)
+//                        index(0).all {
+//                            prop(Transformation::id).isEqualTo(entity.id)
+//                            prop(Transformation::transformedIdent)
+//                                .isEqualTo(Ident.Empty)
+//                            prop(Transformation::transformedAssociatedIdents)
+//                                .isNull()
+//                            prop(Transformation::resultObject).isNull()
+//                        }
+//                        index(1).all {
+//                            prop(Transformation::id).isNotEqualTo(entity.id)
+//                            prop(Transformation::transformedIdent)
+//                                .isEqualTo(
+//                                    kommuneIdentType(
+//                                        Fylke(12),
+//                                        Kommune(35)
+//                                    )
+//                                )
+//                            prop(Transformation::transformedAssociatedIdents)
+//                                .isNull()
+//                            prop(Transformation::resultObject).isEqualTo(MockKommuneinfo("Ny kommune 1"))
+//                        }
+//                        index(2).all {
+//                            prop(Transformation::id).isNotEqualTo(entity.id)
+//                            prop(Transformation::transformedIdent)
+//                                .isEqualTo(
+//                                    kommuneIdentType(
+//                                        Fylke(12),
+//                                        Kommune(36)
+//                                    )
+//                                )
+//                            prop(Transformation::transformedAssociatedIdents)
+//                                .isNull()
+//                            prop(Transformation::resultObject).isEqualTo(MockKommuneinfo("Ny kommune 2"))
+//                        }
+//                    }
+//            }
+//        }
 
         When("kommune splittes med ny kommune-kobling") {
             val transformer = splittKommuneMedKobling()
@@ -242,8 +241,8 @@ class IdentTransformerTest : BehaviorSpec({
                             prop(Transformation::transformedIdent)
                                 .isEqualTo(
                                     kommuneIdentType(
-                                        Fylkesnummer(12),
-                                        Kommunenummer.Lopenummer(35)
+                                        Fylke(12),
+                                        Kommune(35)
                                     )
                                 )
                             prop(Transformation::transformedAssociatedIdents)
@@ -255,8 +254,8 @@ class IdentTransformerTest : BehaviorSpec({
                             prop(Transformation::transformedIdent)
                                 .isEqualTo(
                                     kommuneIdentType(
-                                        Fylkesnummer(12),
-                                        Kommunenummer.Lopenummer(35)
+                                        Fylke(12),
+                                        Kommune(35)
                                     )
                                 )
                             prop(Transformation::transformedAssociatedIdents)
@@ -268,8 +267,8 @@ class IdentTransformerTest : BehaviorSpec({
                             prop(Transformation::transformedIdent)
                                 .isEqualTo(
                                     kommuneIdentType(
-                                        Fylkesnummer(12),
-                                        Kommunenummer.Lopenummer(36)
+                                        Fylke(12),
+                                        Kommune(36)
                                     )
                                 )
                             prop(Transformation::transformedAssociatedIdents)
@@ -285,8 +284,8 @@ class IdentTransformerTest : BehaviorSpec({
         val entity = Entity(
             id = idProvider(TestIdType.Foo, null),
             ident = bygningIdentType(
-                Fylkesnummer(12),
-                Kommunenummer.Lopenummer(34),
+                Fylke(12),
+                Kommune(34),
                 Bygningsnummer(123456)
             )
         )
@@ -306,8 +305,8 @@ class IdentTransformerTest : BehaviorSpec({
                             prop(Transformation::transformedIdent)
                                 .isEqualTo(
                                     bygningIdentType(
-                                        Fylkesnummer(12),
-                                        Kommunenummer.Lopenummer(35),
+                                        Fylke(12),
+                                        Kommune(35),
                                         Bygningsnummer(123456)
                                     )
                                 )
@@ -319,50 +318,50 @@ class IdentTransformerTest : BehaviorSpec({
             }
         }
 
-        When("splitt kommune") {
-            val transformer = splittKommuneUtenKobling()
-
-            Then("transformasjon av hovedident vil være tvetydig") {
-                val result = transformer.transform(entity, ::idProvider)
-
-                assertThat(result, "result")
-                    .isNotNull()
-                    .apply {
-                        hasSize(1)
-                        index(0).all {
-                            prop(Transformation::id).isEqualTo(entity.id)
-                            prop(Transformation::transformedIdent)
-                                .isEqualTo(
-                                    unresolvedBygningIdentType(
-                                        Bygningsnummer(123456)
-                                    )
-                                )
-                            prop(Transformation::transformedAssociatedIdents)
-                                .isNull()
-                            prop(Transformation::resultObject).isNull()
-                        }
-                    }
-            }
-        }
+//        When("splitt kommune") {
+//            val transformer = splittKommuneUtenKobling()
+//
+//            Then("transformasjon av hovedident vil være tvetydig") {
+//                val result = transformer.transform(entity, ::idProvider)
+//
+//                assertThat(result, "result")
+//                    .isNotNull()
+//                    .apply {
+//                        hasSize(1)
+//                        index(0).all {
+//                            prop(Transformation::id).isEqualTo(entity.id)
+//                            prop(Transformation::transformedIdent)
+//                                .isEqualTo(
+//                                    unresolvedBygningIdentType(
+//                                        Bygningsnummer(123456)
+//                                    )
+//                                )
+//                            prop(Transformation::transformedAssociatedIdents)
+//                                .isNull()
+//                            prop(Transformation::resultObject).isNull()
+//                        }
+//                    }
+//            }
+//        }
     }
 
     Given("bygning med relasjoner") {
         val entity = Entity(
             id = idProvider(TestIdType.Foo, null),
             ident = bygningIdentType(
-                Fylkesnummer(12),
-                Kommunenummer.Lopenummer(34),
+                Fylke(12),
+                Kommune(34),
                 Bygningsnummer(123456)
             ),
             associatedIdents = setOf(
                 gardsnummerIdentType(
-                    Fylkesnummer(12),
-                    Kommunenummer.Lopenummer(34),
+                    Fylke(12),
+                    Kommune(34),
                     Matrikkelnummer.Gardsnummer(1),
                 ),
                 gardsnummerIdentType(
-                    Fylkesnummer(12),
-                    Kommunenummer.Lopenummer(34),
+                    Fylke(12),
+                    Kommune(34),
                     Matrikkelnummer.Gardsnummer(2),
                 ),
             )
@@ -383,8 +382,8 @@ class IdentTransformerTest : BehaviorSpec({
                             prop(Transformation::transformedIdent)
                                 .isEqualTo(
                                     bygningIdentType(
-                                        Fylkesnummer(12),
-                                        Kommunenummer.Lopenummer(35),
+                                        Fylke(12),
+                                        Kommune(35),
                                         Bygningsnummer(123456)
                                     )
                                 )
@@ -392,13 +391,13 @@ class IdentTransformerTest : BehaviorSpec({
                                 .isNotNull()
                                 .containsOnly(
                                     gardsnummerIdentType(
-                                        Fylkesnummer(12),
-                                        Kommunenummer.Lopenummer(35),
+                                        Fylke(12),
+                                        Kommune(35),
                                         Matrikkelnummer.Gardsnummer(1),
                                     ),
                                     gardsnummerIdentType(
-                                        Fylkesnummer(12),
-                                        Kommunenummer.Lopenummer(35),
+                                        Fylke(12),
+                                        Kommune(35),
                                         Matrikkelnummer.Gardsnummer(2),
                                     ),
                                 )
@@ -409,46 +408,56 @@ class IdentTransformerTest : BehaviorSpec({
         }
 
         When("splitt kommune og fordel gårdsnummer") {
-            val transformer = IdentTransformer(
-                kommuneIdentType(
-                    Fylkesnummer(12),
-                    Kommunenummer.Lopenummer(34)
-                ) to IdentTransformer.Mapping.Split(
-                    listOf(
-                        Ident.Empty to null,
-                        kommuneIdentType(
-                            Fylkesnummer(12),
-                            Kommunenummer.Lopenummer(35)
-                        ) to MockKommuneinfo("Ny kommune 1"),
-                        kommuneIdentType(
-                            Fylkesnummer(12),
-                            Kommunenummer.Lopenummer(36)
-                        ) to MockKommuneinfo("Ny kommune 2"),
-                    )
-                ),
-                gardsnummerIdentType(
-                    Fylkesnummer(12),
-                    Kommunenummer.Lopenummer(34),
-                    Matrikkelnummer.Gardsnummer(1)
-                ) to IdentTransformer.Mapping.Simple(
-                    gardsnummerIdentType(
-                        Fylkesnummer(12),
-                        Kommunenummer.Lopenummer(35),
-                        Matrikkelnummer.Gardsnummer(1)
-                    )
-                ),
-                gardsnummerIdentType(
-                    Fylkesnummer(12),
-                    Kommunenummer.Lopenummer(34),
-                    Matrikkelnummer.Gardsnummer(2)
-                ) to IdentTransformer.Mapping.Simple(
-                    gardsnummerIdentType(
-                        Fylkesnummer(12),
-                        Kommunenummer.Lopenummer(36),
-                        Matrikkelnummer.Gardsnummer(1) // Endrer denne også
-                    )
-                ),
-            )
+//            val transformer = IdentTransformerImpl(
+//                kommuneIdentType(
+//                    Fylke(12),
+//                    Kommune(34)
+//                ) to IdentTransformerImpl.Mapping.Split(
+//                    listOf(
+//                        Ident.Empty to null,
+//                        kommuneIdentType(
+//                            Fylke(12),
+//                            Kommune(35)
+//                        ) to MockKommuneinfo("Ny kommune 1"),
+//                        kommuneIdentType(
+//                            Fylke(12),
+//                            Kommune(36)
+//                        ) to MockKommuneinfo("Ny kommune 2"),
+//                    )
+//                ),
+//                gardsnummerIdentType(
+//                    Fylke(12),
+//                    Kommune(34),
+//                    Matrikkelnummer.Gardsnummer(1)
+//                ) to IdentTransformerImpl.Mapping.Simple(
+//                    gardsnummerIdentType(
+//                        Fylke(12),
+//                        Kommune(35),
+//                        Matrikkelnummer.Gardsnummer(1)
+//                    )
+//                ),
+//                gardsnummerIdentType(
+//                    Fylke(12),
+//                    Kommune(34),
+//                    Matrikkelnummer.Gardsnummer(2)
+//                ) to IdentTransformerImpl.Mapping.Simple(
+//                    gardsnummerIdentType(
+//                        Fylke(12),
+//                        Kommune(36),
+//                        Matrikkelnummer.Gardsnummer(1) // Endrer denne også
+//                    )
+//                ),
+//            )
+            val transformer = Parameters {
+                adjust(Fylke(12)) {
+                    split(Kommune(34)) {
+                        to(HList * Fylke(12) * Kommune(35))
+                        to(HList * Fylke(12) * Kommune(36))
+                        move(Gard(1), HList * Fylke(12) * Kommune(35) * Gard(1))
+                        move(Gard(2), HList * Fylke(12) * Kommune(36) * Gard(1))
+                    }
+                }
+            }
 
             Then("transformasjon av hovedident vil være tvetydig, men andre vil være entydig") {
                 val result = transformer.transform(entity, ::idProvider)
@@ -469,13 +478,13 @@ class IdentTransformerTest : BehaviorSpec({
                                 .isNotNull()
                                 .containsOnly(
                                     gardsnummerIdentType(
-                                        Fylkesnummer(12),
-                                        Kommunenummer.Lopenummer(35),
+                                        Fylke(12),
+                                        Kommune(35),
                                         Matrikkelnummer.Gardsnummer(1),
                                     ),
                                     gardsnummerIdentType(
-                                        Fylkesnummer(12),
-                                        Kommunenummer.Lopenummer(36),
+                                        Fylke(12),
+                                        Kommune(36),
                                         Matrikkelnummer.Gardsnummer(1),
                                     ),
                                 )
@@ -486,35 +495,35 @@ class IdentTransformerTest : BehaviorSpec({
         }
     }
 
-    fun flyttAdresseparsell() = IdentTransformer(
+    fun flyttAdresseparsell() = IdentTransformerImpl(
         adresseparsellIdentType(
-            Fylkesnummer(12),
-            Kommunenummer.Lopenummer(34),
+            Fylke(12),
+            Kommune(34),
             Adressekode(10000)
-        ) to IdentTransformer.Mapping.Simple(
+        ) to IdentTransformerImpl.Mapping.Simple(
             adresseparsellIdentType(
-                Fylkesnummer(12),
-                Kommunenummer.Lopenummer(35),
+                Fylke(12),
+                Kommune(35),
                 Adressekode(20000)
             )
         )
     )
 
-    fun splittAdresseparsell() = IdentTransformer(
+    fun splittAdresseparsell() = IdentTransformerImpl(
         adresseparsellIdentType(
-            Fylkesnummer(12),
-            Kommunenummer.Lopenummer(34),
+            Fylke(12),
+            Kommune(34),
             Adressekode(10000)
-        ) to IdentTransformer.Mapping.Split(
+        ) to IdentTransformerImpl.Mapping.Split(
             listOf(
                 adresseparsellIdentType(
-                    Fylkesnummer(12),
-                    Kommunenummer.Lopenummer(35),
+                    Fylke(12),
+                    Kommune(35),
                     Adressekode(10000)
                 ) to null,
                 adresseparsellIdentType(
-                    Fylkesnummer(12),
-                    Kommunenummer.Lopenummer(36),
+                    Fylke(12),
+                    Kommune(36),
                     Adressekode(10000)
                 ) to null,
             )
@@ -525,8 +534,8 @@ class IdentTransformerTest : BehaviorSpec({
         val entity = Entity(
             id = idProvider(TestIdType.Foo, null),
             ident = adresseparsellIdentType(
-                Fylkesnummer(12),
-                Kommunenummer.Lopenummer(34),
+                Fylke(12),
+                Kommune(34),
                 Adressekode(10000)
             )
         )
@@ -546,8 +555,8 @@ class IdentTransformerTest : BehaviorSpec({
                             prop(Transformation::transformedIdent)
                                 .isEqualTo(
                                     adresseparsellIdentType(
-                                        Fylkesnummer(12),
-                                        Kommunenummer.Lopenummer(35),
+                                        Fylke(12),
+                                        Kommune(35),
                                         Adressekode(20000)
                                     )
                                 )
@@ -574,8 +583,8 @@ class IdentTransformerTest : BehaviorSpec({
                             prop(Transformation::transformedIdent)
                                 .isEqualTo(
                                     adresseparsellIdentType(
-                                        Fylkesnummer(12),
-                                        Kommunenummer.Lopenummer(35),
+                                        Fylke(12),
+                                        Kommune(35),
                                         Adressekode(10000)
                                     )
                                 )
@@ -588,8 +597,8 @@ class IdentTransformerTest : BehaviorSpec({
                             prop(Transformation::transformedIdent)
                                 .isEqualTo(
                                     adresseparsellIdentType(
-                                        Fylkesnummer(12),
-                                        Kommunenummer.Lopenummer(36),
+                                        Fylke(12),
+                                        Kommune(36),
                                         Adressekode(10000)
                                     )
                                 )
@@ -606,8 +615,8 @@ class IdentTransformerTest : BehaviorSpec({
         val entity = Entity(
             id = idProvider(TestIdType.Foo, null),
             ident = vegadresseIdentType(
-                Fylkesnummer(12),
-                Kommunenummer.Lopenummer(34),
+                Fylke(12),
+                Kommune(34),
                 Adressekode(10000),
                 Adressenummernummer(10)
             )
@@ -628,8 +637,8 @@ class IdentTransformerTest : BehaviorSpec({
                             prop(Transformation::transformedIdent)
                                 .isEqualTo(
                                     vegadresseIdentType(
-                                        Fylkesnummer(12),
-                                        Kommunenummer.Lopenummer(35),
+                                        Fylke(12),
+                                        Kommune(35),
                                         Adressekode(20000),
                                         Adressenummernummer(10)
                                     )
@@ -669,34 +678,34 @@ class IdentTransformerTest : BehaviorSpec({
         }
 
         When("hvor adresseparsellen splittes, men adressen har egen regel") {
-            val transformer = IdentTransformer(
+            val transformer = IdentTransformerImpl(
                 adresseparsellIdentType(
-                    Fylkesnummer(12),
-                    Kommunenummer.Lopenummer(34),
+                    Fylke(12),
+                    Kommune(34),
                     Adressekode(10000)
-                ) to IdentTransformer.Mapping.Split(
+                ) to IdentTransformerImpl.Mapping.Split(
                     listOf(
                         adresseparsellIdentType(
-                            Fylkesnummer(12),
-                            Kommunenummer.Lopenummer(35),
+                            Fylke(12),
+                            Kommune(35),
                             Adressekode(10000)
                         ) to null,
                         adresseparsellIdentType(
-                            Fylkesnummer(12),
-                            Kommunenummer.Lopenummer(36),
+                            Fylke(12),
+                            Kommune(36),
                             Adressekode(10000)
                         ) to null,
                     )
                 ),
                 vegadresseIdentType(
-                    Fylkesnummer(12),
-                    Kommunenummer.Lopenummer(34),
+                    Fylke(12),
+                    Kommune(34),
                     Adressekode(10000),
                     Adressenummernummer(10)
-                ) to IdentTransformer.Mapping.Simple(
+                ) to IdentTransformerImpl.Mapping.Simple(
                     vegadresseIdentType(
-                        Fylkesnummer(12),
-                        Kommunenummer.Lopenummer(35),
+                        Fylke(12),
+                        Kommune(35),
                         Adressekode(10000),
                         Adressenummernummer(10)
                     )
@@ -715,8 +724,8 @@ class IdentTransformerTest : BehaviorSpec({
                             prop(Transformation::transformedIdent)
                                 .isEqualTo(
                                     vegadresseIdentType(
-                                        Fylkesnummer(12),
-                                        Kommunenummer.Lopenummer(35),
+                                        Fylke(12),
+                                        Kommune(35),
                                         Adressekode(10000),
                                         Adressenummernummer(10)
                                     )
@@ -730,5 +739,18 @@ class IdentTransformerTest : BehaviorSpec({
         }
     }
 }) {
-    private data class MockKommuneinfo(val kommunenavn: String) : Payload
+    object MockKommuneinfo {
+        operator fun invoke(kommunenavn: String): Kommunedata {
+            return Kommunedata(
+                navn = kommunenavn,
+                koordinatsystem = Koordinatsystem.UTM32,
+                senterpunkt = Koordinat(500_000.0, 0.0),
+                nedsattKonsesjonsgrense = false,
+                godkjenteGardsnumre = "",
+                adresse = null, standardRekvirentOrgnummer = null,
+                ikrafttredelsesdato = LocalDate(2020, 1, 1),
+                kommunevapen = null
+            )
+        }
+    }
 }

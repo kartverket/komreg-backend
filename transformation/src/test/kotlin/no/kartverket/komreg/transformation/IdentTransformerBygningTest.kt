@@ -1,33 +1,32 @@
 package no.kartverket.komreg.transformation
 
 import io.mockk.coEvery
-import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.kartverket.komreg.core.domain.Bygningsnummer
-import no.kartverket.komreg.core.domain.Fylkesnummer
-import no.kartverket.komreg.core.domain.Kommunenummer
-import no.kartverket.komreg.core.domain.Matrikkelnummer
 import no.kartverket.komreg.integration.spi.Entity
 import no.kartverket.komreg.integration.spi.IdGeneratorManager
 import no.kartverket.komreg.integration.spi.Ident
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
+import no.kartverket.komreg.core.domain.Fylkesnummer as Fylke
+import no.kartverket.komreg.core.domain.Kommunenummer.Lopenummer as Kommune
+import no.kartverket.komreg.core.domain.Matrikkelnummer.Gardsnummer as Gard
 
 class IdentTransformerBygningTest {
     private val mapping = listOf(
-        identOfMatrikkelenhet(2, 5, 1) to IdentTransformer.Mapping.Replace(
+        identOfMatrikkelenhet(2, 5, 1) to IdentTransformerImpl.Mapping.Replace(
             identOfMatrikkelenhet(2, 6, 1)
         ),
-        identOfKommune(2, 5) to IdentTransformer.Mapping.Split(
+        identOfKommune(2, 5) to IdentTransformerImpl.Mapping.Split(
             listOf(
                 identOfKommune(2, 7) to null,
                 identOfKommune(2, 8) to null
             )
         ),
     )
-    private val identTransformer = IdentTransformer(*mapping.toTypedArray())
+    private val identTransformer = IdentTransformerImpl(*mapping.toTypedArray())
     private val idGenerator = mockk<IdGeneratorManager>()
 
     @BeforeEach
@@ -80,17 +79,17 @@ class IdentTransformerBygningTest {
     private fun identOfMatrikkelenhet(fylkesnummer: Int, lopenummer: Int, gardsnummer: Int) =
         runBlocking {
             Ident(
-                Fylkesnummer(fylkesnummer.toLong()),
-                Kommunenummer.Lopenummer(lopenummer.toByte()),
-                Matrikkelnummer.Gardsnummer(gardsnummer),
+                Fylke(fylkesnummer.toLong()),
+                Kommune(lopenummer.toByte()),
+                Gard(gardsnummer),
             )
         }
 
     private fun identOfBygning(fylkesnummer: Long, lopenummer: Int, bygningsnummer: Long) =
         runBlocking {
             Ident(
-                Fylkesnummer(fylkesnummer),
-                Kommunenummer.Lopenummer(lopenummer.toByte()),
+                Fylke(fylkesnummer),
+                Kommune(lopenummer.toByte()),
                 Bygningsnummer(bygningsnummer),
             )
         }
@@ -101,6 +100,6 @@ class IdentTransformerBygningTest {
         }
 
     private fun identOfKommune(fylkesnummer: Int, lopenummer: Int) = runBlocking {
-        Ident(Fylkesnummer(fylkesnummer.toLong()), Kommunenummer.Lopenummer(lopenummer.toByte()))
+        Ident(Fylke(fylkesnummer.toLong()), Kommune(lopenummer.toByte()))
     }
 }

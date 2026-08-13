@@ -7,8 +7,6 @@ import kotlinx.serialization.Serializable
 import no.kartverket.komreg.core.domain.Id
 import java.time.LocalDate
 
-interface Payload
-
 @Serializable
 data class Entity(
     val id: Id,

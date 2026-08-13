@@ -16,8 +16,10 @@ import no.kartverket.komreg.logger
 import no.kartverket.komreg.repositories.KjoringRepo
 import no.kartverket.komreg.repositories.TilbakeføringsstatusRepo
 import no.kartverket.komreg.repositories.TransformationRepo
+import no.kartverket.komreg.transformation.IdentTransformerImpl
 import no.kartverket.komreg.transformation.Reguleringsinput
 import no.kartverket.komreg.transformation.Storage
+import no.kartverket.komreg.transformation.mapInput
 import no.kartverket.komreg.transformation.transform
 import org.slf4j.MDC
 
@@ -95,7 +97,6 @@ private fun runAndWriteTransformations(
         launch(Dispatchers.IO) {
             transform(
                 kjoringId,
-                input,
                 lifeCycleHandlers,
                 sources,
                 processors,
@@ -104,6 +105,8 @@ private fun runAndWriteTransformations(
                 storage,
                 skalTilbakefores,
                 erFortegangskjoring,
+                IdentTransformerImpl(mapInput(input)),
+                input.ikrafttredelsesdato,
             )
 
             kjoringRepo.updateKjoringEndTime(kjoringId)

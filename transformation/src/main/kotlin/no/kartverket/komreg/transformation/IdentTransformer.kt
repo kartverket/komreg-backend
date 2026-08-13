@@ -5,11 +5,12 @@ import no.kartverket.komreg.core.domain.Id
 import no.kartverket.komreg.core.domain.IdType
 import no.kartverket.komreg.core.domain.Kommunenummer
 import no.kartverket.komreg.integration.spi.*
+import no.kartverket.komreg.parameter.compat.IdentTransformer
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
-class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
+class IdentTransformerImpl(mappings: List<Pair<Ident, Mapping>>) : IdentTransformer {
     private val kommuneviseRegler: Map<Kommunenummer, List<Pair<Ident, Mapping>>>
     private val andreRegler: List<Pair<Ident, Mapping>>
 
@@ -36,7 +37,7 @@ class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
         andreRegler = aRegler
     }
 
-    suspend fun transform(
+    override suspend fun transform(
         entity: Entity,
         idProvider: suspend (IdType<*, *>, Any?) -> Id,
     ): List<Transformation>? {
@@ -237,7 +238,7 @@ class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
     }
 
     companion object {
-        operator fun invoke(vararg mappings: Pair<Ident, Mapping>) = IdentTransformer(listOf(*mappings))
+        operator fun invoke(vararg mappings: Pair<Ident, Mapping>) = IdentTransformerImpl(listOf(*mappings))
     }
 
     sealed interface Mapping {
