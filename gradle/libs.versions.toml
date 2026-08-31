@@ -1,5 +1,5 @@
 [versions]
-flywayVersion = "13.3.0"
+flywayVersion = "13.4.0"
 junit = "6.1.3"
 kotest = "5.9.1"
 kotlin = "2.4.10"
