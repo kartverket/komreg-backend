@@ -8,7 +8,7 @@ plugins {
 
 repositories {
     maven {
-        url = uri("https://maven.pkg.github.com/kartverket/komreg-backend")
+        url = uri("https://maven.pkg.github.com/kartverket/matrikkel")
         val ghPackagesToken = project.findProperty("GH_PACKAGES_PAT") as String? ?: System.getenv("GH_PACKAGES_PAT")
         if (!ghPackagesToken.isNullOrBlank()) {
             credentials(HttpHeaderCredentials::class) {
