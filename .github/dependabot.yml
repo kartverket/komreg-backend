@@ -34,6 +34,13 @@ updates:
         exclude-patterns:
           - "org.jetbrains.kotlin*"
           - "io.ktor*"
+    cooldown:
+      default-days: 30
+      semver-major-days: 30
+      semver-minor-days: 30
+      semver-patch-days: 30
+      include:
+        - "org.jetbrains.kotlin*"
 
   - package-ecosystem: "github-actions"
     directory: "/"
