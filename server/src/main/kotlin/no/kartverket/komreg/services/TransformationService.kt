@@ -1,5 +1,6 @@
 package no.kartverket.komreg.services
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -20,6 +21,7 @@ import no.kartverket.komreg.transformation.Reguleringsinput
 import no.kartverket.komreg.transformation.Storage
 import no.kartverket.komreg.transformation.transform
 import org.slf4j.MDC
+import java.lang.management.ManagementFactory
 
 @Suppress("LocalVariableName", "NonAsciiCharacters")
 fun transformEntities(
@@ -92,7 +94,7 @@ private fun runAndWriteTransformations(
             tilbakeføringsstatusRepo.createTilbakeføringsstatusForKjoring(kjoringId, entitySinks.entitySinks)
         }
 
-        launch(Dispatchers.IO) {
+        val transformJob = launch(Dispatchers.IO) {
             transform(
                 kjoringId,
                 input,
@@ -108,6 +110,29 @@ private fun runAndWriteTransformations(
 
             kjoringRepo.updateKjoringEndTime(kjoringId)
             logger.info(FAG, "Avsluttet alle transformasjoner!")
+        }
+
+        transformJob.invokeOnCompletion { cause ->
+            val resultat = when (cause) {
+                null -> "kjørt ferdig"
+                is CancellationException -> "avbrutt"
+                else -> "feilet: ${cause.message}"
+            }
+            logger.info("Transformasjoner $resultat")
+            val memoryMXBean = ManagementFactory.getMemoryMXBean()
+            val heap = memoryMXBean.heapMemoryUsage
+            logger.info(
+                "Heap før GC: used={} MiB committed={} MiB",
+                heap.used / 1024 / 1024,
+                heap.committed / 1024 / 1024
+            )
+            System.gc()
+            val heapAfter = memoryMXBean.heapMemoryUsage
+            logger.info(
+                "Heap etter GC-request: used={} MiB committed={} MiB",
+                heapAfter.used / 1024 / 1024,
+                heapAfter.committed / 1024 / 1024
+            )
         }
     }
 }
