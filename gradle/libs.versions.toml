@@ -70,3 +70,5 @@ logstash-logback-encoder = { module = "net.logstash.logback:logstash-logback-enc
 dotenv-kotlin = { module = "io.github.cdimascio:dotenv-kotlin", version = "6.5.1" }
 
 matrikkel-komreg = { module = "no.statkart.matrikkel:matrikkel-komreg", version = "local-2026.06.09-06.13-0c04280" }
+
+opentelemetry-javaagent = { group = "io.opentelemetry.javaagent", name = "opentelemetry-javaagent", version= "2.31.1" }

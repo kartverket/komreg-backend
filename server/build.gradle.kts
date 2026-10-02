@@ -132,6 +132,54 @@ dependencies {
     integrationTestImplementation(libs.kotlinx.serialization.json)
 }
 
+val openTelemetryJar = "opentelemetry-javaagent.jar"
+
+distributions {
+    main {
+        contents {
+            val otel = libs.opentelemetry.javaagent.map {
+                configurations.detachedConfiguration(dependencies.create(
+                    it
+                ))
+            }
+            from(otel.map { it.singleFile }) {
+                rename { openTelemetryJar }
+                into("bin")
+            }
+        }
+    }
+}
+
+tasks.named<CreateStartScripts>(ApplicationPlugin.TASK_START_SCRIPTS_NAME) {
+    inputs.property("openTelemetryJar", openTelemetryJar)
+
+    // Vi kan ikke bare endre på default jvm options, for gradle escaper dollar-tegnene
+    // så for å få scriptet til å virke fra hvilken som helst current working
+    // directory (ved å referere til $APP_HOME) må vi patche scriptet etter at det er generert
+    doLast {
+        val originalUnixScript = unixScript.readText()
+        val patchedUnixScript = Regex("(?m)^DEFAULT_JVM_OPTS=\"\"$").replace(
+            originalUnixScript
+        ) {
+            $$"""DEFAULT_JVM_OPTS="-javaagent:\"$APP_HOME/bin/$$openTelemetryJar\"""""
+        }
+        require(patchedUnixScript != originalUnixScript) {
+            "Failed to patch unix start script with OpenTelemetry agent"
+        }
+        unixScript.writeText(patchedUnixScript)
+
+        val originalWindowsScript = windowsScript.readText()
+        val patchedWindowsScript = Regex("(?m)^set DEFAULT_JVM_OPTS=(?=\r?$)").replace(
+            originalWindowsScript
+        ) {
+            "set DEFAULT_JVM_OPTS=\"-javaagent:%APP_HOME%\\bin\\$openTelemetryJar\""
+        }
+        require(patchedWindowsScript != originalWindowsScript) {
+            "Failed to patch windows start script with OpenTelemetry agent"
+        }
+        windowsScript.writeText(patchedWindowsScript)
+    }
+}
 
 val buildDockerContext = tasks.register<Sync>("buildDockerContext") {
     val dockerfileTemplate = "template.Dockerfile"
