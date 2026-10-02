@@ -1,4 +1,4 @@
-FROM eclipse-temurin:25-alpine@sha256:09349d79941fd53bb3d487b393ca118d8853c08c09193f416fe6a8718df9e732
+FROM eclipse-temurin:25-alpine@sha256:3fd2d245c4e0eba615fe366a71b8bd25f5db7104f53e4026b24bf508b880bd2a
 
 RUN apk update && apk upgrade
 RUN apk --no-cache add libgcc libstdc++
