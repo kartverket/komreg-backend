@@ -3,7 +3,6 @@ package no.kartverket.komreg.services
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import no.kartverket.komreg.core.KjoringContext
 import no.kartverket.komreg.core.logging.CoroutineMDC
@@ -36,8 +35,6 @@ fun transformEntities(
 
     val entitySinks = EntitySinkManager(kjoringContext)
 
-    printMemoryUsage()
-
     runAndWriteTransformations(
         kjoringContext,
         input,
@@ -47,22 +44,6 @@ fun transformEntities(
         tilbakeføringsstatusRepo,
         erForsteGangkjoring,
     )
-}
-
-private fun printMemoryUsage() {
-    CoroutineScope(Dispatchers.Default).launch {
-        val runtime = Runtime.getRuntime()
-        val mb = 1024 * 1024
-
-        while (true) {
-            delay(30_000)
-            val used = (runtime.totalMemory() - runtime.freeMemory()) / mb
-            val free = runtime.freeMemory() / mb
-            val total = runtime.totalMemory() / mb
-            val max = runtime.maxMemory() / mb
-            logger.info("Memory. Used: $used, free: $free, total: $total, max: $max")
-        }
-    }
 }
 
 @Suppress("LocalVariableName", "NonAsciiCharacters")
