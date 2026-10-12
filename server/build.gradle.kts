@@ -74,8 +74,8 @@ tasks.register<JavaExec>("generateTestRegulering") {
 val integrationTestImplementation by configurations.getting
 
 dependencies {
-    implementation(project(":core-api"))
-    implementation(project(":transformation"))
+    implementation(project(":lib:core-api"))
+    implementation(project(":lib:transformation"))
 
     // Skulle egentlig vært runtimeOnly, men har ikke funnet på noe ordentlig grensesnitt for SSR-generering
     implementation(libs.matrikkel.komreg) {
@@ -128,7 +128,7 @@ dependencies {
     integrationTestImplementation(libs.postgresql)
     integrationTestImplementation(libs.flyway.core)
     integrationTestImplementation(libs.hikari)
-    integrationTestImplementation(project(":core-api"))
+    integrationTestImplementation(project(":lib:core-api"))
     integrationTestImplementation(libs.kotlinx.serialization.json)
 }
 

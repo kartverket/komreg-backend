@@ -4,7 +4,7 @@ plugins {
 }
 
 dependencies {
-    api(project(":core-api"))
+    api(project(":lib:core-api"))
 
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.datetime)
