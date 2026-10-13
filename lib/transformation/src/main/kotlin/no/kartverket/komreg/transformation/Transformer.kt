@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.*
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toJavaLocalDate
 import no.kartverket.komreg.core.domain.*
-import no.kartverket.komreg.core.domain.Matrikkelenhet.GardsnummerserieIdent
-import no.kartverket.komreg.core.domain.Matrikkelenhet.GrunneiendomIdent
+import no.kartverket.komreg.transformation.Matrikkelenhet.GardsnummerserieIdent
+import no.kartverket.komreg.transformation.Matrikkelenhet.GrunneiendomIdent
 import no.kartverket.komreg.integration.spi.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

@@ -53,5 +53,4 @@ data class Matrikkelnummer(
             )
     }
 
-    val fylkesnummer: Fylkesnummer = kommunenummer.fylkesnummer
 }

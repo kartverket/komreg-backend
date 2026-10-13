@@ -3,7 +3,6 @@ package no.kartverket.komreg.core.domain
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
-import no.kartverket.komreg.integration.spi.Ident1
 import no.kartverket.komreg.integration.spi.IdentType1
 import no.kartverket.komreg.integration.spi.identTypeOf1
 
@@ -29,10 +28,3 @@ data class Fylke(
             )
     }
 }
-
-typealias FylkeIdent = Ident1<Fylkesnummer>
-
-fun Fylke.tilFylkesdata(): Fylkesdata =
-    Fylkesdata(
-        navn = fylkesnavn.name,
-    )

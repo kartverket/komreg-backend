@@ -3,7 +3,6 @@ package no.kartverket.komreg.core.domain
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
-import no.kartverket.komreg.integration.spi.Ident2
 import no.kartverket.komreg.integration.spi.IdentType2
 
 @Serializable
@@ -71,8 +70,6 @@ data class Kommune(
     }
 }
 
-typealias KommuneIdent = Ident2<Fylkesnummer, Kommunenummer.Lopenummer>
-
 @Serializable
 data class Koordinat(
     val x: Double,
@@ -101,25 +98,3 @@ enum class Koordinatsystem {
     UTM35,
     UKJENT
 }
-
-fun Kommune.tilKommunedata(ikrafttredelsesdato: LocalDate): Kommunedata =
-    Kommunedata(
-        navn = kommunenavn.name.uppercase(),
-        koordinatsystem = koordinatsystem,
-        senterpunkt = senterpunkt,
-        nedsattKonsesjonsgrense = nedsattKonsesjonsgrense,
-        godkjenteGardsnumre = godkjenteGardsnumre,
-        adresse = adresse?.let {
-            PostadresseForOppretting(
-                adresselinje1 = it.adresselinje1?.trim()?.ifEmpty { null },
-                adresselinje2 = it.adresselinje2?.trim()?.ifEmpty { null },
-                postnummer = it.postnummer,
-            )
-        },
-        standardRekvirentOrgnummer = standardRekvirent?.orgnummer,
-        kommunevapen = kommunevapen,
-        ikrafttredelsesdato = ikrafttredelsesdato,
-    )
-
-operator fun FylkeIdent.div(kommuneIdent: Kommunenummer.Lopenummer): KommuneIdent =
-    appendWith(Kommune.KommuneIdent, kommuneIdent)

@@ -16,7 +16,7 @@ import kotlin.reflect.full.createType
  * @type type som skal finne alle supertyper for
  * @return alle konkrete supertyper for type, inkludert typen selv
  */
-fun typeClosure(type: KType): Set<KType> = typeClosureImpl(type, emptyMap())
+internal fun typeClosure(type: KType): Set<KType> = typeClosureImpl(type, emptyMap())
 
 /**
  * Implementasjon av [typeClosure].
