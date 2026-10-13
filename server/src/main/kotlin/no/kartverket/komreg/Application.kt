@@ -57,6 +57,7 @@ fun Application.module() {
         hikariConfig.password = komregDbPassword
         hikariConfig.minimumIdle = 1
         hikariConfig.keepaliveTime = 600000
+        hikariConfig.schema = "komreg"
         HikariDataSource(hikariConfig)
     }
 
