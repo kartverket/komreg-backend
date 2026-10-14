@@ -75,6 +75,7 @@ val integrationTestImplementation by configurations.getting
 
 dependencies {
     implementation(project(":lib:core-api"))
+    implementation(project(":lib:regulering-dto"))
     implementation(project(":lib:transformation"))
 
     // Skulle egentlig vært runtimeOnly, men har ikke funnet på noe ordentlig grensesnitt for SSR-generering
@@ -129,6 +130,7 @@ dependencies {
     integrationTestImplementation(libs.flyway.core)
     integrationTestImplementation(libs.hikari)
     integrationTestImplementation(project(":lib:core-api"))
+    integrationTestImplementation(project(":lib:regulering-dto"))
     integrationTestImplementation(libs.kotlinx.serialization.json)
 }
 
