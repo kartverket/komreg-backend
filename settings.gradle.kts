@@ -1,7 +1,7 @@
 rootProject.name = "komreg-backend"
 
 include(
-    ":core-api",
-    ":transformation",
+    ":lib:core-api",
+    ":lib:transformation",
     ":server",
 )
