@@ -27,7 +27,6 @@ import org.flywaydb.core.Flyway
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
-import regulering.parameterfil.ParameterfilProcessor
 
 val env = dotenv {
     ignoreIfMissing = true
@@ -114,9 +113,4 @@ fun Application.module() {
     stedsnavnRoutes(reguleringsRepo, kjoringRepo, transformationRepo)
 
     enableFagLogging(komregDbPool)
-
-    ParameterfilProcessor.genererParameterfil(
-        reguleringRepo = reguleringsRepo,
-        inputMappe = "genererParameter/inputSheets",
-    )
 }
