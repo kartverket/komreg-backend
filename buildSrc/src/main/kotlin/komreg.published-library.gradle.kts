@@ -1,5 +1,5 @@
 plugins {
-    id("komreg.kotlin-common")
+    `java-base`
     `maven-publish`
 }
 

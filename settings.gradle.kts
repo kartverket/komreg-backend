@@ -5,4 +5,8 @@ include(
     ":lib:regulering-dto",
     ":lib:transformation",
     ":server",
+    ":regulering-api:server",
 )
+
+
+project(":regulering-api:server").name = "regulering-api-server"

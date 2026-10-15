@@ -63,6 +63,7 @@ fabric.properties
 !.idea/codeStyles/Project.xml
 
 !.idea/runConfigurations
+!.idea/runConfigurations/**
 
 !.idea/codeInsightSettings.xml
 

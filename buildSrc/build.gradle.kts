@@ -3,6 +3,5 @@ plugins {
 }
 
 dependencies {
-    implementation(libs.kotlin.gradle.plugin)
-    implementation(libs.kotlin.serialization.plugin)
+    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:${libs.plugins.kotlin.jvm.get().version}")
 }

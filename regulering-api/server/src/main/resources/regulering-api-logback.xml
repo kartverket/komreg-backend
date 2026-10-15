@@ -1,0 +1,33 @@
+<configuration>
+    <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+        <resetJUL>true</resetJUL>
+    </contextListener>
+    <condition class="ch.qos.logback.core.boolex.PropertyEqualityCondition">
+        <key>APP_LOG_ENCODE</key>
+        <value>pattern</value>
+    </condition>
+    <if>
+        <then>
+            <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+                <encoder>
+                    <pattern>%gray(%d{HH:mm:ss.SSS}) %highlight(%-5level) %cyan(%-9.9thread) %gray(%-36.36logger{36}) | %replace(%msg%n%ex{full}){'(\r?\n)(?=[\s\S])','$1           | '}%nopex</pattern>
+                </encoder>
+            </appender>
+        </then>
+        <else>
+            <!-- JSON logging med trace ID fra OpenTelemetry -->
+            <appender name="STDOUT_JSON" class="ch.qos.logback.core.ConsoleAppender">
+                <encoder class="net.logstash.logback.encoder.LogstashEncoder" >
+                    <includeMdc>true</includeMdc>
+                </encoder>
+            </appender>
+            <appender name="STDOUT"
+                      class="io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender">
+                <appender-ref ref="STDOUT_JSON"/>
+            </appender>
+        </else>
+    </if>
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </root>
+</configuration>

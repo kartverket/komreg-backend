@@ -1,5 +1,11 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
+    id("komreg.kotlin-common")
     id("komreg.published-library")
+    alias(libs.plugins.kotlin.serialization)
 }
 
 dependencies {
@@ -18,4 +24,17 @@ dependencies {
     testRuntimeOnly(libs.junit.jupiter.engine)
     testImplementation(libs.kotest.runner)
     testImplementation(libs.logback.classic)
+}
+
+
+tasks.withType<KotlinCompile> {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_17
+        languageVersion = KotlinVersion.KOTLIN_2_2
+        apiVersion = KotlinVersion.KOTLIN_2_2
+    }
+}
+
+tasks.withType<JavaCompile> {
+    options.release.set(17)
 }
