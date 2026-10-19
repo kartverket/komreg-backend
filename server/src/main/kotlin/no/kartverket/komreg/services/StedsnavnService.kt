@@ -12,6 +12,7 @@ import no.kartverket.komreg.logger
 import no.kartverket.komreg.repositories.KjoringRepo
 import no.kartverket.komreg.repositories.ReguleringRepo
 import no.kartverket.komreg.repositories.TransformationRepo
+import no.kartverket.komreg.routes.toReguleringsinput
 import no.kartverket.komreg.transformation.Fylkeendring
 import no.kartverket.komreg.transformation.Kommuneendring
 import no.statkart.matrikkel.komreg.stedsnavn.ssrJson

@@ -2,6 +2,8 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
     id("komreg.kotlin-common")
+    id("komreg.docker-context")
+    alias(libs.plugins.kotlin.serialization)
     application
     `jvm-test-suite`
 }
@@ -75,6 +77,7 @@ val integrationTestImplementation by configurations.getting
 
 dependencies {
     implementation(project(":lib:core-api"))
+    implementation(project(":lib:regulering-dto"))
     implementation(project(":lib:transformation"))
 
     // Skulle egentlig vært runtimeOnly, men har ikke funnet på noe ordentlig grensesnitt for SSR-generering
@@ -129,35 +132,10 @@ dependencies {
     integrationTestImplementation(libs.flyway.core)
     integrationTestImplementation(libs.hikari)
     integrationTestImplementation(project(":lib:core-api"))
+    integrationTestImplementation(project(":lib:regulering-dto"))
     integrationTestImplementation(libs.kotlinx.serialization.json)
 }
 
-
-val buildDockerContext = tasks.register<Sync>("buildDockerContext") {
-    val dockerfileTemplate = "template.Dockerfile"
-    val startScriptPath = tasks
-        .named<CreateStartScripts>(ApplicationPlugin.TASK_START_SCRIPTS_NAME)
-        .map { "${it.executableDir}/${it.applicationName}" }
-
-    inputs.property("startScriptPath", startScriptPath)
-
-    destinationDir = layout.buildDirectory.get().dir("docker").asFile
-
-    from(File(projectDir, dockerfileTemplate)) {
-        rename(dockerfileTemplate, "Dockerfile")
-        filter<ReplaceTokens>("tokens" to mapOf(
-            "START_SCRIPT" to startScriptPath.get())
-        )
-    }
-
-    into("app") {
-        from(tasks.installDist)
-    }
-}
-
-tasks.assemble {
-    dependsOn(buildDockerContext)
-}
 
 tasks.distTar {
     enabled = false
