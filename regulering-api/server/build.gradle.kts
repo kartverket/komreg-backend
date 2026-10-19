@@ -6,6 +6,7 @@ plugins {
     application
     alias(libs.plugins.ktor.plugin)
     alias(libs.plugins.kotlin.serialization)
+    id("komreg.docker-context")
 }
 
 ktor {

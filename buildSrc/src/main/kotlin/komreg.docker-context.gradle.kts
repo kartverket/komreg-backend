@@ -22,8 +22,9 @@ val buildDockerContext = tasks.register<Sync>("buildDockerContext") {
     from(File(projectDir, dockerfileTemplate)) {
         rename(dockerfileTemplate, "Dockerfile")
         filter<ReplaceTokens>("tokens" to mapOf(
-            "START_SCRIPT" to startScriptPath.get())
-        )
+            "START_SCRIPT" to startScriptPath.get(),
+            "MAIN_CLASS" to application.mainClass.get()
+        ))
     }
 
     into("app") {
