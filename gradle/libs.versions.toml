@@ -1,5 +1,5 @@
 [versions]
-flywayVersion = "13.10.0"
+flywayVersion = "13.10.3"
 junit = "6.1.3"
 kotest = "5.9.1"
 kotlin = "2.3.21" # Må vare < 2.4 for å kunne kompileres sammen med
