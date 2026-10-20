@@ -1,11 +1,11 @@
 info:
-  name: Fordelingsparametre adressekode i kommune
+  name: Log Executions
   type: http
-  seq: 5
+  seq: 2
 
 http:
   method: GET
-  url: "{{baseUrl}}/kommuner/1860/fordelingsparametre/veg/1007"
+  url: "{{baseUrl}}/log/executions"
   auth: inherit
 
 settings:
@@ -13,3 +13,4 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+  forwardAuthorizationHeader: true
