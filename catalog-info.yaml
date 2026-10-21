@@ -3,29 +3,110 @@ apiVersion: "backstage.io/v1alpha1"
 kind: "Component"
 metadata:
   name: "komreg-backend"
+  description:
+    "KomReg-backend kjører reguleringer mot M22-databasen og skriver om matrikkelenheter, adresser
+    og identer."
+  annotations:
+    github.com/project-slug: "kartverket/komreg-backend"
   tags:
-  - "internal"
-  - "private"
+    - "internal"
+    - "private"
 spec:
   type: "service"
   lifecycle: "production"
   owner: "smia"
   system: "komreg"
   providesApis:
-  - "komreg-backend-api"
+    - "api:default/komreg-backend-api"
+  dependsOn:
+    - "resource:default/komreg-database"
+    - "resource:default/m22-database"
 ---
 apiVersion: "backstage.io/v1alpha1"
 kind: "API"
 metadata:
   name: "komreg-backend-api"
+  description: "Starter kjøringer av en regulering."
   tags:
-  - "internal"
+    - "internal"
 spec:
   type: "openapi"
   lifecycle: "production"
   owner: "smia"
+  system: "komreg"
   definition: |
     openapi: "3.0.0"
     info:
-        title: komreg-backend API
-    paths:
+      title: "komreg-backend API"
+      version: "1.0.0"
+    paths: {}
+---
+apiVersion: "backstage.io/v1alpha1"
+kind: "Component"
+metadata:
+  name: "komreg-regulerings-api"
+  description: "API-et bak KomRegs webklient."
+  annotations:
+    github.com/project-slug: "kartverket/komreg-backend"
+  tags:
+    - "internal"
+    - "private"
+spec:
+  type: "service"
+  lifecycle: "experimental"
+  owner: "smia"
+  system: "komreg"
+  providesApis:
+    - "api:default/komreg-regulerings-api"
+  consumesApis:
+    - "api:default/komreg-backend-api"
+  dependsOn:
+    - "resource:default/komreg-database"
+---
+apiVersion: "backstage.io/v1alpha1"
+kind: "API"
+metadata:
+  name: "komreg-regulerings-api"
+  description: "Reguleringer, lagrede lister og parameterfiler for KomRegs webklient."
+  tags:
+    - "internal"
+spec:
+  type: "openapi"
+  lifecycle: "experimental"
+  owner: "smia"
+  system: "komreg"
+  definition: |
+    openapi: "3.0.0"
+    info:
+      title: "KomReg regulerings-API"
+      version: "0.1.0"
+    paths: {}
+---
+apiVersion: "backstage.io/v1alpha1"
+kind: "Resource"
+metadata:
+  name: "komreg-database"
+  title: "KomReg-databasen"
+  description:
+    "PostgreSQL-databasen til KomReg. Tjenestene komreg-backend og komreg-regulerings-api bruker
+    samme database, men hvert sitt skjema."
+  tags:
+    - "internal"
+spec:
+  type: "database"
+  owner: "smia"
+  system: "komreg"
+---
+apiVersion: "backstage.io/v1alpha1"
+kind: "Resource"
+metadata:
+  name: "m22-database"
+  title: "M22-databasen"
+  description:
+    "Oracle-databasen til Matrikkelen. KomReg henter ut data og skriver rett i den når en regulering
+    kjøres."
+  tags:
+    - "internal"
+spec:
+  type: "database"
+  owner: "smia"
