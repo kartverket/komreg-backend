@@ -22,7 +22,7 @@ val buildDockerContext = tasks.register<Sync>("buildDockerContext") {
 
     destinationDir = layout.buildDirectory.get().dir("docker").asFile
 
-    val spec =from(File(projectDir, dockerfileTemplate)) {
+    from(File(projectDir, dockerfileTemplate)) {
         rename(dockerfileTemplate, "Dockerfile")
     }
 
@@ -31,12 +31,14 @@ val buildDockerContext = tasks.register<Sync>("buildDockerContext") {
     }
 
     doFirst {
-        spec.filter<ReplaceTokens>("tokens" to dockerContext.tokens.mapValues {
-            when (val value = it.value) {
-                is Provider<*> -> value.get()
-                else -> value
-            }.toString()
-        })
+        filesMatching(dockerfileTemplate) {
+            filter<ReplaceTokens>("tokens" to dockerContext.tokens.mapValues {
+                when (val value = it.value) {
+                    is Provider<*> -> value.get()
+                    else -> value
+                }.toString()
+            })
+        }
     }
 }
 
