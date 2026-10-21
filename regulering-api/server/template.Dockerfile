@@ -1,6 +1,6 @@
 FROM dhi.io/eclipse-temurin:25-debian
 
-EXPOSE 8082
+EXPOSE @DEFAULT_HTTP_PORT@
 
 WORKDIR /app
 

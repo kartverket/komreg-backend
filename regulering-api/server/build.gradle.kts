@@ -9,6 +9,8 @@ plugins {
     id("komreg.docker-context")
 }
 
+dockerContext.tokens["DEFAULT_HTTP_PORT"] = project.findProperty("regulering.api.server.defaultHttpPort") ?: 8082
+
 ktor {
     openApi {
         enabled = true
@@ -40,7 +42,7 @@ dependencies {
     implementation(libs.ktor.server.openapi)
     implementation(libs.ktor.server.swagger)
     implementation(libs.ktor.server.cors)
-    
+
     // jOOQ dependencies
     implementation(libs.jooq)
     implementation(libs.jooq.kotlin.coroutines)
@@ -67,6 +69,32 @@ dependencies {
     runtimeOnly(libs.logstash.logback.encoder)
     implementation(libs.slf4j.jul.to.slf4j)
 }
+
+tasks.named<ProcessResources>("processResources") {
+    inputs.property("dockerContextTokens", dockerContext.tokens)
+
+    doFirst {
+        filesMatching("**/application.conf") {
+            filter<org.apache.tools.ant.filters.ReplaceTokens>(
+                "tokens" to dockerContext.tokens.mapValues {
+                    when (val value = it.value) {
+                        is Provider<*> -> value.get()
+                        else -> value
+                    }.toString()
+                }
+            )
+        }
+    }
+}
+
+// Disse er treige, vi trenger kunn installDist
+tasks.named("distZip").configure { enabled = false }
+tasks.named("distTar").configure { enabled = false }
+tasks.named("shadowJar").configure { enabled = false }
+tasks.named("startShadowScripts").configure { enabled = false }
+tasks.named("shadowDistTar").configure { enabled = false }
+tasks.named("shadowDistZip").configure { enabled = false }
+
 
 tasks.named<GenerateJooqClassesTask>("generateJooqClasses") {
     basePackageName = "no.kartverket.komreg.regulering.api.server.persistence.jooq"
