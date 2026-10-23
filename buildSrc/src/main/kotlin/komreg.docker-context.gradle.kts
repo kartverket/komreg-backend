@@ -1,38 +1,51 @@
 import org.apache.tools.ant.filters.ReplaceTokens
-import org.gradle.api.plugins.ApplicationPlugin
 import org.gradle.api.tasks.Sync
-import org.gradle.jvm.application.tasks.CreateStartScripts
 import org.gradle.kotlin.dsl.*
 import java.io.File
+import java.io.Serializable
 
 plugins {
     application
 }
 
+val dockerContext = extensions.create<DockerContextExtension>("dockerContext").apply {
+    tokens.apply {
+        put("START_SCRIPT", tasks.named<CreateStartScripts>(ApplicationPlugin.TASK_START_SCRIPTS_NAME).map {  "${it.executableDir}/${it.applicationName}"  })
+        put("MAIN_CLASS", application.mainClass)
+    }
+}
+
 val buildDockerContext = tasks.register<Sync>("buildDockerContext") {
     val dockerfileTemplate = "template.Dockerfile"
-    val startScriptPath = tasks
-        .named(ApplicationPlugin.TASK_START_SCRIPTS_NAME, CreateStartScripts::class)
-        .map { "${it.executableDir}/${it.applicationName}" }
 
-    inputs.property("startScriptPath", startScriptPath)
+    inputs.property("dockerContextTokens", dockerContext.tokens)
 
     destinationDir = layout.buildDirectory.get().dir("docker").asFile
 
     from(File(projectDir, dockerfileTemplate)) {
         rename(dockerfileTemplate, "Dockerfile")
-        filter<ReplaceTokens>("tokens" to mapOf(
-            "START_SCRIPT" to startScriptPath.get())
-        )
     }
 
     into("app") {
         from(tasks.named("installDist", Sync::class))
     }
 
-
+    doFirst {
+        filesMatching(dockerfileTemplate) {
+            filter<ReplaceTokens>("tokens" to dockerContext.tokens.mapValues {
+                when (val value = it.value) {
+                    is Provider<*> -> value.get()
+                    else -> value
+                }.toString()
+            })
+        }
+    }
 }
 
 tasks.named("assemble") {
     dependsOn(buildDockerContext)
+}
+
+abstract class DockerContextExtension() {
+    val tokens: MutableMap<String, Any> = hashMapOf()
 }

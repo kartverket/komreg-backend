@@ -1,0 +1,121 @@
+name: CD - Build komreg-regulering-api and deploy to dev
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '**'
+      - '!lib/**'
+      - 'lib/regulering-dto/**'
+      - '!server/**'
+
+env:
+  registry: ghcr.io
+  image_name: 'komreg-regulering-api'
+
+jobs:
+  build:
+    name: Docker build and push
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    outputs:
+      image_url: ${{ steps.setOutput.outputs.image_url }}
+      digest: ${{ steps.setOutput.outputs.digest }}
+      version: ${{ steps.setOutput.outputs.version }}
+    steps:
+      - name: Checkout project sources
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: 'temurin'
+          java-version: '25'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+
+      - name: Build with Gradle
+        run: > 
+          ./gradlew 
+          -p regulering-api
+          build
+          --info
+        env:
+          GH_PACKAGES_PAT: ${{ secrets.GH_PACKAGES_PAT }}
+
+      - name: Login to Github Container Registry
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ${{ env.registry }}
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Generate version
+        id: generate_version
+        shell: bash
+        run: |
+          timestamp=$(git show -s --format=%ct HEAD)
+          date=$(TZ=Europe/Oslo date -d "@$timestamp" +'%Y.%m.%d')
+          echo "version=${date}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+
+      - name: Build docker and push
+        id: build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc #v7.4.0
+        with:
+          context: regulering-api/server/build/docker
+          push: true
+          tags: ${{ env.registry }}/${{ github.repository_owner }}/${{ env.image_name }}:${{ steps.generate_version.outputs.version }},${{ env.registry }}/${{ github.repository_owner }}/${{ env.image_name }}:latest
+
+      - name: Set output with build values
+        id: setOutput
+        run: |
+          echo "version=${{ steps.generate_version.outputs.version }}" >> $GITHUB_OUTPUT
+          echo "digest=${{ steps.build.outputs.digest }}" >> $GITHUB_OUTPUT
+          echo "image_url=${{ env.registry }}/${{ github.repository_owner }}/${{ env.image_name }}:${{ steps.generate_version.outputs.version }}" >> $GITHUB_OUTPUT
+
+  pharos:
+    name: Run Pharos with Required Permissions
+    needs: build
+    permissions:
+      actions: read
+      packages: read
+      contents: read
+      security-events: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Run Pharos"
+        uses: kartverket/pharos@aee5b200a4bb042954127dd1446408d2841fcc29 # v0.7.1
+        with:
+          image_url: ${{ needs.build.outputs.image_url}}
+          disable_severity_check: true
+
+  deploy-dev:
+      needs: [ build ]
+      permissions:
+        id-token: write
+        contents: read
+      uses: kartverket/smia-workflows/.github/workflows/deploy-app.yml@main
+      with:
+        application: komreg-regulering-api
+        version: ${{ needs.build.outputs.version }}
+        digest: ${{ needs.build.outputs.digest }}
+        environment: dev
+        identity: komreg
+        namespace: komreg-main
+
+  deploy-stage:
+    needs: [ build ]
+    permissions:
+      id-token: write
+      contents: read
+    uses: kartverket/smia-workflows/.github/workflows/deploy-app.yml@main
+    with:
+      application: komreg-regulering-api
+      version: ${{ needs.build.outputs.version }}
+      digest: ${{ needs.build.outputs.digest }}
+      environment: dev
+      identity: komreg
+      namespace: komreg-stage

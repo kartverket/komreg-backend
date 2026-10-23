@@ -1,9 +1,11 @@
-name: CD - Build and deploy to dev
+name: CD - Build komreg-server and deploy to dev
 on:
   workflow_dispatch:
   push:
     branches:
       - main
+    paths-ignore:
+      - 'regulering-api/**'
 
 env:
   registry: ghcr.io
@@ -33,7 +35,12 @@ jobs:
         uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
 
       - name: Build with Gradle
-        run: ./gradlew build integrationTest --info
+        run: > 
+          ./gradlew 
+          -x :regulering-api:regulering-api-server:build 
+          build 
+          integrationTest 
+          --info
         env:
           GH_PACKAGES_PAT: ${{ secrets.GH_PACKAGES_PAT }}
 
@@ -44,11 +51,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
-      - name: Bump version and push tag
-        id: tag_version
-        uses: mathieudutour/github-tag-action@af99e60ce8132224b8e6ebab5023449fe256ed46 #v6.2.0
-        with:
-          github_token: ${{ github.token }}
+      - name: Generate version
+        id: generate_version
+        shell: bash
+        run: |
+          timestamp=$(git show -s --format=%ct HEAD)
+          date=$(TZ=Europe/Oslo date -d "@$timestamp" +'%Y.%m.%d')
+          echo "version=${date}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
 
       - name: Build docker and push
         id: build
@@ -56,14 +65,14 @@ jobs:
         with:
           context: server/build/docker
           push: true
-          tags: ${{ env.registry }}/${{ github.repository }}:${{ steps.tag_version.outputs.new_tag }},${{ env.registry }}/${{ github.repository }}:latest
+          tags: ${{ env.registry }}/${{ github.repository }}:${{ steps.generate_version.outputs.version }},${{ env.registry }}/${{ github.repository }}:latest
 
       - name: Set output with build values
         id: setOutput
         run: |
-          echo "version=${{ steps.tag_version.outputs.new_tag }}" >> $GITHUB_OUTPUT
+          echo "version=${{ steps.generate_version.outputs.version }}" >> $GITHUB_OUTPUT
           echo "digest=${{ steps.build.outputs.digest }}" >> $GITHUB_OUTPUT
-          echo "image_url=${{ env.registry }}/${{ env.image_name }}:${{ steps.tag_version.outputs.new_tag }}" >> $GITHUB_OUTPUT
+          echo "image_url=${{ env.registry }}/${{ env.image_name }}:${{ steps.generate_version.outputs.version }}" >> $GITHUB_OUTPUT
 
   pharos:
     name: Run Pharos with Required Permissions
