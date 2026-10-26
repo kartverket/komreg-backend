@@ -2,7 +2,7 @@ import dev.monosoul.jooq.GenerateJooqClassesTask
 
 plugins {
     id("komreg.kotlin-common")
-    id("dev.monosoul.jooq-docker") version "9.0.8"
+    id("dev.monosoul.jooq-docker") version "9.0.10"
     application
     alias(libs.plugins.ktor.plugin)
     alias(libs.plugins.kotlin.serialization)
