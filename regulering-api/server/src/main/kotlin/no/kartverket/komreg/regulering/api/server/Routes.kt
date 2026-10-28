@@ -3,25 +3,89 @@ package no.kartverket.komreg.regulering.api.server
 import io.ktor.openapi.OpenApiInfo
 import io.ktor.openapi.jsonSchema
 import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationStopped
+import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.plugins.swagger.swaggerUI
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
-import io.ktor.server.routing.get
+import io.ktor.server.routing.*
 import io.ktor.server.routing.openapi.OpenApiDocSource.Routing
 import io.ktor.server.routing.openapi.describe
-import io.ktor.server.routing.path
-import io.ktor.server.routing.routing
 import io.ktor.utils.io.ExperimentalKtorApi
+import jakarta.xml.ws.BindingProvider
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.sync.Semaphore
 import kotlinx.datetime.LocalDate
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
+import no.kartverket.komreg.regulering.api.server.domain.MunicipalityId
+import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.MatrikkelApiMapper
+import no.kartverket.komreg.regulering.api.server.domain.type.MunicipalityNumber
+import no.kartverket.komreg.regulering.api.server.domain.type.CadastralNumber
 import no.kartverket.komreg.regulering.api.server.persistence.ReformRepository
+import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.DefaultMatrikkelApiMunicipalityNumbers
+import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.MatrikkelApiMunicipalityNumbers
 import no.kartverket.komreg.routes.Regulering
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.MatrikkelBubbleIdList
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.MatrikkelContext
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.adresse.Adresse
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.adresse.AdresseId
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.adresse.Veg
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.adresse.VegId
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.adresse.Vegadresse
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.adresse.VegadresseId
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.bygning.ByggIdList
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.geometri.Arc
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.geometri.CurveDirection
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.geometri.Polyline
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.geometri.koder.KoordinatsystemKodeId
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.matrikkelenhet.Festegrunn
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.matrikkelenhet.MatrikkelenhetId
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.matrikkelenhet.MatrikkelenhetIdList
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.matrikkelenhet.Matrikkelnummer
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.matrikkelenhet.Seksjon
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.matrikkelenhet.Teig
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.matrikkelenhet.TeigId
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.matrikkelenhet.TeigIdList
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.matrikkelenhet.Teiggrense
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.matrikkelenhet.TeiggrenseId
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.matrikkelenhet.Teiggrensepunkt
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.matrikkelenhet.TeiggrensepunktId
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.service.adresse.AdresseService
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.service.adresse.AdresseServiceWS
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.service.bygning.BygningService
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.service.bygning.BygningServiceWS
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.service.kommune.KommuneServiceWS
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.service.matrikkelenhet.MatrikkelenhetService
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.service.matrikkelenhet.MatrikkelenhetServiceWS
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.service.store.StoreService
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.service.store.StoreServiceWS
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.service.teig.TeigService
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.service.teig.TeigServiceWS
+import org.apache.cxf.frontend.ClientProxy
+import org.apache.cxf.transport.http.HTTPConduit
+import org.apache.cxf.transports.http.configuration.HTTPClientPolicy
+import org.maplibre.spatialk.geojson.Point
+import org.maplibre.spatialk.geojson.Position
+import org.maplibre.spatialk.geojson.dsl.PolygonBuilder
+import org.maplibre.spatialk.geojson.dsl.addFeature
+import org.maplibre.spatialk.geojson.dsl.addPoint
+import org.maplibre.spatialk.geojson.dsl.addRing
+import org.maplibre.spatialk.geojson.dsl.buildFeatureCollection
+import org.maplibre.spatialk.geojson.dsl.buildPolygon
 import org.slf4j.LoggerFactory
+import java.net.URI
+import java.util.concurrent.Executors
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.geometri.Point as WSPoint
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.matrikkelenhet.Matrikkelenhet as WSMatrikkelenhet
 
 private val log = LoggerFactory.getLogger(Application::routes::class.java.enclosingClass)
 
 @OptIn(ExperimentalKtorApi::class) // OpenAPI io.ktor.server.routing.openapi.DescribeRouteKt.describe
-fun Application.routes(reforms: ReformRepository) {
+fun Application.routes(deploymentConfig: ApplicationConfig, appJson: Json, reforms: ReformRepository) {
     routing {
         swaggerUI(path = "/openapi") {
             info = OpenApiInfo("KomReg Regulering API", "0.1.0")
@@ -50,6 +114,418 @@ fun Application.routes(reforms: ReformRepository) {
                     required = true
                     schema = jsonSchema<Int>()
                 }
+            }
+        }
+        matrikkelApiRoutes(deploymentConfig, appJson)
+    }
+}
+
+fun Route.matrikkelApiRoutes(deploymentConfig: ApplicationConfig, appJson: Json) {
+    val server = URI.create(deploymentConfig.property("app.matrikkel.api.url").getString()).normalize().toString()
+    val user = deploymentConfig.property("app.matrikkel.api.user").getString()
+    val password = deploymentConfig.property("app.matrikkel.api.password").getString()
+    fun <T : Any> T.configure(serviceName: String): T {
+        (this as BindingProvider).apply {
+            requestContext[BindingProvider.ENDPOINT_ADDRESS_PROPERTY] =
+                "$server/$serviceName"
+            requestContext[BindingProvider.USERNAME_PROPERTY] = user
+            requestContext[BindingProvider.PASSWORD_PROPERTY] = password
+            // Are JAX-WS client proxies thread safe?
+            // https://cxf.apache.org/faq
+            requestContext["thread.local.request.context"] = "true"
+            val conduit = (ClientProxy.getClient(this).conduit as HTTPConduit)
+            conduit.client = HTTPClientPolicy().apply {
+                connectionTimeout = 3_000L
+                receiveTimeout = 10_000L
+            }
+        }
+        return this
+    }
+
+    val ctx = MatrikkelContext(
+        "nb_NO",
+        false,
+        KoordinatsystemKodeId(11L),
+        "4.27.2",
+        "komreg-regulering-api",
+        null
+    )
+
+    val matrikkelenhetService: MatrikkelenhetService
+    val teigService: TeigService
+    val storeService: StoreService
+    val bygningService: BygningService
+    val adresseService: AdresseService
+    val mapper: MatrikkelApiMapper
+    val municipalityNumbers: MatrikkelApiMunicipalityNumbers
+    runBlocking {
+        withContext(Dispatchers.IO) {
+            val kommuneServiceDeferred = async {
+                KommuneServiceWS().kommuneServicePort.configure("KommuneServiceWS")
+            }
+            val storeServiceDeferred = async {
+                StoreServiceWS().storeServicePort.configure("StoreServiceWS")
+            }
+            val matrikkelenhetServiceDeferred = async {
+                MatrikkelenhetServiceWS().matrikkelenhetServicePort.configure("MatrikkelenhetServiceWS")
+            }
+            val teigServiceDeferred = async {
+                TeigServiceWS().teigServicePort.configure("TeigServiceWS")
+            }
+            val bygningServiceDeferred = async {
+                BygningServiceWS().bygningServicePort.configure("BygningServiceWS")
+            }
+            val adresseServiceDeferred = async {
+                AdresseServiceWS().adresseServicePort.configure("AdresseServiceWS")
+            }
+            municipalityNumbers = DefaultMatrikkelApiMunicipalityNumbers(
+                kommuneServiceDeferred.await(),
+                storeServiceDeferred.await(),
+                MunicipalityNumber.DefaultFactory,
+                ctx
+            )
+            mapper = MatrikkelApiMapper(
+                municipalityNumbers
+            )
+            matrikkelenhetService = matrikkelenhetServiceDeferred.await()
+            teigService = teigServiceDeferred.await()
+            storeService = storeServiceDeferred.await()
+            bygningService = bygningServiceDeferred.await()
+            adresseService = adresseServiceDeferred.await()
+        }
+    }
+
+    val executor = Executors.newVirtualThreadPerTaskExecutor()
+    application.monitor.subscribe(ApplicationStopped) {
+        log.info("Stopping matrikkel API services...")
+        executor.shutdown()
+        executor.awaitTermination(10, java.util.concurrent.TimeUnit.SECONDS)
+    }
+    val dispatcher = executor.asCoroutineDispatcher()
+    val semaphore = Semaphore(10)
+
+    /**
+     * Finn teigen og tilhørende matrikkelenheter som dekker et punkt (easting, northing) i UTM-sone 33.
+     *
+     */
+    get("/point/cadestral_unit") {
+        if (!semaphore.tryAcquire()) {
+            call.respondText(
+                text = "Too many concurrent requests, please try again later",
+                status = io.ktor.http.HttpStatusCode.ServiceUnavailable
+            )
+            return@get
+        }
+        try {
+            val easting = call.queryParameters["easting"]?.toDoubleOrNull()?.takeIf { it.isFinite() }
+            val northing = call.queryParameters["northing"]?.toDoubleOrNull()?.takeIf { it.isFinite() }
+            if (easting == null || northing == null) {
+                call.respondText(
+                    text = "Invalid or missing easting/northing parameters",
+                    status = io.ktor.http.HttpStatusCode.BadRequest
+                )
+                return@get
+            }
+
+            withContext(dispatcher) {
+                // Finn teigen som dekker punktet (easting, northing)
+                val wsParcelId =
+                    teigService.findTeigerForPunkt(
+                        WSPoint(easting, northing, null),
+                        ctx
+                    )?.item?.reduceOrNull { acc, teigId ->
+                        check(acc == teigId); acc
+                    }
+                if (wsParcelId == null) {
+                    call.respondText(
+                        text = "No parcel found covering point ($easting, $northing)",
+                        status = io.ktor.http.HttpStatusCode.NotFound
+                    )
+                    return@withContext
+                }
+
+                val parcelIdQueue = ArrayDeque(listOf(wsParcelId))
+                val seenParcelIds = hashSetOf<TeigId>()
+                val cadastralUnitIdQueue = ArrayDeque<MatrikkelenhetId>()
+                val seenCadastralUnitIds = hashMapOf<MatrikkelenhetId, WSMatrikkelenhet>()
+                val parcelCadastralUnits = hashMapOf<TeigId, MutableSet<Matrikkelnummer>>()
+                val includedParcelIds = hashSetOf(wsParcelId)
+
+                while (parcelIdQueue.isNotEmpty() || cadastralUnitIdQueue.isNotEmpty()) {
+                    if (parcelIdQueue.isNotEmpty()) {
+                        matrikkelenhetService.findMatrikkelenheterForTeiger(TeigIdList(parcelIdQueue.toList()), ctx)
+                            .entry
+                            .asSequence()
+                            .filter { seenParcelIds.add(it.key) }
+                            .flatMap { it.value.item.asSequence() }
+                            .filterNot { seenCadastralUnitIds.contains(it) }
+                            .forEach {
+                                cadastralUnitIdQueue.addLast(it)
+                            }
+                        parcelIdQueue.clear()
+                    }
+
+                    if (cadastralUnitIdQueue.isNotEmpty()) {
+                        val cadastralUnitsFetched = storeService
+                            .getObjects(MatrikkelBubbleIdList(cadastralUnitIdQueue.toList()), ctx)
+                            .item
+                            .map { it as WSMatrikkelenhet }
+                            .associateBy { it.id as MatrikkelenhetId }
+                        seenCadastralUnitIds.putAll(cadastralUnitsFetched)
+
+                        val leasedUnitIds = matrikkelenhetService
+                            .findFestegrunnerForMatrikkelenheter(MatrikkelenhetIdList(cadastralUnitIdQueue.toList()), false, ctx)
+                            .entry
+                            .asSequence()
+                            .flatMap { it.value.item.asSequence() }
+                            .filterNot(seenCadastralUnitIds::contains)
+                        val sectionedUnitIds = matrikkelenhetService
+                            .findSeksjonerForMatrikkelenheter(MatrikkelenhetIdList(cadastralUnitIdQueue.toList()), false, ctx)
+                            .entry
+                            .asSequence()
+                            .flatMap { it.value.item.asSequence() }
+                            .filterNot(seenCadastralUnitIds::contains)
+
+                        cadastralUnitIdQueue.clear()
+
+                        val leasedFromIds = cadastralUnitsFetched
+                            .values
+                            .asSequence()
+                            .mapNotNull { it as? Festegrunn }
+                            .flatMap { it.festetMatrikkelenhetIds.item.asSequence() }
+
+                        val sectionedFromIds = cadastralUnitsFetched
+                            .values
+                            .asSequence()
+                            .mapNotNull { it as? Seksjon }
+                            .flatMap { it.seksjonertMatrikkelenhetIds.item.asSequence() }
+
+                        (leasedUnitIds + sectionedUnitIds + leasedFromIds + sectionedFromIds)
+                            .filterNot { seenCadastralUnitIds.contains(it) }
+                            .distinct()
+                            .forEach { cadastralUnitIdQueue.addLast(it) }
+
+                        for ((_, unit) in cadastralUnitsFetched) {
+                            for (tfm in unit.teigerForMatrikkelenhet.item) {
+                                parcelCadastralUnits
+                                    .getOrPut(tfm.teigId) { hashSetOf() }
+                                    .add(unit.matrikkelnummer)
+
+                                if (unit.matrikkelnummer.gardsnummer != 0 &&
+                                    includedParcelIds.add(tfm.teigId)
+                                ) {
+                                    parcelIdQueue.addLast(tfm.teigId)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                val cadestralUnitsIds = seenCadastralUnitIds.values.asSequence()
+                    .filter { it.matrikkelnummer.gardsnummer != 0 }
+                    .map { it.id as MatrikkelenhetId }
+                    .toList()
+
+                val directAddressIds: Sequence<AdresseId?>
+                val indirectAddressIds: Sequence<AdresseId?>
+                if (cadestralUnitsIds.isNotEmpty()) {
+                    directAddressIds = cadestralUnitsIds
+                        .let { adresseService.findAdresserForMatrikkelenheter(MatrikkelenhetIdList(it.toList()), ctx) }
+                        .entry
+                        .asSequence()
+                        .flatMap { it.value.item.asSequence() }
+                    indirectAddressIds = cadestralUnitsIds
+                        .let { bygningService.findByggForMatrikkelenheter(MatrikkelenhetIdList(it.toList()), ctx) }
+                        .entry
+                        .asSequence()
+                        .flatMap { it.value.item.asSequence() }
+                        .let { bygningIds -> adresseService.findAdresserForByggList(ByggIdList(bygningIds.toList()), ctx) }
+                        .entry
+                        .asSequence()
+                        .flatMap { it.value.item.asSequence() }
+                } else {
+                    directAddressIds = emptySequence()
+                    indirectAddressIds = emptySequence()
+                }
+
+                val parcelAddressIds = seenCadastralUnitIds.values.asSequence()
+                    .filter { it.matrikkelnummer.gardsnummer == 0}
+                    .flatMap { it.teigerForMatrikkelenhet.item.asSequence() }
+                    .map { it.teigId }
+                    .filter { includedParcelIds.contains(it) }
+                    .let { teigService.findAdresserForTeiger(TeigIdList(it.toList()), ctx) }
+                    .item
+                    .asSequence()
+
+                val adresses = (directAddressIds + indirectAddressIds + parcelAddressIds)
+                    .distinct()
+                    .toList()
+                    .let { storeService.getObjects(MatrikkelBubbleIdList(it), ctx) }
+                    .item
+                    .asSequence()
+                    .map { it as Adresse}
+                    .mapNotNull { it as? Vegadresse }
+                    .associateBy { it.id as VegadresseId }
+
+                val roads = adresses.values.asSequence().map { it.vegId }.let {
+                    storeService.getObjects(MatrikkelBubbleIdList(it.toList()), ctx)
+                }.item.asSequence().map { it as Veg }.associateBy { it.id as VegId }
+
+                val teiger = storeService
+                    .getObjects(MatrikkelBubbleIdList(includedParcelIds.toList()), ctx)
+                    .item.asSequence()
+                    .map { it as Teig }.associateByTo(hashMapOf()) { it.id as TeigId }
+
+                val exteriorCds = teiger.values.flatMap { it.flate.exterior.curveDirections.item }
+                val interiorCds = teiger.values.flatMap { it.flate.interior.item }.map { it.curveDirections.item }
+                val grenselinjeIds = (exteriorCds + interiorCds.flatten()).distinctBy { it.id }.map { it.grenselinjeId }
+
+                val grenselinjer = storeService.getObjects(MatrikkelBubbleIdList(grenselinjeIds), ctx)
+                    .item
+                    .map { it as Teiggrense }
+                    .associateBy { it.id as TeiggrenseId }
+
+                val grensepunktIds = grenselinjer
+                    .values
+                    .asSequence()
+                    .flatMap {
+                        sequenceOf(it.kurve.startpunktId, it.kurve.endpunktId)
+                    }
+                    .distinct()
+                    .toList()
+
+                val grensepunkter = storeService.getObjects(MatrikkelBubbleIdList(grensepunktIds), ctx)
+                    .item
+                    .asSequence()
+                    .map { it as Teiggrensepunkt }
+                    .associateBy { it.id as TeiggrensepunktId }
+
+                with(mapper) {
+                    val features = buildFeatureCollection {
+                        for ((id, vegadresse) in adresses) {
+                            val point = vegadresse.representasjonspunkt?.position?.run { Point(x, y) } ?: continue
+
+                            addFeature {
+                                geometry = point
+                                foreignMembers = buildJsonObject {
+                                    put("featureType", "Address")
+                                }
+                                setId(id.value)
+                                val road = roads[vegadresse.vegId]!!
+                                properties = buildJsonObject {
+                                    put("municipalityNumber", municipalityNumbers[MunicipalityId(road.kommuneId.value)].value)
+                                    put("addressCode", road.adressekode)
+                                    put("addressName", road.adressenavn)
+                                    put("addressNumber", vegadresse.nummer)
+                                    put("addressNumberExtension", vegadresse.bokstav)
+                                }
+                            }
+                        }
+                        for (teig in teiger.values) {
+                            val teigPoly = buildPolygon {
+                                addRing(teig.flate.exterior.curveDirections.item, grenselinjer, grensepunkter)
+                                for (interior in teig.flate.interior.item) {
+                                    addRing(interior.curveDirections.item, grenselinjer, grensepunkter)
+                                }
+                            }
+
+                            addFeature {
+                                geometry = teigPoly
+                                setId(teig.id.value)
+                                properties = buildJsonObject {
+                                    putJsonArray("cadastralNumbers") {
+                                        for (matrikkelnummer in parcelCadastralUnits[teig.id] ?: emptySet()) {
+                                            val cadastralNumber = matrikkelnummer.toDomain()
+                                            add(appJson.encodeToJsonElement(CadastralNumber.serializer(), cadastralNumber))
+                                        }
+                                    }
+                                    if (wsParcelId == teig.id) {
+                                        put("coveringParcel", true)
+                                    } else {
+                                        put("coveringParcel", false)
+                                    }
+                                }
+                                foreignMembers = buildJsonObject {
+                                    put("featureType", "Parcel")
+                                }
+                            }
+                        }
+                        foreignMembers = buildJsonObject {
+                            put("crs", buildJsonObject {
+                                put("type", "name")
+                                put("properties", buildJsonObject {
+                                    put("name", "urn:ogc:def:crs:EPSG::25833")
+                                })
+                            })
+                        }
+                    }
+                    call.respond(features)
+                }
+            }
+        } finally {
+            semaphore.release()
+        }
+
+    }
+}
+
+private fun PolygonBuilder.addRing(
+    curveDirections: List<CurveDirection>,
+    grenselinjer: Map<TeiggrenseId, Teiggrense>,
+    grensepunkter: Map<TeiggrensepunktId, Teiggrensepunkt>
+) {
+    addRing {
+        for (cd in curveDirections) {
+            val grenseselinje = grenselinjer[cd.grenselinjeId]!!
+            val startpunkt = grensepunkter[grenseselinje.kurve.startpunktId]!!
+            val endpunkt = grensepunkter[grenseselinje.kurve.endpunktId]!!
+            val midpoints = when (val kurve = grenseselinje.kurve) {
+                // TODO: Hvordan håndtere kurver?
+                is Arc -> listOf(
+                    Position(
+                        kurve.buepunkt.x,
+                        kurve.buepunkt.y
+                    )
+                )
+
+                is Polyline -> kurve.kurvepunkter.item.map {
+                    Position(
+                        it.x,
+                        it.y
+                    )
+                }
+
+                else -> throw AssertionError("Unexpected curve type: ${grenseselinje.kurve::class.simpleName}")
+            }
+
+            if (cd.isSigned) {
+                addPoint(
+                    Position(
+                        startpunkt.posisjon.x,
+                        startpunkt.posisjon.y
+                    )
+                )
+                midpoints.forEach { add(it) }
+                addPoint(
+                    Position(
+                        endpunkt.posisjon.x,
+                        endpunkt.posisjon.y
+                    )
+                )
+            } else {
+                addPoint(
+                    Position(
+                        endpunkt.posisjon.x,
+                        endpunkt.posisjon.y
+                    )
+                )
+                midpoints.reversed().forEach { add(it) }
+                addPoint(
+                    Position(
+                        startpunkt.posisjon.x,
+                        startpunkt.posisjon.y
+                    )
+                )
             }
         }
     }

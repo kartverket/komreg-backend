@@ -2,7 +2,7 @@ import dev.monosoul.jooq.GenerateJooqClassesTask
 
 plugins {
     id("komreg.kotlin-common")
-    id("dev.monosoul.jooq-docker") version "9.0.11"
+    alias(libs.plugins.jooq.docker)
     application
     alias(libs.plugins.ktor.plugin)
     alias(libs.plugins.kotlin.serialization)
@@ -29,6 +29,17 @@ repositories {
 
 dependencies {
     implementation(project(":lib:regulering-dto"))
+
+    // Matrikkel API client
+    implementation(project(":lib:matrikkelapi-client"))
+    implementation(libs.apache.cxf.rt.frontend.jaxws)
+    implementation(libs.apache.cxf.rt.transports.http)
+
+    // Bygg GeoJSON fra Matrikkel API
+    implementation(libs.spatialk.geojson.jvm)
+
+    // Brukt for for å plassere config filer (secret file)
+    implementation(libs.directories)
 
     implementation(libs.kotlinx.coroutines.core)
 

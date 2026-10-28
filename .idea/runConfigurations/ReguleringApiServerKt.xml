@@ -3,6 +3,7 @@
     <envs>
       <env name="APP_DB_URL" value="r2dbc:postgresql://localhost:5433/komreg-db" />
       <env name="APP_LOG_ENCODE" value="pattern" />
+      <env name="APP_MATRIKKEL_API_URL" value="https://prodtest.matrikkel.no/matrikkelapi/wsapi/v1" />
     </envs>
     <option name="MAIN_CLASS_NAME" value="no.kartverket.komreg.regulering.api.server.ReguleringApiServerKt" />
     <module name="komreg-backend.regulering-api.regulering-api-server.main" />
