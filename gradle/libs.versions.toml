@@ -91,6 +91,7 @@ opentelemetry-runtime-telemetry = { module = "io.opentelemetry.instrumentation:o
 opentelemetry-logback-mdc = { module = "io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0", version.ref = "opentelemetry-instrumentation" }
 opentelemetry-semconv = { module = "io.opentelemetry.semconv:opentelemetry-semconv", version = "1.44.0" }
 
+directories = { module = "dev.dirs:directories", version = "26" }
 
 [plugins]
 ktor-plugin = { id = "io.ktor.plugin", version.ref = "ktor" }

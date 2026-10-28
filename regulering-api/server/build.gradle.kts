@@ -25,10 +25,28 @@ application {
 
 repositories {
     maven { url = uri("https://jitpack.io") }
+    maven {
+        url = uri("https://maven.pkg.github.com/kartverket/matrikkelapi-v1-wsclient")
+        credentials {
+            username = "token"
+            password = System.getenv("GITHUB_TOKEN") ?: System.getenv("GH_PACKAGES_PAT")
+                    ?: project.findProperty("github.token")?.toString()
+                    ?: throw InvalidUserDataException(
+                "GitHub token not found. Please set the GITHUB_TOKEN or GH_PACKAGES_PAT environment variable or github.token project property."
+            )
+        }
+
+    }
 }
 
 dependencies {
     implementation(project(":lib:regulering-dto"))
+
+    implementation("no.kartverket.matrikkelapi-v1:matrikkelapi-v1-wsclient:4.26.0.4")
+    implementation("org.apache.cxf:cxf-rt-frontend-jaxws:4.2.4")
+    implementation("org.apache.cxf:cxf-rt-transports-http:4.2.4")
+
+    implementation(libs.directories)
 
     implementation(libs.kotlinx.coroutines.core)
 

@@ -2,6 +2,7 @@ package no.kartverket.komreg.regulering.api.server
 
 import ch.qos.logback.classic.LoggerContext
 import ch.qos.logback.classic.util.ContextInitializer
+import dev.dirs.ProjectDirectories
 import dev.hayden.KHealth
 import io.ktor.http.HttpHeaders
 import io.ktor.server.application.Application
@@ -24,6 +25,9 @@ import io.r2dbc.pool.ConnectionPoolConfiguration
 import io.r2dbc.spi.ConnectionFactories
 import io.r2dbc.spi.ConnectionFactoryOptions
 import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
+import no.kartverket.komreg.regulering.api.server.domain.MunicipalityNumber
 import no.kartverket.komreg.regulering.api.server.persistence.ReformRepository
 import org.flywaydb.core.Flyway
 import org.jooq.DSLContext
@@ -33,14 +37,16 @@ import org.jooq.impl.DSL
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
+import java.io.File
 import java.net.URI
 import java.time.Duration
 import io.ktor.serialization.kotlinx.json.json as kotlinxJson
 
-//val logger : Logger by lazy {  LoggerFactory.getLogger(::main.javaClass.enclosingClass) }
 lateinit var logger: Logger
 
 fun main(args: Array<String>) {
+    val cl = Thread.currentThread().contextClassLoader ?: ::main.javaClass.classLoader
+
     // Sett logback konfigurasjonsfil hvis den ikke er satt som system property
     // Dumme avhengiheter som inkluderer logback.xml i classpathen som gir
     // warnings, som trigger en stygg liste med meldinger fra logback
@@ -49,14 +55,29 @@ fun main(args: Array<String>) {
             "logback.configurationFile",
             "regulering-api-logback.xml"
         )
-        Thread.currentThread().contextClassLoader.getResources("logback.xml").toList()
+        cl.getResources("logback.xml").toList()
     } else {
         null
     }
 
-    // Finn ut av APP_ENV fra application.conf hvis den ikke er satt som system property
-    val commandLineConfig = CommandLineConfig(args)
+    // Sett opp konfigurasjon for Ktor serveren, med default application.conf
+    // og secrets.conf
+    val modifiedArgs = arrayListOf<String>()
+    val configDir = File(ProjectDirectories.from("no", "kartverket.komreg", "regulering-api").configDir)
+    val secretsFile = File(configDir, "secrets.conf")
+    val secretsFileFound = secretsFile.isFile
+            && secretsFile.canRead()
+            && modifiedArgs.add("-config=$secretsFile")
+    if (args.none { it.startsWith("-config=") }) {
+        check(cl.getResource("application.conf") != null || File("application.conf").isFile) {
+            "application.conf not found"
+        }
+        modifiedArgs.add("-config=application.conf")
+    }
+    val commandLineConfig = CommandLineConfig(modifiedArgs.toTypedArray())
     val deploymentConfig = commandLineConfig.rootConfig.environment.config
+
+    // Sett logging format
     if (System.getProperty("APP_LOG_ENCODE").isNullOrEmpty()) {
         deploymentConfig.propertyOrNull("app.log.encode")?.getString()?.let { System.setProperty("APP_LOG_ENCODE", it) }
     }
@@ -103,6 +124,12 @@ fun main(args: Array<String>) {
         }
     }
 
+    if (!secretsFileFound) {
+        logger.info("Secrets file not found(secrets can still be provided via environment variables): $secretsFile")
+    } else {
+        logger.info("Secrets file found: $secretsFile")
+    }
+
     // JOOQ spammer loggen med tips og logo
     System.setProperty("org.jooq.no-logo", "true")
     System.setProperty("org.jooq.no-tips", "true")
@@ -130,8 +157,14 @@ internal fun rootModuleFactory(
             setOpenTelemetry(openTelemetrySdk)
         }
 
+        val appJson = Json {
+            serializersModule = SerializersModule {
+                // TODO: Støtt test-kommuner med lange fylkesnummer
+                contextual(MunicipalityNumber::class, MunicipalityNumber.DefaultSerializer)
+            }
+        }
         install(ContentNegotiation) {
-            kotlinxJson()
+            kotlinxJson(appJson)
         }
 
         install(CORS) {
@@ -143,7 +176,7 @@ internal fun rootModuleFactory(
 
         healthModule(dsl)
 
-        routes(ReformRepository(dsl))
+        routes(deploymentConfig, appJson, ReformRepository(dsl))
     }
 
 }
