@@ -15,6 +15,7 @@ import io.ktor.utils.io.ExperimentalKtorApi
 import jakarta.xml.ws.BindingProvider
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.sync.Semaphore
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -39,6 +40,9 @@ import no.statkart.matrikkel.matrikkelapi.wsapi.v1.service.store.StoreService
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.service.store.StoreServiceWS
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.service.teig.TeigService
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.service.teig.TeigServiceWS
+import org.apache.cxf.frontend.ClientProxy
+import org.apache.cxf.transport.http.HTTPConduit
+import org.apache.cxf.transports.http.configuration.HTTPClientPolicy
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.util.concurrent.Executors
@@ -92,6 +96,14 @@ fun Route.matrikkelApiRoutes(deploymentConfig: ApplicationConfig) {
                 "$server/$serviceName"
             requestContext[BindingProvider.USERNAME_PROPERTY] = user
             requestContext[BindingProvider.PASSWORD_PROPERTY] = password
+            // Are JAX-WS client proxies thread safe?
+            // https://cxf.apache.org/faq
+            requestContext["thread.local.request.context"] = "true"
+            val conduit = (ClientProxy.getClient(this).conduit as HTTPConduit)
+            conduit.client = HTTPClientPolicy().apply {
+                connectionTimeout = 3_000L
+                receiveTimeout = 10_000L
+            }
         }
         return this
     }
@@ -144,77 +156,94 @@ fun Route.matrikkelApiRoutes(deploymentConfig: ApplicationConfig) {
         executor.awaitTermination(10, java.util.concurrent.TimeUnit.SECONDS)
     }
     val dispatcher = executor.asCoroutineDispatcher()
+    val semaphore = Semaphore(10)
 
     get("/point/cadestral_unit") {
-        val easting = call.queryParameters["easting"]?.toDoubleOrNull()?.takeIf { it.isFinite() }
-        val northing = call.queryParameters["northing"]?.toDoubleOrNull()?.takeIf { it.isFinite() }
-        if (easting == null || northing == null) {
+        if (!semaphore.tryAcquire()) {
             call.respondText(
-                text = "Invalid or missing easting/northing parameters",
-                status = io.ktor.http.HttpStatusCode.BadRequest
+                text = "Too many concurrent requests, please try again later",
+                status = io.ktor.http.HttpStatusCode.ServiceUnavailable
             )
             return@get
         }
-
-        withContext(dispatcher) {
-            val wsParcelId = teigService.findTeigerForPunkt(Point(easting, northing, null),ctx)?.item?.reduceOrNull {
-                    acc, teigId -> check(acc == teigId); acc
-            }
-            if (wsParcelId == null) {
+        try {
+            val easting = call.queryParameters["easting"]?.toDoubleOrNull()?.takeIf { it.isFinite() }
+            val northing = call.queryParameters["northing"]?.toDoubleOrNull()?.takeIf { it.isFinite() }
+            if (easting == null || northing == null) {
                 call.respondText(
-                    text = "No parcel found covering point ($easting, $northing)",
-                    status = io.ktor.http.HttpStatusCode.NotFound
+                    text = "Invalid or missing easting/northing parameters",
+                    status = io.ktor.http.HttpStatusCode.BadRequest
                 )
-                return@withContext
+                return@get
             }
 
-            val wsRemainingCadestralUnitIds = ArrayDeque<MatrikkelenhetId>()
-            val wsSeenCadestralUnitIds = hashSetOf<MatrikkelenhetId>()
-            val wsVisitedParcelIds = hashSetOf<TeigId>()
-            val wsCadestralUnits = mutableListOf<WSMatrikkelenhet>()
-
-            for (id in matrikkelenhetService.findMatrikkelenheterForTeig(wsParcelId, ctx).item) {
-                if (wsSeenCadestralUnitIds.add(id)) {
-                    wsRemainingCadestralUnitIds.addLast(id)
+            withContext(dispatcher) {
+                val wsParcelId =
+                    teigService.findTeigerForPunkt(
+                        Point(easting, northing, null),
+                        ctx
+                    )?.item?.reduceOrNull { acc, teigId ->
+                        check(acc == teigId); acc
+                    }
+                if (wsParcelId == null) {
+                    call.respondText(
+                        text = "No parcel found covering point ($easting, $northing)",
+                        status = io.ktor.http.HttpStatusCode.NotFound
+                    )
+                    return@withContext
                 }
-            }
 
-            while (wsRemainingCadestralUnitIds.isNotEmpty()) {
-                val batchIds = wsRemainingCadestralUnitIds.toList()
-                wsRemainingCadestralUnitIds.clear()
+                val wsRemainingCadestralUnitIds = ArrayDeque<MatrikkelenhetId>()
+                val wsSeenCadestralUnitIds = hashSetOf<MatrikkelenhetId>()
+                val wsVisitedParcelIds = hashSetOf<TeigId>()
+                val wsCadestralUnits = mutableListOf<WSMatrikkelenhet>()
 
-                val wsNewCadestralUnits = storeService
-                    .getObjects(MatrikkelBubbleIdList(batchIds), ctx)
-                    .item
-                    .map { it as WSMatrikkelenhet }
-                wsCadestralUnits.addAll(wsNewCadestralUnits)
+                for (id in matrikkelenhetService.findMatrikkelenheterForTeig(wsParcelId, ctx).item) {
+                    if (wsSeenCadestralUnitIds.add(id)) {
+                        wsRemainingCadestralUnitIds.addLast(id)
+                    }
+                }
 
-                val wsNewParcelIds = wsNewCadestralUnits
-                    .asSequence()
-                    .flatMap { it.teigerForMatrikkelenhet.item.asSequence() }
-                    .map { it.teigId }
-                    .filter { wsVisitedParcelIds.add(it) }
-                    .toList()
+                while (wsRemainingCadestralUnitIds.isNotEmpty()) {
+                    val batchIds = wsRemainingCadestralUnitIds.toList()
+                    wsRemainingCadestralUnitIds.clear()
 
-                if (wsNewParcelIds.isNotEmpty()) {
-                    matrikkelenhetService
-                        .findMatrikkelenheterForTeiger(TeigIdList(wsNewParcelIds), ctx)
-                        .entry
+                    val wsNewCadestralUnits = storeService
+                        .getObjects(MatrikkelBubbleIdList(batchIds), ctx)
+                        .item
+                        .map { it as WSMatrikkelenhet }
+                    wsCadestralUnits.addAll(wsNewCadestralUnits)
+
+                    val wsNewParcelIds = wsNewCadestralUnits
                         .asSequence()
-                        .flatMap { it.value.item.asSequence() }
-                        .forEach { id ->
-                            if (wsSeenCadestralUnitIds.add(id)) {
-                                wsRemainingCadestralUnitIds.addLast(id)
+                        .flatMap { it.teigerForMatrikkelenhet.item.asSequence() }
+                        .map { it.teigId }
+                        .filter { wsVisitedParcelIds.add(it) }
+                        .toList()
+
+                    if (wsNewParcelIds.isNotEmpty()) {
+                        matrikkelenhetService
+                            .findMatrikkelenheterForTeiger(TeigIdList(wsNewParcelIds), ctx)
+                            .entry
+                            .asSequence()
+                            .flatMap { it.value.item.asSequence() }
+                            .forEach { id ->
+                                if (wsSeenCadestralUnitIds.add(id)) {
+                                    wsRemainingCadestralUnitIds.addLast(id)
+                                }
                             }
-                        }
+                    }
+                }
+
+                with(mapper) {
+                    val cadestralUnits = wsCadestralUnits.map { it.toDomain() }
+                    call.respond(CadestralUnitCoveringPointResult(wsParcelId.toDomain(), cadestralUnits))
                 }
             }
-
-            with(mapper) {
-                val cadestralUnits = wsCadestralUnits.map { it.toDomain() }
-                call.respond(CadestralUnitCoveringPointResult(wsParcelId.toDomain(), cadestralUnits))
-            }
+        } finally {
+            semaphore.release()
         }
+
     }
 }
 
