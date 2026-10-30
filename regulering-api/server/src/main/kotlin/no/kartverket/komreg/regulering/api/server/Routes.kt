@@ -232,11 +232,15 @@ fun Route.matrikkelApiRoutes(deploymentConfig: ApplicationConfig) {
                     val batchIds = wsRemainingCadestralUnitIds.toList()
                     wsRemainingCadestralUnitIds.clear()
 
-                    val wsNewCadestralUnits = storeService
+                    val fetchedCadestralUnits = storeService
                         .getObjects(MatrikkelBubbleIdList(batchIds), ctx)
                         .item
                         .map { it as WSMatrikkelenhet }
+                    val (wsNewNoCadestralUnit, wsNewCadestralUnits) = fetchedCadestralUnits
+                        .partition { it.matrikkelnummer.gardsnummer == 0 }
+
                     wsCadestralUnits.addAll(wsNewCadestralUnits)
+                    wsCadestralUnits.addAll(wsNewNoCadestralUnit)
 
                     val wsNewParcelIds = wsNewCadestralUnits
                         .asSequence()
