@@ -291,11 +291,6 @@ fun Route.matrikkelApiRoutes(deploymentConfig: ApplicationConfig) {
                     .map { it as Teiggrensepunkt }
                     .associateBy { it.id as TeiggrensepunktId }
 
-                exteriorCds
-                    .map {
-                        grenselinjer[it.grenselinjeId]
-                    }
-
                 val features = buildFeatureCollection {
                     for (teig in teiger.values) {
                         val teigPoly = buildPolygon {
