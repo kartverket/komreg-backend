@@ -92,6 +92,7 @@ opentelemetry-logback-mdc = { module = "io.opentelemetry.instrumentation:opentel
 opentelemetry-semconv = { module = "io.opentelemetry.semconv:opentelemetry-semconv", version = "1.44.0" }
 
 directories = { module = "dev.dirs:directories", version = "26" }
+spatialk-geojson-jvm = { module = "org.maplibre.spatialk:geojson-jvm", version = "0.8.0" }
 
 [plugins]
 ktor-plugin = { id = "io.ktor.plugin", version.ref = "ktor" }

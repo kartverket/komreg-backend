@@ -19,6 +19,9 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import no.kartverket.komreg.regulering.api.server.domain.CadestralUnit
 import no.kartverket.komreg.regulering.api.server.domain.MatrikkelApiMapper
 import no.kartverket.komreg.regulering.api.server.domain.MunicipalityNumber
@@ -28,11 +31,17 @@ import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.DefaultMa
 import no.kartverket.komreg.routes.Regulering
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.MatrikkelBubbleIdList
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.MatrikkelContext
-import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.geometri.Point
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.geometri.Arc
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.geometri.Polyline
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.geometri.koder.KoordinatsystemKodeId
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.matrikkelenhet.MatrikkelenhetId
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.matrikkelenhet.Teig
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.matrikkelenhet.TeigId
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.matrikkelenhet.TeigIdList
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.matrikkelenhet.Teiggrense
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.matrikkelenhet.TeiggrenseId
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.matrikkelenhet.Teiggrensepunkt
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.matrikkelenhet.TeiggrensepunktId
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.service.kommune.KommuneServiceWS
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.service.matrikkelenhet.MatrikkelenhetService
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.service.matrikkelenhet.MatrikkelenhetServiceWS
@@ -43,9 +52,17 @@ import no.statkart.matrikkel.matrikkelapi.wsapi.v1.service.teig.TeigServiceWS
 import org.apache.cxf.frontend.ClientProxy
 import org.apache.cxf.transport.http.HTTPConduit
 import org.apache.cxf.transports.http.configuration.HTTPClientPolicy
+import org.maplibre.spatialk.geojson.FeatureCollection
+import org.maplibre.spatialk.geojson.Polygon
+import org.maplibre.spatialk.geojson.dsl.addFeature
+import org.maplibre.spatialk.geojson.dsl.addPoint
+import org.maplibre.spatialk.geojson.dsl.addRing
+import org.maplibre.spatialk.geojson.dsl.buildFeatureCollection
+import org.maplibre.spatialk.geojson.dsl.buildPolygon
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.util.concurrent.Executors
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.geometri.Point as WSPoint
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.matrikkelenhet.Matrikkelenhet as WSMatrikkelenhet
 
 private val log = LoggerFactory.getLogger(Application::routes::class.java.enclosingClass)
@@ -158,6 +175,10 @@ fun Route.matrikkelApiRoutes(deploymentConfig: ApplicationConfig) {
     val dispatcher = executor.asCoroutineDispatcher()
     val semaphore = Semaphore(10)
 
+    /**
+     * Finn teigen og tilhørende matrikkelenheter som dekker et punkt (easting, northing) i UTM-sone 33.
+     *
+     */
     get("/point/cadestral_unit") {
         if (!semaphore.tryAcquire()) {
             call.respondText(
@@ -180,7 +201,7 @@ fun Route.matrikkelApiRoutes(deploymentConfig: ApplicationConfig) {
             withContext(dispatcher) {
                 val wsParcelId =
                     teigService.findTeigerForPunkt(
-                        Point(easting, northing, null),
+                        WSPoint(easting, northing, null),
                         ctx
                     )?.item?.reduceOrNull { acc, teigId ->
                         check(acc == teigId); acc
@@ -235,9 +256,111 @@ fun Route.matrikkelApiRoutes(deploymentConfig: ApplicationConfig) {
                     }
                 }
 
+                val teiger = storeService
+                    .getObjects(MatrikkelBubbleIdList(wsVisitedParcelIds.distinct().toList()), ctx)
+                    .item.asSequence()
+                    .map { it as Teig }.associateByTo(hashMapOf()) { it.id as TeigId }
+
+                val exteriorCds = teiger.values.flatMap { it.flate.exterior.curveDirections.item }
+                val interiorCds = teiger.values.flatMap { it.flate.interior.item }.map { it.curveDirections.item }
+                val grenselinjeIds = (exteriorCds + interiorCds.flatten()).distinctBy { it.id }.map { it.grenselinjeId }
+
+                val grenselinjer = storeService.getObjects(MatrikkelBubbleIdList(grenselinjeIds), ctx)
+                    .item
+                    .map { it as Teiggrense }
+                    .associateBy { it.id as TeiggrenseId }
+
+                val grensepunktIds = grenselinjer
+                    .values
+                    .asSequence()
+                    .flatMap {
+                        sequenceOf(it.kurve.startpunktId, it.kurve.endpunktId)
+                    }
+                    .distinct()
+                    .toList()
+
+                val grensepunkter = storeService.getObjects(MatrikkelBubbleIdList(grensepunktIds), ctx)
+                    .item
+                    .asSequence()
+                    .map { it as Teiggrensepunkt }
+                    .associateBy { it.id as TeiggrensepunktId }
+
+                exteriorCds
+                    .map {
+                        grenselinjer[it.grenselinjeId]
+                    }
+
+                val features = buildFeatureCollection {
+                    for (teig in teiger.values) {
+                        val teigPoly = buildPolygon {
+                            addRing {
+                                for (cd in teig.flate.exterior.curveDirections.item) {
+                                    val grenseselinje = grenselinjer[cd.grenselinjeId]!!
+                                    val startpunkt = grensepunkter[grenseselinje.kurve.startpunktId]!!
+                                    val endpunkt = grensepunkter[grenseselinje.kurve.endpunktId]!!
+                                    val midpoints = when (val kurve = grenseselinje.kurve) {
+                                        is Arc -> listOf(
+                                            org.maplibre.spatialk.geojson.Position(
+                                                kurve.buepunkt.x,
+                                                kurve.buepunkt.y
+                                            )
+                                        )
+
+                                        is Polyline -> kurve.kurvepunkter.item.map {
+                                            org.maplibre.spatialk.geojson.Position(
+                                                it.x,
+                                                it.y
+                                            )
+                                        }
+
+                                        else -> throw AssertionError("Unexpected curve type: ${grenseselinje.kurve::class.simpleName}")
+                                    }
+
+                                    if (cd.isSigned) {
+                                        addPoint(
+                                            org.maplibre.spatialk.geojson.Position(
+                                                startpunkt.posisjon.x,
+                                                startpunkt.posisjon.x
+                                            )
+                                        )
+                                        midpoints.forEach { add(it) }
+                                        addPoint(
+                                            org.maplibre.spatialk.geojson.Position(
+                                                endpunkt.posisjon.x,
+                                                endpunkt.posisjon.x
+                                            )
+                                        )
+                                    } else {
+                                        addPoint(
+                                            org.maplibre.spatialk.geojson.Position(
+                                                endpunkt.posisjon.x,
+                                                endpunkt.posisjon.x
+                                            )
+                                        )
+                                        midpoints.reversed().forEach { add(it) }
+                                        addPoint(
+                                            org.maplibre.spatialk.geojson.Position(
+                                                startpunkt.posisjon.x,
+                                                startpunkt.posisjon.x
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        addFeature(geometry = teigPoly) {
+                            geometry = teigPoly
+                            properties = buildJsonObject {
+                                put("parcelId", teig.id.value)
+                            }
+                        }
+                    }
+                }
+
                 with(mapper) {
                     val cadestralUnits = wsCadestralUnits.map { it.toDomain() }
-                    call.respond(CadestralUnitCoveringPointResult(wsParcelId.toDomain(), cadestralUnits))
+                    call.respond(CadestralUnitCoveringPointResult(wsParcelId.toDomain(), cadestralUnits, features))
                 }
             }
         } finally {
@@ -250,5 +373,6 @@ fun Route.matrikkelApiRoutes(deploymentConfig: ApplicationConfig) {
 @Serializable
 data class CadestralUnitCoveringPointResult(
     val coveringParcelId: ParcelId,
-    val cadestralUnits: Collection<CadestralUnit>
+    val cadestralUnits: Collection<CadestralUnit>,
+    val features: FeatureCollection<Polygon, JsonObject?>,
 )
