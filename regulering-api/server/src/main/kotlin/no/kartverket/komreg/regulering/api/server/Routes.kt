@@ -32,6 +32,7 @@ import no.kartverket.komreg.routes.Regulering
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.MatrikkelBubbleIdList
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.MatrikkelContext
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.geometri.Arc
+import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.geometri.CurveDirection
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.geometri.Polyline
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.geometri.koder.KoordinatsystemKodeId
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.matrikkelenhet.MatrikkelenhetId
@@ -54,6 +55,8 @@ import org.apache.cxf.transport.http.HTTPConduit
 import org.apache.cxf.transports.http.configuration.HTTPClientPolicy
 import org.maplibre.spatialk.geojson.FeatureCollection
 import org.maplibre.spatialk.geojson.Polygon
+import org.maplibre.spatialk.geojson.Position
+import org.maplibre.spatialk.geojson.dsl.PolygonBuilder
 import org.maplibre.spatialk.geojson.dsl.addFeature
 import org.maplibre.spatialk.geojson.dsl.addPoint
 import org.maplibre.spatialk.geojson.dsl.addRing
@@ -293,59 +296,9 @@ fun Route.matrikkelApiRoutes(deploymentConfig: ApplicationConfig) {
                 val features = buildFeatureCollection {
                     for (teig in teiger.values) {
                         val teigPoly = buildPolygon {
-                            addRing {
-                                for (cd in teig.flate.exterior.curveDirections.item) {
-                                    val grenseselinje = grenselinjer[cd.grenselinjeId]!!
-                                    val startpunkt = grensepunkter[grenseselinje.kurve.startpunktId]!!
-                                    val endpunkt = grensepunkter[grenseselinje.kurve.endpunktId]!!
-                                    val midpoints = when (val kurve = grenseselinje.kurve) {
-                                        is Arc -> listOf(
-                                            org.maplibre.spatialk.geojson.Position(
-                                                kurve.buepunkt.x,
-                                                kurve.buepunkt.y
-                                            )
-                                        )
-
-                                        is Polyline -> kurve.kurvepunkter.item.map {
-                                            org.maplibre.spatialk.geojson.Position(
-                                                it.x,
-                                                it.y
-                                            )
-                                        }
-
-                                        else -> throw AssertionError("Unexpected curve type: ${grenseselinje.kurve::class.simpleName}")
-                                    }
-
-                                    if (cd.isSigned) {
-                                        addPoint(
-                                            org.maplibre.spatialk.geojson.Position(
-                                                startpunkt.posisjon.x,
-                                                startpunkt.posisjon.x
-                                            )
-                                        )
-                                        midpoints.forEach { add(it) }
-                                        addPoint(
-                                            org.maplibre.spatialk.geojson.Position(
-                                                endpunkt.posisjon.x,
-                                                endpunkt.posisjon.x
-                                            )
-                                        )
-                                    } else {
-                                        addPoint(
-                                            org.maplibre.spatialk.geojson.Position(
-                                                endpunkt.posisjon.x,
-                                                endpunkt.posisjon.x
-                                            )
-                                        )
-                                        midpoints.reversed().forEach { add(it) }
-                                        addPoint(
-                                            org.maplibre.spatialk.geojson.Position(
-                                                startpunkt.posisjon.x,
-                                                startpunkt.posisjon.x
-                                            )
-                                        )
-                                    }
-                                }
+                            addRing(teig.flate.exterior.curveDirections.item, grenselinjer, grensepunkter)
+                            for (interior in teig.flate.interior.item) {
+                                addRing(interior.curveDirections.item, grenselinjer, grensepunkter)
                             }
                         }
 
@@ -367,6 +320,68 @@ fun Route.matrikkelApiRoutes(deploymentConfig: ApplicationConfig) {
             semaphore.release()
         }
 
+    }
+}
+
+private fun PolygonBuilder.addRing(
+    curveDirections: List<CurveDirection>,
+    grenselinjer: Map<TeiggrenseId, Teiggrense>,
+    grensepunkter: Map<TeiggrensepunktId, Teiggrensepunkt>
+) {
+    addRing {
+        for (cd in curveDirections) {
+            val grenseselinje = grenselinjer[cd.grenselinjeId]!!
+            val startpunkt = grensepunkter[grenseselinje.kurve.startpunktId]!!
+            val endpunkt = grensepunkter[grenseselinje.kurve.endpunktId]!!
+            val midpoints = when (val kurve = grenseselinje.kurve) {
+                // TODO: Hvordan håndtere kurver?
+                is Arc -> listOf(
+                    Position(
+                        kurve.buepunkt.x,
+                        kurve.buepunkt.y
+                    )
+                )
+
+                is Polyline -> kurve.kurvepunkter.item.map {
+                    Position(
+                        it.x,
+                        it.y
+                    )
+                }
+
+                else -> throw AssertionError("Unexpected curve type: ${grenseselinje.kurve::class.simpleName}")
+            }
+
+            if (cd.isSigned) {
+                addPoint(
+                    Position(
+                        startpunkt.posisjon.x,
+                        startpunkt.posisjon.y
+                    )
+                )
+                midpoints.forEach { add(it) }
+                addPoint(
+                    Position(
+                        endpunkt.posisjon.x,
+                        endpunkt.posisjon.y
+                    )
+                )
+            } else {
+                addPoint(
+                    Position(
+                        endpunkt.posisjon.x,
+                        endpunkt.posisjon.y
+                    )
+                )
+                midpoints.reversed().forEach { add(it) }
+                addPoint(
+                    Position(
+                        startpunkt.posisjon.x,
+                        startpunkt.posisjon.y
+                    )
+                )
+            }
+        }
     }
 }
 
