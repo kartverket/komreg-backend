@@ -1,4 +1,4 @@
-FROM eclipse-temurin:25-alpine@sha256:1e20ead9eec7234db293f1913438090d533ed47c0b9e12dc8c7627a802a44ed6
+FROM eclipse-temurin:25-alpine@sha256:425f0b733cb23843bd78dbe5552513976d0cf12b9722752c48a5161cf5cd2f32
 
 RUN <<'EOF'
 set -eu
