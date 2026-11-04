@@ -378,7 +378,7 @@ fun Route.matrikkelApiRoutes(deploymentConfig: ApplicationConfig, appJson: Json)
 
                 val exteriorCds = teiger.values.flatMap { it.flate.exterior.curveDirections.item }
                 val interiorCds = teiger.values.flatMap { it.flate.interior.item }.map { it.curveDirections.item }
-                val grenselinjeIds = (exteriorCds + interiorCds.flatten()).distinctBy { it.id }.map { it.grenselinjeId }
+                val grenselinjeIds = (exteriorCds + interiorCds.flatten()).asSequence().map { it.grenselinjeId }.distinct().toList()
 
                 val grenselinjer = storeService.getObjects(MatrikkelBubbleIdList(grenselinjeIds), ctx)
                     .item

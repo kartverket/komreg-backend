@@ -68,6 +68,7 @@ fun main(args: Array<String>) {
     val secretsFileFound = secretsFile.isFile
             && secretsFile.canRead()
             && modifiedArgs.add("-config=$secretsFile")
+    modifiedArgs.addAll(args)
     if (args.none { it.startsWith("-config=") }) {
         check(cl.getResource("application.conf") != null || File("application.conf").isFile) {
             "application.conf not found"
