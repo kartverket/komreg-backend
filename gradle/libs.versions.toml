@@ -15,6 +15,7 @@ testcontainers = "2.0.5"
 jooq = "3.21.9" # Se dev.monosoul.jooq.RecommendedVersions fra gradle plugin
 opentelemetry-instrumentation = "2.33.1-alpha"
 slf4j = "2.0.20"
+apache-cxf = "4.2.4"
 
 [libraries]
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
@@ -91,8 +92,25 @@ opentelemetry-runtime-telemetry = { module = "io.opentelemetry.instrumentation:o
 opentelemetry-logback-mdc = { module = "io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0", version.ref = "opentelemetry-instrumentation" }
 opentelemetry-semconv = { module = "io.opentelemetry.semconv:opentelemetry-semconv", version = "1.44.0" }
 
+directories = { module = "dev.dirs:directories", version = "26" }
+spatialk-geojson-jvm = { module = "org.maplibre.spatialk:geojson-jvm", version = "0.8.0" }
+
+jakarta-ee-bom = { module = "jakarta.platform:jakarta.jakartaee-bom", version = "11.0.0" }
+jakarta-xml-bind-api = { module = "jakarta.xml.bind:jakarta.xml.bind-api", version = "4.0.5" }
+jakarta-xml-ws-api = { module = "jakarta.xml.ws:jakarta.xml.ws-api", version = "4.0.3" }
+jakarta-xml-ws-tools = { module = "com.sun.xml.ws:jaxws-tools", version = "4.0.5" }
+# Bruk samme versjon som jakarta-xml-ws-tools' slf4j-api
+jakarta-xml-ws-tools-slf4j = { module = "org.slf4j:slf4j-simple", version = "1.7.36" }
+jvnet-jaxb-plugins = { module = "org.jvnet.jaxb:jaxb-plugins", version = "4.0.16" }
+
+apache-cxf-rt-frontend-jaxws = { module = "org.apache.cxf:cxf-rt-frontend-jaxws", version.ref = "apache-cxf" }
+apache-cxf-rt-transports-http = { module = "org.apache.cxf:cxf-rt-transports-http", version.ref = "apache-cxf" }
+
+
+
 
 [plugins]
 ktor-plugin = { id = "io.ktor.plugin", version.ref = "ktor" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+jooq-docker = { id = "dev.monosoul.jooq-docker", version = "9.0.11" }

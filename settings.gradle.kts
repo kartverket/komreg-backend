@@ -4,6 +4,7 @@ include(
     ":lib:core-api",
     ":lib:regulering-dto",
     ":lib:transformation",
+    ":lib:matrikkelapi-client",
     ":server",
     ":regulering-api:server",
 )

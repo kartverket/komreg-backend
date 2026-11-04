@@ -10,7 +10,7 @@
         <then>
             <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
                 <encoder>
-                    <pattern>%gray(%d{HH:mm:ss.SSS}) %highlight(%-5level) %cyan(%-9.9thread) %gray(%-36.36logger{36}) | %replace(%msg%n%ex{full}){'(\r?\n)(?=[\s\S])','$1           | '}%nopex</pattern>
+                    <pattern>%white(%d{HH:mm:ss.SSS}) %highlight(%-5level) %cyan(%-9.9thread) %white(%-36.36logger{36}) | %replace(%msg%n%ex{full}){'(\r?\n)(?=[\s\S])','$1           | '}%nopex</pattern>
                 </encoder>
             </appender>
         </then>
