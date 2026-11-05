@@ -24,6 +24,7 @@ import kotlinx.serialization.json.put
 import no.kartverket.komreg.regulering.api.server.domain.MunicipalityId
 import no.kartverket.komreg.regulering.api.server.domain.type.MunicipalityNumber
 import no.kartverket.komreg.regulering.api.server.persistence.ReformRepository
+import no.kartverket.komreg.regulering.api.server.route.regulering.reguleringer
 import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.CadastralUnitFeatures
 import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.DefaultMatrikkelApiMunicipalityNumbers
 import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.EPSG_25833_CRS
@@ -63,7 +64,6 @@ import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.geometri.Point as WSPo
 
 private val log = LoggerFactory.getLogger(Application::routes::class.java.enclosingClass)
 
-@OptIn(ExperimentalKtorApi::class) // OpenAPI io.ktor.server.routing.openapi.DescribeRouteKt.describe
 fun Application.routes(deploymentConfig: ApplicationConfig, appJson: Json, reforms: ReformRepository) {
     routing {
         swaggerUI(path = "/openapi") {
@@ -78,24 +78,8 @@ fun Application.routes(deploymentConfig: ApplicationConfig, appJson: Json, refor
             call.respondText("Hello, World!")
             log.info("Responded to /greet")
         }
-        get("/reform") {
-            call.respond(reforms.summaries.toList())
-        }
-        get("/reform/part/{partId}/data") {
-            val partId = call.parameters["partId"]
-            call.respond(Regulering("partId", partId ?: "null", LocalDate(2020, 1, 1), emptyList()))
-        }.describe {
-            summary = "Bla bla bla"
-            description = "Ja, ukeblad"
-            parameters {
-                path("partId") {
-                    description = "The ID of the part to retrieve data for"
-                    required = true
-                    schema = jsonSchema<Int>()
-                }
-            }
-        }
         matrikkelApiRoutes(deploymentConfig, appJson)
+        reguleringer(appJson, reforms)
     }
 }
 

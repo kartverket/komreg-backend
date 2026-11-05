@@ -55,6 +55,7 @@ dependencies {
     implementation(libs.ktor.server.openapi)
     implementation(libs.ktor.server.swagger)
     implementation(libs.ktor.server.cors)
+    implementation(libs.ktor.server.sse.jvm)
 
     // jOOQ dependencies
     implementation(libs.jooq)
@@ -120,6 +121,8 @@ tasks.named<GenerateJooqClassesTask>("generateJooqClasses") {
         name = "org.jooq.codegen.KotlinGenerator"
         generate.apply {
             withPojos(false)
+            withPojosAsKotlinDataClasses(true)
+            withImmutablePojos(true)
             withKotlinNotNullRecordAttributes(true)
         }
     }
