@@ -15,6 +15,7 @@ import io.ktor.server.engine.loadCommonConfiguration
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
+import io.ktor.server.sse.SSE
 import io.opentelemetry.instrumentation.ktor.v3_0.KtorServerTelemetry
 import io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetry
 import io.opentelemetry.sdk.OpenTelemetrySdk
@@ -172,6 +173,8 @@ internal fun rootModuleFactory(
             anyHost()
             allowHeader(HttpHeaders.ContentType)
         }
+
+        install(SSE)
 
         val dsl = databaseDsl(deploymentConfig)
 
