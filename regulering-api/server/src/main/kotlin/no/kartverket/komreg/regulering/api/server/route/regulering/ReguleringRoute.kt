@@ -14,8 +14,6 @@ import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.kartverket.komreg.regulering.api.server.persistence.ReformRepository
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicInteger
 
 @Serializable
 data class MatrikkelenhetDraft(
@@ -23,7 +21,7 @@ data class MatrikkelenhetDraft(
     val gardsnummer: Int,
     // null betyr hele gårdsnummeret flyttes
     val bruksnummer: Int? = null,
-    val teigIder: Set<Int>,
+    val teigIder: Set<Long>,
     // Ikke satt (null) betyr dagens nummer beholdes
     val nyGardsnummer: Int? = null,
     val nyBruksnummer: Int? = null,
@@ -53,19 +51,17 @@ data class OpprettReguleringRequest(
 
 
 fun Route.reguleringer(appJson: Json, reforms: ReformRepository) {
-    val nesteId = AtomicInteger(1)
     val changes = MutableSharedFlow<ReguleringDetail>(extraBufferCapacity = 64)
 
     route("/api/reguleringer") {
         post {
             val request = call.receive<OpprettReguleringRequest>()
-            val regulering = ReguleringDetail(
-                id = nesteId.getAndIncrement(),
-                navn = request.navn,
-                dato = request.dato,
-                grensejustering = request.grensejustering,
-            )
-            reforms[regulering.id] = regulering
+            val regulering = try {
+                reforms.insert(request)
+            } catch (e: IllegalArgumentException) {
+                call.respond(HttpStatusCode.BadRequest, e.message ?: "Ugyldig regulering")
+                return@post
+            }
             changes.emit(regulering)
             call.respond(HttpStatusCode.Created, regulering)
         }

@@ -23,6 +23,7 @@ CREATE TABLE reform
 
 CREATE TABLE reform_cadastral_unit
 (
+    id                      serial              NOT NULL,
     reform_id               int4                NOT NULL,
     municipality_number     municipality_number NOT NULL,
     land_number             land_number         NOT NULL,
@@ -30,7 +31,8 @@ CREATE TABLE reform_cadastral_unit
     new_municipality_number municipality_number NOT NULL,
     new_land_number         land_number         NOT NULL,
     new_title_number        title_number,
-    CONSTRAINT ck_whole_landnumer_or_not
+    CONSTRAINT pk_reform_cadastral_unit PRIMARY KEY (id),
+    CONSTRAINT ck_whole_land_number_or_not
         CHECK ((title_number IS NULL) = (new_title_number IS NULL)),
     CONSTRAINT ex_reform_source_cadastral_unit
         EXCLUDE USING gist (
@@ -52,13 +54,13 @@ CREATE TABLE reform_cadastral_unit
             ON DELETE CASCADE
 );
 
-CREATE TABLE reform_parcel
+CREATE TABLE reform_cadastral_unit_parcel
 (
-    reform_id int4 NOT NULL,
-    parcel_id int8 NOT NULL,
-    CONSTRAINT pk_reform_parcel PRIMARY KEY (reform_id, parcel_id),
-    CONSTRAINT fk_reform_id
-        FOREIGN KEY (reform_id)
-            REFERENCES reform (id)
+    reform_cadastral_unit_id int4 NOT NULL,
+    parcel_id                int8 NOT NULL,
+    CONSTRAINT pk_reform_cadastral_unit_parcel PRIMARY KEY (reform_cadastral_unit_id, parcel_id),
+    CONSTRAINT fk_reform_cadastral_unit_id
+        FOREIGN KEY (reform_cadastral_unit_id)
+            REFERENCES reform_cadastral_unit (id)
             ON DELETE CASCADE
 );
