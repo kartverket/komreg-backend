@@ -79,7 +79,12 @@ class ReformRepository(
         }
 
         val enheter = grensejusteringer.flatMap { g ->
-            g.matrikkelenheter.map { Triple(g, it, it.bruksnummer?.let { bnr -> TitleNumber(bnr).value }) }
+            g.matrikkelenheter.map { enhet ->
+                require(enhet.bruksnummer != null || enhet.nyBruksnummer == null) {
+                    "nyBruksnummer requires bruksnummer for ${enhet.kommunenummer}-${enhet.gardsnummer}"
+                }
+                Triple(g, enhet, enhet.bruksnummer?.let { bnr -> TitleNumber(bnr).value })
+            }
         }
         // (municipality_number, land_number, title_number) is unique per reform (ex_reform_source_cadastral_unit)
         val byKey = enheter.associate { (_, enhet, title) -> Triple(enhet.kommunenummer, enhet.gardsnummer, title) to enhet }
