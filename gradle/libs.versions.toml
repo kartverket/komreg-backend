@@ -100,7 +100,7 @@ jakarta-xml-bind-api = { module = "jakarta.xml.bind:jakarta.xml.bind-api", versi
 jakarta-xml-ws-api = { module = "jakarta.xml.ws:jakarta.xml.ws-api", version = "4.0.3" }
 jakarta-xml-ws-tools = { module = "com.sun.xml.ws:jaxws-tools", version = "4.0.5" }
 # Bruk samme versjon som jakarta-xml-ws-tools' slf4j-api
-jakarta-xml-ws-tools-slf4j = { module = "org.slf4j:slf4j-simple", version = "1.7.36" }
+jakarta-xml-ws-tools-slf4j = { module = "org.slf4j:slf4j-simple", version = "2.0.20" }
 jvnet-jaxb-plugins = { module = "org.jvnet.jaxb:jaxb-plugins", version = "4.0.16" }
 
 apache-cxf-rt-frontend-jaxws = { module = "org.apache.cxf:cxf-rt-frontend-jaxws", version.ref = "apache-cxf" }
