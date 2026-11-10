@@ -334,15 +334,18 @@ fun Route.matrikkelApiRoutes(deploymentConfig: ApplicationConfig, appJson: Json)
                         .entry
                         .asSequence()
                         .flatMap { it.value.item.asSequence() }
-                    indirectAddressIds = cadestralUnitsIds
+                    val bygningIds = cadestralUnitsIds
                         .let { bygningService.findByggForMatrikkelenheter(MatrikkelenhetIdList(it.toList()), ctx) }
                         .entry
-                        .asSequence()
-                        .flatMap { it.value.item.asSequence() }
-                        .let { bygningIds -> adresseService.findAdresserForByggList(ByggIdList(bygningIds.toList()), ctx) }
-                        .entry
-                        .asSequence()
-                        .flatMap { it.value.item.asSequence() }
+                        .flatMap { it.value.item }
+                    indirectAddressIds = if (bygningIds.isNotEmpty()) {
+                        adresseService.findAdresserForByggList(ByggIdList(bygningIds), ctx)
+                            .entry
+                            .asSequence()
+                            .flatMap { it.value.item.asSequence() }
+                    } else {
+                        emptySequence()
+                    }
                 } else {
                     directAddressIds = emptySequence()
                     indirectAddressIds = emptySequence()
@@ -353,9 +356,11 @@ fun Route.matrikkelApiRoutes(deploymentConfig: ApplicationConfig, appJson: Json)
                     .flatMap { it.teigerForMatrikkelenhet.item.asSequence() }
                     .map { it.teigId }
                     .filter { includedParcelIds.contains(it) }
-                    .let { teigService.findAdresserForTeiger(TeigIdList(it.toList()), ctx) }
-                    .item
-                    .asSequence()
+                    .toList()
+                    .let { ids ->
+                        if (ids.isEmpty()) emptySequence()
+                        else teigService.findAdresserForTeiger(TeigIdList(ids), ctx).item.asSequence()
+                    }
 
                 val adresses = (directAddressIds + indirectAddressIds + parcelAddressIds)
                     .distinct()
