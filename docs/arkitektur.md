@@ -92,6 +92,11 @@ Sentrale klasser:
 - `IdentTransformer` — selve omnummereringsalgoritmen
 - `Transformer.transform()` — orkestrerer hele flyten: source → transform → storage → sink
 
+`ReformOp` og `ReformClaims` er et alternativt språk for å beskrive og validere regler.
+En avgrenset bro kan oversette representerbare regler til eksisterende `Regulering`-DTO;
+kjøringen bruker fremdeles `IdentTransformer`. Se [ReformOp-design](reform-op.md)
+for operasjoner, begrensninger og forskjellen på regelrundtur og kjøreatferd.
+
 Støttede endringstyper:
 
 | Type                    | Beskrivelse                         |
