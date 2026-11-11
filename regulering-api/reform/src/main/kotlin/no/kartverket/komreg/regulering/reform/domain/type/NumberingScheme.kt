@@ -1,5 +1,9 @@
 package no.kartverket.komreg.regulering.reform.domain.type
 
+/**
+ * Hvilke fylkesnummer som er gyldige. Løpenummeret til en kommune har alltid 2 siffer, så et kommunenummer har
+ * 4 siffer i prod, og 4 eller 7 i test.
+ */
 sealed interface NumberingScheme {
     val countyDigits: Set<Int>
 

@@ -13,7 +13,8 @@ import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * En reform slik frontend skriver og lagrer den. Speiler JSON-formatet 1:1. Segmentverdier og payload tolkes
- * ikke her, men i resolve via [SegmentRegistry]. Se `docs/reform-format.md`.
+ * ikke her, men i resolve via [SegmentRegistry]. Se `docs/reform-format.md`. Begrunnelsene bak
+ * formatet står i `docs/reform-format-design.md`.
  *
  * Specen har ingen `id`. Identiteten er ressursen i regulering-api.
  */

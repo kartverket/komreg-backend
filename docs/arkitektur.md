@@ -93,8 +93,8 @@ Sentrale klasser:
 - `Transformer.transform()` — orkestrerer hele flyten: source → transform → storage → sink
 
 `ReformOp` og `ReformClaims` er et alternativt språk for å beskrive og validere regler.
-En avgrenset bro kan oversette representerbare regler til eksisterende `Regulering`-DTO;
-kjøringen bruker fremdeles `IdentTransformer`. Se [ReformOp-design](reform-op.md)
+En avgrenset bro (se [regulering-mapping](#regulering-mapping)) kan oversette representerbare regler til
+eksisterende `Regulering`-DTO; kjøringen bruker fremdeles `IdentTransformer`. Se [ReformOp-design](reform-op.md)
 for operasjoner, begrensninger og forskjellen på regelrundtur og kjøreatferd.
 
 Støttede endringstyper:
@@ -119,12 +119,46 @@ Ktor-applikasjonen som eksponerer REST-API og binder alt sammen.
 - **Repositories** — PostgreSQL-tilgang (`ReguleringRepo`, `KjoringRepo`, `TransformationRepo`, `TilbakeføringsstatusRepo`)
 - **Integration** — SPI-managere som laster matrikkel-komreg-implementasjoner via ServiceLoader
 
+### regulering-dto
+
+`Regulering`-DTO-ene (`Regulering`, `EndringDTO` og transformasjons-DTO-ene per identtype) som `server` tar imot.
+
+### regulering-mapping
+
+`:lib:regulering-mapping` er broen mellom `ReformClaims` og `Regulering`-DTO-en (`toReguleringDTO`, `Umappbar`), og
+mappingen fra `Regulering` til `Reguleringsinput` (`toReguleringsinput`). Koden ligger i pakken
+`no.kartverket.komreg.routes`, samme pakke som DTO-ene, og brukes av både `server` og `regulering-api`. Broen
+avviser regler DTO-en ikke kan uttrykke, og sjekker at DTO-en gir samme `ReformOp`-regler som den kom fra.
+
 ### regulering-api
 
-Eier reform-specen. Specen lagres som `jsonb` i `regulering-api`-databasen og valideres i trinn (format, konflikt,
-domene, data, bro) før den lagres. `Regulering`-DTO-en avledes fra specen via `lib/regulering-mapping` og lagres ikke.
-`server` mottar DTO-er som før. Se [reform-format](reform-format.md#lagring-og-endepunkter-i-regulering-api) for
-endepunkter og feilformat.
+`regulering-api` eier reform-specen og har egen database og egen Ktor-applikasjon. Frontend snakker bare med den.
+Den består av to moduler:
+
+| modul | ansvar |
+|---|---|
+| `:regulering-api:reform` | Ren Kotlin uten Ktor og jOOQ. Domenetyper (`CountyNumber`, `MunicipalityNumber` og så videre), `ReformSpec`, `SegmentRegistry`, `resolve`, domeneregler og dataregler. |
+| `:regulering-api:server` | Endepunkter, lagring av spec (Flyway, R2DBC og jOOQ), `ReformSpecService` som kjører kjeden, og `MatrikkelApiMunicipalityCache`, som henter fylker og kommuner fra Matrikkel API og implementerer `KommuneService`. |
+
+```mermaid
+graph LR
+    ras["regulering-api:server"] --> rar["regulering-api:reform"]
+    ras --> mapping["lib:regulering-mapping"]
+    ras --> client["lib:matrikkelapi-client"]
+    rar --> transformation["lib:transformation"]
+    mapping --> transformation
+    mapping --> dto["lib:regulering-dto"]
+    transformation --> coreapi["lib:core-api"]
+    server["server"] --> mapping
+    server --> transformation
+```
+
+`regulering-api` har ingen avhengighet til `server`, og `server` ingen til `regulering-api`. De deler bare libene.
+Specen lagres som `jsonb` og valideres i trinn (format, konflikt, domene, data, bro) før den lagres.
+`Regulering`-DTO-en avledes fra specen og lagres ikke. `server` mottar DTO-er som før, og sending fra
+`regulering-api` til `server` er ikke implementert. Se [reform-format](reform-format.md#lagring-og-endepunkter-i-regulering-api)
+for endepunkter og feilformat, og [reform-format-design](reform-format-design.md) for hvorfor kjeden er bygd slik
+og hvor reglene bor.
 
 ## Transformasjonsflyten
 

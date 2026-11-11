@@ -68,7 +68,7 @@ resultatet. Eksisterende DTO-validering gjelder fremdeles når DTO-en kjøres.
 
 ## Bro til eksisterende kode
 
-For regler som DTO-en kan uttrykke, bruk `toReguleringDTO` i servermodulen
+For regler som DTO-en kan uttrykke, bruk `toReguleringDTO` (i `:lib:regulering-mapping`)
 før den vanlige lagrings- og kjøringsveien:
 
 ```kotlin
@@ -104,8 +104,10 @@ op-modellen. Ingen `ReformOp` kjøres direkte i denne leveransen.
 DTO-en har også snevrere uttrykksevne: `Move` av fylke/kommune,
 vilkårlig `Retire`, fri `Derive` og vilkårlige opprettelser blir
 avvist hvis de ikke lar seg gjengi via DTO-ens endringstyper.
-Gårdsnummerserier og veger som mål forutsettes å finnes; broen
-oppretter dem ikke. Kommunedata normaliseres til reguleringens ene
+Deling av en kommune der etterfølgeren ikke opprettes av delingen,
+og utskilling (en `Derive` fra en kilde som fortsetter), avvises også, fordi
+DTO-en oppretter alle målene ved deling. Gårdsnummerserier og veger som mål
+forutsettes å finnes; broen oppretter dem ikke. Kommunedata normaliseres til reguleringens ene
 ikrafttredelsesdato og navn i store bokstaver; opplysninger uten
 tilsvarende felt i payloaden kan gå tapt, og op-rekkefølgen (dermed
 mulig ID-tildelingsrekkefølge) er ikke bevart. Bruk derfor ikke broen

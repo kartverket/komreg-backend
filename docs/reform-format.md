@@ -4,6 +4,7 @@ Dette dokumentet beskriver JSON-formatet for reformer (reguleringer) slik fronte
 er et tre av operasjoner. Formatet vet ikke hva en kommune eller en veg er, bare hvilke **kinds** (segmenter)
 som finnes og hvordan de henger sammen. De samme fem operasjonene brukes for alle identtyper.
 
+Bakgrunn og designvalg: [reform-format-design.md](reform-format-design.md).
 Modellen formatet oversettes til: [reform-op.md](reform-op.md).
 
 ## Toppnivå

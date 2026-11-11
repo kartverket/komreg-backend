@@ -120,7 +120,11 @@ private fun Ident.hasCadastralNumber(): Boolean {
         (parts[5] as Matrikkelnummer.Seksjonsnummer).value.toInt() != 0
 }
 
-/** Kapabilitetstabellen per kind i v1. Kinds som ikke står her, støttes ikke av noen sink. */
+/**
+ * Kapabilitetstabellen per kind i v1. Kinds som ikke står her, støttes ikke av noen sink. Reglene er utledet fra
+ * sinkene i matrikkel-komreg (`no.statkart.matrikkel.komreg.mottaker`), ikke fra DTO-valideringen. Se
+ * `docs/reform-format.md` og `docs/reform-format-design.md`.
+ */
 internal val v1Capabilities: Map<String, SinkCapabilities> = mapOf(
     V1Kinds.COUNTY to SinkCapabilities(
         label = "Fylke",

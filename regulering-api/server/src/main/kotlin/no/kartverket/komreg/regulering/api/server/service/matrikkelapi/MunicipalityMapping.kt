@@ -19,6 +19,16 @@ import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.LocalDate as WsLocalDa
 /** Tolker feltene som `KommuneServiceImpl` i matrikkel-komreg gjør. */
 internal fun WsFylke.toCore(): Fylke = Fylke(fylkesnummer.toLong(), fylkesnavn, gyldigTilDato?.toKotlin())
 
+/**
+ * Samme tolkning av feltene som i `KommuneServiceImpl` i matrikkel-komreg:
+ * - `kommunenummer`: de to siste sifrene er løpenummeret, resten er fylkesnummeret.
+ * - `godkjenteGardsnumre` kommer fra `brukteGardsnummer`, og er tom hvis den mangler.
+ * - `koordinatsystem` kommer fra `koordinatsystemKodeId` (10 er UTM32, 11 er UTM33, 13 er UTM35, ellers ukjent).
+ * - `adresse` kommer fra `postadresse`. Postnummer (fire siffer) og poststed hentes fra [postnummeromrade], så
+ *   adressen mangler hvis området mangler.
+ * - `standardRekvirent` kommer fra [standardRekvirent] (organisasjonsnummer og navn).
+ * - `kommunevapen` er tomt hvis [kommunevapen] mangler.
+ */
 internal fun WsKommune.toCore(
     postnummeromrade: Postnummeromrade?,
     standardRekvirent: JuridiskPerson?,
