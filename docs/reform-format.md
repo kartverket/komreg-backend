@@ -237,5 +237,52 @@ En spec som ikke har riktig form (ukjent `op`, manglende felt, `null` som segmen
 disse reglene sjekkes.
 
 Formatet sjekker bare det som er synlig i specen. Konflikter mellom operasjoner (for eksempel to regler for
-samme kilde, eller to operasjoner som oppretter samme mål), regler for hva hver identtype støtter, og regler
-som trenger data fra matrikkelen, sjekkes i senere steg.
+samme kilde, eller to operasjoner som oppretter samme mål) sjekkes av `ReformClaims.validate`, regler for hva
+hver identtype støtter av [domeneregler](#domeneregler), og regler som trenger data fra matrikkelen i et
+senere steg.
+
+## Domeneregler
+
+`ReformClaims.validateDomain(registry)` (pakken `no.kartverket.komreg.regulering.reform.rules`) avviser
+operasjoner som er strukturelt gyldige, men som sinkene i matrikkel-komreg ikke støtter. Den bruker ingen IO,
+samler alle feil, og gir for hver feil `ops`, en stabil `rule`-kode, en norsk melding og et `hint` om riktig
+grep i formatet. Identtypen til en operasjon er kinden registeret finner for nøkkelen. Reglene ligger som en
+tabell per kind i `SinkCapabilities.kt`.
+
+| kind | opprette | avlede | flytte | slå sammen | utgå |
+|---|---|---|---|---|---|
+| `county` | ✓ | ✓ | ✗ ¹ | ✓ | ✓, uten etterfølger |
+| `municipality` | ✓ | ✓ | ✗ ¹ | ✓ | ✓, etterfølger påkrevd ² |
+| `addressCode` (veg) | ✗ | ✓, bare fra en kilde som flyttes ³ | ✓ | ✗ | ✗ ⁴ |
+| `addressNumber`, `districtNumber`, `titleNumber` | ✗ | ✗ | ✓ | ✗ | ✗ |
+| `landNumber` (gårdsnummer) | ✗ | ✗ | ✓ | ✗ | ✓, uten etterfølger og med flytting av bruksnumre under ⁵ |
+| `parcel` (teig) | ✗ | ✗ | ✓, bare uten matrikkelnummer ⁶ | ✗ | ✗ |
+
+Kinds som ikke står i tabellen (`districtType`) støttes ikke av noen sink (`UnsupportedIdentType`).
+
+Tilleggskrav:
+
+| regel | gjelder | krav |
+|---|---|---|
+| `WrongPayload` | `county`, `municipality` | Nytt fylke har `Fylkesdata`, ny kommune har `Kommunedata`. Gjelder både opprettelse og avledning. |
+| `MissingMunicipalityCoat` | `municipality` | Ny kommune har kommunevåpen. |
+| `RetireNeedsSuccessor` / `RetireHasSuccessor` | `municipality` / `county`, `landNumber` | Kommune som utgår har etterfølger. Fylke og gårdsnummer har ingen. |
+| `SuccessorNotDerived` | `municipality` | Etterfølgeren er en av delene som er avledet fra samme kilde. |
+| `TargetsInMultipleCounties` | `municipality`, `addressCode` | Alle mål fra én kilde ligger i samme fylke. |
+| `DeriveWithoutMove` | `addressCode` | En veg deles med `role: identity`, så den har en `move`. |
+| `SeriesRetireWithoutTitleMoves` | `landNumber` | Et gårdsnummer som utgår, har `move` av bruksnumre under seg. |
+| `ParcelHasCadastralNumber` | `parcel` | Bare teiger uten matrikkelnummer (gnr 0, fnr 0, snr 0, bnr 0 eller 1) flyttes. |
+| `ParcelNotPaired` | `parcel` | bnr 0 og bnr 1 flyttes parvis til samme mål. |
+| `TargetTypeMismatch` | alle | Mål og etterfølger har samme kind som kilden. |
+| `ActionNotSupported` | alle | Handlingen er lov for kinden (tabellen over). |
+
+1. `FylkeSink` og `KommuneSink` tolker samme ID med ny nøkkel som at fylket eller kommunen utgår, uten at en ny
+   rad opprettes. Riktig grep er `merge` med `into.new` (renummerering).
+2. Kommunen har én peker til etterfølgeren (`nykommuneid`).
+3. `VegTilbakeforingService` krever en kildeentitet.
+4. En veg uten ny nøkkel **slettes**. Del vegen med `role: identity`.
+5. Matrikkelenhet-sinken forutsetter ny nøkkel for hvert bruksnummer.
+6. Teiger med matrikkelnummer er knyttet til matrikkelenheten, ikke bare til kommunen.
+
+`server` har en tilsvarende sikring i broen til `Regulering` (`Umappbar`). Domenereglene fanger de samme
+tilfellene tidligere og med bedre meldinger.
