@@ -6,50 +6,27 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
-@JvmInline
-value class MunicipalityNumber private constructor (val value: String) {
-    sealed interface Factory {
-        operator fun invoke(value: String): MunicipalityNumber
-    }
-    object DefaultFactory : Factory {
-        override fun invoke(value: String): MunicipalityNumber {
-            require(value.length == 4 && value.all { it.isDigit() }) {
-                "Municipality number must be a 4-digit string"
-            }
-            return MunicipalityNumber(value)
-        }
-    }
-    object TestFactory : Factory {
-        override fun invoke(value: String): MunicipalityNumber {
-            require(value.length <= 19 && value.all { it.isDigit() }) {
-                "Municipality number must be a string of digits with a maximum length of 19"
-            }
-            return MunicipalityNumber(value)
-        }
-    }
+data class MunicipalityNumber(val county: CountyNumber, val serial: MunicipalitySerial) {
+    val value: String get() = county.value + serial.value
 
-    sealed class Serializer(private val create: Factory) : KSerializer<MunicipalityNumber> {
-        override val descriptor = PrimitiveSerialDescriptor(
-            "MunicipalityNumber",
-            PrimitiveKind.STRING
-        )
+    override fun toString(): String = value
 
-        override fun serialize(encoder: Encoder, value: MunicipalityNumber) {
-            encoder.encodeString(value.value)
-        }
-
-        override fun deserialize(decoder: Decoder): MunicipalityNumber {
-            with(create) {
-                return invoke(decoder.decodeString())
-            }
-        }
+    class Serializer(private val scheme: NumberingScheme) : KSerializer<MunicipalityNumber> {
+        override val descriptor = PrimitiveSerialDescriptor("MunicipalityNumber", PrimitiveKind.STRING)
+        override fun serialize(encoder: Encoder, value: MunicipalityNumber) = encoder.encodeString(value.value)
+        override fun deserialize(decoder: Decoder): MunicipalityNumber =
+            with(scheme) { MunicipalityNumber(decoder.decodeString()) }
     }
-    object DefaultSerializer : Serializer(DefaultFactory)
-    object TestSerializer : Serializer(TestFactory)
 
     companion object {
-        context(create: Factory)
-        operator fun invoke(value: String) = create(value)
-
+        context(scheme: NumberingScheme)
+        operator fun invoke(value: String): MunicipalityNumber {
+            require(value.all { it.isDigit() } && value.length - 2 in scheme.countyDigits) {
+                "Municipality number must be a digit string with a county part of length " +
+                    scheme.countyDigits.sorted().joinToString(" or ") + " followed by 2 digits"
+            }
+            val countyLength = value.length - 2
+            return MunicipalityNumber(CountyNumber(value.take(countyLength)), MunicipalitySerial(value.drop(countyLength)))
+        }
     }
 }

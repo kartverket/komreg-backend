@@ -17,7 +17,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import no.kartverket.komreg.regulering.api.server.domain.MunicipalityId
-import no.kartverket.komreg.regulering.reform.domain.type.MunicipalityNumber
+import no.kartverket.komreg.regulering.reform.domain.type.NumberingScheme
 import no.kartverket.komreg.regulering.api.server.persistence.ReformRepository
 import no.kartverket.komreg.regulering.api.server.route.regulering.reguleringer
 import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.CadastralUnitFeatures
@@ -139,7 +139,7 @@ fun Route.matrikkelApiRoutes(deploymentConfig: ApplicationConfig, appJson: Json)
             municipalityNumbers = DefaultMatrikkelApiMunicipalityNumbers(
                 kommuneServiceDeferred.await(),
                 storeServiceDeferred.await(),
-                MunicipalityNumber.DefaultFactory,
+                NumberingScheme.fromName(deploymentConfig.propertyOrNull("app.numberingScheme")?.getString()),
                 ctx
             )
             mapper = MatrikkelApiMapper(
