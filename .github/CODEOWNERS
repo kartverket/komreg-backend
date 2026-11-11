@@ -3,5 +3,4 @@
 # Denne koden forvaltes av:   Team Smia
 # Dokumentasjon:              https://kartverket.atlassian.net/wiki/spaces/TKR/overview
 
-* @kartverket/smia-komreg
-/.security/ @kristmh
+* @kartverket/smia
