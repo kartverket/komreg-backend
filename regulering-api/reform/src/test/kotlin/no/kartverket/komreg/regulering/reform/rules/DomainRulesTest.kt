@@ -228,6 +228,11 @@ class DomainRulesTest {
     }
 
     @Test
+    fun `utskilling av kommune er gyldig`() {
+        assertThat(errors(ReformOp.Derive(kommune(12, 36), kommune(12, 34), kommunedata()))).isEmpty()
+    }
+
+    @Test
     fun `alle mål fra en veg må ligge i samme fylke`() {
         assertRule(
             errors(

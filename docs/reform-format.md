@@ -58,7 +58,7 @@ Det finnes to slags nøkler:
   - En skalar er ett segment av typen `kind`: `"key": 1234`.
   - En array er en sti av segmenter som slutter på `kind`: `"key": ["46", "01", 1234]`. Første ledd må være
     et barn av konteksten. På rotnivå betyr det at stien starter med fylket.
-- **Mål** (`to`, `into.existing`, `into.new`, og `existing` og `new` i delene av `split.into`) er alltid **absolutte** arrays fra roten, uansett hvor i treet
+- **Mål** (`to`, `derivedFrom`, `into.existing`, `into.new`, og `existing` og `new` i delene av `split.into`) er alltid **absolutte** arrays fra roten, uansett hvor i treet
   de står. Målet har samme kind som kilden: `"to": ["46", "02", 1234]`.
 
 ```json
@@ -78,7 +78,7 @@ Alle noder har `op` og `kind`. Barn ligger alltid i `then` og er relative til n�
 | `move` | `key`, `to`, `then`? | Samme entitet får ny nøkkel. Det som ligger under, og som ikke har egen regel, følger med. |
 | `merge` | `from`, `into` | Kildene i `from` utgår og peker på målet i `into`. |
 | `split` | `key`, `into`, `then`? | Kilden deles i partene i `into`. `"into": []` betyr at kilden oppløses. |
-| `create` | `key`, `payload`, `then`? | Ny entitet uten kilde. |
+| `create` | `key`, `derivedFrom`?, `payload`?, `then`? | Ny entitet. Uten `derivedFrom` har den ingen kilde. Med `derivedFrom` avledes den fra en kilde som ikke endres av noden. |
 
 ### `merge`
 
@@ -135,6 +135,47 @@ kommune være etterfølger, må den finnes i Matrikkelen og ikke være utgått (
 **Begrensning i broen:** DTO-en og legacy-kjøringen oppretter alle målene ved deling. En kommunedeling der
 etterfølgeren ikke opprettes av delingen (eksisterende, eller avledet fra en annen kilde) består derfor
 formatet og alle regler, men stoppes i broen (`steg: "bro"`) inntil videre.
+
+## `create` med `derivedFrom`
+
+| felt | betydning |
+|---|---|
+| `key` | Pivot, relativ til konteksten. |
+| `derivedFrom` | Absolutt nøkkel av samme kind som `key`. Gir `Derive(key, from = derivedFrom, payload)` i stedet for `Create`. |
+| `payload` | Påkrevd uten `derivedFrom`. Valgfri med `derivedFrom`, og overstyrer da det som arves fra kilden. |
+| `then` | TARGET, som ellers. |
+
+`derivedFrom` er ikke en kilde i formatets forstand. Det står ikke i ro, og det bestemmer ikke hva som skjer med
+kilden. Det gjør kildens egen op (`split`, `merge` eller `move`). Uten en slik op fortsetter kilden. `derivedFrom`
+er lov overalt der `create` er lov, og gir aldri `KeptAndConsumed`.
+
+**Utskilling:** en ny kommune skilles ut fra en kilde som fortsetter.
+
+```json
+{ "op": "create", "kind": "municipality", "key": ["46", "10"], "derivedFrom": ["46", "05"], "payload": { … } }
+```
+
+**Flere kilder bidrar til én ny kommune:** begge kildene deles og peker på samme etterfølger. `create` avgjør
+hvilken kilde målet arver fra. `existing` betyr at målet ikke opprettes av `split`-noden.
+
+```json
+{ "op": "split", "kind": "municipality", "key": ["46", "05"],
+  "into": [ { "existing": ["50", "10"], "role": "successor" } ] },
+{ "op": "split", "kind": "municipality", "key": ["50", "05"],
+  "into": [ { "existing": ["50", "10"], "role": "successor" } ] },
+{ "op": "create", "kind": "municipality", "key": ["50", "10"], "derivedFrom": ["46", "05"], "payload": { … } }
+```
+
+**Kortform og kanonisk skrivemåte:** `split` med `{"new": t, …}` gir de samme `ReformOp`-ene som
+`{"existing": t, …}` sammen med `create(t, derivedFrom = k)`. Det samme gjelder `merge.into.new` med flere kilder.
+`new` er en kortform, og ingen regel håndhever valget.
+
+- Målet har én kilde: bruk `new` i `split.into` eller `merge.into`.
+- Kilden fortsetter (utskilling), eller flere kilder peker på målet: bruk `create` med `derivedFrom`.
+
+**Begrensning i broen:** utskilling (`Derive` fra en kilde uten egen op) stoppes i broen (`steg: "bro"`) med
+grunnen «Utskilling, der kilden fortsetter, kan ikke uttrykkes i DTO-en». `merge` med `into.existing` sammen med
+`create` med `derivedFrom` fra en av kildene avvises av ekvivalenssjekken.
 
 ## Kontekster
 
@@ -254,7 +295,7 @@ Når en nøkkel ikke kan beregnes, sjekkes ikke nodene under den.
 | `MultipleRoles` | `into[i].role` | Mer enn én part i en `split` har `role`. |
 | `PayloadOnIdentity` | `into[i].payload` | En part med `role: identity` har payload. |
 | `EmptyMerge` | `from` | `merge` uten kilder. |
-| `PayloadRequired` | `into` | `into.new` med to eller flere kilder mangler payload. |
+| `PayloadRequired` | `into`, create-noden | `into.new` med to eller flere kilder, eller `create` uten både `payload` og `derivedFrom`, mangler payload. |
 | `PayloadNotAllowed` | `payload` | `kind` tar ikke payload. |
 | `InvalidPayload` | `payload` | Payloaden kan ikke leses (manglende eller ukjente felter, feil type, ugyldig base64 og lignende). |
 | `KeptAndConsumed` | stedet der nøkkelen står i ro | En nøkkel står i ro (`adjust`, mellomledd på roten eller `into.existing`), men er kilde i en annen node. Feilen har også `sourcePath`. |

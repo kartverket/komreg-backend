@@ -112,10 +112,20 @@ private class Resolver(private val registry: SegmentRegistry, private val ikraft
 
             is OpSpec.Create -> {
                 val pivot = pivot(context, kind, node.key, path / "key")
-                val payload = payload(kind, node.payload, path / "payload")
+                val payload = node.payload?.let { payload(kind, it, path / "payload") }
+                val derivedFrom = node.derivedFrom?.let { target(kind, it, path / "derivedFrom") }
                 pivot ?: return
                 keepIntermediates(pivot, mode)
-                payload?.let { pivot.key.toIdents(registry).forEach { emit(ReformOp.Create(it, payload), path) } }
+                when {
+                    node.derivedFrom != null ->
+                        derivedFrom?.let { source ->
+                            if (node.payload == null || payload != null) {
+                                paired(source, pivot.key) { s, t -> emit(ReformOp.Derive(t, from = s, payload), path) }
+                            }
+                        }
+
+                    payload != null -> pivot.key.toIdents(registry).forEach { emit(ReformOp.Create(it, payload), path) }
+                }
                 walkAll(node.then, pivot.key, Mode.TARGET, path / "then")
             }
         }
@@ -143,7 +153,10 @@ private class Resolver(private val registry: SegmentRegistry, private val ikraft
                 }
             }
 
-            is OpSpec.Adjust, is OpSpec.Move, is OpSpec.Create -> Unit
+            is OpSpec.Create ->
+                if (node.payload == null && node.derivedFrom == null) errors += FormatErr.PayloadRequired(path)
+
+            is OpSpec.Adjust, is OpSpec.Move -> Unit
         }
     }
 

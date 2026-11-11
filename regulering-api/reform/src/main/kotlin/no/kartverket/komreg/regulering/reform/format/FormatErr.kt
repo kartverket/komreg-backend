@@ -113,10 +113,10 @@ sealed interface FormatErr {
         override val message get() = "En merge må ha minst én kilde i from"
     }
 
-    /** `merge.into.new` med to eller flere kilder mangler payload. */
+    /** `merge.into.new` med to eller flere kilder, eller `create` uten `derivedFrom`, mangler payload. */
     data class PayloadRequired(override val path: JsonPath) : FormatErr {
         override val code get() = "PayloadRequired"
-        override val message get() = "Sammenslåing av flere kilder til en ny nøkkel krever payload"
+        override val message get() = "payload kreves ved sammenslåing av flere kilder til en ny nøkkel, og ved create uten derivedFrom"
     }
 
     /** `kind` tar ikke payload. */

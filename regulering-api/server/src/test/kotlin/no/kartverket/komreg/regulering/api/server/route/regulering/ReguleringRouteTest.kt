@@ -1,6 +1,7 @@
 package no.kartverket.komreg.regulering.api.server.route.regulering
 
 import assertk.assertThat
+import assertk.assertions.contains
 import assertk.assertions.containsExactly
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
@@ -212,6 +213,26 @@ class ReguleringRouteTest {
         val error = response.errors().single()
         assertThat(error.field("steg")).isEqualTo("bro")
         assertThat(error.field("sti")).isEqualTo("$.operasjoner[0]")
+    }
+
+    @Test
+    fun `utskilling stoppes i broen med sti til create-noden`() = test {
+        val spec = """
+            { "format": 1, "navn": "Utskilling", "ikrafttredelse": "2027-01-01", "operasjoner": [
+                { "op": "create", "kind": "municipality", "key": ["46", "10"], "derivedFrom": ["46", "03"],
+                  "payload": { "navn": "Ny", "koordinatsystem": "UTM32",
+                    "senterpunkt": { "x": 1.0, "y": 2.0 }, "godkjenteGardsnumre": [ { "fra": 1, "til": 200 } ],
+                    "kommunevapen": "iVBORw0KGgo=" } }
+            ] }
+        """.trimIndent()
+
+        val response = post("/api/reguleringer/validering", spec)
+
+        assertThat(response.jsonBody().jsonObject.field("gyldig")).isEqualTo("false")
+        val error = response.errors().single()
+        assertThat(error.field("steg")).isEqualTo("bro")
+        assertThat(error.field("sti")).isEqualTo("$.operasjoner[0]")
+        assertThat(error.field("melding")).contains("Utskilling")
     }
 
     @Test

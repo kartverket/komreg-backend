@@ -19,6 +19,7 @@ import no.kartverket.komreg.integration.spi.identTypeOf2
 import no.kartverket.komreg.integration.spi.identTypeOf3
 import no.kartverket.komreg.integration.spi.invoke
 import no.kartverket.komreg.regulering.reform.domain.type.NumberingScheme
+import no.kartverket.komreg.regulering.reform.rules.validateDomain
 import no.kartverket.komreg.transformation.reform.ReformClaims
 import no.kartverket.komreg.transformation.reform.ReformOp
 import kotlin.test.Test
@@ -314,6 +315,112 @@ class ResolveTest {
     fun PayloadRequired() {
         assertThat(errors("""{ "op": "merge", "kind": "county", "from": ["30", "31"], "into": { "new": ["33"] } }""").codes())
             .containsExactly("PayloadRequired" to "$.operasjoner[0].into")
+    }
+
+    @Test
+    fun `PayloadRequired for create without payload and derivedFrom`() {
+        assertThat(errors("""{ "op": "create", "kind": "municipality", "key": ["46", "10"] }""").codes())
+            .containsExactly("PayloadRequired" to "$.operasjoner[0]")
+    }
+
+    @Test
+    fun `create with derivedFrom resolves to Derive with and without payload`() {
+        val resolved = ok(
+            """{ "op": "create", "kind": "municipality", "key": ["46", "10"], "derivedFrom": ["46", "05"],
+                 "payload": { "navn": "Ny", "koordinatsystem": "UTM32", "senterpunkt": { "x": 1.0, "y": 2.0 },
+                 "godkjenteGardsnumre": [ { "fra": 1, "til": 3 } ], "kommunevapen": "iVBORw0KGgo=" } }""",
+            """{ "op": "create", "kind": "municipality", "key": ["46", "11"], "derivedFrom": ["46", "05"] }""",
+        )
+
+        assertThat(resolved.ops.filterIsInstance<ReformOp.Derive>().map { it.target to it.from to (it.payload != null) })
+            .containsExactly(
+                kommune(46, 10) to kommune(46, 5) to true,
+                kommune(46, 11) to kommune(46, 5) to false,
+            )
+        assertThat(resolved.ops).hasSize(2)
+    }
+
+    @Test
+    fun `derivedFrom is checked as an absolute target`() {
+        val errors = errors(
+            """{ "op": "create", "kind": "municipality", "key": ["46", "10"], "derivedFrom": ["05"] }""",
+            """{ "op": "create", "kind": "municipality", "key": ["46", "11"], "derivedFrom": ["46", "x"] }""",
+        )
+
+        assertThat(errors.codes()).containsExactly(
+            "TargetLengthMismatch" to "$.operasjoner[0].derivedFrom",
+            "InvalidSegment" to "$.operasjoner[1].derivedFrom[1]",
+        )
+    }
+
+    @Test
+    fun `derivedFrom from a source used by split gives no KeptAndConsumed`() {
+        val resolved = ok(
+            """{ "op": "split", "kind": "municipality", "key": ["46", "05"], "into": [ { "existing": ["50", "10"], "role": "successor" } ] }""",
+            """{ "op": "create", "kind": "municipality", "key": ["46", "10"], "derivedFrom": ["46", "05"] }""",
+        )
+
+        assertThat(resolved.ops).containsExactly(
+            ReformOp.Retire(kommune(46, 5), successor = kommune(50, 10)),
+            ReformOp.Derive(kommune(46, 10), from = kommune(46, 5)),
+        )
+    }
+
+    @Test
+    fun `short form and create with derivedFrom give the same ops`() {
+        val payload = """{ "navn": "Ny", "koordinatsystem": "UTM32", "senterpunkt": { "x": 1.0, "y": 2.0 },
+            "godkjenteGardsnumre": [ { "fra": 1, "til": 3 } ], "kommunevapen": "iVBORw0KGgo=" }"""
+        val short = ok(
+            """{ "op": "split", "kind": "municipality", "key": ["46", "05"], "into": [
+                 { "new": ["46", "06"], "role": "successor", "payload": $payload }, { "new": ["46", "10"], "payload": $payload } ] }""",
+        )
+        val canonical = ok(
+            """{ "op": "split", "kind": "municipality", "key": ["46", "05"], "into": [
+                 { "existing": ["46", "06"], "role": "successor" } ] }""",
+            """{ "op": "create", "kind": "municipality", "key": ["46", "06"], "derivedFrom": ["46", "05"], "payload": $payload }""",
+            """{ "op": "create", "kind": "municipality", "key": ["46", "10"], "derivedFrom": ["46", "05"], "payload": $payload }""",
+        )
+
+        assertThat(canonical.ops).containsExactlyInAnyOrder(*short.ops.toTypedArray())
+    }
+
+    @Test
+    fun `create with derivedFrom under create then is relative to the TARGET`() {
+        val resolved = ok(
+            """{ "op": "create", "kind": "county", "key": "60", "payload": { "navn": "Nytt" }, "then": [
+                 { "op": "create", "kind": "municipality", "key": "01", "derivedFrom": ["46", "05"] } ] }""",
+        )
+
+        assertThat(resolved.ops).containsExactly(
+            ReformOp.Create(fylke(60), Fylkesdata("Nytt")),
+            ReformOp.Derive(kommune(60, 1), from = kommune(46, 5)),
+        )
+        assertThat(ReformClaims.validate(resolved.ops).isRight()).isTrue()
+    }
+
+    @Test
+    fun `shared successor fixture passes claims and domain rules`() {
+        val resolved = resolveJson(ReformSpecFixtures.valid("split-shared-successor-derived")).fold({ error("$it") }, { it })
+
+        val claims = ReformClaims.validate(resolved.ops).fold({ error("$it") }, { it })
+        assertThat(claims.validateDomain(registry).isRight()).isTrue()
+    }
+
+    @Test
+    fun `claims reject derivedFrom from a target and conflicting targets`() {
+        val fromTarget = ok(
+            """{ "op": "create", "kind": "municipality", "key": ["46", "10"], "derivedFrom": ["46", "11"] }""",
+            """{ "op": "create", "kind": "municipality", "key": ["46", "11"], "derivedFrom": ["46", "05"] }""",
+        )
+        assertThat(ReformClaims.validate(fromTarget.ops).leftOrNull()!!.map { it::class.simpleName })
+            .containsExactly("DeriveFromTarget")
+
+        val conflict = ok(
+            """{ "op": "split", "kind": "municipality", "key": ["46", "05"], "into": [ { "new": ["46", "10"] } ] }""",
+            """{ "op": "create", "kind": "municipality", "key": ["46", "10"], "derivedFrom": ["46", "06"] }""",
+        )
+        assertThat(ReformClaims.validate(conflict.ops).leftOrNull()!!.map { it::class.simpleName })
+            .containsExactly("Conflict")
     }
 
     @Test

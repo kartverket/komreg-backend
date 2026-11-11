@@ -69,13 +69,14 @@ sealed interface OpSpec {
         val then: List<OpSpec> = emptyList(),
     ) : OpSpec
 
-    /** Ny entitet uten kilde. */
+    /** Ny entitet. Uten [derivedFrom] har den ingen kilde. Med [derivedFrom] avledes den fra en kilde som ikke endres av noden. */
     @Serializable
     @SerialName("create")
     data class Create(
         override val kind: String,
         val key: PathSpec,
-        val payload: JsonObject,
+        val derivedFrom: KeySpec? = null,
+        val payload: JsonObject? = null,
         val then: List<OpSpec> = emptyList(),
     ) : OpSpec
 }

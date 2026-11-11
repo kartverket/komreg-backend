@@ -275,6 +275,41 @@ class ReformClaimsTilReguleringTest : FunSpec({
             claims.umappbare().single().shouldBeInstanceOf<Umappbar.UgyldigPayload>()
         }
 
+        test("utskilling, der kilden fortsetter, har egen grunn") {
+            val claims = ReformClaims.validate(
+                listOf(ReformOp.Derive(kommuneIdent(12, 99), from = kommuneIdent(12, 34), payload = kommunedata())),
+            ).getOrNull()!!
+
+            claims.umappbare().filterIsInstance<Umappbar.IngenDtoEkvivalent>().map { it.grunn } shouldBe
+                listOf("Utskilling, der kilden fortsetter, kan ikke uttrykkes i DTO-en")
+        }
+
+        test("kortform og create med derivedFrom gir samme DTO") {
+            val kilde = kommuneIdent(12, 34)
+            val mål = kommuneIdent(12, 99)
+            val ops = listOf(
+                ReformOp.RetireTo(kilde, mål),
+                ReformOp.Derive(mål, from = kilde, payload = kommunedata().copy(navn = "NY")),
+            )
+
+            // split.into.new og split.into.existing sammen med create.derivedFrom lowerer til de samme op-ene
+            ReformClaims.validate(ops).getOrNull()!!.regulering().shouldBeInstanceOf<Either.Right<Regulering>>()
+        }
+
+        test("merge til eksisterende mål sammen med create med derivedFrom fra en av kildene") {
+            val mål = kommuneIdent(12, 50)
+            val claims = ReformClaims.validate(
+                listOf(
+                    ReformOp.RetireTo(kommuneIdent(12, 34), mål),
+                    ReformOp.RetireTo(kommuneIdent(12, 35), mål),
+                    ReformOp.Derive(mål, from = kommuneIdent(12, 34), payload = kommunedata()),
+                ),
+            ).getOrNull()!!
+
+            // Avvist av ekvivalenssjekken: DTO-en gir Create for målet, ikke Derive
+            claims.regulering().shouldBeInstanceOf<Either.Left<*>>()
+        }
+
         test("deling der ett mål opprettes og ikke er avledet fra kilden") {
             val ops = input(
                 Fylkeendring(FraEnTilMange(fnr(30), listOf(fnr(31), fnr(32)))),

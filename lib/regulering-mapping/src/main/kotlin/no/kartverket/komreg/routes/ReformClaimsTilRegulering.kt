@@ -570,7 +570,13 @@ private class EndringMapper(
     private fun rapporterUbehandlede() {
         (ops - behandlet).forEach { op ->
             val grunn = when (op) {
-                is ReformOp.Derive -> "Avledningen hører ikke til en kilderegel som kan uttrykkes"
+                is ReformOp.Derive ->
+                    if (ops.none { it is ReformOp.SourceOp && it.source == op.from }) {
+                        "Utskilling, der kilden fortsetter, kan ikke uttrykkes i DTO-en"
+                    } else {
+                        "Avledningen hører ikke til en kilderegel som kan uttrykkes"
+                    }
+
                 is ReformOp.Create -> "Ingen fylke- eller kommuneendring har målet"
                 else -> "Operasjonen på ${op.nøkkel.form() ?: "ukjent identtype"} kan ikke uttrykkes"
             }
