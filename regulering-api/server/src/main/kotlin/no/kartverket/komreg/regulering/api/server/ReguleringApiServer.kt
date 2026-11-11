@@ -15,7 +15,6 @@ import io.ktor.server.engine.loadCommonConfiguration
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
-import io.ktor.server.sse.SSE
 import io.opentelemetry.instrumentation.ktor.v3_0.KtorServerTelemetry
 import io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetry
 import io.opentelemetry.sdk.OpenTelemetrySdk
@@ -30,7 +29,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import no.kartverket.komreg.regulering.reform.domain.type.MunicipalityNumber
 import no.kartverket.komreg.regulering.reform.domain.type.NumberingScheme
-import no.kartverket.komreg.regulering.api.server.persistence.ReformRepository
+import no.kartverket.komreg.regulering.api.server.persistence.JooqReformSpecRepository
 import org.flywaydb.core.Flyway
 import org.jooq.DSLContext
 import org.jooq.SQLDialect
@@ -175,13 +174,11 @@ internal fun rootModuleFactory(
             allowHeader(HttpHeaders.ContentType)
         }
 
-        install(SSE)
-
         val dsl = databaseDsl(deploymentConfig)
 
         healthModule(dsl)
 
-        routes(deploymentConfig, appJson, ReformRepository(dsl))
+        routes(deploymentConfig, appJson, JooqReformSpecRepository(dsl, appJson), numberingScheme)
     }
 
 }

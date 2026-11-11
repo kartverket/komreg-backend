@@ -319,3 +319,48 @@ Kommunevåpen hentes første gang en kommune trenger det og beholdes deretter, f
 i en reform. Tiden for å laste alle ved oppstart er ikke målt. `findAlleKommuner()` gir kommuner med våpen og
 laster derfor alle som mangler. Datareglene trenger ikke våpen og bør bruke `withoutCoatOfArms`. Broen bruker
 `findKommune(kommunenummer)` for enkeltkommuner.
+
+## Lagring og endepunkter i `regulering-api`
+
+Specen er kilden til sannhet og lagres som `jsonb` i tabellen `reform` (migrasjon `V003__reform_spec.sql`) i
+`regulering-api`-databasen, med `navn` og `ikrafttredelse` kopiert ut til egne kolonner for listing. `Regulering`-DTO-en
+lagres ikke, men avledes av specen ved hvert kall. Skjelettet fra før (`Reform`, `ReformExecution`, SSE-strømmen
+og den gamle repositoryen) er fjernet.
+
+| Metode og sti                              | Gjør                                                         | Svar                                  |
+|--------------------------------------------|--------------------------------------------------------------|---------------------------------------|
+| `POST /api/reguleringer/validering`        | Validerer uten å lagre                                       | 200 med `{gyldig, feil}`              |
+| `POST /api/reguleringer`                   | Validerer og lagrer                                          | 201 `{id}`, eller 422 med `{gyldig, feil}` |
+| `GET /api/reguleringer`                    | Lister `{id, navn, ikrafttredelse}`                          | 200                                   |
+| `GET /api/reguleringer/{id}`               | Henter specen                                                | 200, eller 404                        |
+| `PUT /api/reguleringer/{id}`               | Validerer og erstatter specen                                | 204, 422 eller 404                    |
+| `DELETE /api/reguleringer/{id}`            | Sletter                                                      | 204, eller 404                        |
+| `GET /api/reguleringer/{id}/regulering`    | Avledet `Regulering`-DTO (id som streng)                     | 200, eller 422 hvis broen feiler      |
+
+En `id` som ikke er et heltall gir 400. Bare gyldige specer lagres. `PUT` validerer før den oppdaterer, så en ugyldig
+spec gir 422 også når `id` ikke finnes.
+
+### Feilformat
+
+```json
+{ "gyldig": false,
+  "feil": [ { "sti": "$.operasjoner[0].key", "steg": "format", "kode": "InvalidSegment",
+              "melding": "Ugyldig verdi \"3\" for county: ...", "hint": "...", "flereSti": ["$.operasjoner[2]"] } ] }
+```
+
+`hint` og `flereSti` utelates når de er tomme. `flereSti` brukes når en feil gjelder flere operasjoner; `sti` er da den
+første. Valideringen kjøres i trinn, og kjøringen stopper ved første trinn som gir feil, så senere trinn ikke gir
+følgefeil:
+
+| `steg`     | kontroll                                                              |
+|------------|-----------------------------------------------------------------------|
+| `form`     | JSON-formen (ukjent `op`, manglende felt, feil type)                  |
+| `format`   | segmenter og nøkler, se «Feilkoder fra formatet»                      |
+| `konflikt` | `ReformClaims` (operasjoner som er i konflikt)                        |
+| `domene`   | domeneregler                                                          |
+| `data`     | dataregler mot kommunedata                                            |
+| `bro`      | avledning til `Regulering`-DTO (`Umappbar`)                           |
+
+Feil fra `konflikt`, `domene`, `data` og `bro` mappes til JSON-stier via `Resolved.origins`, med `$` som reserve.
+
+Ikke løst: lagring av ugyldige utkast.

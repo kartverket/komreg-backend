@@ -18,14 +18,16 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import no.kartverket.komreg.regulering.api.server.domain.MunicipalityId
 import no.kartverket.komreg.regulering.reform.domain.type.NumberingScheme
-import no.kartverket.komreg.regulering.api.server.persistence.ReformRepository
+import no.kartverket.komreg.regulering.api.server.persistence.ReformSpecRepository
+import no.kartverket.komreg.regulering.api.server.service.reform.ReformSpecService
+import no.kartverket.komreg.regulering.reform.format.SegmentRegistry
+import no.kartverket.komreg.regulering.reform.format.v1
 import no.kartverket.komreg.regulering.api.server.route.regulering.reguleringer
 import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.CadastralUnitFeatures
 import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.EPSG_25833_CRS
 import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.MatrikkelApiMapper
 import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.MatrikkelApiMunicipalityCache
 import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.MatrikkelApiMunicipalityDataSource
-import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.MatrikkelApiMunicipalityNumbers
 import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.getObjectsChunked
 import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.teigerInKrets
 import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.toGeoJson
@@ -59,7 +61,12 @@ import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.geometri.Point as WSPo
 
 private val log = LoggerFactory.getLogger(Application::routes::class.java.enclosingClass)
 
-fun Application.routes(deploymentConfig: ApplicationConfig, appJson: Json, reforms: ReformRepository) {
+fun Application.routes(
+    deploymentConfig: ApplicationConfig,
+    appJson: Json,
+    reforms: ReformSpecRepository,
+    numberingScheme: NumberingScheme,
+) {
     routing {
         swaggerUI(path = "/openapi") {
             info = OpenApiInfo("KomReg Regulering API", "0.1.0")
@@ -73,12 +80,22 @@ fun Application.routes(deploymentConfig: ApplicationConfig, appJson: Json, refor
             call.respondText("Hello, World!")
             log.info("Responded to /greet")
         }
-        matrikkelApiRoutes(deploymentConfig, appJson)
-        reguleringer(appJson, reforms)
+        val municipalities = matrikkelApiRoutes(deploymentConfig, appJson, numberingScheme)
+        val registry = runBlocking { SegmentRegistry.v1(numberingScheme) }
+        reguleringer(
+            appJson,
+            reforms,
+            ReformSpecService(registry, municipalities, municipalities.withoutCoatOfArms),
+        )
     }
 }
 
-fun Route.matrikkelApiRoutes(deploymentConfig: ApplicationConfig, appJson: Json) {
+/** Registrerer Matrikkel API-rutene og gir kommunecachen de bruker. */
+fun Route.matrikkelApiRoutes(
+    deploymentConfig: ApplicationConfig,
+    appJson: Json,
+    numberingScheme: NumberingScheme,
+): MatrikkelApiMunicipalityCache {
     val server = URI.create(deploymentConfig.property("app.matrikkel.api.url").getString()).normalize().toString()
     val user = deploymentConfig.property("app.matrikkel.api.user").getString()
     val password = deploymentConfig.property("app.matrikkel.api.password").getString()
@@ -116,7 +133,7 @@ fun Route.matrikkelApiRoutes(deploymentConfig: ApplicationConfig, appJson: Json)
     val bygningService: BygningService
     val adresseService: AdresseService
     val mapper: MatrikkelApiMapper
-    val municipalityNumbers: MatrikkelApiMunicipalityNumbers
+    val municipalityNumbers: MatrikkelApiMunicipalityCache
     runBlocking {
         withContext(Dispatchers.IO) {
             val kommuneServiceDeferred = async {
@@ -140,7 +157,7 @@ fun Route.matrikkelApiRoutes(deploymentConfig: ApplicationConfig, appJson: Json)
             storeService = storeServiceDeferred.await()
             municipalityNumbers = MatrikkelApiMunicipalityCache(
                 MatrikkelApiMunicipalityDataSource(kommuneServiceDeferred.await(), storeService, ctx),
-                NumberingScheme.fromName(deploymentConfig.propertyOrNull("app.numberingScheme")?.getString()),
+                numberingScheme,
             )
             mapper = MatrikkelApiMapper(
                 municipalityNumbers
@@ -243,7 +260,10 @@ fun Route.matrikkelApiRoutes(deploymentConfig: ApplicationConfig, appJson: Json)
             call.respond(buildFeature(kretsflate.geometri.toGeoJson()) {
                 setId(krets.id.value)
                 properties = buildJsonObject {
-                    put("municipalityNumber", municipalityNumbers[MunicipalityId(krets.kommuneIds.item.single().value)].value)
+                    put(
+                        "municipalityNumber",
+                        municipalityNumbers[MunicipalityId(krets.kommuneIds.item.single().value)].value
+                    )
                     put("kretsnummer", krets.kretsnummer)
                     put("kretsnavn", krets.kretsnavn)
                 }
@@ -289,4 +309,6 @@ fun Route.matrikkelApiRoutes(deploymentConfig: ApplicationConfig, appJson: Json)
             call.respond(features.collect(parcelIdsInKrets) { put("inKrets", it in parcelIdsInKrets) })
         }
     }
+
+    return municipalityNumbers
 }

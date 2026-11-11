@@ -119,6 +119,13 @@ Ktor-applikasjonen som eksponerer REST-API og binder alt sammen.
 - **Repositories** — PostgreSQL-tilgang (`ReguleringRepo`, `KjoringRepo`, `TransformationRepo`, `TilbakeføringsstatusRepo`)
 - **Integration** — SPI-managere som laster matrikkel-komreg-implementasjoner via ServiceLoader
 
+### regulering-api
+
+Eier reform-specen. Specen lagres som `jsonb` i `regulering-api`-databasen og valideres i trinn (format, konflikt,
+domene, data, bro) før den lagres. `Regulering`-DTO-en avledes fra specen via `lib/regulering-mapping` og lagres ikke.
+`server` mottar DTO-er som før. Se [reform-format](reform-format.md#lagring-og-endepunkter-i-regulering-api) for
+endepunkter og feilformat.
+
 ## Transformasjonsflyten
 
 En transformasjon trigges med `GET /run/{regId}`.
@@ -260,6 +267,9 @@ KOMREG kobler seg til Matrikkelen via JDBC (Oracle). Tilkoblingen brukes av
 matrikkel-komreg-implementasjonene (sources og sinks).
 
 ## API-endepunkter
+
+`regulering-api` har egne endepunkter under `/api/reguleringer` for lagring og validering av reform-specer, se
+[reform-format](reform-format.md#lagring-og-endepunkter-i-regulering-api). Tabellen under gjelder `server`.
 
 | Gruppe      | Endepunkter                                             | Beskrivelse                        |
 |-------------|---------------------------------------------------------|------------------------------------|

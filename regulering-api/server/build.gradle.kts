@@ -29,6 +29,7 @@ repositories {
 
 dependencies {
     implementation(project(":lib:regulering-dto"))
+    implementation(project(":lib:regulering-mapping"))
     implementation(project(":regulering-api:regulering-api-reform"))
 
     // Matrikkel API client
@@ -56,7 +57,6 @@ dependencies {
     implementation(libs.ktor.server.openapi)
     implementation(libs.ktor.server.swagger)
     implementation(libs.ktor.server.cors)
-    implementation(libs.ktor.server.sse.jvm)
 
     // jOOQ dependencies
     implementation(libs.jooq)
@@ -93,6 +93,9 @@ dependencies {
     testImplementation(libs.junit.jupiter.api)
     testRuntimeOnly(libs.junit.jupiter.engine)
     testImplementation(libs.assertk)
+    testImplementation(testFixtures(project(":regulering-api:regulering-api-reform")))
+    testImplementation(libs.ktor.server.test.host)
+    testImplementation(libs.testcontainers.postgresql)
 }
 
 tasks.named<ProcessResources>("processResources") {
