@@ -28,7 +28,7 @@ import io.r2dbc.spi.ConnectionFactoryOptions
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
-import no.kartverket.komreg.regulering.api.server.domain.type.MunicipalityNumber
+import no.kartverket.komreg.regulering.reform.domain.type.MunicipalityNumber
 import no.kartverket.komreg.regulering.api.server.persistence.ReformRepository
 import org.flywaydb.core.Flyway
 import org.jooq.DSLContext

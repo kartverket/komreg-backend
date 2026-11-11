@@ -1,7 +1,7 @@
 package no.kartverket.komreg.regulering.api.server.service.matrikkelapi
 
 import no.kartverket.komreg.regulering.api.server.domain.MunicipalityId
-import no.kartverket.komreg.regulering.api.server.domain.type.*
+import no.kartverket.komreg.regulering.reform.domain.type.*
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.kommune.KommuneId
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.matrikkelenhet.Matrikkelnummer
 

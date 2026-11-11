@@ -2,7 +2,6 @@ package no.kartverket.komreg.regulering.api.server
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.openapi.OpenApiInfo
-import io.ktor.openapi.jsonSchema
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStopped
 import io.ktor.server.config.ApplicationConfig
@@ -11,18 +10,14 @@ import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.*
 import io.ktor.server.routing.openapi.OpenApiDocSource.Routing
-import io.ktor.server.routing.openapi.describe
-import io.ktor.utils.io.ExperimentalKtorApi
 import jakarta.xml.ws.BindingProvider
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.sync.Semaphore
-import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import no.kartverket.komreg.regulering.api.server.domain.MunicipalityId
-import no.kartverket.komreg.regulering.api.server.domain.type.MunicipalityNumber
+import no.kartverket.komreg.regulering.reform.domain.type.MunicipalityNumber
 import no.kartverket.komreg.regulering.api.server.persistence.ReformRepository
 import no.kartverket.komreg.regulering.api.server.route.regulering.reguleringer
 import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.CadastralUnitFeatures
@@ -33,7 +28,6 @@ import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.Matrikkel
 import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.getObjectsChunked
 import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.teigerInKrets
 import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.toGeoJson
-import no.kartverket.komreg.routes.Regulering
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.MatrikkelContext
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.adresse.Grunnkrets
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.adresse.GrunnkretsId

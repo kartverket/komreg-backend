@@ -1,4 +1,4 @@
-package no.kartverket.komreg.regulering.api.server.domain.type
+package no.kartverket.komreg.regulering.reform.domain.type
 
 import kotlinx.serialization.Serializable
 

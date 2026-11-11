@@ -29,6 +29,7 @@ repositories {
 
 dependencies {
     implementation(project(":lib:regulering-dto"))
+    implementation(project(":regulering-api:regulering-api-reform"))
 
     // Matrikkel API client
     implementation(project(":lib:matrikkelapi-client"))

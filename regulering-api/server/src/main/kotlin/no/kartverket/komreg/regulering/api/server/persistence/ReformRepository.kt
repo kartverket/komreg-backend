@@ -8,7 +8,7 @@ import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toKotlinLocalDate
-import no.kartverket.komreg.regulering.api.server.domain.type.TitleNumber
+import no.kartverket.komreg.regulering.reform.domain.type.TitleNumber
 import no.kartverket.komreg.regulering.api.server.persistence.jooq.tables.references.REFORM
 import no.kartverket.komreg.regulering.api.server.persistence.jooq.tables.references.REFORM_CADASTRAL_UNIT
 import no.kartverket.komreg.regulering.api.server.persistence.jooq.tables.references.REFORM_CADASTRAL_UNIT_PARCEL
