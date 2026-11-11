@@ -1,0 +1,11 @@
+{
+  "format": 1,
+  "navn": "Nytt fylke med ny kommune",
+  "ikrafttredelse": "2027-01-01",
+  "operasjoner": [
+    {
+      "op": "create", "kind": "county", "key": "60", "payload": { "navn": "Nytt fylke" },
+      "then": [ { "op": "create", "kind": "municipality", "key": "01", "payload": { "navn": "Nye Kommune", "koordinatsystem": "UTM32", "senterpunkt": { "x": 230000.0, "y": 6630000.0 }, "godkjenteGardsnumre": [ { "fra": 1, "til": 200 } ], "kommunevapen": "iVBORw0KGgo=" } } ]
+    }
+  ]
+}

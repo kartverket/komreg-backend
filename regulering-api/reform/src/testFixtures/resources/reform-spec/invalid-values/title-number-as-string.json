@@ -1,0 +1,23 @@
+{
+  "format": 1,
+  "navn": "Ugyldig",
+  "ikrafttredelse": "2027-01-01",
+  "operasjoner": [
+    {
+      "op": "move",
+      "kind": "titleNumber",
+      "key": [
+        "46",
+        "01",
+        12,
+        "1"
+      ],
+      "to": [
+        "46",
+        "01",
+        13,
+        1
+      ]
+    }
+  ]
+}

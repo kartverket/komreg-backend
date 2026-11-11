@@ -1,0 +1,19 @@
+{
+  "format": 1,
+  "navn": "Justering i Vestland",
+  "ikrafttredelse": "2027-01-01",
+  "operasjoner": [
+    {
+      "op": "adjust", "kind": "county", "key": "46",
+      "then": [
+        {
+          "op": "adjust", "kind": "municipality", "key": "01",
+          "then": [
+            { "op": "move", "kind": "districtNumber", "key": ["valg", 1], "to": ["46", "01", "valg", 2] },
+            { "op": "move", "kind": "addressNumber", "key": [1234, 5], "to": ["46", "01", 1234, 7] }
+          ]
+        }
+      ]
+    }
+  ]
+}

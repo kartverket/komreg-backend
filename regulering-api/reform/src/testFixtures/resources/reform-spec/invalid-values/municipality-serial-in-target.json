@@ -1,0 +1,21 @@
+{
+  "format": 1,
+  "navn": "Ugyldig",
+  "ikrafttredelse": "2027-01-01",
+  "operasjoner": [
+    {
+      "op": "move",
+      "kind": "addressCode",
+      "key": [
+        "46",
+        "01",
+        1234
+      ],
+      "to": [
+        "46",
+        "2",
+        1234
+      ]
+    }
+  ]
+}

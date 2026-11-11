@@ -1,0 +1,12 @@
+{
+  "format": 1,
+  "navn": "Flytting av veg og teig",
+  "ikrafttredelse": "2027-01-01",
+  "operasjoner": [
+    {
+      "op": "move", "kind": "addressCode", "key": ["46", "01", 1234], "to": ["46", "02", 1234],
+      "then": [ { "op": "move", "kind": "addressNumber", "key": 5, "to": ["46", "02", 1234, 6] } ]
+    },
+    { "op": "move", "kind": "parcel", "key": ["46", "01", 987654], "to": ["46", "02", 987654] }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "format": 1,
+  "navn": "Sammenslåing til eksisterende kommune",
+  "ikrafttredelse": "2027-01-01",
+  "operasjoner": [
+    {
+      "op": "merge", "kind": "municipality",
+      "from": [
+        ["46", "01"],
+        {
+          "key": ["46", "03"],
+          "then": [ { "op": "move", "kind": "landNumber", "key": 12, "to": ["46", "02", 40] } ]
+        }
+      ],
+      "into": {
+        "existing": ["46", "02"],
+        "then": [ { "op": "move", "kind": "addressCode", "key": 1234, "to": ["46", "02", 1235] } ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "format": 1,
+  "navn": "Ugyldig",
+  "ikrafttredelse": "2027-01-01",
+  "operasjoner": [
+    {
+      "op": "rename",
+      "kind": "municipality",
+      "key": [
+        "46",
+        "01"
+      ]
+    }
+  ]
+}

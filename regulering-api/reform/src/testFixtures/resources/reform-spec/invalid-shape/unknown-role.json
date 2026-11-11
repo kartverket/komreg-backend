@@ -1,0 +1,24 @@
+{
+  "format": 1,
+  "navn": "Ugyldig",
+  "ikrafttredelse": "2027-01-01",
+  "operasjoner": [
+    {
+      "op": "split",
+      "kind": "municipality",
+      "key": [
+        "46",
+        "05"
+      ],
+      "into": [
+        {
+          "to": [
+            "46",
+            "10"
+          ],
+          "role": "heir"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "format": 1,
+  "navn": "Ugyldig",
+  "ikrafttredelse": "2027-01-01",
+  "operasjoner": [
+    {
+      "op": "create",
+      "kind": "county",
+      "key": "60",
+      "payload": "Nytt fylke"
+    }
+  ]
+}
