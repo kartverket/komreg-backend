@@ -4,4 +4,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 @JvmInline
-value class ParcelId(val value: Long)
+value class ParcelId(val value: Long) {
+    override fun toString(): String = value.toString()
+}

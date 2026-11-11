@@ -4,4 +4,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 @JvmInline
-value class DistrictNumber(val value: Long)
+value class DistrictNumber(val value: Long) {
+    override fun toString(): String = value.toString()
+}

@@ -8,4 +8,6 @@ value class AddressNumber(val value: Short) {
     init {
         require(value in 1..9998) { "Unit number must be between 1 and 9998" }
     }
+
+    override fun toString(): String = value.toString()
 }

@@ -4,4 +4,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 @JvmInline
-value class DistrictType(val value: String)
+value class DistrictType(val value: String) {
+    override fun toString(): String = value.toString()
+}

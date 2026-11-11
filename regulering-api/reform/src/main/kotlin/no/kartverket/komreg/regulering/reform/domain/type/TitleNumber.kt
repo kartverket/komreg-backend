@@ -9,6 +9,8 @@ value class TitleNumber(val value: Short) {
         require(value in RANGE) { "Title number must be between 0 and 9999, was $value" }
     }
 
+    override fun toString(): String = value.toString()
+
     companion object {
         private val RANGE = 0..9999
 

@@ -8,6 +8,10 @@ en erstatning for dagens transformasjonsmotor: `Regulering`-DTO-en,
 Ingen eksisterende endepunkter tar imot `ReformOp`, og ingen regler i en lagret
 regulering valideres automatisk som `ReformClaims`.
 
+Frontend skriver ikke `ReformOp` direkte, men et hierarkisk JSON-format som
+`resolve` i `:regulering-api:reform` oversetter til `ReformOp`. Se
+[reform-format.md](reform-format.md).
+
 ## Nøkler, identitet og eierskap
 
 En `Ident` kan ha flere komponenter i rekkefølge, for eksempel fylke, kommune
