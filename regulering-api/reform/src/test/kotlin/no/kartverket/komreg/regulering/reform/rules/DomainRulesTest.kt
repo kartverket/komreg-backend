@@ -152,15 +152,22 @@ class DomainRulesTest {
     }
 
     @Test
-    fun `etterfølgeren til en kommune må være avledet fra samme kilde`() {
-        assertRule(
+    fun `etterfølgeren til en kommune kan finnes fra før eller avledes fra en annen kilde`() {
+        assertThat(
             errors(
                 ReformOp.Retire(kommune(12, 34), successor = kommune(12, 50)),
                 ReformOp.Derive(kommune(12, 35), kommune(12, 34), kommunedata()),
-                ReformOp.Create(kommune(12, 50), kommunedata()),
             ),
-            "SuccessorNotDerived",
-        )
+        ).isEmpty()
+        assertThat(
+            errors(
+                ReformOp.Retire(kommune(12, 34), successor = kommune(12, 50)),
+                ReformOp.Derive(kommune(12, 35), kommune(12, 34), kommunedata()),
+                ReformOp.Retire(kommune(12, 40), successor = kommune(12, 50)),
+                ReformOp.Derive(kommune(12, 50), kommune(12, 40), kommunedata()),
+                ReformOp.Derive(kommune(12, 51), kommune(12, 40), kommunedata()),
+            ),
+        ).isEmpty()
     }
 
     @Test

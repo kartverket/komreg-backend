@@ -6,14 +6,14 @@
     {
       "op": "split", "kind": "municipality", "key": ["46", "05"],
       "into": [
-        { "to": ["46", "10"], "payload": { "navn": "Nye Kommune", "koordinatsystem": "UTM32", "senterpunkt": { "x": 230000.0, "y": 6630000.0 }, "godkjenteGardsnumre": [ { "fra": 1, "til": 200 } ], "kommunevapen": "iVBORw0KGgo=" }, "role": "successor" },
-        { "to": ["46", "11"], "payload": { "navn": "Nye Kommune", "koordinatsystem": "UTM32", "senterpunkt": { "x": 230000.0, "y": 6630000.0 }, "godkjenteGardsnumre": [ { "fra": 1, "til": 200 } ], "kommunevapen": "iVBORw0KGgo=" } }
+        { "new": ["46", "10"], "payload": { "navn": "Nye Kommune", "koordinatsystem": "UTM32", "senterpunkt": { "x": 230000.0, "y": 6630000.0 }, "godkjenteGardsnumre": [ { "fra": 1, "til": 200 } ], "kommunevapen": "iVBORw0KGgo=" }, "role": "successor" },
+        { "new": ["46", "11"], "payload": { "navn": "Nye Kommune", "koordinatsystem": "UTM32", "senterpunkt": { "x": 230000.0, "y": 6630000.0 }, "godkjenteGardsnumre": [ { "fra": 1, "til": 200 } ], "kommunevapen": "iVBORw0KGgo=" } }
       ],
       "then": [
         { "op": "move", "kind": "addressCode", "key": 1234, "to": ["46", "11", 1234] },
         {
           "op": "split", "kind": "addressCode", "key": 1300,
-          "into": [ { "to": ["46", "10", 1300], "role": "identity" }, { "to": ["46", "11", 1300] } ]
+          "into": [ { "new": ["46", "10", 1300], "role": "identity" }, { "new": ["46", "11", 1300] } ]
         }
       ]
     },

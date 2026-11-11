@@ -58,7 +58,7 @@ Det finnes to slags nøkler:
   - En skalar er ett segment av typen `kind`: `"key": 1234`.
   - En array er en sti av segmenter som slutter på `kind`: `"key": ["46", "01", 1234]`. Første ledd må være
     et barn av konteksten. På rotnivå betyr det at stien starter med fylket.
-- **Mål** (`to`, `into.existing`, `into.new`) er alltid **absolutte** arrays fra roten, uansett hvor i treet
+- **Mål** (`to`, `into.existing`, `into.new`, og `existing` og `new` i delene av `split.into`) er alltid **absolutte** arrays fra roten, uansett hvor i treet
   de står. Målet har samme kind som kilden: `"to": ["46", "02", 1234]`.
 
 ```json
@@ -89,8 +89,10 @@ Alle noder har `op` og `kind`. Barn ligger alltid i `then` og er relative til n�
 ```
 
 - Elementene i `from` er en pivot, eller `{"key": pivot, "then": [...]}` når kilden har unntak.
-- `into` er enten `{"existing": mål, "then"?: [...]}` (målet finnes fra før) eller
+- `into` er enten `{"existing": mål, "then"?: [...]}` (målet opprettes ikke av noden) eller
   `{"new": mål, "payload"?: {...}, "then"?: [...]}` (målet opprettes).
+- `existing` betyr at målet **ikke opprettes av denne noden**. Det kan finnes fra før, eller opprettes et annet
+  sted i reformen. Dermed kan flere kilder dele samme etterfølger.
 - Én kilde og `into.new` er en renummerering: målet får ny ID. Med to eller flere kilder og `into.new` er
   `payload` påkrevd.
 - `then` under en kilde er relativ til kilden. `then` under `into` er relativ til målet.
@@ -99,16 +101,40 @@ Alle noder har `op` og `kind`. Barn ligger alltid i `then` og er relative til n�
 
 ```json
 { "op": "split", "kind": "municipality", "key": ["46", "05"],
-  "into": [ { "to": ["46", "10"], "role": "successor", "payload": { … } },
-            { "to": ["46", "11"], "payload": { … } } ],
+  "into": [ { "new": ["46", "10"], "role": "successor", "payload": { … } },
+            { "new": ["46", "11"], "payload": { … } } ],
   "then": [ … ] }
 ```
 
-En part er `{"to": mål, "payload"?: {...}, "role"?: "identity" | "successor"}`. Høyst én part har `role`:
+En del er enten ny eller eksisterende, med samme form som `merge.into`:
 
-- `identity`: denne parten arver kilden (samme ID). Den kan ikke ha payload. De andre partene er nye.
-- `successor`: kilden utgår og peker på denne parten. Alle partene er nye.
-- ingen `role`: kilden utgår uten peker. Alle partene er nye.
+```json
+{ "new": mål, "payload"?: {…}, "role"?: "identity" | "successor", "then"?: […] }
+{ "existing": mål, "role": "successor", "then"?: […] }
+```
+
+Høyst én del har `role`. En `existing`-del har ikke `payload`, og `role` er påkrevd og kan bare være
+`successor`. Brudd på dette er formfeil. Feltet `to` på en del er ikke lenger lov.
+
+| del | `role` | gir | `then` under delen |
+|---|---|---|---|
+| `new` | ingen | `Derive` fra kilden | opprettes (`create`) |
+| `new` | `successor` | `Derive` fra kilden, og kilden utgår med denne som etterfølger | opprettes (`create`) |
+| `new` | `identity` | kilden flyttes hit (`Move`), uten payload | opprettes (`create`) |
+| `existing` | `successor` | kilden utgår med denne som etterfølger | står i ro |
+| ingen del har `role` | — | kilden utgår uten etterfølger | — |
+
+- `identity`: delen arver kilden (samme ID). De andre delene er nye.
+- `successor`: kilden utgår og peker på delen. Er delen `new`, avledes den fra kilden. Er den `existing`, står den
+  i ro, og målet kan finnes fra før eller opprettes av en annen kilde.
+- ingen `role`: kilden utgår uten peker. Alle delene er nye.
+
+`existing` betyr «opprettes ikke av denne noden», ikke nødvendigvis «finnes fra før». Skal en eksisterende
+kommune være etterfølger, må den finnes i Matrikkelen og ikke være utgått (`TargetNotFound`, `TargetExpired`).
+
+**Begrensning i broen:** DTO-en og legacy-kjøringen oppretter alle målene ved deling. En kommunedeling der
+etterfølgeren ikke opprettes av delingen (eksisterende, eller avledet fra en annen kilde) består derfor
+formatet og alle regler, men stoppes i broen (`steg: "bro"`) inntil videre.
 
 ## Kontekster
 
@@ -116,9 +142,9 @@ Hvilke operasjoner som er lov i `then`, avhenger av hvor noden står:
 
 | kontekst | oppstår i | lovlige op-er |
 |---|---|---|
-| står i ro | roten, `adjust.then`, `merge.into.existing.then` | alle |
+| står i ro | roten, `adjust.then`, `merge.into.existing.then`, `split.into[].then` med `existing` | alle |
 | under en kilde | `move.then`, `split.then`, `merge.from[].then` | `move`, `split`, `merge` |
-| under en ny nøkkel | `create.then`, `merge.into.new.then` | `create` |
+| under en ny nøkkel | `create.then`, `merge.into.new.then`, `split.into[].then` med `new` | `create` |
 
 Under en kilde følger alt uten egen regel kilden uansett, så `adjust` er ikke lov der.
 
@@ -180,12 +206,12 @@ bokstaver. Ukjente felter er en feil.
         { "op": "merge", "kind": "municipality", "from": ["01", "02"],
           "into": { "new": ["33", "01"], "payload": { … } } },
         { "op": "split", "kind": "municipality", "key": "05",
-          "into": [ { "to": ["33", "10"], "role": "successor", "payload": { … } },
-                    { "to": ["33", "11"], "payload": { … } } ],
+          "into": [ { "new": ["33", "10"], "role": "successor", "payload": { … } },
+                    { "new": ["33", "11"], "payload": { … } } ],
           "then": [
             { "op": "move", "kind": "addressCode", "key": 1234, "to": ["33", "11", 1234] },
             { "op": "split", "kind": "addressCode", "key": 1300,
-              "into": [ { "to": ["33", "10", 1300], "role": "identity" }, { "to": ["33", "11", 1300] } ] } ] } ] }],
+              "into": [ { "new": ["33", "10", 1300], "role": "identity" }, { "new": ["33", "11", 1300] } ] } ] } ] }],
       "into": { "new": ["33"], "payload": { "navn": "Buskerud" } } },
     { "op": "adjust", "kind": "municipality", "key": ["46", "01"], "then": [
       { "op": "move", "kind": "landNumber", "key": 5, "to": ["46", "02", 7], "then": [
@@ -267,7 +293,6 @@ Tilleggskrav:
 | `WrongPayload` | `county`, `municipality` | Nytt fylke har `Fylkesdata`, ny kommune har `Kommunedata`. Gjelder både opprettelse og avledning. |
 | `MissingMunicipalityCoat` | `municipality` | Ny kommune har kommunevåpen. |
 | `RetireNeedsSuccessor` / `RetireHasSuccessor` | `municipality` / `county`, `landNumber` | Kommune som utgår har etterfølger. Fylke og gårdsnummer har ingen. |
-| `SuccessorNotDerived` | `municipality` | Etterfølgeren er en av delene som er avledet fra samme kilde. |
 | `TargetsInMultipleCounties` | `municipality`, `addressCode` | Alle mål fra én kilde ligger i samme fylke. |
 | `DeriveWithoutMove` | `addressCode` | En veg deles med `role: identity`, så den har en `move`. |
 | `SeriesRetireWithoutTitleMoves` | `landNumber` | Et gårdsnummer som utgår, har `move` av bruksnumre under seg. |

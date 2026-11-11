@@ -85,6 +85,24 @@ class DataRulesTest {
     }
 
     @Test
+    fun `eksisterende etterfølger ved kommunedeling må finnes og være gyldig`() {
+        assertThat(
+            errors(
+                ReformOp.Retire(kommune(30, 1), successor = kommune(30, 2)),
+                ReformOp.Derive(kommune(30, 5), kommune(30, 1), null),
+            ),
+        ).isEmpty()
+        assertThat(
+            errors(
+                ReformOp.Retire(kommune(30, 1), successor = kommune(30, 4)),
+                ReformOp.Derive(kommune(30, 5), kommune(30, 1), null),
+                ReformOp.Retire(kommune(30, 2), successor = kommune(30, 3)),
+                ReformOp.Derive(kommune(30, 6), kommune(30, 2), null),
+            ).map { it.rule },
+        ).containsExactlyInAnyOrder("TargetNotFound", "TargetExpired")
+    }
+
+    @Test
     fun `fylkemål som må finnes, finnes ikke eller er utgått`() {
         val errors = errors(
             ReformOp.RetireTo(fylke(32), fylke(99)),

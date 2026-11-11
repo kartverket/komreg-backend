@@ -38,18 +38,40 @@ fun ReformSpec.resolve(registry: SegmentRegistry): EitherNel<FormatErr, Resolved
 /** En dekodet pivot: nøkkelen og mellomleddene foran den, med JSON-stiene til segmentene. */
 private class Pivot(val key: Key.Snoc, val intermediates: List<Pair<Key.Snoc, JsonPath>>, val keyPath: JsonPath)
 
+private enum class PartRole { IDENTITY, SUCCESSOR }
+
 private class ResolvedPart(
-    val role: PartSpec.Role?,
+    val spec: PartSpec,
+    val role: PartRole?,
     val target: Key.Snoc?,
     val payload: Payload?,
     val path: JsonPath,
-)
+) {
+    val isNew get() = spec is PartSpec.New
+}
+
+private val PartSpec.partRole: PartRole?
+    get() = when (this) {
+        is PartSpec.New -> when (role) {
+            NewRole.IDENTITY -> PartRole.IDENTITY
+            NewRole.SUCCESSOR -> PartRole.SUCCESSOR
+            null -> null
+        }
+
+        is PartSpec.Existing -> PartRole.SUCCESSOR
+    }
+
+private val PartSpec.targetSpec: KeySpec
+    get() = when (this) {
+        is PartSpec.New -> new
+        is PartSpec.Existing -> existing
+    }
 
 private class Resolver(private val registry: SegmentRegistry, private val ikrafttredelse: LocalDate) {
     val errors = mutableListOf<FormatErr>()
     val ops = mutableListOf<Pair<ReformOp, JsonPath>>()
 
-    /** Nøkler som står i ro: `adjust.key`, mellomledd i KEEP-kontekst og `merge.into.existing`. */
+    /** Nøkler som står i ro: `adjust.key`, mellomledd i KEEP-kontekst, `merge.into.existing` og `split.into[].existing`. */
     private val keeps = mutableListOf<Pair<Key.Snoc, JsonPath>>()
 
     fun walkAll(nodes: List<OpSpec>, context: Key, mode: Mode, path: JsonPath) =
@@ -111,11 +133,11 @@ private class Resolver(private val registry: SegmentRegistry, private val ikraft
             }
 
             is OpSpec.Split -> {
-                node.into.withIndex().filter { it.value.role != null }.drop(1).forEach { (i, _) ->
+                node.into.withIndex().filter { it.value.partRole != null }.drop(1).forEach { (i, _) ->
                     errors += FormatErr.MultipleRoles(path / "into" / i / "role")
                 }
                 node.into.forEachIndexed { i, part ->
-                    if (part.role == PartSpec.Role.IDENTITY && part.payload != null) {
+                    if (part is PartSpec.New && part.role == NewRole.IDENTITY && part.payload != null) {
                         errors += FormatErr.PayloadOnIdentity(path / "into" / i / "payload")
                     }
                 }
@@ -169,34 +191,51 @@ private class Resolver(private val registry: SegmentRegistry, private val ikraft
         val pivot = pivot(context, kind, node.key, path / "key")
         val parts = node.into.mapIndexed { i, part ->
             val partPath = path / "into" / i
+            val targetPath = partPath / if (part is PartSpec.New) "new" else "existing"
             ResolvedPart(
-                role = part.role,
-                target = target(kind, part.to, partPath / "to"),
-                payload = part.payload?.takeIf { part.role != PartSpec.Role.IDENTITY }
+                spec = part,
+                role = part.partRole,
+                target = target(kind, part.targetSpec, targetPath),
+                payload = (part as? PartSpec.New)?.takeIf { it.role != NewRole.IDENTITY }?.payload
                     ?.let { payload(kind, it, partPath / "payload") },
                 path = partPath,
             )
         }
-        pivot ?: return
+        keepExistingParts(parts)
+        if (pivot == null) {
+            walkPartThens(parts)
+            return
+        }
         keepIntermediates(pivot, mode)
         val source = pivot.key
 
         val rolePart = parts.firstOrNull { it.role != null }
         when (rolePart?.role) {
-            PartSpec.Role.IDENTITY ->
+            PartRole.IDENTITY ->
                 rolePart.target?.let { paired(source, it) { s, t -> emit(ReformOp.Move(s, t), path) } }
 
-            PartSpec.Role.SUCCESSOR ->
+            PartRole.SUCCESSOR ->
                 rolePart.target?.let { paired(source, it) { s, t -> emit(ReformOp.Retire(s, successor = t), path) } }
 
             null -> source.toIdents(registry).forEach { emit(ReformOp.Retire(it), path) }
         }
 
-        parts.filter { it.role != PartSpec.Role.IDENTITY }.forEach { part ->
+        parts.filter { it.isNew && it.role != PartRole.IDENTITY }.forEach { part ->
             part.target?.let { paired(source, it) { s, t -> emit(ReformOp.Derive(t, from = s, part.payload), part.path) } }
         }
 
+        walkPartThens(parts)
         walkAll(node.then, source, Mode.SOURCE, path / "then")
+    }
+
+    /** En `existing`-del opprettes ikke av noden, og står i ro. */
+    private fun keepExistingParts(parts: List<ResolvedPart>) =
+        parts.filter { !it.isNew }.forEach { part -> part.target?.let { keeps += it to part.path / "existing" } }
+
+    /** `then` under en del er relativ til målet: KEEP for `existing` og TARGET for `new`. */
+    private fun walkPartThens(parts: List<ResolvedPart>) = parts.forEach { part ->
+        val target = part.target ?: return@forEach
+        walkAll(part.spec.then, target, if (part.isNew) Mode.TARGET else Mode.KEEP, part.path / "then")
     }
 
     /** Mellomledd i en sti-pivot står i ro i KEEP-kontekst, og er bare navigasjon ellers. */

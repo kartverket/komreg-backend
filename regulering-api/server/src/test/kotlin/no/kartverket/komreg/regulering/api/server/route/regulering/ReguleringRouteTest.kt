@@ -194,6 +194,27 @@ class ReguleringRouteTest {
     }
 
     @Test
+    fun `kommunedeling med eksisterende etterfølger stoppes i broen`() = test {
+        val spec = """
+            { "format": 1, "navn": "Deling", "ikrafttredelse": "2027-01-01", "operasjoner": [
+                { "op": "split", "kind": "municipality", "key": ["46", "03"], "into": [
+                    { "existing": ["46", "01"], "role": "successor" },
+                    { "new": ["46", "10"], "payload": { "navn": "Ny", "koordinatsystem": "UTM32",
+                        "senterpunkt": { "x": 1.0, "y": 2.0 }, "godkjenteGardsnumre": [ { "fra": 1, "til": 200 } ],
+                        "kommunevapen": "iVBORw0KGgo=" } }
+                ] }
+            ] }
+        """.trimIndent()
+
+        val response = post("/api/reguleringer/validering", spec)
+
+        assertThat(response.jsonBody().jsonObject.field("gyldig")).isEqualTo("false")
+        val error = response.errors().single()
+        assertThat(error.field("steg")).isEqualTo("bro")
+        assertThat(error.field("sti")).isEqualTo("$.operasjoner[0]")
+    }
+
+    @Test
     fun `put erstatter specen, og gir 422 og 404 ved feil`() = test {
         val id = post("/api/reguleringer", valid).jsonBody().jsonObject.field("id")
         val replacement = valid.replace("Flytting av veg og teig", "Nytt navn")

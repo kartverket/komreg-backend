@@ -4,6 +4,7 @@ import arrow.core.EitherNel
 import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.containsExactlyInAnyOrder
+import assertk.assertions.hasSize
 import assertk.assertions.isEqualTo
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isTrue
@@ -97,10 +98,60 @@ class ResolveTest {
     }
 
     @Test
+    fun `split with an existing successor retires the source to it and derives the new parts`() {
+        val resolved = ok(
+            """{ "op": "split", "kind": "municipality", "key": ["50", "05"], "into": [
+                 { "existing": ["50", "01"], "role": "successor" }, { "new": ["50", "10"] } ] }""",
+        )
+
+        assertThat(resolved.ops).containsExactly(
+            ReformOp.Retire(kommune(50, 5), successor = kommune(50, 1)),
+            ReformOp.Derive(kommune(50, 10), from = kommune(50, 5)),
+        )
+        assertThat(resolved.origins[ReformOp.Derive(kommune(50, 10), from = kommune(50, 5))]!!.map { it.value })
+            .containsExactly("$.operasjoner[0].into[1]")
+    }
+
+    @Test
+    fun `then under a part is KEEP for existing and TARGET for new`() {
+        val resolved = ok(
+            """{ "op": "split", "kind": "county", "key": "30", "into": [
+                 { "existing": ["31"], "role": "successor", "then": [ { "op": "adjust", "kind": "municipality", "key": "01" } ] },
+                 { "new": ["32"], "then": [ { "op": "create", "kind": "municipality", "key": "01", "payload": {
+                     "navn": "K", "koordinatsystem": "UTM32", "senterpunkt": { "x": 1.0, "y": 2.0 }, "kommunevapen": "iVBORw0KGgo=" } } ] } ] }""",
+        )
+        assertThat(resolved.ops.filterIsInstance<ReformOp.Create>().map { it.target }).containsExactly(kommune(32, 1))
+
+        val errors = errors(
+            """{ "op": "split", "kind": "municipality", "key": ["50", "05"], "into": [
+                 { "existing": ["50", "01"], "role": "successor" },
+                 { "new": ["50", "10"], "then": [ { "op": "move", "kind": "addressCode", "key": 1, "to": ["50", "10", 1] },
+                                                   { "op": "adjust", "kind": "addressCode", "key": 2 } ] } ] }""",
+        )
+        assertThat(errors.filter { it.code == "OpNotAllowedInContext" }.map { it.path.value }).containsExactly(
+            "$.operasjoner[0].into[1].then[0]",
+            "$.operasjoner[0].into[1].then[1]",
+        )
+    }
+
+    @Test
+    fun `KeptAndConsumed when an existing part is a source elsewhere`() {
+        val errors = errors(
+            """{ "op": "split", "kind": "municipality", "key": ["50", "05"], "into": [
+                 { "existing": ["50", "01"], "role": "successor" }, { "new": ["50", "10"] } ] }""",
+            """{ "op": "merge", "kind": "municipality", "from": [["50", "01"]], "into": { "existing": ["50", "02"] } }""",
+        )
+
+        assertThat(errors).containsExactly(
+            FormatErr.KeptAndConsumed(JsonPath("$.operasjoner[0].into[0].existing"), "[county=50/municipality=01]", JsonPath("$.operasjoner[1].from[0]")),
+        )
+    }
+
+    @Test
     fun `split with identity moves the source and derives the other parts`() {
         val resolved = ok(
             """{ "op": "split", "kind": "municipality", "key": ["46", "05"], "into": [
-                 { "to": ["46", "10"], "role": "identity" }, { "to": ["46", "11"] } ] }""",
+                 { "new": ["46", "10"], "role": "identity" }, { "new": ["46", "11"] } ] }""",
         )
 
         assertThat(resolved.ops).containsExactly(
@@ -228,7 +279,17 @@ class ResolveTest {
         assertThat(
             errors(
                 """{ "op": "split", "kind": "addressCode", "key": ["46", "01", 1], "into": [
-                     { "to": ["46", "02", 1], "role": "identity" }, { "to": ["46", "03", 1], "role": "successor" } ] }""",
+                     { "new": ["46", "02", 1], "role": "identity" }, { "new": ["46", "03", 1], "role": "successor" } ] }""",
+            ).codes(),
+        ).containsExactly("MultipleRoles" to "$.operasjoner[0].into[1].role")
+    }
+
+    @Test
+    fun `MultipleRoles counts an existing part and a new part with a role`() {
+        assertThat(
+            errors(
+                """{ "op": "split", "kind": "municipality", "key": ["46", "05"], "into": [
+                     { "existing": ["46", "01"], "role": "successor" }, { "new": ["46", "10"], "role": "identity" } ] }""",
             ).codes(),
         ).containsExactly("MultipleRoles" to "$.operasjoner[0].into[1].role")
     }
@@ -238,7 +299,7 @@ class ResolveTest {
         assertThat(
             errors(
                 """{ "op": "split", "kind": "county", "key": "30", "into": [
-                     { "to": ["31"], "role": "identity", "payload": { "navn": "X" } }, { "to": ["32"] } ] }""",
+                     { "new": ["31"], "role": "identity", "payload": { "navn": "X" } }, { "new": ["32"] } ] }""",
             ).codes(),
         ).containsExactly("PayloadOnIdentity" to "$.operasjoner[0].into[0].payload")
     }
@@ -282,7 +343,7 @@ class ResolveTest {
             """{ "op": "move", "kind": "road", "key": 1, "to": [1] }""",
             """{ "op": "merge", "kind": "county", "from": [], "into": { "new": ["3"], "payload": { "navn": 1 } } }""",
             """{ "op": "split", "kind": "addressCode", "key": ["46", "01", 0], "into": [
-                 { "to": ["46", "02"] }, { "to": ["46", "03", 1], "role": "identity", "payload": {} } ],
+                 { "new": ["46", "02"] }, { "new": ["46", "03", 1], "role": "identity", "payload": {} } ],
                  "then": [ { "op": "create", "kind": "addressNumber", "key": 1, "payload": {} } ] }""",
         )
 
@@ -293,7 +354,7 @@ class ResolveTest {
             "InvalidSegment" to "$.operasjoner[1].into.new[0]",
             "PayloadOnIdentity" to "$.operasjoner[2].into[1].payload",
             "InvalidSegment" to "$.operasjoner[2].key[2]",
-            "TargetLengthMismatch" to "$.operasjoner[2].into[0].to",
+            "TargetLengthMismatch" to "$.operasjoner[2].into[0].new",
         )
     }
 }

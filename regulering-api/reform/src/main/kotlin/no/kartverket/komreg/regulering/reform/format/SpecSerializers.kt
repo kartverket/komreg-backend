@@ -91,3 +91,17 @@ internal object IntoSpecSerializer : JsonContentPolymorphicSerializer<IntoSpec>(
         }
     }
 }
+
+internal object PartSpecSerializer : JsonContentPolymorphicSerializer<PartSpec>(PartSpec::class) {
+    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<PartSpec> {
+        val fields = (element as? JsonObject)?.keys
+            ?: throw SerializationException("En del i into må være et objekt, fikk $element")
+        return when {
+            "existing" in fields && "new" in fields ->
+                throw SerializationException("En del i into kan ikke ha både existing og new")
+            "existing" in fields -> PartSpec.Existing.serializer()
+            "new" in fields -> PartSpec.New.serializer()
+            else -> throw SerializationException("En del i into må ha enten existing eller new")
+        }
+    }
+}

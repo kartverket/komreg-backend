@@ -4,13 +4,13 @@ import kotlinx.serialization.json.JsonPrimitive
 
 /** Konteksten en node står i. Avgjør hvilke op-er som er lov, og om mellomledd i en sti-pivot gir `Keeps`. */
 enum class Mode(val description: String, val allowedOps: Set<String>) {
-    /** Roten, `adjust.then` og `merge.into.existing.then`. Nøkkelen står i ro. */
+    /** Roten, `adjust.then`, `merge.into.existing.then` og `split.into[].then` med `existing`. Nøkkelen står i ro. */
     KEEP("der nøkkelen står i ro", setOf(OpNames.ADJUST, OpNames.MOVE, OpNames.MERGE, OpNames.SPLIT, OpNames.CREATE)),
 
     /** `move.then`, `split.then` og `merge.from[].then`. */
     SOURCE("under en kilde", setOf(OpNames.MOVE, OpNames.SPLIT, OpNames.MERGE)),
 
-    /** `create.then` og `merge.into.new.then`. */
+    /** `create.then`, `merge.into.new.then` og `split.into[].then` med `new`. */
     TARGET("under en ny nøkkel", setOf(OpNames.CREATE)),
 }
 

@@ -76,13 +76,6 @@ sealed interface DomainErr {
         override val hint get() = "Fjern `role: successor` fra delingen."
     }
 
-    /** Etterfølgeren er ikke et [ReformOp.Derive]-mål fra samme kilde. */
-    data class SuccessorNotDerived(val op: ReformOp.Retire, val successor: Ident.NonEmpty) : DomainErr {
-        override val ops get() = listOf(op)
-        override val message get() = "Etterfølgeren $successor er ikke avledet fra kilden ${op.source}"
-        override val hint get() = "Etterfølgeren må være en av delene i samme `split` som kilden."
-    }
-
     /** Målene fra én kilde ligger i flere fylker. */
     data class TargetsInMultipleCounties(val source: Ident.NonEmpty, override val ops: List<ReformOp>) : DomainErr {
         override val message get() = "Målene fra $source ligger i flere fylker"

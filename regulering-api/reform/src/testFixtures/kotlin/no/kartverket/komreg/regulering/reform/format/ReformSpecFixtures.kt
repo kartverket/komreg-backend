@@ -9,7 +9,10 @@ package no.kartverket.komreg.regulering.reform.format
  * - [invalidValues]: kan dekodes til [ReformSpec], men har ett ugyldig segment (med `NumberingScheme.Production`).
  */
 object ReformSpecFixtures {
-    val valid = listOf("design-example", "adjust", "move", "merge-existing", "merge-new", "split", "create")
+    val valid = listOf(
+        "design-example", "adjust", "move", "merge-existing", "merge-new", "split",
+        "split-existing-successor", "split-shared-successor", "create",
+    )
 
     val invalidShape = listOf(
         "unknown-op",
@@ -22,6 +25,12 @@ object ReformSpecFixtures {
         "target-not-array",
         "unknown-role",
         "payload-not-object",
+        "part-both-new-and-existing",
+        "part-neither-new-nor-existing",
+        "existing-role-identity",
+        "existing-without-role",
+        "existing-with-payload",
+        "part-with-to",
     )
 
     /** Det ugyldige segmentet: JSON-stien og kinden det skal dekodes som. */

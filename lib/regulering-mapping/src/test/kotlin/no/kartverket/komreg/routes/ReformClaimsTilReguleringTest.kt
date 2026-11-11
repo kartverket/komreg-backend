@@ -5,6 +5,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
@@ -214,6 +215,34 @@ class ReformClaimsTilReguleringTest : FunSpec({
             val claims = ReformClaims.validate(listOf(ReformOp.Retire(kommuneIdent(12, 34)))).getOrNull()!!
 
             claims.umappbare().single().shouldBeInstanceOf<Umappbar.IngenDtoEkvivalent>()
+        }
+
+        test("kommunedeling med eksisterende etterfølger") {
+            val claims = ReformClaims.validate(
+                listOf(
+                    ReformOp.Retire(kommuneIdent(12, 34), successor = kommuneIdent(12, 35)),
+                    ReformOp.Derive(kommuneIdent(12, 99), from = kommuneIdent(12, 34), payload = kommunedata()),
+                ),
+            ).getOrNull()!!
+
+            claims.umappbare().single().shouldBeInstanceOf<Umappbar.IngenDtoEkvivalent>()
+                .grunn shouldContain "etterfølgeren ikke opprettes av delingen"
+        }
+
+        test("kommunedeling med etterfølger som er avledet fra en annen kilde") {
+            val claims = ReformClaims.validate(
+                listOf(
+                    ReformOp.Retire(kommuneIdent(12, 34), successor = kommuneIdent(12, 97)),
+                    ReformOp.Derive(kommuneIdent(12, 97), from = kommuneIdent(12, 34), payload = kommunedata()),
+                    ReformOp.Derive(kommuneIdent(12, 98), from = kommuneIdent(12, 34), payload = kommunedata()),
+                    ReformOp.Retire(kommuneIdent(12, 35), successor = kommuneIdent(12, 97)),
+                    ReformOp.Derive(kommuneIdent(12, 96), from = kommuneIdent(12, 35), payload = kommunedata()),
+                ),
+            ).getOrNull()!!
+
+            val umappbare = claims.umappbare()
+            umappbare.single().shouldBeInstanceOf<Umappbar.IngenDtoEkvivalent>().grunn shouldContain
+                "etterfølgeren ikke opprettes av delingen"
         }
 
         test("Retire av serie uten flytting av bruksnummer") {

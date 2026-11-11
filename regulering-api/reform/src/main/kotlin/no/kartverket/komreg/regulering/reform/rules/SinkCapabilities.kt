@@ -63,14 +63,6 @@ private val municipalityCoat: Check = { scope ->
     }
 }
 
-private val successorIsDerived: Check = { scope ->
-    scope.ops.filterIsInstance<ReformOp.Retire>().mapNotNull { op ->
-        val successor = op.successor
-        val derivedTargets = scope.claims.derives[op.source].orEmpty().map { it.target }
-        if (successor != null && successor !in derivedTargets) DomainErr.SuccessorNotDerived(op, successor) else null
-    }
-}
-
 private val targetsInOneCounty: Check = { scope ->
     val sourceOps = scope.ops.filterIsInstance<ReformOp.SourceOp>().associateBy { it.source }
     val derives = scope.ops.filterIsInstance<ReformOp.Derive>().map { it.from }
@@ -151,7 +143,6 @@ internal val v1Capabilities: Map<String, SinkCapabilities> = mapOf(
         checks = listOf(
             payloadIs<Kommunedata>("Kommune", "Kommunedata"),
             municipalityCoat,
-            successorIsDerived,
             targetsInOneCounty,
         ),
     ),

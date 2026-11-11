@@ -95,7 +95,7 @@ sealed interface PathSpec {
     data class Path(override val segments: List<JsonPrimitive>) : PathSpec
 }
 
-/** Mål (`to`, `into.existing`, `into.new`): absolutt array av segmenter fra roten. */
+/** Mål (`to`, `existing`, `new`): absolutt array av segmenter fra roten. */
 @Serializable(KeySpecSerializer::class)
 data class KeySpec(val segments: List<JsonPrimitive>)
 
@@ -129,21 +129,42 @@ sealed interface IntoSpec {
     ) : IntoSpec
 }
 
-/** En del i `split`. Høyst én del har [role]. */
-@Serializable
-data class PartSpec(
-    val to: KeySpec,
-    val payload: JsonObject? = null,
-    val role: Role? = null,
-) {
-    @Serializable
-    enum class Role {
-        /** Delen arver kildens ID (kilden flyttes hit). */
-        @SerialName("identity")
-        IDENTITY,
+/** En del i `split`: en ny del (med nøkkel og eventuell payload), eller en eksisterende etterfølger. */
+@Serializable(PartSpecSerializer::class)
+sealed interface PartSpec {
+    val then: List<OpSpec>
 
-        /** Kilden utgår og peker på denne delen. */
-        @SerialName("successor")
-        SUCCESSOR,
-    }
+    /** Høyst én del i et `split` har rolle. */
+    @Serializable
+    data class New(
+        val new: KeySpec,
+        val payload: JsonObject? = null,
+        val role: NewRole? = null,
+        override val then: List<OpSpec> = emptyList(),
+    ) : PartSpec
+
+    @Serializable
+    data class Existing(
+        val existing: KeySpec,
+        val role: ExistingRole,
+        override val then: List<OpSpec> = emptyList(),
+    ) : PartSpec
+}
+
+@Serializable
+enum class NewRole {
+    /** Delen arver kildens ID (kilden flyttes hit). */
+    @SerialName("identity")
+    IDENTITY,
+
+    /** Kilden utgår og peker på denne delen. */
+    @SerialName("successor")
+    SUCCESSOR,
+}
+
+@Serializable
+enum class ExistingRole {
+    /** Kilden utgår og peker på denne delen. */
+    @SerialName("successor")
+    SUCCESSOR,
 }

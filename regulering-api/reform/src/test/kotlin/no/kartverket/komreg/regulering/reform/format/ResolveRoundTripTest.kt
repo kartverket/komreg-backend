@@ -107,7 +107,7 @@ class ResolveRoundTripTest {
     @Test
     fun fylkesdeling() = assertRoundTrip(
         """{ "op": "split", "kind": "county", "key": "30",
-             "into": [ { "to": ["31"], "payload": ${fylkePayload(31)} }, { "to": ["32"], "payload": ${fylkePayload(32)} } ] }""",
+             "into": [ { "new": ["31"], "payload": ${fylkePayload(31)} }, { "new": ["32"], "payload": ${fylkePayload(32)} } ] }""",
         Fylkeendring(FraEnTilMange(fnr(30), listOf(fnr(31), fnr(32)))),
     )
 
@@ -141,8 +141,8 @@ class ResolveRoundTripTest {
     @Test
     fun kommunedeling() = assertRoundTrip(
         """{ "op": "split", "kind": "municipality", "key": ["12", "34"],
-             "into": [ { "to": ["12", "35"], "role": "successor", "payload": ${kommunePayload(12, 35)} },
-                       { "to": ["12", "36"], "payload": ${kommunePayload(12, 36)} } ] }""",
+             "into": [ { "new": ["12", "35"], "role": "successor", "payload": ${kommunePayload(12, 35)} },
+                       { "new": ["12", "36"], "payload": ${kommunePayload(12, 36)} } ] }""",
         Kommuneendring(FraEnTilMange(fnr(12), listOf(fnr(12))), FraEnTilMange(klnr(34), listOf(klnr(35), klnr(36)))),
     )
 
@@ -166,7 +166,7 @@ class ResolveRoundTripTest {
     @Test
     fun vegdeling() = assertRoundTrip(
         """{ "op": "split", "kind": "addressCode", "key": ["12", "34", 100],
-             "into": [ { "to": ["12", "35", 200], "role": "identity" }, { "to": ["12", "36", 300] } ] }""",
+             "into": [ { "new": ["12", "35", 200], "role": "identity" }, { "new": ["12", "36", 300] } ] }""",
         Vegendring(
             FraEnTilMange(fnr(12), listOf(fnr(12))),
             FraEnTilMange(klnr(34), listOf(klnr(35), klnr(36))),

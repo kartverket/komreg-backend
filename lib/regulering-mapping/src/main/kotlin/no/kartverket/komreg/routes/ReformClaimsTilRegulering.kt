@@ -351,6 +351,14 @@ private class EndringMapper(
                     if ((form == Form.KOMMUNE) != (op.successor != null)) {
                         return@mapNotNull avvis(op, "Deling av $form har ${if (form == Form.KOMMUNE) "alltid" else "aldri"} etterfølger")
                     }
+                    if (op.successor != null && avledninger.none { it.target == op.successor }) {
+                        behandlet += avledninger
+                        return@mapNotNull avvis(
+                            op,
+                            "Deling av $form der etterfølgeren ikke opprettes av delingen kan ikke uttrykkes: " +
+                                "DTO-en oppretter alle målene ved deling",
+                        )
+                    }
                     (listOfNotNull(op.successor) + avledninger.map { it.target }).distinct().also {
                         if (it.size < 2) return@mapNotNull avvis(op, "Deling av $form må ha minst to mål")
                     }

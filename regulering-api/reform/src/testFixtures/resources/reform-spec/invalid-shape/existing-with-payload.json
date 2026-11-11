@@ -1,0 +1,11 @@
+{
+  "format": 1,
+  "navn": "Ugyldig",
+  "ikrafttredelse": "2027-01-01",
+  "operasjoner": [
+    { "op": "split", "kind": "municipality", "key": ["46", "05"],
+      "into": [
+        { "existing": ["46", "01"], "role": "successor", "payload": { "navn": "Nye Kommune", "koordinatsystem": "UTM32", "senterpunkt": { "x": 230000.0, "y": 6630000.0 }, "godkjenteGardsnumre": [ { "fra": 1, "til": 200 } ], "kommunevapen": "iVBORw0KGgo=" } }
+      ] }
+  ]
+}
