@@ -21,9 +21,10 @@ import no.kartverket.komreg.regulering.reform.domain.type.NumberingScheme
 import no.kartverket.komreg.regulering.api.server.persistence.ReformRepository
 import no.kartverket.komreg.regulering.api.server.route.regulering.reguleringer
 import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.CadastralUnitFeatures
-import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.DefaultMatrikkelApiMunicipalityNumbers
 import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.EPSG_25833_CRS
 import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.MatrikkelApiMapper
+import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.MatrikkelApiMunicipalityCache
+import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.MatrikkelApiMunicipalityDataSource
 import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.MatrikkelApiMunicipalityNumbers
 import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.getObjectsChunked
 import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.teigerInKrets
@@ -136,18 +137,16 @@ fun Route.matrikkelApiRoutes(deploymentConfig: ApplicationConfig, appJson: Json)
             val adresseServiceDeferred = async {
                 AdresseServiceWS().adresseServicePort.configure("AdresseServiceWS")
             }
-            municipalityNumbers = DefaultMatrikkelApiMunicipalityNumbers(
-                kommuneServiceDeferred.await(),
-                storeServiceDeferred.await(),
+            storeService = storeServiceDeferred.await()
+            municipalityNumbers = MatrikkelApiMunicipalityCache(
+                MatrikkelApiMunicipalityDataSource(kommuneServiceDeferred.await(), storeService, ctx),
                 NumberingScheme.fromName(deploymentConfig.propertyOrNull("app.numberingScheme")?.getString()),
-                ctx
             )
             mapper = MatrikkelApiMapper(
                 municipalityNumbers
             )
             matrikkelenhetService = matrikkelenhetServiceDeferred.await()
             teigService = teigServiceDeferred.await()
-            storeService = storeServiceDeferred.await()
             bygningService = bygningServiceDeferred.await()
             adresseService = adresseServiceDeferred.await()
         }

@@ -88,6 +88,13 @@ dependencies {
     testImplementation(libs.kotest.runner)
 }
 
+dependencies {
+    testImplementation(kotlin("test"))
+    testImplementation(libs.junit.jupiter.api)
+    testRuntimeOnly(libs.junit.jupiter.engine)
+    testImplementation(libs.assertk)
+}
+
 tasks.named<ProcessResources>("processResources") {
     inputs.property("dockerContextTokens", dockerContext.tokens)
 

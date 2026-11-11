@@ -286,3 +286,36 @@ Tilleggskrav:
 
 `server` har en tilsvarende sikring i broen til `Regulering` (`Umappbar`). Domenereglene fanger de samme
 tilfellene tidligere og med bedre meldinger.
+
+## Dataregler
+
+`ReformClaims.validateData(kommuneService)` (pakken `...reform.rules`) sjekker mot data om fylker og kommuner.
+`KommuneService` er SPI-et i core-api, og kalles blokkerende på `Dispatchers.IO`. Feil er `DataErr`, med samme
+form som `DomainErr` (`ops`, `rule`, norsk melding og `hint`) og samles uten å avbryte ved første feil.
+«Gyldig» betyr `gyldigTilDato == null`. Kommuner og fylker slettes aldri, de får bare `gyldigTilDato`.
+
+| regel | krav |
+|---|---|
+| `MunicipalityNotCovered` | Et fylke som utgår (`RetireTo` eller `Retire`) har en egen kilderegel for hver gyldig kommune i fylket. `lookup` må treffe kommunenøkkelen eksakt, en regel for fylket dekker ikke kommunene. |
+| `TargetNotFound` / `TargetExpired` | Fylke- og kommunenøkler i `requiredExistingTargets` finnes og er gyldige. |
+| `SourceNotFound` / `SourceExpired` | Fylke- og kommunekilder (`SourceOp.source` og `Derive.from`) finnes og er gyldige. |
+
+Avgrensninger:
+
+- Andre identtyper (veger, gårdsnumre, teiger og så videre) sjekkes ikke ennå.
+- Dekning av veger, adresser og matrikkelenheter under en kommune som deles, sjekkes ikke. Det hører til en
+  tørrkjøring.
+- Cachen i `server` laster ved oppstart og på nytt ved bom, så en kommune som utgår etter oppstart kan kreve
+  dekning først etter neste bom eller omstart.
+
+### Kommunecache i `regulering-api` (`server`)
+
+`MatrikkelApiMunicipalityCache` implementerer `KommuneService` og `MatrikkelApiMunicipalityNumbers`. Den laster
+fylker, kommuner, `Postnummeromrade` og `JuridiskPerson` ved oppstart (via `MunicipalityDataSource`), og laster
+alt på nytt én gang ved bom (ukjent `MunicipalityId` eller kommunenummer). Feltene tolkes som i `KommuneServiceImpl`
+i matrikkel-komreg (`MunicipalityMapping.kt`).
+
+Kommunevåpen hentes første gang en kommune trenger det og beholdes deretter, fordi bare noen få kommuner er med
+i en reform. Tiden for å laste alle ved oppstart er ikke målt. `findAlleKommuner()` gir kommuner med våpen og
+laster derfor alle som mangler. Datareglene trenger ikke våpen og bør bruke `withoutCoatOfArms`. Broen bruker
+`findKommune(kommunenummer)` for enkeltkommuner.
