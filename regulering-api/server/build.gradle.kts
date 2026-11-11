@@ -38,6 +38,8 @@ dependencies {
     // Bygg GeoJSON fra Matrikkel API
     implementation(libs.spatialk.geojson.jvm)
 
+    implementation(libs.jts.core)
+
     // Brukt for for å plassere config filer (secret file)
     implementation(libs.directories)
 
@@ -79,6 +81,9 @@ dependencies {
     implementation(libs.logback.classic)
     runtimeOnly(libs.logstash.logback.encoder)
     implementation(libs.slf4j.jul.to.slf4j)
+
+    testImplementation(libs.assertk)
+    testImplementation(libs.kotest.runner)
 }
 
 tasks.named<ProcessResources>("processResources") {
