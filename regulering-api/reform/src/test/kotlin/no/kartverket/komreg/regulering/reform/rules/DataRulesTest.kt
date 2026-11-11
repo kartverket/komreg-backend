@@ -6,6 +6,7 @@ import assertk.assertions.isEmpty
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDate
 import no.kartverket.komreg.core.domain.Fylke
+import no.kartverket.komreg.core.domain.Fylkesdata
 import no.kartverket.komreg.core.domain.Fylkesnummer
 import no.kartverket.komreg.core.domain.Kommune
 import no.kartverket.komreg.core.domain.Kommunenummer
@@ -110,6 +111,22 @@ class DataRulesTest {
         )
         assertThat(errors.filterNot { it is DataErr.MunicipalityNotCovered }.map { it.rule })
             .containsExactlyInAnyOrder("TargetNotFound", "TargetExpired")
+    }
+
+    @Test
+    fun `nye fylker og kommuner kan ikke ta et nummer som er i bruk`() {
+        assertThat(
+            errors(
+                ReformOp.Create(fylke(32), Fylkesdata("C")),
+                ReformOp.Derive(kommune(30, 2), from = kommune(30, 1)),
+            ).map { it.rule },
+        ).containsExactlyInAnyOrder("TargetInUse", "TargetInUse")
+        assertThat(
+            errors(
+                ReformOp.Create(fylke(31), Fylkesdata("B")),
+                ReformOp.Derive(kommune(30, 3), from = kommune(30, 1)),
+            ),
+        ).isEmpty()
     }
 
     @Test

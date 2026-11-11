@@ -59,7 +59,7 @@ sealed interface OpSpec {
         val into: IntoSpec,
     ) : OpSpec
 
-    /** [key] deles i [into]. `into: []` betyr oppløsning. */
+    /** [key] deles i [into]. `role` på delene avgjør hva som skjer med kilden. `into: []` betyr at kilden utgår uten etterfølger. */
     @Serializable
     @SerialName("split")
     data class Split(

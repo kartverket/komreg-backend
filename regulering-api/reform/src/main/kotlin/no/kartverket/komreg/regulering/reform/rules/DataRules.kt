@@ -22,6 +22,8 @@ import no.kartverket.komreg.transformation.reform.weakTarget
  *
  * - Et fylke som utgår må ha en egen, eksakt kilderegel for hver gyldig kommune i fylket.
  * - Fylke- og kommunemål som må finnes fra før ([ReformClaims.requiredExistingTargets]) må finnes og være gyldige.
+ * - Fylke- og kommunemål som opprettes ([ReformOp.NewEntity.target]) kan ikke være i bruk av et gyldig fylke eller
+ *   en gyldig kommune.
  * - Fylke- og kommunekilder ([ReformOp.SourceOp.source] og [ReformOp.Derive.from]) må finnes og være gyldige.
  *
  * Andre identtyper sjekkes ikke ennå. [kommuneService] er blokkerende og kalles på [Dispatchers.IO].
@@ -57,6 +59,10 @@ suspend fun ReformClaims.validateData(kommuneService: KommuneService): EitherNel
         }
     }
 
+    val newTargets = declarations.filterIsInstance<ReformOp.NewEntity>().groupBy { it.target }.flatMap { (key, ops) ->
+        if (status(key) == Status.VALID) listOf(DataErr.TargetInUse(key, ops)) else emptyList()
+    }
+
     val sources = declarations.mapNotNull { op ->
         when (op) {
             is ReformOp.SourceOp -> op.source
@@ -71,7 +77,7 @@ suspend fun ReformClaims.validateData(kommuneService: KommuneService): EitherNel
         }
     }
 
-    return (coverage + targets + sources).toNonEmptyListOrNull()?.left() ?: Unit.right()
+    return (coverage + targets + newTargets + sources).toNonEmptyListOrNull()?.left() ?: Unit.right()
 }
 
 private enum class Status { VALID, EXPIRED, MISSING }

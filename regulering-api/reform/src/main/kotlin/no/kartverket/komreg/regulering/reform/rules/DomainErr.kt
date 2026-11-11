@@ -89,7 +89,10 @@ sealed interface DomainErr {
         override val hint get() = "Bruk `split` der én av delene har `role: identity`, slik at vegen beholder ID-en."
     }
 
-    /** Gårdsnummerserie utgår uten at bruksnumrene under flyttes. */
+    /**
+     * Gårdsnummerserie utgår uten at noen bruksnumre under flyttes. Speiler hva broen kan uttrykke. At alle
+     * bruksnumrene som finnes er dekket, krever data og sjekkes ikke her.
+     */
     data class SeriesRetireWithoutTitleMoves(val op: ReformOp.Retire) : DomainErr {
         override val ops get() = listOf(op)
         override val message get() = "Gårdsnummeret ${op.source} utgår uten at noen bruksnumre under flyttes"

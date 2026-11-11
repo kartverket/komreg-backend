@@ -77,7 +77,7 @@ Alle noder har `op` og `kind`. Barn ligger alltid i `then` og er relative til n�
 | `adjust` | `key`, `then`? | Ingen endring på `key`. Bare kontekst for barna. |
 | `move` | `key`, `to`, `then`? | Samme entitet får ny nøkkel. Det som ligger under, og som ikke har egen regel, følger med. |
 | `merge` | `from`, `into` | Kildene i `from` utgår og peker på målet i `into`. |
-| `split` | `key`, `into`, `then`? | Kilden deles i partene i `into`. `"into": []` betyr at kilden oppløses. |
+| `split` | `key`, `into`, `then`? | Kilden deles i partene i `into`. `role` på delene avgjør om kilden fortsetter, utgår med etterfølger eller utgår uten. `"into": []` betyr at kilden utgår uten etterfølger og uten nye deler. |
 | `create` | `key`, `derivedFrom`?, `payload`?, `then`? | Ny entitet. Uten `derivedFrom` har den ingen kilde. Med `derivedFrom` avledes den fra en kilde som ikke endres av noden. |
 
 ### `merge`
@@ -336,7 +336,7 @@ Tilleggskrav:
 | `RetireNeedsSuccessor` / `RetireHasSuccessor` | `municipality` / `county`, `landNumber` | Kommune som utgår har etterfølger. Fylke og gårdsnummer har ingen. |
 | `TargetsInMultipleCounties` | `municipality`, `addressCode` | Alle mål fra én kilde ligger i samme fylke. |
 | `DeriveWithoutMove` | `addressCode` | En veg deles med `role: identity`, så den har en `move`. |
-| `SeriesRetireWithoutTitleMoves` | `landNumber` | Et gårdsnummer som utgår, har `move` av bruksnumre under seg. |
+| `SeriesRetireWithoutTitleMoves` | `landNumber` | Et gårdsnummer som utgår, har `move` av minst ett bruksnummer under seg. Regelen speiler bare hva broen kan uttrykke. Den sjekker ikke at bruksnumrene finnes, eller at alle er dekket. |
 | `ParcelHasCadastralNumber` | `parcel` | Bare teiger uten matrikkelnummer (gnr 0, fnr 0, snr 0, bnr 0 eller 1) flyttes. |
 | `ParcelNotPaired` | `parcel` | bnr 0 og bnr 1 flyttes parvis til samme mål. |
 | `TargetTypeMismatch` | alle | Mål og etterfølger har samme kind som kilden. |
@@ -364,6 +364,7 @@ form som `DomainErr` (`ops`, `rule`, norsk melding og `hint`) og samles uten å 
 |---|---|
 | `MunicipalityNotCovered` | Et fylke som utgår (`RetireTo` eller `Retire`) har en egen kilderegel for hver gyldig kommune i fylket. `lookup` må treffe kommunenøkkelen eksakt, en regel for fylket dekker ikke kommunene. |
 | `TargetNotFound` / `TargetExpired` | Fylke- og kommunenøkler i `requiredExistingTargets` finnes og er gyldige. |
+| `TargetInUse` | Fylke- og kommunenøkler som opprettes (`Create` og `Derive`), er ikke i bruk av et gyldig fylke eller en gyldig kommune. Et utgått nummer kan brukes på nytt. |
 | `SourceNotFound` / `SourceExpired` | Fylke- og kommunekilder (`SourceOp.source` og `Derive.from`) finnes og er gyldige. |
 
 Avgrensninger:
@@ -371,6 +372,8 @@ Avgrensninger:
 - Andre identtyper (veger, gårdsnumre, teiger og så videre) sjekkes ikke ennå.
 - Dekning av veger, adresser og matrikkelenheter under en kommune som deles, sjekkes ikke. Det hører til en
   tørrkjøring.
+- Dekning av bruksnumre under et gårdsnummer som utgår, sjekkes heller ikke. Et bruksnummer uten egen `move`
+  får en delvis ident (bare bruksnummeret) i `IdentTransformer`. Også dette hører til en tørrkjøring.
 - Cachen i `server` laster ved oppstart og på nytt ved bom, så en kommune som utgår etter oppstart kan kreve
   dekning først etter neste bom eller omstart.
 

@@ -36,6 +36,12 @@ sealed interface DataErr {
         override val hint get() = "Velg et mål som er gyldig, eller opprett et nytt med `into.new`."
     }
 
+    /** Et mål som opprettes, er allerede i bruk av et gyldig fylke eller en gyldig kommune. */
+    data class TargetInUse(val key: Ident.NonEmpty, override val ops: List<ReformOp>) : DataErr {
+        override val message get() = "Målet $key er allerede i bruk"
+        override val hint get() = "Velg et ledig nummer, eller bruk `into.existing` hvis målet skal være det som finnes."
+    }
+
     /** Kilden finnes ikke. */
     data class SourceNotFound(val key: Ident.NonEmpty, override val ops: List<ReformOp>) : DataErr {
         override val message get() = "Kilden $key finnes ikke"
