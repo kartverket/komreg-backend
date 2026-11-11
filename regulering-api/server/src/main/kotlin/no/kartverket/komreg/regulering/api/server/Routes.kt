@@ -22,6 +22,7 @@ import no.kartverket.komreg.regulering.api.server.persistence.ReformSpecReposito
 import no.kartverket.komreg.regulering.api.server.service.reform.ReformSpecService
 import no.kartverket.komreg.regulering.reform.format.SegmentRegistry
 import no.kartverket.komreg.regulering.reform.format.v1
+import no.kartverket.komreg.regulering.api.server.route.regulering.ReguleringOpenApi
 import no.kartverket.komreg.regulering.api.server.route.regulering.reguleringer
 import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.CadastralUnitFeatures
 import no.kartverket.komreg.regulering.api.server.service.matrikkelapi.EPSG_25833_CRS
@@ -68,13 +69,7 @@ fun Application.routes(
     numberingScheme: NumberingScheme,
 ) {
     routing {
-        swaggerUI(path = "/openapi") {
-            info = OpenApiInfo("KomReg Regulering API", "0.1.0")
-            remotePath = "openapi.json"
-            source = Routing(
-                routes = { descendants().filterNot { it.path.startsWith("/readyz") || it.path.startsWith("/livez") } }
-            )
-        }
+        openApiDocs()
         get("/greet") {
             log.info("Received request for /greet")
             call.respondText("Hello, World!")
@@ -86,6 +81,18 @@ fun Application.routes(
             appJson,
             reforms,
             ReformSpecService(registry, municipalities, municipalities.withoutCoatOfArms),
+        )
+    }
+}
+
+/** Swagger UI på `/openapi` og OpenAPI-dokumentet på `/openapi/openapi.json`. */
+internal fun Route.openApiDocs() {
+    swaggerUI(path = "/openapi") {
+        info = OpenApiInfo("KomReg Regulering API", "0.1.0")
+        tag(ReguleringOpenApi.TAG, ReguleringOpenApi.TAG_DESCRIPTION)
+        remotePath = "openapi.json"
+        source = Routing(
+            routes = { descendants().filterNot { it.path.startsWith("/readyz") || it.path.startsWith("/livez") } }
         )
     }
 }
