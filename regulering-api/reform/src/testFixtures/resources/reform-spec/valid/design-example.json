@@ -1,0 +1,46 @@
+{
+  "format": 1,
+  "navn": "Reform 2027",
+  "ikrafttredelse": "2027-01-01",
+  "operasjoner": [
+    {
+      "op": "merge", "kind": "county",
+      "from": [
+        "03",
+        {
+          "key": "30",
+          "then": [
+            {
+              "op": "merge", "kind": "municipality", "from": ["01", "02"],
+              "into": { "new": ["33", "01"], "payload": { "navn": "Nye Kommune", "koordinatsystem": "UTM32", "senterpunkt": { "x": 230000.0, "y": 6630000.0 }, "godkjenteGardsnumre": [ { "fra": 1, "til": 200 } ], "kommunevapen": "iVBORw0KGgo=" } }
+            },
+            {
+              "op": "split", "kind": "municipality", "key": "05",
+              "into": [
+                { "new": ["33", "10"], "role": "successor", "payload": { "navn": "Nye Kommune", "koordinatsystem": "UTM32", "senterpunkt": { "x": 230000.0, "y": 6630000.0 }, "godkjenteGardsnumre": [ { "fra": 1, "til": 200 } ], "kommunevapen": "iVBORw0KGgo=" } },
+                { "new": ["33", "11"], "payload": { "navn": "Nye Kommune", "koordinatsystem": "UTM32", "senterpunkt": { "x": 230000.0, "y": 6630000.0 }, "godkjenteGardsnumre": [ { "fra": 1, "til": 200 } ], "kommunevapen": "iVBORw0KGgo=" } }
+              ],
+              "then": [
+                { "op": "move", "kind": "addressCode", "key": 1234, "to": ["33", "11", 1234] },
+                {
+                  "op": "split", "kind": "addressCode", "key": 1300,
+                  "into": [ { "new": ["33", "10", 1300], "role": "identity" }, { "new": ["33", "11", 1300] } ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "into": { "new": ["33"], "payload": { "navn": "Buskerud" } }
+    },
+    {
+      "op": "adjust", "kind": "municipality", "key": ["46", "01"],
+      "then": [
+        {
+          "op": "move", "kind": "landNumber", "key": 5, "to": ["46", "02", 7],
+          "then": [ { "op": "move", "kind": "titleNumber", "key": 1, "to": ["46", "02", 8, 1] } ]
+        }
+      ]
+    }
+  ]
+}

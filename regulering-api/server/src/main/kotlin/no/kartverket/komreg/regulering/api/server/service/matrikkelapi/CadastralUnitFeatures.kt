@@ -7,7 +7,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import no.kartverket.komreg.regulering.api.server.domain.MunicipalityId
-import no.kartverket.komreg.regulering.api.server.domain.type.CadastralNumber
+import no.kartverket.komreg.regulering.reform.domain.type.CadastralNumber
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.MatrikkelBubbleId
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.MatrikkelBubbleIdList
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.MatrikkelBubbleObject

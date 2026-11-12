@@ -1,0 +1,13 @@
+{
+  "format": 1,
+  "navn": "Ugyldig",
+  "ikrafttredelse": "2027-01-01",
+  "operasjoner": [
+    {
+      "op": "move",
+      "kind": "county",
+      "key": "46",
+      "to": "47"
+    }
+  ]
+}

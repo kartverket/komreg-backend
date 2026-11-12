@@ -29,6 +29,8 @@ repositories {
 
 dependencies {
     implementation(project(":lib:regulering-dto"))
+    implementation(project(":lib:regulering-mapping"))
+    implementation(project(":regulering-api:regulering-api-reform"))
 
     // Matrikkel API client
     implementation(project(":lib:matrikkelapi-client"))
@@ -86,6 +88,16 @@ dependencies {
     testImplementation(libs.kotest.runner)
 }
 
+dependencies {
+    testImplementation(kotlin("test"))
+    testImplementation(libs.junit.jupiter.api)
+    testRuntimeOnly(libs.junit.jupiter.engine)
+    testImplementation(libs.assertk)
+    testImplementation(testFixtures(project(":regulering-api:regulering-api-reform")))
+    testImplementation(libs.ktor.server.test.host)
+    testImplementation(libs.testcontainers.postgresql)
+}
+
 tasks.named<ProcessResources>("processResources") {
     inputs.property("dockerContextTokens", dockerContext.tokens)
 
@@ -120,6 +132,8 @@ tasks.named<GenerateJooqClassesTask>("generateJooqClasses") {
         name = "org.jooq.codegen.KotlinGenerator"
         generate.apply {
             withPojos(false)
+            withPojosAsKotlinDataClasses(true)
+            withImmutablePojos(true)
             withKotlinNotNullRecordAttributes(true)
         }
     }

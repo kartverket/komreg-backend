@@ -10,6 +10,7 @@ docker run --rm -it -e POSTGRES_USER=regulering -e POSTGRES_PASSWORD=regulering 
 
 ### Vil ha for å kjøre lokalt
 - APP_LOG_ENCODE=pattern
+- APP_NUMBERING_SCHEME=test (standard er `production`). Testdatabasen har testfylker med 5-sifret fylkesnummer.
 
 ### OpenTelemetry
 - OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 (eller 4317 for gRPC)

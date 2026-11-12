@@ -1,0 +1,9 @@
+{
+  "format": 1,
+  "navn": "Kommuner skilles ut",
+  "ikrafttredelse": "2027-01-01",
+  "operasjoner": [
+    { "op": "create", "kind": "municipality", "key": ["46", "10"], "derivedFrom": ["46", "05"], "payload": { "navn": "Ny Kommune", "koordinatsystem": "UTM32", "senterpunkt": { "x": 230000.0, "y": 6630000.0 }, "godkjenteGardsnumre": [ { "fra": 1, "til": 200 } ], "kommunevapen": "iVBORw0KGgo=" } },
+    { "op": "create", "kind": "municipality", "key": ["46", "11"], "derivedFrom": ["46", "05"] }
+  ]
+}

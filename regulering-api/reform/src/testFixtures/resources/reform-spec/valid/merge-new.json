@@ -1,0 +1,19 @@
+{
+  "format": 1,
+  "navn": "Sammenslåing til nytt fylke",
+  "ikrafttredelse": "2027-01-01",
+  "operasjoner": [
+    {
+      "op": "merge", "kind": "county", "from": ["30", "31"],
+      "into": {
+        "new": ["33"],
+        "payload": { "navn": "Buskerud" },
+        "then": [ { "op": "create", "kind": "municipality", "key": "01", "payload": { "navn": "Nye Kommune", "koordinatsystem": "UTM32", "senterpunkt": { "x": 230000.0, "y": 6630000.0 }, "godkjenteGardsnumre": [ { "fra": 1, "til": 200 } ], "kommunevapen": "iVBORw0KGgo=" } } ]
+      }
+    },
+    {
+      "op": "merge", "kind": "municipality", "from": [["46", "01"]],
+      "into": { "new": ["46", "99"], "payload": { "navn": "Omnummerert", "koordinatsystem": "UTM32", "senterpunkt": { "x": 230000.0, "y": 6630000.0 }, "kommunevapen": "iVBORw0KGgo=" } }
+    }
+  ]
+}

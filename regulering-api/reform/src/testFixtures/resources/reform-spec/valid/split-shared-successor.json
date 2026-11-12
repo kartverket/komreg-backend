@@ -1,0 +1,21 @@
+{
+  "format": 1,
+  "navn": "To kommuner deler en ny etterfølger",
+  "ikrafttredelse": "2027-01-01",
+  "operasjoner": [
+    {
+      "op": "split", "kind": "municipality", "key": ["46", "05"],
+      "into": [
+        { "new": ["46", "10"], "role": "successor", "payload": { "navn": "Nye Kommune", "koordinatsystem": "UTM32", "senterpunkt": { "x": 230000.0, "y": 6630000.0 }, "godkjenteGardsnumre": [ { "fra": 1, "til": 200 } ], "kommunevapen": "iVBORw0KGgo=" } },
+        { "new": ["46", "11"], "payload": { "navn": "Nye Kommune", "koordinatsystem": "UTM32", "senterpunkt": { "x": 230000.0, "y": 6630000.0 }, "godkjenteGardsnumre": [ { "fra": 1, "til": 200 } ], "kommunevapen": "iVBORw0KGgo=" } }
+      ]
+    },
+    {
+      "op": "split", "kind": "municipality", "key": ["46", "06"],
+      "into": [
+        { "existing": ["46", "10"], "role": "successor" },
+        { "new": ["46", "12"], "payload": { "navn": "Nye Kommune", "koordinatsystem": "UTM32", "senterpunkt": { "x": 230000.0, "y": 6630000.0 }, "godkjenteGardsnumre": [ { "fra": 1, "til": 200 } ], "kommunevapen": "iVBORw0KGgo=" } }
+      ]
+    }
+  ]
+}

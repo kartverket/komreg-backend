@@ -27,8 +27,9 @@ import io.r2dbc.spi.ConnectionFactoryOptions
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
-import no.kartverket.komreg.regulering.api.server.domain.type.MunicipalityNumber
-import no.kartverket.komreg.regulering.api.server.persistence.ReformRepository
+import no.kartverket.komreg.regulering.reform.domain.type.MunicipalityNumber
+import no.kartverket.komreg.regulering.reform.domain.type.NumberingScheme
+import no.kartverket.komreg.regulering.api.server.persistence.JooqReformSpecRepository
 import org.flywaydb.core.Flyway
 import org.jooq.DSLContext
 import org.jooq.SQLDialect
@@ -158,10 +159,10 @@ internal fun rootModuleFactory(
             setOpenTelemetry(openTelemetrySdk)
         }
 
+        val numberingScheme = NumberingScheme.fromName(deploymentConfig.propertyOrNull("app.numberingScheme")?.getString())
         val appJson = Json {
             serializersModule = SerializersModule {
-                // TODO: Støtt test-kommuner med lange fylkesnummer
-                contextual(MunicipalityNumber::class, MunicipalityNumber.DefaultSerializer)
+                contextual(MunicipalityNumber::class, MunicipalityNumber.Serializer(numberingScheme))
             }
         }
         install(ContentNegotiation) {
@@ -177,7 +178,7 @@ internal fun rootModuleFactory(
 
         healthModule(dsl)
 
-        routes(deploymentConfig, appJson, ReformRepository(dsl))
+        routes(deploymentConfig, appJson, JooqReformSpecRepository(dsl, appJson), numberingScheme)
     }
 
 }

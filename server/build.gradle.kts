@@ -79,6 +79,7 @@ dependencies {
     implementation(project(":lib:core-api"))
     implementation(project(":lib:regulering-dto"))
     implementation(project(":lib:transformation"))
+    implementation(project(":lib:regulering-mapping"))
 
     // Skulle egentlig vært runtimeOnly, men har ikke funnet på noe ordentlig grensesnitt for SSR-generering
     implementation(libs.matrikkel.komreg) {
