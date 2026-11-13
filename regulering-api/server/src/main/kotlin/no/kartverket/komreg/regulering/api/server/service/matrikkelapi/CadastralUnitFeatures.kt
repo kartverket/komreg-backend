@@ -233,7 +233,7 @@ class CadastralUnitFeatures(
             emptyMap()
         }
 
-        val roadIds = adresses.values.map { it.vegId }
+        val roadIds = adresses.values.map { it.vegId }.distinct()
         val roads = if (roadIds.isNotEmpty()) {
             storeService.getObjects(MatrikkelBubbleIdList(roadIds), ctx)
                 .item.asSequence().map { it as Veg }.associateBy { it.id as VegId }
@@ -251,8 +251,8 @@ class CadastralUnitFeatures(
         val grenselinjeIds = (exteriorCds + interiorCds.flatten()).asSequence().map { it.grenselinjeId }.distinct().toList()
 
         val grenselinjer = if (grenselinjeIds.isNotEmpty()) {
-            storeService.getObjects(MatrikkelBubbleIdList(grenselinjeIds), ctx)
-                .item.map { it as Teiggrense }
+            storeService.getObjectsChunked(grenselinjeIds, ctx)
+                .map { it as Teiggrense }
                 .associateBy { it.id as TeiggrenseId }
         } else {
             emptyMap()
