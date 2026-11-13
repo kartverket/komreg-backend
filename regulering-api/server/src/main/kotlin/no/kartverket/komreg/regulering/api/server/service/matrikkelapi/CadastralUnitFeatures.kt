@@ -224,8 +224,8 @@ class CadastralUnitFeatures(
 
         val addressIds = (directAddressIds + indirectAddressIds + parcelAddressIds).distinct().toList()
         val adresses = if (addressIds.isNotEmpty()) {
-            storeService.getObjects(MatrikkelBubbleIdList(addressIds), ctx)
-                .item.asSequence()
+            storeService.getObjectsChunked(addressIds, ctx)
+                .asSequence()
                 .map { it as Adresse }
                 .mapNotNull { it as? Vegadresse }
                 .associateBy { it.id as VegadresseId }
@@ -235,15 +235,15 @@ class CadastralUnitFeatures(
 
         val roadIds = adresses.values.map { it.vegId }.distinct()
         val roads = if (roadIds.isNotEmpty()) {
-            storeService.getObjects(MatrikkelBubbleIdList(roadIds), ctx)
-                .item.asSequence().map { it as Veg }.associateBy { it.id as VegId }
+            storeService.getObjectsChunked(roadIds, ctx)
+                .asSequence().map { it as Veg }.associateBy { it.id as VegId }
         } else {
             emptyMap()
         }
 
         val teiger = storeService
-            .getObjects(MatrikkelBubbleIdList(includedParcelIds.toList()), ctx)
-            .item.asSequence()
+            .getObjectsChunked(includedParcelIds.toList(), ctx)
+            .asSequence()
             .map { it as Teig }.associateByTo(hashMapOf()) { it.id as TeigId }
 
         val exteriorCds = teiger.values.flatMap { it.flate.exterior.curveDirections.item }
@@ -268,8 +268,8 @@ class CadastralUnitFeatures(
             .toList()
 
         val grensepunkter = if (grensepunktIds.isNotEmpty()) {
-            storeService.getObjects(MatrikkelBubbleIdList(grensepunktIds), ctx)
-                .item.asSequence()
+            storeService.getObjectsChunked(grensepunktIds, ctx)
+                .asSequence()
                 .map { it as Teiggrensepunkt }
                 .associateBy { it.id as TeiggrensepunktId }
         } else {
