@@ -13,7 +13,6 @@ import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.MatrikkelBubbleIdList
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.MatrikkelBubbleObject
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.MatrikkelContext
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.adresse.Adresse
-import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.adresse.AdresseId
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.adresse.Veg
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.adresse.VegId
 import no.statkart.matrikkel.matrikkelapi.wsapi.v1.domain.adresse.Vegadresse
@@ -168,68 +167,96 @@ class CadastralUnitFeatures(
             .map { it.id as MatrikkelenhetId }
             .toList()
 
-        val directAddressIds: Sequence<AdresseId?>
-        val indirectAddressIds: Sequence<AdresseId?>
-        if (cadestralUnitsIds.isNotEmpty()) {
-            directAddressIds = cadestralUnitsIds
-                .let { adresseService.findAdresserForMatrikkelenheter(MatrikkelenhetIdList(it.toList()), ctx) }
+        val addressCadastralUnits = hashMapOf<VegadresseId, MutableSet<Matrikkelnummer>>()
+        val (directAddressIds, indirectAddressIds) = if (cadestralUnitsIds.isNotEmpty()) {
+            val directAddresses = adresseService
+                .findAdresserForMatrikkelenheter(MatrikkelenhetIdList(cadestralUnitsIds), ctx)
                 .entry
-                .asSequence()
-                .flatMap { it.value.item.asSequence() }
-            val bygningIds = cadestralUnitsIds
-                .let { bygningService.findByggForMatrikkelenheter(MatrikkelenhetIdList(it.toList()), ctx) }
-                .entry
-                .flatMap { it.value.item }
-            indirectAddressIds = if (bygningIds.isNotEmpty()) {
-                adresseService.findAdresserForByggList(ByggIdList(bygningIds), ctx)
-                    .entry
-                    .asSequence()
-                    .flatMap { it.value.item.asSequence() }
-            } else {
-                emptySequence()
+            for (entry in directAddresses) {
+                val cadastralNumber = seenCadastralUnitIds[entry.key]!!.matrikkelnummer
+                for (addressId in entry.value.item.filterIsInstance<VegadresseId>()) {
+                    addressCadastralUnits.getOrPut(addressId) { hashSetOf() }.add(cadastralNumber)
+                }
             }
+            val direct: Sequence<VegadresseId> =
+                directAddresses.asSequence().flatMap { it.value.item.asSequence().filterIsInstance<VegadresseId>() }
+
+            val buildingIdsByUnit = bygningService
+                .findByggForMatrikkelenheter(MatrikkelenhetIdList(cadestralUnitsIds), ctx)
+                .entry
+            val buildingIds = buildingIdsByUnit.flatMap { it.value.item }.distinct()
+            val buildingAddresses = if (buildingIds.isNotEmpty()) {
+                adresseService.findAdresserForByggList(ByggIdList(buildingIds), ctx).entry
+            } else {
+                emptyList()
+            }
+            val addressIdsByBuilding = buildingAddresses.associate {
+                it.key.value to it.value.item.filterIsInstance<VegadresseId>()
+            }
+            for (entry in buildingIdsByUnit) {
+                val cadastralNumber = seenCadastralUnitIds[entry.key]!!.matrikkelnummer
+                for (byggId in entry.value.item) {
+                    for (addressId in addressIdsByBuilding[byggId.value] ?: emptyList()) {
+                        addressCadastralUnits.getOrPut(addressId) { hashSetOf() }.add(cadastralNumber)
+                    }
+                }
+            }
+            val indirect: Sequence<VegadresseId> =
+                addressIdsByBuilding.values.asSequence().flatMap { it.asSequence() }
+
+            direct to indirect
         } else {
-            directAddressIds = emptySequence()
-            indirectAddressIds = emptySequence()
+            emptySequence<VegadresseId>() to emptySequence()
         }
 
-        val parcelAddressIds = seenCadastralUnitIds.values.asSequence()
-            .filter { it.matrikkelnummer.gardsnummer == 0 }
+        val parcelIdsForAddresses = seenCadastralUnitIds.values.asSequence()
+            .filter { it.matrikkelnummer.gardsnummer == 0}
             .flatMap { it.teigerForMatrikkelenhet.item.asSequence() }
             .map { it.teigId }
             .filter { includedParcelIds.contains(it) }
             .toList()
-            .let { ids ->
-                if (ids.isEmpty()) emptySequence()
-                else teigService.findAdresserForTeiger(TeigIdList(ids), ctx).item.asSequence()
-            }
+        val parcelAddressIds = if (parcelIdsForAddresses.isNotEmpty()) {
+            teigService.findAdresserForTeiger(TeigIdList(parcelIdsForAddresses), ctx)
+                .item.asSequence().filterIsInstance<VegadresseId>()
+        } else {
+            emptySequence()
+        }
 
-        val adresses = (directAddressIds + indirectAddressIds + parcelAddressIds)
-            .filterNotNull()
-            .distinct()
-            .toList()
-            .let { storeService.getObjectsChunked(it, ctx) }
-            .asSequence()
-            .map { it as Adresse }
-            .mapNotNull { it as? Vegadresse }
-            .associateBy { it.id as VegadresseId }
+        val addressIds = (directAddressIds + indirectAddressIds + parcelAddressIds).distinct().toList()
+        val adresses = if (addressIds.isNotEmpty()) {
+            storeService.getObjects(MatrikkelBubbleIdList(addressIds), ctx)
+                .item.asSequence()
+                .map { it as Adresse }
+                .mapNotNull { it as? Vegadresse }
+                .associateBy { it.id as VegadresseId }
+        } else {
+            emptyMap()
+        }
 
-        val roads = adresses.values.asSequence().map { it.vegId }.distinct().toList()
-            .let { storeService.getObjectsChunked(it, ctx) }
-            .asSequence().map { it as Veg }.associateBy { it.id as VegId }
+        val roadIds = adresses.values.map { it.vegId }
+        val roads = if (roadIds.isNotEmpty()) {
+            storeService.getObjects(MatrikkelBubbleIdList(roadIds), ctx)
+                .item.asSequence().map { it as Veg }.associateBy { it.id as VegId }
+        } else {
+            emptyMap()
+        }
 
         val teiger = storeService
-            .getObjectsChunked(includedParcelIds.toList(), ctx)
-            .asSequence()
+            .getObjects(MatrikkelBubbleIdList(includedParcelIds.toList()), ctx)
+            .item.asSequence()
             .map { it as Teig }.associateByTo(hashMapOf()) { it.id as TeigId }
 
         val exteriorCds = teiger.values.flatMap { it.flate.exterior.curveDirections.item }
         val interiorCds = teiger.values.flatMap { it.flate.interior.item }.map { it.curveDirections.item }
         val grenselinjeIds = (exteriorCds + interiorCds.flatten()).asSequence().map { it.grenselinjeId }.distinct().toList()
 
-        val grenselinjer = storeService.getObjectsChunked(grenselinjeIds, ctx)
-            .map { it as Teiggrense }
-            .associateBy { it.id as TeiggrenseId }
+        val grenselinjer = if (grenselinjeIds.isNotEmpty()) {
+            storeService.getObjects(MatrikkelBubbleIdList(grenselinjeIds), ctx)
+                .item.map { it as Teiggrense }
+                .associateBy { it.id as TeiggrenseId }
+        } else {
+            emptyMap()
+        }
 
         val grensepunktIds = grenselinjer
             .values
@@ -240,10 +267,14 @@ class CadastralUnitFeatures(
             .distinct()
             .toList()
 
-        val grensepunkter = storeService.getObjectsChunked(grensepunktIds, ctx)
-            .asSequence()
-            .map { it as Teiggrensepunkt }
-            .associateBy { it.id as TeiggrensepunktId }
+        val grensepunkter = if (grensepunktIds.isNotEmpty()) {
+            storeService.getObjects(MatrikkelBubbleIdList(grensepunktIds), ctx)
+                .item.asSequence()
+                .map { it as Teiggrensepunkt }
+                .associateBy { it.id as TeiggrensepunktId }
+        } else {
+            emptyMap()
+        }
 
         return with(mapper) {
             buildFeatureCollection {
@@ -263,6 +294,11 @@ class CadastralUnitFeatures(
                             put("addressName", road.adressenavn)
                             put("addressNumber", vegadresse.nummer)
                             put("addressNumberExtension", vegadresse.bokstav)
+                            putJsonArray("cadastralNumbers") {
+                                for (matrikkelnummer in addressCadastralUnits[id] ?: emptySet()) {
+                                    add(appJson.encodeToJsonElement(CadastralNumber.serializer(), matrikkelnummer.toDomain()))
+                                }
+                            }
                         }
                     }
                 }
