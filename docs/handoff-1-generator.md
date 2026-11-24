@@ -127,6 +127,12 @@ Dette er ment. Dokumenter dem i testene.
 | Kommunedeling | Etterfølgeren kommer to ganger: kilden får etterfølgerens nøkkel, og etterfølgeren opprettes i tillegg. | Kilden får `transformedIdent = successor`, og hver del opprettes én gang via `Derive`. Sjekk at `KommuneSink` gir samme resultat. |
 | Assosierte identer ved deling | `flatMap` over alle delene. | Følger bare kilderegelen, så én ident per assosiert ident. |
 | `sammenslaaing` | Satt fra DTO-en. | `null`. |
+| Deling uten etterfølger | Fylkedeling gir `transformedIdent = Ident.Empty` for kilden (og `Ident.Empty` blant de assosierte identene). | `null`, og en assosiert ident uten etterfølger fjernes. `FylkeSink` og `KommuneSink` bruker `get…OrNull()` og oppfører seg likt. |
+| Vegdeling, vegadresser uten egen regel | Treff på forelder i en `Split` gir delvis nøkkel (bare adressenummeret). | `toReformOps` gir `Move(kilde, første mål)`, så adressene følger det første målet. |
+| Teig med matrikkelnummer | Regelen (F, L, TeigId) treffer teigen uansett matrikkelnummer. | Regelen har gnr 0 og bnr 0/1, så bare teiger uten matrikkelnummer flyttes. Dataregelen `ParcelHasCadastralNumber` hindrer at det skjer i praksis. |
+
+`ReformTransformerSammenligningTest` kjører dagens og ny transformator på de samme DTO-ene og feiler hvis en
+forskjell ikke er deklarert med en av radene over.
 
 ## Identtyper i bruk
 
