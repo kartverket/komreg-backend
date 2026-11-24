@@ -1,0 +1,27 @@
+### Lagre reglene for en reform-regulering (201 ny, 200 erstattet, 400 ugyldig, 409 har kjøring)
+PUT http://localhost:8080/reform-reguleringer/fylkesreform-test HTTP/1.1
+Content-Type: application/json
+
+{
+  "navn": "Viken deles",
+  "ikrafttredelsesdato": "2024-01-01",
+  "regler": [
+    {
+      "type": "retireTo",
+      "source": {"type": ["Fylkesnummer"], "values": [{"type": "Fylkesnummer", "value": 30}]},
+      "target": {"type": ["Fylkesnummer"], "values": [{"type": "Fylkesnummer", "value": 31}]}
+    },
+    {
+      "type": "derive",
+      "target": {"type": ["Fylkesnummer"], "values": [{"type": "Fylkesnummer", "value": 31}]},
+      "from": {"type": ["Fylkesnummer"], "values": [{"type": "Fylkesnummer", "value": 30}]},
+      "payload": {"type": "no.kartverket.komreg.core.domain.Fylkesdata", "navn": "Østfold"}
+    }
+  ]
+}
+
+### Hent reglene
+GET http://localhost:8080/reform-reguleringer/fylkesreform-test
+
+### Kjør (krever TRANSFORMASJONSMOTOR=reform)
+GET http://localhost:8080/run/fylkesreform-test

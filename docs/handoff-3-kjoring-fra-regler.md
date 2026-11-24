@@ -8,6 +8,23 @@
 Koble `ReformTransformer` inn i kjøringen. Gjør det i to faser. Fase A bytter motor og beholder DTO-en som
 transport. Fase B fjerner DTO-en fra transporten og krever et valg først.
 
+## Status
+
+Gjennomført som én fase, med en justering: begge motorene beholdes bak `TRANSFORMASJONSMOTOR=legacy|reform`
+(standard `legacy`). `legacy` kjører DTO-en med `IdentTransformer` som før. `reform` bygger *ikke* reglene fra
+DTO-en, men kjører lagrede `ReformOp`-er (transportalternativ 1):
+
+- `ReformOp` er `@Serializable`. `PUT/GET /reform-reguleringer/{id}` lagrer og henter reglene i tabellen
+  `reform_regulering` (`V6__reform_regulering.sql`). `kjoring` peker på enten `regulering` eller
+  `reform_regulering`.
+- `transform()` har to overloads som deler kjøringen. `TransformationService` tar `Kjoringsregler.Legacy` eller
+  `Kjoringsregler.Reform`.
+- `StedsnavnService` lager parametrene fra reglene for reform-kjøringer. `StedsnavnParametreTest` sammenligner
+  med `legacy` og viser forskjellen (eksisterende mål for sammenslåing). Kommunenavn under `NK` skrives med store
+  bokstaver med begge motorene.
+- Gjenstår: `ReguleringValidator` er ikke flyttet til `regulering-api` (den gjelder bare `legacy`), og
+  `regulering-api` sender ikke reglene til `server` ennå. Sammenligningen av motorene i et testmiljø gjenstår.
+
 ## Fase A: ny motor, samme transport
 
 ### `transform()` (`lib/transformation/.../Transformer.kt`)

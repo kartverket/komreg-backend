@@ -15,11 +15,20 @@ Regulering (DTO) ──toReguleringsinput().toReformOps()──▶ List<ReformOp
 - `regulering-api` tar imot reformer i JSON-formatet i [reform-format.md](reform-format.md), oversetter dem til
   `ReformOp`, validerer dem og lager en `Regulering`-DTO med broen nedenfor.
 - `ReformMapping.kt` går motsatt vei. Den lager regler av en eksisterende DTO.
-- Ingen kode kjører `ReformOp` direkte. En regulering kjøres fortsatt av `server`, fra DTO-en:
-  `Regulering` → `Reguleringsinput` → `mapInput` → `IdentTransformer` → sinkene i matrikkel-komreg. Se
-  [arkitektur.md](arkitektur.md).
+- `server` kjører en regulering med motoren i `TRANSFORMASJONSMOTOR` (se
+  [arkitektur.md](arkitektur.md#transformasjonsmotor)):
+  - `legacy` (standard): `Regulering` → `Reguleringsinput` → `mapInput` → `IdentTransformer` → sinkene.
+  - `reform`: lagrede `ReformOp`-er (`PUT /reform-reguleringer/{id}`) → `ReformClaims.validate` →
+    `ReformTransformer` → sinkene.
 
-Operasjonene beskriver altså hva en regulering *betyr*. De er ikke instruksjoner som utføres.
+Operasjonene beskriver hva en regulering *betyr*. Med `legacy` er de ikke instruksjoner som utføres.
+
+### JSON
+
+`ReformOp` er `@Serializable`, med `type` lik `create`, `derive`, `move`, `retire` eller `retireTo`. Identer
+bruker `IdentSerializer`, og en tom ident avvises. Payloads er polymorfe, så JSON-en må leses og skrives med
+`jsonSerializer()` i `server`, som kjenner identtypene og payloadene fra pluginene. Eksempel:
+[`http/local/reformRegulering.http`](../http/local/reformRegulering.http).
 
 ## Nøkler og ID-er
 

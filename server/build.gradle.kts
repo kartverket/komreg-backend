@@ -132,6 +132,7 @@ dependencies {
     integrationTestImplementation(libs.hikari)
     integrationTestImplementation(project(":lib:core-api"))
     integrationTestImplementation(project(":lib:regulering-dto"))
+    integrationTestImplementation(project(":lib:transformation"))
     integrationTestImplementation(libs.kotlinx.serialization.json)
 }
 

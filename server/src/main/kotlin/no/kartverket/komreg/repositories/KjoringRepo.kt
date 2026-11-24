@@ -1,6 +1,8 @@
 package no.kartverket.komreg.repositories
 
 import kotlinx.serialization.Serializable
+import no.kartverket.komreg.Transformasjonsmotor
+import java.sql.ResultSet
 import java.sql.Statement
 import java.sql.Timestamp
 import java.util.Date
@@ -9,10 +11,13 @@ import javax.sql.DataSource
 class KjoringRepo(
     private val dataSource: DataSource,
 ) {
-    fun insertAndRetrieveKjoringId(reguleringId: String): Int? {
+    fun insertAndRetrieveKjoringId(
+        reguleringId: String,
+        motor: Transformasjonsmotor = Transformasjonsmotor.LEGACY,
+    ): Int? {
         dataSource.connection.use { connection ->
             val insertStatement = connection.prepareStatement(
-                "INSERT INTO kjoring (regulering, start, status, mottaker) VALUES (?, now(), 'KJØRER', ?)",
+                "INSERT INTO kjoring (${motor.reguleringskolonne}, start, status, mottaker) VALUES (?, now(), 'KJØRER', ?)",
                 Statement.RETURN_GENERATED_KEYS,
             )
             insertStatement.setString(1, reguleringId)
@@ -41,10 +46,13 @@ class KjoringRepo(
         }
     }
 
-    fun finnStoppetKjøringForRegulering(reguleringId: String): Kjoring? {
+    fun finnStoppetKjøringForRegulering(
+        reguleringId: String,
+        motor: Transformasjonsmotor = Transformasjonsmotor.LEGACY,
+    ): Kjoring? {
         dataSource.connection.use { connection ->
             val preparedStatement = connection.prepareStatement(
-                "SELECT * FROM kjoring WHERE regulering = ? \n" +
+                "SELECT * FROM kjoring WHERE ${motor.reguleringskolonne} = ? \n" +
                     "AND status = 'STOPPET' \n" +
                     "AND slutt IS NULL \n" +
                     "ORDER BY start DESC \n" +
@@ -55,14 +63,7 @@ class KjoringRepo(
             val result = preparedStatement.executeQuery()
 
             return if (result.next()) {
-                Kjoring(
-                    id = result.getInt("id"),
-                    regulering = result.getString("regulering"),
-                    start = result.getTimestamp("start"),
-                    stop = result.getTimestamp("slutt"),
-                    status = enumValueOf<Kjoringstatus>(result.getString("status")),
-                    mottaker = enumValueOf<Mottaker>(result.getString("mottaker"))
-                )
+                result.toKjoring()
             } else {
                 null
             }
@@ -140,10 +141,14 @@ class KjoringRepo(
         }
     }
 
-    fun getStatusForKjoringMedReguleringsId(reguleringsId: String): List<Kjoring> {
+    fun getStatusForKjoringMedReguleringsId(
+        reguleringsId: String,
+        motor: Transformasjonsmotor = Transformasjonsmotor.LEGACY,
+    ): List<Kjoring> {
         val kjoringer = mutableListOf<Kjoring>()
         dataSource.connection.use { connection ->
-            val prepareStatement = connection.prepareStatement("SELECT * FROM kjoring WHERE regulering = ?")
+            val prepareStatement =
+                connection.prepareStatement("SELECT * FROM kjoring WHERE ${motor.reguleringskolonne} = ?")
 
             prepareStatement.setString(1, reguleringsId)
 
@@ -151,14 +156,7 @@ class KjoringRepo(
 
             while (result.next()) {
                 kjoringer.add(
-                    Kjoring(
-                        id = result.getInt("id"),
-                        regulering = result.getString("regulering"),
-                        start = result.getTimestamp("start"),
-                        stop = result.getTimestamp("slutt"),
-                        status = enumValueOf<Kjoringstatus>(result.getString("status")),
-                        mottaker = enumValueOf<Mottaker>(result.getString("mottaker"))
-                    ),
+                    result.toKjoring(),
                 )
             }
         }
@@ -175,14 +173,7 @@ class KjoringRepo(
 
             while (result.next()) {
                 kjoringer.add(
-                    Kjoring(
-                        id = result.getInt("id"),
-                        regulering = result.getString("regulering"),
-                        start = result.getTimestamp("start"),
-                        stop = result.getTimestamp("slutt"),
-                        status = enumValueOf<Kjoringstatus>(result.getString("status")),
-                        mottaker = enumValueOf<Mottaker>(result.getString("mottaker"))
-                    ),
+                    result.toKjoring(),
                 )
             }
         }
@@ -196,14 +187,7 @@ class KjoringRepo(
                 prepareStatement.setInt(1, kjoringId)
                 prepareStatement.executeQuery().use { result ->
                     val kjoring = if (result.next()) {
-                        Kjoring(
-                            id = result.getInt("id"),
-                            regulering = result.getString("regulering"),
-                            start = result.getTimestamp("start"),
-                            stop = result.getTimestamp("slutt"),
-                            status = enumValueOf<Kjoringstatus>(result.getString("status")),
-                            mottaker = enumValueOf<Mottaker>(result.getString("mottaker"))
-                        )
+                        result.toKjoring()
                     } else {
                         null
                     }
@@ -219,9 +203,28 @@ class KjoringRepo(
     }
 }
 
+private fun ResultSet.toKjoring() = Kjoring(
+    id = getInt("id"),
+    regulering = getString("regulering"),
+    reformRegulering = getString("reform_regulering"),
+    start = getTimestamp("start"),
+    stop = getTimestamp("slutt"),
+    status = enumValueOf<Kjoringstatus>(getString("status")),
+    mottaker = enumValueOf<Mottaker>(getString("mottaker")),
+)
+
+/** Kolonnen i `kjoring` som peker på reguleringen for [Transformasjonsmotor]. */
+private val Transformasjonsmotor.reguleringskolonne: String
+    get() = when (this) {
+        Transformasjonsmotor.LEGACY -> "regulering"
+        Transformasjonsmotor.REFORM -> "reform_regulering"
+    }
+
+/** En kjøring har enten [regulering] (`legacy`) eller [reformRegulering] (`reform`). */
 data class Kjoring(
     val id: Int,
-    val regulering: String,
+    val regulering: String?,
+    val reformRegulering: String?,
     val start: Date,
     val stop: Date?,
     val status: Kjoringstatus,

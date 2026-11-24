@@ -452,7 +452,7 @@ private suspend fun fetchExecutionLogEventDTOs(
 
     val sql = """
         SELECT 
-          s.kjoring_id, s.first_event_id, s.first_timestamp, s.last_event_id, s.last_timestamp, r.regulering ->> 'navn' navn
+          s.kjoring_id, s.first_event_id, s.first_timestamp, s.last_event_id, s.last_timestamp, COALESCE(r.regulering ->> 'navn', rr.navn) navn
           FROM 
             (SELECT
                  row_number() OVER () - 1 row_number,
@@ -476,6 +476,7 @@ private suspend fun fetchExecutionLogEventDTOs(
              ORDER BY first_timestamp $sortDirection, q.kjoring_id $sortDirection) s
              LEFT JOIN kjoring k ON s.kjoring_id::int4 = k.id
              LEFT JOIN regulering r ON k.regulering = r.id
+             LEFT JOIN reform_regulering rr ON k.reform_regulering = rr.id
         WHERE s.row_number BETWEEN ? AND ?
         ORDER BY s.row_number
     """.trimIndent()

@@ -17,6 +17,7 @@ import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.datetime.LocalDate
 import no.kartverket.komreg.integration.SchemaManager
 import no.kartverket.komreg.repositories.KjoringRepo
+import no.kartverket.komreg.repositories.ReformReguleringRepo
 import no.kartverket.komreg.repositories.ReguleringRepo
 import no.kartverket.komreg.repositories.TilbakeføringsstatusRepo
 import no.kartverket.komreg.repositories.TransformationRepo
@@ -77,7 +78,9 @@ fun Application.module() {
     val reguleringsRepo = ReguleringRepo(komregDbPool)
     val tilbakeføringsstatusRepo = TilbakeføringsstatusRepo(komregDbPool)
     val transformationRepo = TransformationRepo(komregDbPool, jsonSerializer())
-    val reguleringService = ReguleringService(reguleringsRepo, kjoringRepo)
+    val reformReguleringRepo = ReformReguleringRepo(komregDbPool, jsonSerializer())
+    val reguleringService = ReguleringService(reguleringsRepo, kjoringRepo, reformReguleringRepo)
+    val motor = Transformasjonsmotor.fra(env[Transformasjonsmotor.ENV])
     val kjoringService = KjoringService(kjoringRepo)
     val schemaManager = SchemaManager(kjoringRepo)
 
@@ -98,6 +101,7 @@ fun Application.module() {
 
     logger.info("Current environment: ${System.getenv("environment")}")
     logger.info("Mottaker DB: $matrikkelDbUsername")
+    logger.info("Transformasjonsmotor: ${motor.verdi}")
 
     environment.monitor.subscribe(ApplicationStopping) {
         kjoringService.handleShutdown()
@@ -109,8 +113,9 @@ fun Application.module() {
 
     internalRoutes(metricsRegistry)
     reguleringRoutes(reguleringService, reguleringsRepo)
-    kjoringroutes(transformationRepo, kjoringRepo, tilbakeføringsstatusRepo, reguleringService, komregDbPool)
-    stedsnavnRoutes(reguleringsRepo, kjoringRepo, transformationRepo)
+    reformReguleringRoutes(reguleringService, reformReguleringRepo, jsonSerializer())
+    kjoringroutes(transformationRepo, kjoringRepo, tilbakeføringsstatusRepo, reguleringService, komregDbPool, motor)
+    stedsnavnRoutes(reguleringsRepo, reformReguleringRepo, kjoringRepo, transformationRepo)
 
     enableFagLogging(komregDbPool)
 }

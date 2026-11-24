@@ -11,6 +11,8 @@ import no.kartverket.komreg.core.domain.*
 import no.kartverket.komreg.transformation.Matrikkelenhet.GardsnummerserieIdent
 import no.kartverket.komreg.transformation.Matrikkelenhet.GrunneiendomIdent
 import no.kartverket.komreg.integration.spi.*
+import no.kartverket.komreg.transformation.reform.ReformClaims
+import no.kartverket.komreg.transformation.reform.ReformTransformer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -44,6 +46,7 @@ interface Storage {
     )
 }
 
+/** Kjøring med dagens motor (`legacy`): [IdentTransformer] med regler fra [Reguleringsinput]. */
 suspend fun transform(
     kjoringId: Int,
     input: Reguleringsinput,
@@ -56,8 +59,75 @@ suspend fun transform(
     skalTilbakefores: Boolean,
     erForstegangskjoring: Boolean = true,
 ) {
-    val logger: Logger = LoggerFactory.getLogger({}::class.java)
     val transformer = IdentTransformer(mapInput(input))
+    runTransform(
+        kjoringId = kjoringId,
+        ikrafttredelsesdato = input.ikrafttredelsesdato,
+        transformEntity = { entity -> transformer.transform(entity, idGeneratorManager::idFor).orEmpty() },
+        creates = { emptyList() },
+        lifeCycleHandlers = lifeCycleHandlers,
+        entitySources = entitySources,
+        entityProcessors = entityProcessors,
+        entitySinks = entitySinks,
+        storage = storage,
+        skalTilbakefores = skalTilbakefores,
+        erForstegangskjoring = erForstegangskjoring,
+    )
+}
+
+/**
+ * Kjøring med ny motor (`reform`): [ReformTransformer] med validerte [claims].
+ *
+ * [idTypeFor] gir `IdType` for nye entiteter uten kilde ([ReformOp.Create]), typisk fra `IdTypeProvider`-ene.
+ */
+suspend fun transform(
+    kjoringId: Int,
+    claims: ReformClaims,
+    ikrafttredelsesdato: LocalDate,
+    idTypeFor: suspend (IdentOrEmptyType<*>) -> IdType<*, *>?,
+    lifeCycleHandlers: List<LifeCycleHandler>,
+    entitySources: List<EntitySource>,
+    entityProcessors: List<EntityProcessor>,
+    entitySinks: List<EntitySink>,
+    idGeneratorManager: IdGeneratorManager,
+    storage: Storage,
+    skalTilbakefores: Boolean,
+    erForstegangskjoring: Boolean = true,
+) {
+    val transformer = ReformTransformer(claims, idTypeFor)
+    runTransform(
+        kjoringId = kjoringId,
+        ikrafttredelsesdato = ikrafttredelsesdato,
+        transformEntity = { entity -> transformer.transform(entity, idGeneratorManager::idFor) },
+        creates = { transformer.creates(idGeneratorManager::idFor) },
+        lifeCycleHandlers = lifeCycleHandlers,
+        entitySources = entitySources,
+        entityProcessors = entityProcessors,
+        entitySinks = entitySinks,
+        storage = storage,
+        skalTilbakefores = skalTilbakefores,
+        erForstegangskjoring = erForstegangskjoring,
+    )
+}
+
+/**
+ * Felles kjøring: [transformEntity] for hver entitet fra [entitySources], deretter [creates] (transformasjoner
+ * uten kildeentitet), så [entityProcessors] og til slutt tilbakeføring til [entitySinks].
+ */
+private suspend fun runTransform(
+    kjoringId: Int,
+    ikrafttredelsesdato: LocalDate,
+    transformEntity: suspend (Entity) -> List<Transformation>,
+    creates: suspend () -> List<Transformation>,
+    lifeCycleHandlers: List<LifeCycleHandler>,
+    entitySources: List<EntitySource>,
+    entityProcessors: List<EntityProcessor>,
+    entitySinks: List<EntitySink>,
+    storage: Storage,
+    skalTilbakefores: Boolean,
+    erForstegangskjoring: Boolean,
+) {
+    val logger: Logger = LoggerFactory.getLogger({}::class.java)
 
     val gjenvarendeSinkerForNyeEntiteter = storage.hentSinkerSomSkalGjenopptasForNyeEntiteter(kjoringId)
     val gjenvarendeSinkerForErstattendeEntiteter =
@@ -74,16 +144,9 @@ suspend fun transform(
             logger.info("Skriver transformasjon for ${entitySource.id}")
             val flow = entitySource.entityFlow
 
-            val transformResult =
-                flow
-                    .mapNotNull { entity ->
-                        val result = transformer.transform(entity, idGeneratorManager::idFor)
-                        result
-                    }
-
             val transformResultFlow =
-                transformResult.transform { list ->
-                    list.forEach { emit(it) }
+                flow.transform { entity ->
+                    transformEntity(entity).forEach { emit(it) }
                 }
             transformResultFlow.chunked(10000)
                 .collect { chunk ->
@@ -91,6 +154,11 @@ suspend fun transform(
                     storage.writeTransformationsToDatabase(kjoringId, chunk)
                 }
             logger.info("Ferdigskrevet transformasjoner for ${entitySource.id}")
+        }
+
+        // Processorene leser alle transformasjoner fra storage, så opprettelsene må ligge der først.
+        creates().chunked(10000).forEach { chunk ->
+            storage.writeTransformationsToDatabase(kjoringId, chunk)
         }
 
         entityProcessors.forEach { processor ->
@@ -127,7 +195,7 @@ suspend fun transform(
                             val sourceEntity = it.sourceEntity
                             sourceEntity == null || sourceEntity.id != it.id
                         },
-                        input.ikrafttredelsesdato.toJavaLocalDate(),
+                        ikrafttredelsesdato.toJavaLocalDate(),
                     )
                     logger.info("Tilbakeført nyopprettinger for ${sink.id}")
                     storage.setTilbakeforingsStatusForSink(sink, "FERDIG", kjoringId, erOppretting = true)
@@ -150,7 +218,7 @@ suspend fun transform(
                             val sourceEntity = it.sourceEntity
                             sourceEntity != null && sourceEntity.id == it.id
                         },
-                        input.ikrafttredelsesdato.toJavaLocalDate(),
+                        ikrafttredelsesdato.toJavaLocalDate(),
                     )
                     logger.info("Tilbakeført endringer for ${sink.id}")
                     storage.setTilbakeforingsStatusForSink(sink, "FERDIG", kjoringId, erOppretting = false)

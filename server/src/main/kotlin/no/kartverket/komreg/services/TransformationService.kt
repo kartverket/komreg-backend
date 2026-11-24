@@ -11,20 +11,42 @@ import no.kartverket.komreg.env
 import no.kartverket.komreg.integration.EntityProcessorManager
 import no.kartverket.komreg.integration.EntitySinkManager
 import no.kartverket.komreg.integration.EntitySourceManager
+import no.kartverket.komreg.integration.IdTypeProviderManager
 import no.kartverket.komreg.integration.LifeCycleHandlerManager
 import no.kartverket.komreg.logger
 import no.kartverket.komreg.repositories.KjoringRepo
 import no.kartverket.komreg.repositories.TilbakeføringsstatusRepo
 import no.kartverket.komreg.repositories.TransformationRepo
+import kotlinx.datetime.LocalDate
 import no.kartverket.komreg.transformation.Reguleringsinput
 import no.kartverket.komreg.transformation.Storage
+import no.kartverket.komreg.transformation.reform.ReformClaims
 import no.kartverket.komreg.transformation.transform
 import org.slf4j.MDC
 import java.lang.management.ManagementFactory
 
+/** Reglene en kjøring bruker, én variant per [no.kartverket.komreg.Transformasjonsmotor]. */
+sealed interface Kjoringsregler {
+    val reguleringId: String
+    val ikrafttredelsesdato: LocalDate
+
+    /** `legacy`: `IdentTransformer` med regler fra `Regulering`-DTO-en. */
+    data class Legacy(val input: Reguleringsinput) : Kjoringsregler {
+        override val reguleringId: String get() = input.id
+        override val ikrafttredelsesdato: LocalDate get() = input.ikrafttredelsesdato
+    }
+
+    /** `reform`: `ReformTransformer` med lagrede, validerte `ReformOp`-er. */
+    data class Reform(
+        override val reguleringId: String,
+        val claims: ReformClaims,
+        override val ikrafttredelsesdato: LocalDate,
+    ) : Kjoringsregler
+}
+
 @Suppress("LocalVariableName", "NonAsciiCharacters")
 fun transformEntities(
-    input: Reguleringsinput,
+    regler: Kjoringsregler,
     kjoringContext: KjoringContext,
     transformationRepo: TransformationRepo,
     kjoringRepo: KjoringRepo,
@@ -37,7 +59,7 @@ fun transformEntities(
 
     runAndWriteTransformations(
         kjoringContext,
-        input,
+        regler,
         entitySinks,
         StorageService(transformationRepo, tilbakeføringsstatusRepo, kjoringRepo),
         kjoringRepo,
@@ -49,7 +71,7 @@ fun transformEntities(
 @Suppress("LocalVariableName", "NonAsciiCharacters")
 private fun runAndWriteTransformations(
     kjoringContext: KjoringContext,
-    input: Reguleringsinput,
+    regler: Kjoringsregler,
     entitySinks: EntitySinkManager,
     storage: Storage,
     kjoringRepo: KjoringRepo,
@@ -65,29 +87,47 @@ private fun runAndWriteTransformations(
     val lifeCycleHandlers = LifeCycleHandlerManager(kjoringContext).lifeCycleHandlers
     val sources = EntitySourceManager(kjoringContext).entitySources
     val processors = EntityProcessorManager(kjoringContext).entityProcessors
+    val idTypeProviders = IdTypeProviderManager()
 
     CoroutineScope(Dispatchers.IO + CoroutineMDC()).launch {
         MDC.put("kjoringId", kjoringId.toString())
         logger.info(FAG, "Startet å kjøre transformasjoner")
 
         if (tilbakeføringsstatusRepo.getTilbakeføringsstatusForKjøringId(kjoringId) == null) {
-            logger.info("Førstegangskjøring av Regulering ${input.id}. Oppretter tilbakeføringsstatus for sinker.")
+            logger.info("Førstegangskjøring av Regulering ${regler.reguleringId}. Oppretter tilbakeføringsstatus for sinker.")
             tilbakeføringsstatusRepo.createTilbakeføringsstatusForKjoring(kjoringId, entitySinks.entitySinks)
         }
 
         val transformJob = launch(Dispatchers.IO) {
-            transform(
-                kjoringId,
-                input,
-                lifeCycleHandlers,
-                sources,
-                processors,
-                entitySinks.entitySinks,
-                kjoringContext.idGenerators,
-                storage,
-                skalTilbakefores,
-                erFortegangskjoring,
-            )
+            when (regler) {
+                is Kjoringsregler.Legacy -> transform(
+                    kjoringId,
+                    regler.input,
+                    lifeCycleHandlers,
+                    sources,
+                    processors,
+                    entitySinks.entitySinks,
+                    kjoringContext.idGenerators,
+                    storage,
+                    skalTilbakefores,
+                    erFortegangskjoring,
+                )
+
+                is Kjoringsregler.Reform -> transform(
+                    kjoringId,
+                    regler.claims,
+                    regler.ikrafttredelsesdato,
+                    idTypeProviders::idTypeFor,
+                    lifeCycleHandlers,
+                    sources,
+                    processors,
+                    entitySinks.entitySinks,
+                    kjoringContext.idGenerators,
+                    storage,
+                    skalTilbakefores,
+                    erFortegangskjoring,
+                )
+            }
 
             kjoringRepo.updateKjoringEndTime(kjoringId)
             logger.info(FAG, "Avsluttet alle transformasjoner!")

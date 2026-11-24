@@ -12,9 +12,11 @@ import io.ktor.server.routing.routing
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.kartverket.komreg.KjoringContextImpl
+import no.kartverket.komreg.Transformasjonsmotor
 import no.kartverket.komreg.exceptions.MissingPathVariableException
 import no.kartverket.komreg.exceptions.ReguleringAlreadyFinishedException
 import no.kartverket.komreg.repositories.*
+import no.kartverket.komreg.services.Kjoringsregler
 import no.kartverket.komreg.services.ReguleringService
 import no.kartverket.komreg.services.transformEntities
 import org.slf4j.Logger
@@ -28,6 +30,7 @@ fun Application.kjoringroutes(
     tilbakeføringsstatusRepo: TilbakeføringsstatusRepo,
     reguleringsService: ReguleringService,
     komregDataSource: DataSource,
+    motor: Transformasjonsmotor,
 ) {
     val logger: Logger = LoggerFactory.getLogger({}::class.java)
     routing {
@@ -36,15 +39,20 @@ fun Application.kjoringroutes(
                 try {
                     val regId = call.parameters["regId"] ?: throw MissingPathVariableException("Missing regId")
 
-                    val regulering = reguleringsService.getOrThrowRegulering(regId)
+                    val regler = when (motor) {
+                        Transformasjonsmotor.LEGACY ->
+                            Kjoringsregler.Legacy(reguleringsService.getOrThrowRegulering(regId).toReguleringsinput())
 
-                    logger.info("Starter transformasjon for regulering: $regId")
+                        Transformasjonsmotor.REFORM -> reguleringsService.getOrThrowReformRegler(regId)
+                    }
 
-                    val kjoringsomskalgjenopptas = kjoringRepo.finnStoppetKjøringForRegulering(regId)
+                    logger.info("Starter transformasjon for regulering: $regId med motor ${motor.verdi}")
+
+                    val kjoringsomskalgjenopptas = kjoringRepo.finnStoppetKjøringForRegulering(regId, motor)
 
                     if (kjoringsomskalgjenopptas != null) {
                         transformEntities(
-                            regulering.toReguleringsinput(),
+                            regler,
                             KjoringContextImpl(kjoringsomskalgjenopptas.id, komregDataSource),
                             transformationRepo,
                             kjoringRepo,
@@ -59,12 +67,11 @@ fun Application.kjoringroutes(
                             "Gjenopptar kjøring med id: ${kjoringsomskalgjenopptas.id}, og regId: $regId",
                         )
                     } else {
-                        val kjoringId = kjoringRepo.insertAndRetrieveKjoringId(regId)
+                        val kjoringId = kjoringRepo.insertAndRetrieveKjoringId(regId, motor)
                             ?: throw SQLException("Kunne ikke opprette kjøring for regId: $regId")
-                        val reguleringsinput = regulering.toReguleringsinput()
 
                         transformEntities(
-                            reguleringsinput,
+                            regler,
                             KjoringContextImpl(kjoringId, komregDataSource),
                             transformationRepo,
                             kjoringRepo,

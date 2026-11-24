@@ -7,7 +7,8 @@ medium for punktene merket *vurder*.
 
 ## 1. Fjern legacy-motoren
 
-- Fjern motorvalget fra handoff-3 og gjør `reform` til eneste motor.
+- Fjern motorvalget fra handoff-3 (`Transformasjonsmotor`, `TRANSFORMASJONSMOTOR`, `Kjoringsregler.Legacy` og
+  DTO-overloaden av `transform()`) og gjør `reform` til eneste motor.
 - Slett `IdentTransformer.kt` (med `Mapping`), `mapInput` og `map*`-funksjonene i `Transformer.kt`, og testene
   `IdentTransformer*Test`. De tilfellene som er portet i handoff-1, beholdes.
 - Behold `ReformMapping.kt` (`toReformOps`) så lenge `server` tar imot DTO-er.
@@ -45,7 +46,7 @@ brukeren før du lager en ny regel.
 
 Oppdater:
 
-- [reform-op.md](reform-op.md): fjern "Ingen kode kjører `ReformOp` direkte" og avsnittet
+- [reform-op.md](reform-op.md): fjern `legacy` fra kjørebeskrivelsen øverst og avsnittet
   "Samme regler betyr ikke samme kjøring". Beskriv `ReformTransformer` og semantikktabellen fra handoff-1. Oppdater
   "Hva broen ikke kan uttrykke" eller fjern det.
 - [arkitektur.md](arkitektur.md): kjøringsflyten, den nye modulen fra handoff-2 og transporten fra fase B.

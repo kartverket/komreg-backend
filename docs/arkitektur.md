@@ -97,8 +97,13 @@ Sentrale klasser:
 
 `ReformOp` og `ReformClaims` beskriver og validerer reglene i en regulering. En bro (se
 [regulering-mapping](#regulering-mapping)) oversetter regler som DTO-en kan uttrykke, til en `Regulering`-DTO.
-Selve kjøringen gjøres av `IdentTransformer`, ikke av `ReformOp`. Se [reform-op.md](reform-op.md) for operasjonene,
-broens begrensninger og hvorfor samme regler ikke betyr samme kjøring.
+`ReformOp` er `@Serializable`, og `ReformRegulering` (navn, dato, regler) er formatet `server` lagrer.
+
+`transform()` har to innganger, én per motor (se [Transformasjonsmotor](#transformasjonsmotor)):
+`transform(kjoringId, input: Reguleringsinput, ...)` kjører `IdentTransformer`, og
+`transform(kjoringId, claims: ReformClaims, ikrafttredelsesdato, idTypeFor, ...)` kjører `ReformTransformer` og
+skriver opprettelsene (`creates`) til storage etter alle sources og før processorene. Se
+[reform-op.md](reform-op.md) for operasjonene, broens begrensninger og hvorfor samme regler ikke betyr samme kjøring.
 
 Støttede endringstyper:
 
@@ -119,7 +124,7 @@ Ktor-applikasjonen som eksponerer REST-API og binder alt sammen.
 **Lag:**
 - **Routes** — HTTP-endepunkter (regulering, kjøring, grunndata, stedsnavn, intern)
 - **Services** — forretningslogikk (`ReguleringService`, `KjoringService`, `TransformationService`)
-- **Repositories** — PostgreSQL-tilgang (`ReguleringRepo`, `KjoringRepo`, `TransformationRepo`, `TilbakeføringsstatusRepo`)
+- **Repositories** — PostgreSQL-tilgang (`ReguleringRepo`, `ReformReguleringRepo`, `KjoringRepo`, `TransformationRepo`, `TilbakeføringsstatusRepo`)
 - **Integration** — SPI-managere som laster matrikkel-komreg-implementasjoner via ServiceLoader
 
 ### plugins/matrikkel-komreg
@@ -164,14 +169,30 @@ graph LR
 
 `regulering-api` har ingen avhengighet til `server`, og `server` ingen til `regulering-api`. De deler bare libene.
 Specen lagres som `jsonb` og valideres i trinn (format, konflikt, domene, data, bro) før den lagres.
-`Regulering`-DTO-en avledes fra specen og lagres ikke. `server` mottar DTO-er som før, og sending fra
-`regulering-api` til `server` er ikke implementert. Se [reform-format](reform-format.md#endepunkter-i-regulering-api)
+`Regulering`-DTO-en avledes fra specen og lagres ikke. `server` tar imot både DTO-er (`/reguleringer`) og
+validerte `ReformOp`-er (`PUT /reform-reguleringer/{id}`). Sending fra `regulering-api` til `server` er ikke
+implementert. Se [reform-format](reform-format.md#endepunkter-i-regulering-api)
 for endepunkter og feilformat, og [reform-format-design](reform-format-design.md) for hvorfor kjeden er bygd slik
 og hvor reglene bor.
 
 ## Transformasjonsflyten
 
 En transformasjon trigges med `GET /run/{regId}`.
+
+### Transformasjonsmotor
+
+Miljøvariabelen `TRANSFORMASJONSMOTOR` velger motor for hele applikasjonen. Den leses ved oppstart.
+
+| Verdi | Regler fra | Motor | `kjoring`-kolonne |
+|---|---|---|---|
+| `legacy` (standard) | `regulering` (DTO), validert med `ReguleringValidator` | `IdentTransformer` | `regulering` |
+| `reform` | `reform_regulering` (`ReformOp`-er), validert på nytt med `ReformClaims.validate` | `ReformTransformer` | `reform_regulering` |
+
+Med `reform` må reglene være lagret med `PUT /reform-reguleringer/{regId}`. Det finnes ingen omvei via DTO-en.
+`regId` slås opp i tabellen til motoren, så en kjøring gjenopptas bare med samme motor. Stedsnavnparametrene
+(`StedsnavnService`) lages fra reglene når kjøringen har `reform_regulering`. `NK`/`NF` er nye kommuner og
+fylker, og `UK`/`UF` er de som utgår. Med `reform` står et eksisterende mål for en sammenslåing derfor bare som mål
+i `UK`, ikke under `NK`. `legacy` lister alle mål fra `nyeKommuner` under `NK`, også dem som finnes fra før. Kommunenavn under `NK` skrives med store bokstaver med begge motorene.
 
 ```mermaid
 sequenceDiagram
@@ -267,6 +288,7 @@ En typisk arbeidsflyt for å kjøre en kommuneendring:
 1. **Velg mottakerskjema** — `POST /skjema` med `MOTTAKER1` eller `MOTTAKER2`. Sikrer at man ikke skriver til et skjema som er eksponert mot brukere.
 2. **Opprett regulering** — `POST /reguleringer` med en JSON-payload som beskriver ikrafttredelsesdato, involverte fylker og kommuner.
 3. **Legg til endringer** — `POST /reguleringer/{id}/endringer` for hver endring (kommunesammenslåing, matrikkelenhetsflytting, vegendring, osv.).
+   Med `TRANSFORMASJONSMOTOR=reform` erstattes steg 2 og 3 av `PUT /reform-reguleringer/{id}`.
 4. **Kjør transformasjon** — `GET /run/{regId}`. Kjøringen starter asynkront og kan ta lang tid avhengig av datamengde.
 5. **Verifiser** — Sjekk kjøringsstatus, transformasjonsresultater, og eventuelt M22-klienten for å se endringene visuelt.
 
@@ -296,7 +318,8 @@ noe som gjør det mulig å gjenoppta en avbrutt kjøring.
 | Tabell                  | Beskrivelse                                         |
 |-------------------------|-----------------------------------------------------|
 | `regulering`            | Reguleringsinput (JSONB-payload)                    |
-| `kjoring`               | Kjøringsstatus, start/stopp, mottakerskjema         |
+| `reform_regulering`     | Navn, dato og regler (`ReformOp`-er som JSONB) for motoren `reform` |
+| `kjoring`               | Kjøringsstatus, start/stopp, mottakerskjema. Peker på enten `regulering` eller `reform_regulering` |
 | `transformasjon`        | Beregnede transformasjoner (source → target ident)  |
 | `mottakerskjema`        | Hvilke mottakerskjema som er ledige                 |
 | `tilbakeføringsstatus`  | Status per sink per kjøring                         |
@@ -318,6 +341,7 @@ matrikkel-komreg-implementasjonene (sources og sinks).
 |-------------|---------------------------------------------------------|------------------------------------|
 | Regulering  | `GET/POST/PUT/DELETE /reguleringer`                     | CRUD for reguleringer              |
 | Endringer   | `GET/POST/PUT/DELETE /reguleringer/{id}/endringer`      | CRUD for endringer i en regulering |
+| Reform      | `PUT/GET /reform-reguleringer/{id}`                     | Lagre/hente `ReformOp`-er for motoren `reform` |
 | Kjøring     | `GET /run/{regId}`                                      | Start/gjenoppta transformasjon     |
 | Skjema      | `POST /skjema`                                          | Velg mottakerskjema                |
 | Grunndata   | `GET /fylker`, `GET /kommuner`                          | Oppslag av fylke-/kommunedata (via SPI) |

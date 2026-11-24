@@ -1,6 +1,7 @@
 plugins {
     id("komreg.kotlin-common")
     `java-library`
+    alias(libs.plugins.kotlin.serialization)
 }
 
 dependencies {

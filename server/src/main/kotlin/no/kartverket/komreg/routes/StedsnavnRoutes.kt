@@ -6,16 +6,18 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.kartverket.komreg.KrAppBootContextImpl
 import no.kartverket.komreg.repositories.KjoringRepo
+import no.kartverket.komreg.repositories.ReformReguleringRepo
 import no.kartverket.komreg.repositories.ReguleringRepo
 import no.kartverket.komreg.repositories.TransformationRepo
 import no.kartverket.komreg.services.StedsnavnService
 
 fun Application.stedsnavnRoutes(
     reguleringRepo: ReguleringRepo,
+    reformReguleringRepo: ReformReguleringRepo,
     kjoringRepo: KjoringRepo,
     transformationRepo: TransformationRepo
 ) {
-    val stedsnavnService = StedsnavnService(reguleringRepo, kjoringRepo, transformationRepo)
+    val stedsnavnService = StedsnavnService(reguleringRepo, reformReguleringRepo, kjoringRepo, transformationRepo)
 
     routing {
         get("/stedsnavn/json/{kjoring}") {
