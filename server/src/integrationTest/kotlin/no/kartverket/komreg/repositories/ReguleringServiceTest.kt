@@ -59,6 +59,15 @@ class ReguleringServiceTest {
                     service.startKjoring("r1", Transformasjonsmotor.REFORM)
                 }
 
+                // Gjenopptakelse kreves atomisk, så en ny forespørsel kan ikke gjenoppta den samme kjøringen.
+                kjoringRepo.setStatusForKjøring(kjoring.kjoringId, Kjoringstatus.STOPPET)
+                val gjenopptatt = service.startKjoring("r1", Transformasjonsmotor.REFORM)
+                assertEquals(kjoring.kjoringId to true, gjenopptatt.kjoringId to gjenopptatt.gjenopptatt)
+                assertEquals(Kjoringstatus.KJØRER, kjoringRepo.getKjoring(kjoring.kjoringId)!!.status)
+                assertThrows(ReguleringAlreadyRunningException::class.java) {
+                    service.startKjoring("r1", Transformasjonsmotor.REFORM)
+                }
+
                 // En kjøring som har låst reglene, men ikke committet kjøringen ennå, må blokkere lagring.
                 assertEquals(LagreReformResultat.Lagret(opprettet = true), service.lagreReformRegulering("r2", regulering))
                 val lagring = dataSource.iTransaksjon { connection ->

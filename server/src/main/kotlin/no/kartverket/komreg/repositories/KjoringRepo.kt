@@ -80,14 +80,13 @@ class KjoringRepo(
     }
 
     fun setStatusForKjøring(kjoringId: Int, status: Kjoringstatus) {
-        dataSource.connection.use { connection ->
-            val updateStatement = connection.prepareStatement(
-                "UPDATE kjoring SET status = ? WHERE id = ?",
-            )
+        dataSource.connection.use { setStatusForKjøring(it, kjoringId, status) }
+    }
 
+    fun setStatusForKjøring(connection: Connection, kjoringId: Int, status: Kjoringstatus) {
+        connection.prepareStatement("UPDATE kjoring SET status = ? WHERE id = ?").use { updateStatement ->
             updateStatement.setString(1, status.toString())
             updateStatement.setInt(2, kjoringId)
-
             updateStatement.executeUpdate()
         }
     }

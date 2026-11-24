@@ -53,7 +53,6 @@ fun Application.kjoringroutes(
 
                     if (kjoring.gjenopptatt) {
                         logger.info("Gjenopptar kjøring med id: ${kjoring.kjoringId}, og regId: $regId")
-                        kjoringRepo.setStatusForKjøring(kjoring.kjoringId, Kjoringstatus.KJØRER)
 
                         call.respond(
                             HttpStatusCode.OK,

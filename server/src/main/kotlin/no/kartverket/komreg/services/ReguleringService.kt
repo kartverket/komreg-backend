@@ -71,7 +71,11 @@ class ReguleringService(
         regler: Kjoringsregler,
     ): StartetKjoring {
         val stoppet = kjoringRepo.finnStoppetKjøringForRegulering(connection, regId, motor)
-        if (stoppet != null) return StartetKjoring(regler, stoppet.id, gjenopptatt = true)
+        if (stoppet != null) {
+            // Kreves i samme transaksjon, slik at en samtidig forespørsel ikke gjenopptar den samme kjøringen.
+            kjoringRepo.setStatusForKjøring(connection, stoppet.id, Kjoringstatus.KJØRER)
+            return StartetKjoring(regler, stoppet.id, gjenopptatt = true)
+        }
 
         val kjoringId = kjoringRepo.insertAndRetrieveKjoringId(connection, regId, motor)
             ?: throw SQLException("Kunne ikke opprette kjøring for regId: $regId")
