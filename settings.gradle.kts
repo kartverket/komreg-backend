@@ -6,6 +6,7 @@ include(
     ":lib:transformation",
     ":lib:regulering-mapping",
     ":lib:matrikkelapi-client",
+    ":plugins:matrikkel-komreg",
     ":server",
     ":regulering-api:reform",
     ":regulering-api:server",

@@ -48,11 +48,14 @@ graph TB
     subgraph backend["komreg-backend"]
         server["<b>server</b><br/>Ktor, routes, services, repos"]
         transformation["<b>transformation</b><br/>IdentTransformer,<br/>Reguleringsinput"]
+        pluginmodul["<b>plugins/matrikkel-komreg</b><br/>IdTypeProvider, pakker inn<br/>matrikkel-komreg"]
         coreapi["<b>core-api</b><br/>SPI-grensesnitt, domenemodell"]
 
         server --> transformation
         transformation --> coreapi
         server --> coreapi
+        server --> pluginmodul
+        pluginmodul --> coreapi
     end
 
     subgraph matrikkel["matrikkel-repoet"]
@@ -77,7 +80,7 @@ Heltrukne piler er Gradle-avhengigheter. Den stiplede pilen er en _kjøretidskob
 Definerer det felles "språket" mellom komreg og Matrikkelen:
 
 - **Domenemodell:** `Entity`, `Ident`, `Kommune`, `Fylke`, `Matrikkelenhet`, `TeigId`, osv.
-- **SPI-grensesnitt:** `EntitySource`, `EntitySink`, `EntityProcessor`, `IdGenerator`, `KommuneService`, `LifeCycleHandler`
+- **SPI-grensesnitt:** `EntitySource`, `EntitySink`, `EntityProcessor`, `IdGenerator`, `IdTypeProvider`, `KommuneService`, `LifeCycleHandler`
 - **Factories:** `EntitySourceFactory`, `EntitySinkFactory` osv. — oppdages via Java `ServiceLoader`
 
 core-api publiseres til Nexus slik at matrikkel-repoet kan bruke det som avhengighet.
@@ -118,6 +121,12 @@ Ktor-applikasjonen som eksponerer REST-API og binder alt sammen.
 - **Services** — forretningslogikk (`ReguleringService`, `KjoringService`, `TransformationService`)
 - **Repositories** — PostgreSQL-tilgang (`ReguleringRepo`, `KjoringRepo`, `TransformationRepo`, `TilbakeføringsstatusRepo`)
 - **Integration** — SPI-managere som laster matrikkel-komreg-implementasjoner via ServiceLoader
+
+### plugins/matrikkel-komreg
+
+Pakker inn matrikkel-komreg (`api`-avhengighet, uten Oracle-driver) og eier `MatrikkelIdTypeProvider`
+(`IdTypeProvider` for fylke og kommune, registrert via ServiceLoader). `server` avhenger av denne modulen i stedet
+for direkte av matrikkel-komreg. Ingen kode i `lib/` avhenger av den.
 
 ### regulering-dto
 

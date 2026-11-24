@@ -82,9 +82,7 @@ dependencies {
     implementation(project(":lib:regulering-mapping"))
 
     // Skulle egentlig vært runtimeOnly, men har ikke funnet på noe ordentlig grensesnitt for SSR-generering
-    implementation(libs.matrikkel.komreg) {
-        exclude(group = "com.oracle.database.jdbc")
-    }
+    implementation(project(":plugins:matrikkel-komreg"))
     implementation(libs.kotlin.reflect)
 
     implementation(libs.kotlinx.collections.immutable.jvm)
