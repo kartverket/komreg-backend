@@ -79,6 +79,8 @@ fun Route.reguleringer(appJson: Json, repository: ReformSpecRepository, service:
             get {
                 val id = call.id() ?: return@get
                 val spec = repository.find(id) ?: return@get call.respond(HttpStatusCode.NotFound)
+                val name = spec.navn.replace(Regex("\\s"), "_");
+                call.response.headers.append("Content-disposition", value = "attachment; filename=$name.json")
                 call.respond(spec)
             }.describe(ReguleringOpenApi.hent)
 
