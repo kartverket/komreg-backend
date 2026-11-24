@@ -1,5 +1,6 @@
 package no.kartverket.komreg.services
 
+import arrow.core.getOrElse
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDate
 import no.kartverket.komreg.core.domain.Fylke
@@ -15,6 +16,8 @@ import no.kartverket.komreg.transformation.FraEnTilMange
 import no.kartverket.komreg.transformation.Fylkeendring
 import no.kartverket.komreg.transformation.Kommuneendring
 import no.kartverket.komreg.transformation.Reguleringsinput
+import no.kartverket.komreg.transformation.reform.ReformClaims
+import no.kartverket.komreg.transformation.reform.ReformOp
 import no.kartverket.komreg.transformation.reform.toReformOps
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -45,8 +48,25 @@ class StedsnavnParametreTest {
     private fun input(fylker: List<Fylke>, kommuner: List<Kommune>, vararg endringer: Endring) =
         Reguleringsinput("reg", dato, endringer.toList(), fylker, kommuner)
 
-    private fun reform(input: Reguleringsinput) =
-        stedsnavnParametre(runBlocking { input.toReformOps() }, input.ikrafttredelsesdato)
+    private fun reform(input: Reguleringsinput, ops: List<ReformOp> = runBlocking { input.toReformOps() }) =
+        stedsnavnParametre(
+            ReformClaims.validate(ops).getOrElse { error("Ugyldige regler: $it") },
+            input.ikrafttredelsesdato,
+        )
+
+    @Test
+    fun `reform gir ikke dupliserte parametre for identiske dupliserte regler`() {
+        val input = input(
+            listOf(Fylke(Fylkesnummer(31), Fylkesnavn("Østfold"), null)),
+            listOf(kommune(31, 1, "Halden"), kommune(31, 50, "Ny")),
+            Fylkeendring(FraEnTilMange(Fylkesnummer(30), listOf(Fylkesnummer(31)))),
+            kommuneendring(30 to 1, listOf(31 to 1)),
+            kommuneendring(30 to 35, listOf(31 to 50)),
+        )
+        val ops = runBlocking { input.toReformOps() }
+
+        assertEquals(reform(input, ops), reform(input, ops + ops))
+    }
 
     @Test
     fun `reform gir samme parametre som legacy for nye fylker og kommuner`() {

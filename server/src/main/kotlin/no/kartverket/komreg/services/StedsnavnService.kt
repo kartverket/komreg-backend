@@ -22,6 +22,8 @@ import no.kartverket.komreg.integration.spi.Ident
 import no.kartverket.komreg.transformation.Fylkeendring
 import no.kartverket.komreg.transformation.Kommuneendring
 import no.kartverket.komreg.transformation.Reguleringsinput
+import arrow.core.getOrElse
+import no.kartverket.komreg.transformation.reform.ReformClaims
 import no.kartverket.komreg.transformation.reform.ReformOp
 import no.statkart.matrikkel.komreg.stedsnavn.ssrJson
 import java.io.Writer
@@ -46,7 +48,15 @@ class StedsnavnService(
 
                 kjoring.reformRegulering != null ->
                     reformReguleringRepo.get(kjoring.reformRegulering)
-                        ?.let { stedsnavnParametre(it.regler, it.ikrafttredelsesdato) }
+                        ?.let { regulering ->
+                            val claims = ReformClaims.validate(regulering.regler).getOrElse { errs ->
+                                throw IllegalStateException(
+                                    "Reform-reguleringen ${kjoring.reformRegulering} gir ugyldige regler: " +
+                                        errs.joinToString { it.message },
+                                )
+                            }
+                            stedsnavnParametre(claims, regulering.ikrafttredelsesdato)
+                        }
 
                 else -> null
             }
@@ -122,7 +132,8 @@ internal fun Reguleringsinput.stedsnavnParametre(): List<String> = buildList {
 }
 
 /**
- * Parametrene til stedsnavnjobben for en `reform`-regulering, utledet fra reglene:
+ * Parametrene til stedsnavnjobben for en `reform`-regulering, utledet fra de validerte reglene
+ * ([ReformClaims.declarations], der identiske duplikater er slått sammen):
  *
  * - `NF`/`NK`: fylker og kommuner som opprettes ([ReformOp.Create]/[ReformOp.Derive]). Navnet hentes fra
  *   payloaden; en [ReformOp.Derive] uten payload gir tomt navn. Kommunenavn skrives med store bokstaver.
@@ -132,8 +143,10 @@ internal fun Reguleringsinput.stedsnavnParametre(): List<String> = buildList {
  * Forskjell fra `legacy`: et eksisterende mål for en sammenslåing opprettes ikke, og står derfor ikke under
  * `NF`/`NK`.
  */
-internal fun stedsnavnParametre(regler: List<ReformOp>, ikrafttredelsesdato: LocalDate): List<String> = buildList {
+internal fun stedsnavnParametre(claims: ReformClaims, ikrafttredelsesdato: LocalDate): List<String> = buildList {
     add("DT\t$ikrafttredelsesdato")
+
+    val regler = claims.declarations
 
     val nye = regler.mapNotNull { op ->
         when (op) {
