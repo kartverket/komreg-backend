@@ -30,6 +30,10 @@ class ReformReguleringRepo(
 
     /** Låser raden for [id] ut transaksjonen på [connection], hvis den finnes. */
     fun lock(connection: Connection, id: String) {
+        connection.prepareStatement("SELECT pg_advisory_xact_lock(hashtextextended(?, 0))").use { statement ->
+            statement.setString(1, "reform_regulering:$id")
+            statement.executeQuery().close()
+        }
         connection.prepareStatement("SELECT 1 FROM reform_regulering WHERE id = ? FOR UPDATE").use { statement ->
             statement.setString(1, id)
             statement.executeQuery().close()
