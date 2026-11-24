@@ -82,11 +82,12 @@ sealed interface DomainErr {
         override val hint get() = "Alle deler av en deling må ligge i samme fylke. Del i ett fylke om gangen."
     }
 
-    /** Veg avledes fra en kilde som ikke flyttes. */
+    /** Veg avledes fra en kilde som verken flyttes med egen regel eller står i ro. */
     data class DeriveWithoutMove(val op: ReformOp.Derive) : DomainErr {
         override val ops get() = listOf(op)
-        override val message get() = "Vegen ${op.from} avledes uten å flyttes: $op"
-        override val hint get() = "Bruk `split` der én av delene har `role: identity`, slik at vegen beholder ID-en."
+        override val message get() = "Vegen ${op.from} avledes, men følger en regel lenger opp: $op"
+        override val hint get() = "Del vegen med `split` der én av delene har `role: identity`, " +
+            "eller skill den ut med `create` og `derivedFrom` fra en veg som står i ro."
     }
 
     /**

@@ -5,12 +5,14 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.toKotlinLocalDate
 import no.kartverket.komreg.core.domain.Adressekode
+import no.kartverket.komreg.core.domain.Adressenummernummer
 import no.kartverket.komreg.core.domain.Fylkesnummer
 import no.kartverket.komreg.core.domain.Kommunenummer
 import no.kartverket.komreg.integration.spi.Entity
 import no.kartverket.komreg.integration.spi.IdGeneratorManager
 import no.kartverket.komreg.integration.spi.Ident
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -127,6 +129,71 @@ class IdentTransformerVegTest {
             assertEquals(expected2, result[1].transformedIdent)
         }
     }
+
+    // Kildevegen står i ro i kommune 2-5, og en ny veg skilles ut til kommune 4-8 i et annet fylke
+    private val utskilling = runBlocking {
+        IdentTransformer(
+            *mapInput(
+                Reguleringsinput(
+                    id = "utskilling",
+                    ikrafttredelsesdato = ikrafttredelsesdato,
+                    endringer = listOf(
+                        Vegendring(
+                            fylkesnummer = FraEnTilMange(Fylkesnummer(2), listOf(Fylkesnummer(2), Fylkesnummer(4))),
+                            kommuneløpenummer = FraEnTilMange(
+                                Kommunenummer.Lopenummer(5),
+                                listOf(Kommunenummer.Lopenummer(5), Kommunenummer.Lopenummer(8)),
+                            ),
+                            adressekode = FraEnTilMange(Adressekode(2700), listOf(Adressekode(2700), Adressekode(3000))),
+                        ),
+                        Vegadresseendring(
+                            FraTil(Fylkesnummer(2), Fylkesnummer(4)),
+                            FraTil(Kommunenummer.Lopenummer(5), Kommunenummer.Lopenummer(8)),
+                            FraTil(Adressekode(2700), Adressekode(3000)),
+                            FraTil(Adressenummernummer(1), Adressenummernummer(1)),
+                        ),
+                    ),
+                    kommuner = emptyList(),
+                    fylker = emptyList(),
+                ),
+            ).toTypedArray(),
+        )
+    }
+
+    @Test
+    fun `ved utskilling beholder kildevegen ID og ident, og den nye vegen får ny ID`() {
+        val entity = Entity(dummyId(123), identOfVeg(2, 5, 2700))
+        runBlocking {
+            val result = utskilling.transform(entity, idGenerator::idFor)!!
+            assertEquals(listOf(dummyId(123), dummyId(1)), result.map { it.id })
+            assertEquals(listOf(identOfVeg(2, 5, 2700), identOfVeg(4, 8, 3000)), result.map { it.transformedIdent })
+        }
+    }
+
+    @Test
+    fun `ved utskilling blir vegadresser uten egen regel liggende, og de med regel flyttes`() {
+        runBlocking {
+            val blir = utskilling.transform(Entity(dummyId(200), identOfVegadresse(2, 5, 2700, 2)), idGenerator::idFor)
+            assertNull(blir)
+
+            val flyttes = utskilling.transform(Entity(dummyId(201), identOfVegadresse(2, 5, 2700, 1)), idGenerator::idFor)!!
+            assertEquals(identOfVegadresse(4, 8, 3000, 1), flyttes.single().transformedIdent)
+        }
+    }
+}
+
+private fun identOfVegadresse(
+    fylkesnummer: Int,
+    lopenummer: Int,
+    adressekode: Int,
+    nummer: Int,
+) = runBlocking {
+    Ident(
+        Fylkesnummer(fylkesnummer.toLong()),
+        Kommunenummer.Lopenummer(lopenummer.toByte()),
+        Adressekode(adressekode),
+        Adressenummernummer(nummer.toShort()),
+    )
 }
 
 private fun identOfVeg(

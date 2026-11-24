@@ -348,22 +348,14 @@ suspend fun mapTeig(teigendring: Teigendring): Pair<Ident, IdentTransformer.Mapp
 suspend fun mapVegendring(vegendring: Vegendring): Pair<Ident, IdentTransformer.Mapping> {
     val adresseparsellIdentType = identTypeOf3<Fylkesnummer, Kommunenummer.Lopenummer, Adressekode>()
 
+    // Fylke og adressekode er enten felles for alle målene eller oppgitt per mål. Ved utskilling er første mål
+    // kilden selv, og da ligger målene ofte i ulike fylker.
     val til =
-        vegendring.kommuneløpenummer.til.map { tilKlnr ->
-            val tilAdr =
-                if (vegendring.adressekode.til.size == 1) {
-                    vegendring.adressekode.til.single()
-                } else {
-                    vegendring.adressekode.til[
-                        vegendring.kommuneløpenummer.til.indexOf(
-                            tilKlnr,
-                        ),
-                    ]
-                }
+        vegendring.kommuneløpenummer.til.mapIndexed { i, tilKlnr ->
             adresseparsellIdentType(
-                vegendring.fylkesnummer.til.single(),
+                vegendring.fylkesnummer.til.singleOrNull() ?: vegendring.fylkesnummer.til[i],
                 tilKlnr,
-                tilAdr,
+                vegendring.adressekode.til.singleOrNull() ?: vegendring.adressekode.til[i],
             ) to null
         }
 

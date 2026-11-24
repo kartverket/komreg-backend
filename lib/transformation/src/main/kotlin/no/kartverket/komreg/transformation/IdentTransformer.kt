@@ -204,6 +204,9 @@ class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
                                 } to payload
                             }
                         }
+                    } else if (target.into.firstOrNull()?.first == mapping.first) {
+                        // Kilden står i ro (utskilling), så det som ligger under og ikke har egen regel, blir der
+                        listOf(this to null)
                     } else {
                         // Imperfect match: Unresolved
                         val matchedIndicies = matches.map { it.first }.toSet()
@@ -268,7 +271,8 @@ class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
 
         // Split er når ett fylke splittes i flere (som Viken), eller en kommune i flere kommuner (som Ålesund)
         // Også brukt når bruksnumre under et gårdsnummer splittes til flere gårdsnumre
-        // Også brukt når en veg splittes i flere veger
+        // Også brukt når en veg splittes i flere veger. Er første mål kilden selv, står vegen i ro og de andre
+        // målene skilles ut fra den (utskilling).
         data class Split(var into: List<Pair<Ident, Payload?>>) : Mapping {
             override fun checkIdentType(identType: IdentOrEmptyType<*>) {
                 val type = into.map { it.first.type }

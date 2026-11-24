@@ -78,10 +78,12 @@ private val targetsInOneCounty: Check = { scope ->
     }
 }
 
-private val deriveOnlyFromMove: Check = { scope ->
+// Kildevegen må enten flyttes med egen regel eller stå i ro (utskilling). En veg som følger en regel lenger opp,
+// for eksempel fordi kommunen utgår, har ingen ID som den nye vegen kan klones fra etter reformen.
+private val deriveOnlyFromMoveOrStill: Check = { scope ->
     scope.ops.filterIsInstance<ReformOp.Derive>().mapNotNull { op ->
-        val rule = scope.claims.lookup(op.from)?.takeIf { it.isExact }?.operation
-        if (rule is ReformOp.Move) null else DomainErr.DeriveWithoutMove(op)
+        val match = scope.claims.lookup(op.from) ?: return@mapNotNull null
+        if (match.isExact && match.operation is ReformOp.Move) null else DomainErr.DeriveWithoutMove(op)
     }
 }
 
@@ -154,14 +156,15 @@ internal val v1Capabilities: Map<String, SinkCapabilities> = mapOf(
         label = "Veg",
         actions = setOf(DomainAction.DERIVE, DomainAction.MOVE),
         hints = mapOf(
-            DomainAction.CREATE to "Veger kan ikke opprettes. Flytt en eksisterende veg (`move`), " +
-                "eller del den med `split` der én av delene har `role: identity`.",
+            DomainAction.CREATE to "Veger kan ikke opprettes uten kilde. Flytt en eksisterende veg (`move`), " +
+                "del den med `split` der én av delene har `role: identity`, eller skill ut en ny veg med " +
+                "`create` og `derivedFrom`.",
             DomainAction.RETIRE_TO to "Veger kan ikke avvikles. Bruk `split` der én av delene har `role: identity`.",
             DomainAction.RETIRE to "Veger kan ikke avvikles, det sletter vegen. " +
                 "Bruk `split` der én av delene har `role: identity`.",
         ),
         defaultHint = "Bruk `move`, eller `split` der én av delene har `role: identity`.",
-        checks = listOf(deriveOnlyFromMove, targetsInOneCounty),
+        checks = listOf(deriveOnlyFromMoveOrStill, targetsInOneCounty),
     ),
     V1Kinds.ADDRESS_NUMBER to onlyMove("Vegadresse"),
     V1Kinds.DISTRICT_NUMBER to onlyMove("Krets"),

@@ -220,9 +220,18 @@ class DomainRulesTest {
     }
 
     @Test
-    fun `veg kan bare avledes fra en kilde som flyttes`() {
+    fun `ny veg kan skilles ut fra en veg som står i ro, også til et annet fylke`() {
+        assertThat(errors(ReformOp.Derive(veg(30, 1, 300), veg(12, 34, 100)))).isEmpty()
+    }
+
+    @Test
+    fun `veg kan ikke avledes fra en veg som følger kommunen sin`() {
         assertRule(
-            errors(ReformOp.Derive(veg(12, 36, 300), veg(12, 34, 100))),
+            errors(
+                ReformOp.Retire(kommune(12, 34), successor = kommune(12, 35)),
+                ReformOp.Derive(kommune(12, 35), kommune(12, 34), kommunedata()),
+                ReformOp.Derive(veg(12, 36, 300), veg(12, 34, 100)),
+            ),
             "DeriveWithoutMove",
         )
     }

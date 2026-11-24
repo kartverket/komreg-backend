@@ -160,8 +160,8 @@ private class SourceChange(
     val successorOnSplit: Boolean,
 )
 
-// Legacy `mapVegendring` slår opp adressekoden med `indexOf(tilKlnr)`, som gir feil kode når samme kommune står
-// flere ganger. Her brukes indeksen direkte.
+// Fylke og adressekode er enten felles for alle målene eller oppgitt per mål. Er første mål kilden selv, står vegen i
+// ro, og de andre målene skilles ut fra den.
 private suspend fun Vegendring.toReformOps(): List<ReformOp> {
     val type = identTypeOf3<Fylkesnummer, Kommunenummer.Lopenummer, Adressekode>()
     val source = type(fylkesnummer.fra, kommuneløpenummer.fra, adressekode.fra)
@@ -172,10 +172,10 @@ private suspend fun Vegendring.toReformOps(): List<ReformOp> {
     }
 
     val targets = kommuneløpenummer.til.mapIndexed { i, tilKlnr ->
-        type(fylkesnummer.til.single(), tilKlnr, adressekode.til.singleOrNull() ?: adressekode.til[i])
+        type(fylkesnummer.til.singleOrNull() ?: fylkesnummer.til[i], tilKlnr, adressekode.til.singleOrNull() ?: adressekode.til[i])
     }
-    return listOf(ReformOp.Move(source, targets.first())) +
-        targets.drop(1).map { ReformOp.Derive(it, from = source) }
+    val derives = targets.drop(1).map { ReformOp.Derive(it, from = source) }
+    return if (targets.first() == source) derives else listOf(ReformOp.Move(source, targets.first())) + derives
 }
 
 private fun Matrikkelenhetendring.toReformOps(): List<ReformOp> {

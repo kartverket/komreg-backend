@@ -175,7 +175,9 @@ og kommuner), og domenereglene sjekker hva sinkene kan utføre. Se [reform-forma
 - **Mål for fylke eller kommune** opprettes hvis minst én endring til det ikke har `sammenslaaing = true`. Ellers må
   målet finnes fra før. Et mål som opprettes fra én endring, blir en `Derive` fra kilden. Et mål som opprettes fra
   flere endringer, blir én `Create`.
-- **Veg**: én til én gir `Move`. Ved deling flyttes vegen til første mål, og de andre målene avledes fra den.
+- **Veg**: én til én gir `Move`. Ved deling flyttes vegen til første mål, og de andre målene avledes fra den. Er
+  første mål kilden selv, står vegen i ro, og de andre målene blir `Derive` fra den (utskilling). Fylke og
+  adressekode er enten felles for alle målene eller oppgitt per mål.
 - **Vegadresse og krets** gir `Move`.
 - **Teig** gir to `Move`, én for bruksnummer 0 («matrikkelnummer mangler») og én for bruksnummer 1
   («matrikkelnummer vann mangler»).
@@ -212,9 +214,10 @@ DTO-en kan uttrykke mindre enn reglene. Broen returnerer `IngenDtoEkvivalent` me
 - `Move` av et fylke eller en kommune. En endring i DTO-en lager alltid en ny entitet.
 - Kommunedeling der etterfølgeren ikke opprettes av delingen, for eksempel en del som slås inn i en eksisterende
   kommune. DTO-en oppretter alle målene ved deling.
-- Utskilling, altså en `Derive` fra en kilde som ikke har en kilderegel og dermed fortsetter.
+- Utskilling av fylke eller kommune, altså en `Derive` fra en kilde som ikke har en kilderegel og dermed
+  fortsetter. Utskilling av veg uttrykkes som en `VegTransformasjonDTO` der første mål er kilden selv.
 - Deling med færre enn to mål, fylkesdeling med etterfølger og kommunedeling uten etterfølger.
-- Kommune- eller vegdeling med mål i flere fylker.
+- Kommunedeling med mål i flere fylker.
 - En gårdsnummerserie med en annen regel enn `Move`, bortsett fra `Retire` uten etterfølger når minst ett
   bruksnummer i serien flyttes.
 - `Create` av et mål som ingen fylke- eller kommuneendring peker på.

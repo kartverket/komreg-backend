@@ -245,6 +245,14 @@ eller `move`). Har kilden ingen egen node, fortsetter den uendret.
 { "op": "create", "kind": "municipality", "key": ["46", "10"], "derivedFrom": ["46", "05"], "payload": { … } }
 ```
 
+**Utskilling av veg:** en vegadresse flyttes til en kommune som ikke har vegen fra før. Veg 1300 i 1811 står i ro,
+og 5060 får en ny veg 2100, med samme vegnavn, som adressen flyttes til. Den nye vegen kan ligge i et annet fylke.
+
+```json
+[ { "op": "create", "kind": "addressCode", "key": ["50", "60", 2100], "derivedFrom": ["18", "11", 1300] },
+  { "op": "move", "kind": "addressNumber", "key": ["18", "11", 1300, 12], "to": ["50", "60", 2100, 12] } ]
+```
+
 **Flere kilder til én ny kommune:** 4605 og 5005 utgår begge med 5010 som etterfølger. 5010 opprettes av
 `create` og arver fra 4605. `existing` i `split` betyr her at 5010 opprettes et annet sted i reformen.
 
@@ -260,9 +268,10 @@ eller `move`). Har kilden ingen egen node, fortsetter den uendret.
 en `create` med `derivedFrom` lik kilden. Det samme gjelder `merge.into.new`. Bruk `new` når målet har én
 kilde, og `create` med `derivedFrom` når kilden fortsetter, eller når flere kilder peker på målet.
 
-**Begrensning:** DTO-en kan ikke uttrykke utskilling. En spec med utskilling er gyldig i formatet, men stoppes i
-`steg: "bro"`. Det samme gjelder `merge` med `into.existing` og to eller flere kilder, sammen med en `create`
-med `derivedFrom` fra en av kildene. Den stoppes som `UlikTransformasjon`.
+**Begrensning:** DTO-en kan ikke uttrykke utskilling av fylke og kommune. En slik spec er gyldig i formatet, men
+stoppes i `steg: "bro"`. Utskilling av veg kan uttrykkes. Det samme gjelder `merge` med `into.existing` og to
+eller flere kilder, sammen med en `create` med `derivedFrom` fra en av kildene. Den stoppes som
+`UlikTransformasjon`.
 
 ## Kontekster
 
@@ -457,7 +466,7 @@ stedet.
 |---|---|---|---|---|---|
 | `county` | ja | ja | nei ¹ | ja | ja, uten etterfølger |
 | `municipality` | ja | ja | nei ¹ | ja | ja, med etterfølger ² |
-| `addressCode` | nei | ja, når kilden flyttes ³ | ja | nei | nei ⁴ |
+| `addressCode` | nei | ja, når kilden flyttes eller står i ro ³ | ja | nei | nei ⁴ |
 | `addressNumber`, `districtNumber`, `titleNumber` | nei | nei | ja | nei | nei |
 | `landNumber` | nei | nei | ja | nei | ja, uten etterfølger, med flytting av bruksnumre ⁵ |
 | `parcel` | nei | nei | ja, bare uten matrikkelnummer ⁶ | nei | nei |
@@ -470,8 +479,9 @@ Her betyr «opprette» `create`, «avlede» en ny del i `split`, `merge.into.new
 1. Sinkene tolker samme ID med ny nøkkel som at fylket eller kommunen utgår, uten at en ny rad opprettes. Gi nytt
    nummer med `merge` og `into.new`.
 2. Kommunen har én peker til etterfølgeren (`nykommuneid` i matrikkelen).
-3. Sinken for veger krever at en ny veg har en kildeveg, og at kildevegen selv får ny nøkkel. Del vegen med
-   `role: identity`.
+3. Sinken for veger krever at en ny veg har en kildeveg. Kildevegen flyttes selv (del vegen med `role: identity`)
+   eller står i ro uten egen regel (utskilling med `create` og `derivedFrom`). Den nye vegen arver vegnavnet.
+   En veg som følger en regel lenger opp, for eksempel fordi kommunen utgår, kan det ikke avledes fra.
 4. En veg uten ny nøkkel blir slettet. Del vegen med `role: identity`.
 5. Sinken for matrikkelenheter krever en ny nøkkel for hvert bruksnummer.
 6. En teig med matrikkelnummer hører til matrikkelenheten, ikke bare til kommunen.
@@ -486,7 +496,7 @@ Tilleggskrav:
 | `WrongPayload` | `county`, `municipality` | Et nytt fylke har fylkespayload, og en ny kommune har kommunepayload. |
 | `MissingMunicipalityCoat` | `municipality` | En ny kommune har kommunevåpen. |
 | `TargetsInMultipleCounties` | `municipality`, `addressCode` | Alle mål fra én kilde ligger i samme fylke. |
-| `DeriveWithoutMove` | `addressCode` | En veg som det avledes fra, flyttes selv (`role: identity`). |
+| `DeriveWithoutMove` | `addressCode` | En veg som det avledes fra, flyttes selv (`role: identity`) eller står i ro uten egen regel. |
 | `SeriesRetireWithoutTitleMoves` | `landNumber` | Et gårdsnummer som utgår, har minst én `move` av et bruksnummer under seg. Det sjekkes ikke at alle bruksnumrene er flyttet. |
 | `ParcelHasCadastralNumber` | `parcel` | Bare teiger uten matrikkelnummer flyttes. |
 | `ParcelNotPaired` | `parcel` | En teig flyttes fra begge plassholderne (bnr 0 og bnr 1) til samme mål. |
@@ -533,7 +543,8 @@ formatet, så en spec som har bestått alle andre steg, kan stoppes her. Specen 
 Kjente tilfeller som stoppes her:
 
 - En kommunedeling der etterfølgeren ikke opprettes av delingen (en `existing`-del).
-- Utskilling, der kilden fortsetter (`create` med `derivedFrom` fra en kilde uten egen node).
+- Utskilling av fylke eller kommune, der kilden fortsetter (`create` med `derivedFrom` fra en kilde uten egen
+  node).
 - En kommunedeling med færre enn to deler.
 - `merge` med `into.existing` og to eller flere kilder, sammen med en `create` med `derivedFrom` fra en av kildene
   (stoppes som `UlikTransformasjon`).

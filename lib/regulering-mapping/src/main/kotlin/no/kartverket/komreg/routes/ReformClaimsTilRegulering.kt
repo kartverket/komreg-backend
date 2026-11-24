@@ -448,28 +448,40 @@ private class EndringMapper(
         is ReformOp.Derive -> payload
     }
 
-    /** Flytting av veg, og delinger av veg (avledninger fra flyttingen). Alle målene må ligge i samme fylke. */
-    private fun veger(): List<TransformasjonDTO> =
-        ops.filterIsInstance<ReformOp.Move>().filter { it.source.form() == Form.VEG }.mapNotNull { flytting ->
-            val avledninger = avledninger(flytting.source)
-            val mål = listOf(flytting.target) + avledninger.map { it.target }
+    /**
+     * Flytting av veg og delinger av veg (avledninger fra flyttingen), og utskilling av nye veger fra en veg som står i
+     * ro. Ved utskilling er første mål kilden selv, slik at vegen beholder ID-en og de andre målene opprettes som nye
+     * veger. Fylket oppgis per mål når målene ligger i ulike fylker.
+     */
+    private fun veger(): List<TransformasjonDTO> {
+        val flyttinger = ops.filterIsInstance<ReformOp.Move>().filter { it.source.form() == Form.VEG }
+            .map { Triple(it as ReformOp, it.source, listOf(it.target)) }
+        val utskillinger = ops.filterIsInstance<ReformOp.Derive>()
+            .filter { avledning ->
+                avledning.from.form() == Form.VEG && ops.none { it is ReformOp.SourceOp && it.source == avledning.from }
+            }
+            .map { it.from }.distinct()
+            .map { kilde -> Triple(avledninger(kilde).first() as ReformOp, kilde, listOf(kilde)) }
+
+        return (flyttinger + utskillinger).mapNotNull { (op, kilde, førsteMål) ->
+            val avledninger = avledninger(kilde)
+            val mål = førsteMål + avledninger.map { it.target }
             if (mål.any { it.form() != Form.VEG }) {
-                return@mapNotNull avvis(flytting, "Målet har ikke samme identtype som kilden")
+                return@mapNotNull avvis(op, "Målet har ikke samme identtype som kilden")
             }
-            if (mål.map { it.fylke() }.distinct().size > 1) {
-                return@mapNotNull avvis(flytting, "Vegdeling med mål i flere fylker kan ikke uttrykkes")
-            }
-            behandlet += flytting
+            behandlet += op
             behandlet += avledninger
+            val fylker = mål.map { it.fylke().verdi() }
             VegTransformasjonDTO(
-                fylkesnummer = FraEnTilMangeDTO(flytting.source.fylke().verdi(), listOf(mål.first().fylke().verdi())),
-                kommuneløpenummer = FraEnTilMangeDTO(flytting.source.lopenummer().verdi(), mål.map { it.lopenummer().verdi() }),
+                fylkesnummer = FraEnTilMangeDTO(kilde.fylke().verdi(), fylker.distinct().singleOrNull()?.let(::listOf) ?: fylker),
+                kommuneløpenummer = FraEnTilMangeDTO(kilde.lopenummer().verdi(), mål.map { it.lopenummer().verdi() }),
                 adressekode = FraEnTilMangeDTO(
-                    flytting.source.komponent<Adressekode>(2).value.toString(),
+                    kilde.komponent<Adressekode>(2).value.toString(),
                     mål.map { it.komponent<Adressekode>(2).value.toString() },
                 ),
             )
         }
+    }
 
     /** Flytting av vegadresser og kretser. */
     private fun enkleFlyttinger(form: Form): List<TransformasjonDTO> =

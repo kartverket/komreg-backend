@@ -160,6 +160,27 @@ class ReformClaimsTilReguleringTest : FunSpec({
                 ),
             )
         }
+
+        test("utskilling av veg til en kommune i et annet fylke, der kildevegen står i ro") {
+            val input = input(
+                Vegendring(
+                    FraEnTilMange(fnr(12), listOf(fnr(12), fnr(30))),
+                    FraEnTilMange(klnr(34), listOf(klnr(34), klnr(1))),
+                    FraEnTilMange(Adressekode(100), listOf(Adressekode(100), Adressekode(200))),
+                ),
+                Vegadresseendring(
+                    FraTil(fnr(12), fnr(30)), FraTil(klnr(34), klnr(1)),
+                    FraTil(Adressekode(100), Adressekode(200)), FraTil(Adressenummernummer(1), Adressenummernummer(1)),
+                ),
+            )
+            roundtrip(input)
+
+            val veg = ReformClaims.validate(input.toReformOps()).getOrNull()!!.regulering().getOrNull()!!
+                .endringer.flatMap { it.transformasjoner }.filterIsInstance<VegTransformasjonDTO>().single()
+            veg.fylkesnummer.til shouldBe listOf("12", "30")
+            veg.kommuneløpenummer.til shouldBe listOf("34", "01")
+            veg.adressekode.til shouldBe listOf("100", "200")
+        }
     }
 
     context("innhold") {
