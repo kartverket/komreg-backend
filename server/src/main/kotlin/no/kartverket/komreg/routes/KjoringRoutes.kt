@@ -16,7 +16,6 @@ import no.kartverket.komreg.Transformasjonsmotor
 import no.kartverket.komreg.exceptions.MissingPathVariableException
 import no.kartverket.komreg.exceptions.ReguleringAlreadyFinishedException
 import no.kartverket.komreg.repositories.*
-import no.kartverket.komreg.services.Kjoringsregler
 import no.kartverket.komreg.services.ReguleringService
 import no.kartverket.komreg.services.transformEntities
 import org.slf4j.Logger
@@ -39,48 +38,30 @@ fun Application.kjoringroutes(
                 try {
                     val regId = call.parameters["regId"] ?: throw MissingPathVariableException("Missing regId")
 
-                    val regler = when (motor) {
-                        Transformasjonsmotor.LEGACY ->
-                            Kjoringsregler.Legacy(reguleringsService.getOrThrowRegulering(regId).toReguleringsinput())
-
-                        Transformasjonsmotor.REFORM -> reguleringsService.getOrThrowReformRegler(regId)
-                    }
+                    val kjoring = reguleringsService.startKjoring(regId, motor)
 
                     logger.info("Starter transformasjon for regulering: $regId med motor ${motor.verdi}")
 
-                    val kjoringsomskalgjenopptas = kjoringRepo.finnStoppetKjøringForRegulering(regId, motor)
+                    transformEntities(
+                        kjoring.regler,
+                        KjoringContextImpl(kjoring.kjoringId, komregDataSource),
+                        transformationRepo,
+                        kjoringRepo,
+                        tilbakeføringsstatusRepo,
+                        !kjoring.gjenopptatt,
+                    )
 
-                    if (kjoringsomskalgjenopptas != null) {
-                        transformEntities(
-                            regler,
-                            KjoringContextImpl(kjoringsomskalgjenopptas.id, komregDataSource),
-                            transformationRepo,
-                            kjoringRepo,
-                            tilbakeføringsstatusRepo,
-                            false,
-                        )
-                        logger.info("Gjenopptar kjøring med id: ${kjoringsomskalgjenopptas.id}, og regId: $regId")
-                        kjoringRepo.setStatusForKjøring(kjoringsomskalgjenopptas.id, Kjoringstatus.KJØRER)
+                    if (kjoring.gjenopptatt) {
+                        logger.info("Gjenopptar kjøring med id: ${kjoring.kjoringId}, og regId: $regId")
+                        kjoringRepo.setStatusForKjøring(kjoring.kjoringId, Kjoringstatus.KJØRER)
 
                         call.respond(
                             HttpStatusCode.OK,
-                            "Gjenopptar kjøring med id: ${kjoringsomskalgjenopptas.id}, og regId: $regId",
+                            "Gjenopptar kjøring med id: ${kjoring.kjoringId}, og regId: $regId",
                         )
                     } else {
-                        val kjoringId = kjoringRepo.insertAndRetrieveKjoringId(regId, motor)
-                            ?: throw SQLException("Kunne ikke opprette kjøring for regId: $regId")
-
-                        transformEntities(
-                            regler,
-                            KjoringContextImpl(kjoringId, komregDataSource),
-                            transformationRepo,
-                            kjoringRepo,
-                            tilbakeføringsstatusRepo,
-                            true,
-                        )
-
-                        logger.info("Starter ny kjøring med id: $kjoringId, og regId: $regId")
-                        call.respond(HttpStatusCode.OK, "Starter ny kjøring med id: $kjoringId, og regId: $regId")
+                        logger.info("Starter ny kjøring med id: ${kjoring.kjoringId}, og regId: $regId")
+                        call.respond(HttpStatusCode.OK, "Starter ny kjøring med id: ${kjoring.kjoringId}, og regId: $regId")
                     }
                 } catch (e: Exception) {
                     when (e) {

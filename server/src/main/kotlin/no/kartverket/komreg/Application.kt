@@ -79,7 +79,7 @@ fun Application.module() {
     val tilbakeføringsstatusRepo = TilbakeføringsstatusRepo(komregDbPool)
     val transformationRepo = TransformationRepo(komregDbPool, jsonSerializer())
     val reformReguleringRepo = ReformReguleringRepo(komregDbPool, jsonSerializer())
-    val reguleringService = ReguleringService(reguleringsRepo, kjoringRepo, reformReguleringRepo)
+    val reguleringService = ReguleringService(komregDbPool, reguleringsRepo, kjoringRepo, reformReguleringRepo)
     val motor = Transformasjonsmotor.fra(env[Transformasjonsmotor.ENV])
     val kjoringService = KjoringService(kjoringRepo)
     val schemaManager = SchemaManager(kjoringRepo)

@@ -189,6 +189,9 @@ Miljøvariabelen `TRANSFORMASJONSMOTOR` velger motor for hele applikasjonen. Den
 | `reform` | `reform_regulering` (`ReformOp`-er), validert på nytt med `ReformClaims.validate` | `ReformTransformer` | `reform_regulering` |
 
 Med `reform` må reglene være lagret med `PUT /reform-reguleringer/{regId}`. Det finnes ingen omvei via DTO-en.
+Reglene kan ikke endres når reguleringen har en kjøring. `PUT` og `/run/{regId}` låser raden i `reform_regulering`
+i samme transaksjon som de sjekker kjøringer og lagrer reglene eller oppretter kjøringen. Derfor bruker en kjøring
+alltid de lagrede reglene.
 `regId` slås opp i tabellen til motoren, så en kjøring gjenopptas bare med samme motor. Stedsnavnparametrene
 (`StedsnavnService`) lages fra reglene når kjøringen har `reform_regulering`. `NK`/`NF` er nye kommuner og
 fylker, og `UK`/`UF` er de som utgår. Med `reform` står et eksisterende mål for en sammenslåing derfor bare som mål
