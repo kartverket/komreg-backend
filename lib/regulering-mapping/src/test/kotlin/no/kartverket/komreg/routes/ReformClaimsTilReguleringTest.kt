@@ -32,6 +32,7 @@ import no.kartverket.komreg.integration.spi.KommuneService
 import no.kartverket.komreg.integration.spi.identTypeOf1
 import no.kartverket.komreg.integration.spi.identTypeOf2
 import no.kartverket.komreg.integration.spi.identTypeOf3
+import no.kartverket.komreg.integration.spi.identTypeOf4
 import no.kartverket.komreg.integration.spi.invoke
 import no.kartverket.komreg.transformation.Endring
 import no.kartverket.komreg.transformation.FraEnTilMange
@@ -253,6 +254,25 @@ class ReformClaimsTilReguleringTest : FunSpec({
             val claims = ReformClaims.validate(listOf(ReformOp.Retire(serie(12, 34, 40)))).getOrNull()!!
 
             claims.umappbare().single().shouldBeInstanceOf<Umappbar.IngenDtoEkvivalent>()
+        }
+
+        test("sammenslåing av gårdsnummer og vegadresse blir flytting i DTO-en") {
+            val vegadresse = identTypeOf4<Fylkesnummer, Kommunenummer.Lopenummer, Adressekode, Adressenummernummer>()
+            val claims = ReformClaims.validate(
+                listOf(
+                    ReformOp.RetireTo(serie(12, 34, 40), serie(12, 34, 60)),
+                    ReformOp.RetireTo(
+                        vegadresse(fnr(12), klnr(34), Adressekode(100), Adressenummernummer(1)),
+                        vegadresse(fnr(12), klnr(34), Adressekode(100), Adressenummernummer(2)),
+                    ),
+                ),
+            ).getOrNull()!!
+
+            val transformasjoner = claims.regulering().getOrNull()!!.endringer.flatMap { it.transformasjoner }
+            transformasjoner.filterIsInstance<MatrikkelenhetTransformasjonDTO>().single().gårdsnummer shouldBe
+                FraTilDTO("40", "60")
+            transformasjoner.filterIsInstance<VegadresseTransformasjonDTO>().single().adressenummer shouldBe
+                FraTilDTO("1", "2")
         }
 
         test("Retire av teig og grunneiendom") {

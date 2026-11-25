@@ -99,12 +99,6 @@ sealed interface DomainErr {
         override val message get() = "Teigen i $op har matrikkelnummer"
         override val hint get() = "Bare teiger uten matrikkelnummer (gnr 0, fnr 0, snr 0) kan flyttes."
     }
-
-    /** Teigen flyttes ikke for både bnr 0 og bnr 1 til samme mål. */
-    data class ParcelNotPaired(val source: Ident.NonEmpty, override val ops: List<ReformOp.Move>) : DomainErr {
-        override val message get() = "Teigen $source må flyttes for både bnr 0 og bnr 1 til samme mål"
-        override val hint get() = "Flytt teigen med `move` på kind `parcel`, som gjelder begge."
-    }
 }
 
 private fun ReformOp.NewEntity.payloadName(): String = when (this) {

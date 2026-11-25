@@ -83,19 +83,10 @@ private val seriesRetireNeedsTitleMoves: Check = { scope ->
 }
 
 private val parcelMoves: Check = { scope ->
-    val moves = scope.ops.filterIsInstance<ReformOp.Move>()
-    val (withNumber, plain) = moves.partition { it.source.hasCadastralNumber() || it.target.hasCadastralNumber() }
-
-    val unpaired = plain.groupBy { it.source.parcel() to it.target.parcel() }.values.mapNotNull { group ->
-        val pairs = group.map { it.source.leaseRole() to it.target.leaseRole() }.toSet()
-        if (pairs == setOf(0 to 0, 1 to 1)) null else DomainErr.ParcelNotPaired(group.first().source, group)
-    }
-    withNumber.map { DomainErr.ParcelHasCadastralNumber(it) } + unpaired
+    scope.ops.filterIsInstance<ReformOp.Move>()
+        .filter { it.source.hasCadastralNumber() || it.target.hasCadastralNumber() }
+        .map { DomainErr.ParcelHasCadastralNumber(it) }
 }
-
-private fun Ident.parcel(): List<Comparable<*>> = toArray().let { it.take(2) + it[6] }
-
-private fun Ident.leaseRole(): Int = (toArray()[3] as Matrikkelnummer.Bruksnummer).value.toInt()
 
 /** Teiger uten matrikkelnummer har gnr 0, bnr 0 eller 1, fnr 0 og snr 0. */
 private fun Ident.hasCadastralNumber(): Boolean {
@@ -149,15 +140,23 @@ internal val v1Capabilities: Map<String, SinkCapabilities> = mapOf(
         defaultHint = "Bruk `move`, `create` med `derivedFrom`, eller `split` uten `successor` for å slette vegen.",
         checks = listOf(deriveNotFromRetired),
     ),
-    V1Kinds.ADDRESS_NUMBER to onlyMove("Vegadresse"),
+    // Et adressenummer er en serie (nummer med og uten bokstav), som et gårdsnummer. Ved sammenslåing får hver
+    // adresse i serien nytt nummer, og sinken oppdaterer den som ved flytting. Like adresser i målet sjekkes ikke.
+    V1Kinds.ADDRESS_NUMBER to SinkCapabilities(
+        label = "Vegadresse",
+        actions = setOf(DomainAction.MOVE, DomainAction.RETIRE_TO),
+        defaultHint = "Bare flytting (`move`) og sammenslåing (`merge`) støttes.",
+    ),
     V1Kinds.DISTRICT_NUMBER to onlyMove("Krets"),
     V1Kinds.TITLE_NUMBER to onlyMove("Grunneiendom"),
     V1Kinds.LAND_NUMBER to SinkCapabilities(
         label = "Gårdsnummer",
-        actions = setOf(DomainAction.MOVE, DomainAction.RETIRE),
+        // Et gårdsnummer er ingen entitet. Ved sammenslåing får hver grunneiendom i serien nytt gårdsnummer, og sinken
+        // oppdaterer den som ved flytting. Like bruksnumre i målet sjekkes ikke.
+        actions = setOf(DomainAction.MOVE, DomainAction.RETIRE_TO, DomainAction.RETIRE),
         retire = SuccessorPolicy.FORBIDDEN,
-        defaultHint = "Flytt gårdsnummeret (`move`), eller la det utgå (`split` uten `successor`) " +
-            "når bruksnumrene under flyttes enkeltvis med `then`.",
+        defaultHint = "Flytt gårdsnummeret (`move`), slå det sammen med et annet (`merge`), eller la det utgå " +
+            "(`split` uten `successor`) når bruksnumrene under flyttes enkeltvis med `then`.",
         checks = listOf(seriesRetireNeedsTitleMoves),
     ),
     V1Kinds.PARCEL to SinkCapabilities(

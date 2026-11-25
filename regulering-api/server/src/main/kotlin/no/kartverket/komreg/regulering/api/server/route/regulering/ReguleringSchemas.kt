@@ -56,7 +56,7 @@ internal object ReguleringSchemas {
                       `SourceUnderCreatedTarget`, `DeriveFromTarget`
                     - `domene`: `ActionNotSupported`, `RetireNeedsSuccessor`, `RetireHasSuccessor`, `WrongPayload`,
                       `MissingMunicipalityCoat`, `DeriveFromRetired`,
-                      `SeriesRetireWithoutTitleMoves`, `ParcelHasCadastralNumber`, `ParcelNotPaired`,
+                      `SeriesRetireWithoutTitleMoves`, `ParcelHasCadastralNumber`,
                       `TargetTypeMismatch`, `UnsupportedIdentType`
                     - `data`: `MunicipalityNotCovered`, `TargetNotFound`, `TargetExpired`, `TargetInUse`,
                       `SourceNotFound`, `SourceExpired`

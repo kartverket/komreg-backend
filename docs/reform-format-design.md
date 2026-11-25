@@ -186,7 +186,26 @@ Tabellen i [reform-format.md](reform-format.md#domeneregler) er utledet fra sink
 vegadresse, matrikkelenhet, teig og krets), ikke fra valideringen av DTO-en.
 
 - Sinkene for vegadresse, krets, matrikkelenhet og teig forutsetter at hver transformasjon har en eksisterende
-  kilde (`sourceEntity`) og en ny nøkkel (`transformedIdent`). Derfor støttes bare `move` for disse.
+  kilde (`sourceEntity`) og en ny nøkkel (`transformedIdent`). `create` og `split` støttes derfor ikke for disse.
+  En opprettelse har ingen kilde, og sinken feiler. En sletting har ingen ny nøkkel, og sinken feiler eller lar
+  entiteten bli liggende. En avledning (`create` med `derivedFrom`) oppdaterer ingenting, og for krets og
+  matrikkelenhet legges det inn rader som ikke hører til noen entitet.
+- `merge` støttes for `landNumber` og `addressNumber`, fordi de er serier uten egen entitet. Hver grunneiendom eller
+  vegadresse under kilden får målet som prefiks, og sinken oppdaterer den som ved `move`. Det sjekkes ikke at
+  bruksnummeret eller bokstaven er ledig i målet. Det er samme risiko som ved `move` til en serie som finnes.
+  DTO-en uttrykker sammenslåingen som flytting, og rundturssjekken i broen regner `RetireTo` og `Move` som like
+  for disse. `merge` av `titleNumber` og `districtNumber` gir to entiteter med samme nøkkel, og avvises.
+- En teig flyttes i formatet alltid for både bnr 0 og bnr 1. Domenereglene krever ikke paret, fordi det ikke kan
+  brytes fra formatet. Broen krever det, fordi DTO-en uttrykker en teig uten bruksnummer.
+- Tre krav fra sinkene sjekkes ikke, fordi det trengs data som valideringen ikke har (datareglene har bare fylker og
+  kommuner):
+  - `KretsTilbakeforingService` tar `single()` på kretstype og kretsnummer over alle kommunene til kretsen. En
+    krets i flere kommuner må få samme type og nummer i alle.
+  - `MatrikkelenhetTilbakeforingService` krever en ny nøkkel for hver grunneiendom. Når et gårdsnummer utgår
+    (`split`), må alle bruksnumrene under det flyttes. `SeriesRetireWithoutTitleMoves` sjekker bare at minst ett
+    er flyttet.
+  - En vegadresse uten egen regel på en veg som utgår (`split`), får bare delvis nøkkel, og
+    `VegadresseTilbakeforingService` feiler. Vegen må være tom, eller alle adressene må flyttes.
 - `VegTilbakeforingService` tolker en transformasjon uten ny nøkkel som at vegen skal slettes. `split` av en veg
   gir derfor sletting, og en veg som skal bestå, må flyttes, også når den deles (`move` for delen som beholder
   ID-en). DTO-en kan ikke uttrykke sletting av veg, så det stoppes i `bro`.

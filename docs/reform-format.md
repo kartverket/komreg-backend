@@ -442,9 +442,10 @@ stedet.
 | `county` | ja | ja | nei ¹ | ja | ja, uten etterfølger |
 | `municipality` | ja | ja | nei ¹ | ja | ja, med etterfølger ² |
 | `addressCode` | nei | ja ³ | ja | nei ⁵ | ja, uten etterfølger ⁴ |
-| `addressNumber`, `districtNumber`, `titleNumber` | nei | nei | ja | nei | nei |
-| `landNumber` | nei | nei | ja | nei | ja, uten etterfølger, med flytting av bruksnumre ⁶ |
-| `parcel` | nei | nei | ja, bare uten matrikkelnummer ⁷ | nei | nei |
+| `addressNumber` | nei | nei | ja | ja ⁶ | nei |
+| `districtNumber`, `titleNumber` | nei | nei | ja | nei | nei |
+| `landNumber` | nei | nei | ja | ja ⁶ | ja, uten etterfølger, med flytting av bruksnumre ⁷ |
+| `parcel` | nei | nei | ja, bare uten matrikkelnummer ⁸ | nei | nei |
 
 Her betyr «opprette» `create` uten `derivedFrom`, «avlede» `create` med `derivedFrom`, «slå sammen» `merge`, og
 «utgå» `split`.
@@ -462,8 +463,11 @@ Her betyr «opprette» `create` uten `derivedFrom`, «avlede» `create` med `der
 5. Dette er en begrensning i sinken, ikke en domeneregel. Sinken flytter kildevegen til nøkkelen til målvegen i
    stedet for å slette den, og da får to veger samme nøkkel. Regelen kan fjernes når sinken er rettet. Se
    «Bakgrunn for domenereglene» i [reform-format-design.md](reform-format-design.md#bakgrunn-for-domenereglene).
-6. Sinken for matrikkelenheter krever en ny nøkkel for hvert bruksnummer.
-7. En teig med matrikkelnummer hører til matrikkelenheten, ikke bare til kommunen.
+6. Et adressenummer og et gårdsnummer er serier uten egen entitet. Ved sammenslåing får hver adresse eller
+   grunneiendom under kilden målet som prefiks, som ved flytting. Det sjekkes ikke at bokstaven eller
+   bruksnummeret er ledig i målet.
+7. Sinken for matrikkelenheter krever en ny nøkkel for hvert bruksnummer.
+8. En teig med matrikkelnummer hører til matrikkelenheten, ikke bare til kommunen.
 
 Tilleggskrav:
 
@@ -477,7 +481,6 @@ Tilleggskrav:
 | `DeriveFromRetired` | `addressCode` | En veg som det avledes fra, ligger ikke under en forelder som utgår (for eksempel en kommune som deles), med mindre vegen har en egen regel. |
 | `SeriesRetireWithoutTitleMoves` | `landNumber` | Et gårdsnummer som utgår, har minst én `move` av et bruksnummer under seg. Det sjekkes ikke at alle bruksnumrene er flyttet. |
 | `ParcelHasCadastralNumber` | `parcel` | Bare teiger uten matrikkelnummer flyttes. |
-| `ParcelNotPaired` | `parcel` | En teig flyttes fra begge plassholderne (bnr 0 og bnr 1) til samme mål. |
 | `TargetTypeMismatch` | alle | Mål og etterfølger har samme kind som kilden. |
 
 ### Dataregler
@@ -499,8 +502,9 @@ støtter (se fotnote 1 over). Regelen for fylket dekker ikke kommunene, så hver
 `merge` eller `split`.
 
 Datareglene sjekker bare fylker og kommuner. Om veger, adresser, gårdsnumre og teiger finnes, sjekkes ikke. Det
-sjekkes heller ikke at alt under en kommune som deles, eller alle bruksnumre under et gårdsnummer som utgår, har
-fått en regel.
+sjekkes heller ikke at alt under en kommune som deles, alle bruksnumre under et gårdsnummer som utgår, eller alle
+adresser på en veg som utgår, har fått en regel. Sinkene krever det. Se «Bakgrunn for domenereglene» i
+[reform-format-design.md](reform-format-design.md#bakgrunn-for-domenereglene).
 
 Kommunedataene hentes ved oppstart av `regulering-api`, og valideringen laster dem ikke på nytt. En kommune som
 er opprettet eller har utgått etter oppstart, er derfor ikke kjent med riktig status før tjenesten startes på

@@ -268,36 +268,35 @@ class DomainRulesTest {
     }
 
     @Test
-    fun `gårdsnummer som utgår kan ikke ha etterfølger eller slås sammen`() {
+    fun `gårdsnummer som utgår kan ikke ha etterfølger`() {
         val flytting = ReformOp.Move(grunneiendom(34, 40, 1), grunneiendom(35, 60, 1))
         assertRule(errors(ReformOp.Retire(serie(34, 40), successor = serie(35, 60)), flytting), "RetireHasSuccessor")
-        assertRule(errors(ReformOp.RetireTo(serie(34, 40), serie(35, 60))), "ActionNotSupported")
         assertRule(errors(ReformOp.Create(serie(35, 60), fylkesdata)), "ActionNotSupported")
     }
 
     @Test
-    fun `gårdsnummer kan flyttes`() {
+    fun `gårdsnummer kan flyttes og slås sammen`() {
         assertThat(errors(ReformOp.Move(serie(34, 40), serie(35, 60)))).isEmpty()
+        assertThat(errors(ReformOp.RetireTo(serie(34, 40), serie(35, 60)))).isEmpty()
     }
 
     @Test
-    fun `vegadresse, krets og grunneiendom kan bare flyttes`() {
+    fun `vegadresse kan flyttes og slås sammen`() {
         assertThat(errors(ReformOp.Move(vegadresse(100, 1), vegadresse(200, 2)))).isEmpty()
-        assertThat(errors(ReformOp.Move(grunneiendom(34, 40, 1), grunneiendom(34, 40, 9)))).isEmpty()
+        assertThat(errors(ReformOp.RetireTo(vegadresse(100, 1), vegadresse(100, 2)))).isEmpty()
         assertRule(errors(ReformOp.Create(vegadresse(200, 2), fylkesdata)), "ActionNotSupported")
-        assertRule(errors(ReformOp.Retire(grunneiendom(34, 40, 1))), "ActionNotSupported")
     }
 
     @Test
-    fun `teig flyttes parvis for bnr 0 og 1`() {
-        assertThat(
-            errors(ReformOp.Move(teig(34, 0, 1), teig(35, 0, 2)), ReformOp.Move(teig(34, 1, 1), teig(35, 1, 2))),
-        ).isEmpty()
-        assertRule(errors(ReformOp.Move(teig(34, 0, 1), teig(35, 0, 2))), "ParcelNotPaired")
-        assertRule(
-            errors(ReformOp.Move(teig(34, 0, 1), teig(35, 1, 2)), ReformOp.Move(teig(34, 1, 1), teig(35, 0, 2))),
-            "ParcelNotPaired",
-        )
+    fun `grunneiendom kan bare flyttes`() {
+        assertThat(errors(ReformOp.Move(grunneiendom(34, 40, 1), grunneiendom(34, 40, 9)))).isEmpty()
+        assertRule(errors(ReformOp.Retire(grunneiendom(34, 40, 1))), "ActionNotSupported")
+        assertRule(errors(ReformOp.RetireTo(grunneiendom(34, 40, 1), grunneiendom(34, 40, 9))), "ActionNotSupported")
+    }
+
+    @Test
+    fun `teig kan flyttes for ett bruksnummer alene`() {
+        assertThat(errors(ReformOp.Move(teig(34, 0, 1), teig(35, 0, 2)))).isEmpty()
     }
 
     @Test
