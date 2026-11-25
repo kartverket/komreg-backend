@@ -136,7 +136,7 @@ internal val v1Capabilities: Map<String, SinkCapabilities> = mapOf(
         actions = setOf(DomainAction.CREATE, DomainAction.DERIVE, DomainAction.RETIRE_TO, DomainAction.RETIRE),
         retire = SuccessorPolicy.FORBIDDEN,
         hints = mapOf(
-            DomainAction.MOVE to "Fylke kan ikke flyttes. Bruk `merge` med `into.new` for renummerering.",
+            DomainAction.MOVE to "Fylke kan ikke flyttes. Gi nytt nummer med `merge` og `create` med `derivedFrom`.",
         ),
         defaultHint = "Bruk `merge` eller `split`.",
         checks = listOf(payloadIs<Fylkesdata>("Fylke", "Fylkesdata")),
@@ -146,7 +146,7 @@ internal val v1Capabilities: Map<String, SinkCapabilities> = mapOf(
         actions = setOf(DomainAction.CREATE, DomainAction.DERIVE, DomainAction.RETIRE_TO, DomainAction.RETIRE),
         retire = SuccessorPolicy.REQUIRED,
         hints = mapOf(
-            DomainAction.MOVE to "Kommune kan ikke flyttes. Bruk `merge` med `into.new` for renummerering.",
+            DomainAction.MOVE to "Kommune kan ikke flyttes. Gi nytt nummer med `merge` og `create` med `derivedFrom`.",
         ),
         defaultHint = "Bruk `merge` eller `split`.",
         checks = listOf(
@@ -159,13 +159,14 @@ internal val v1Capabilities: Map<String, SinkCapabilities> = mapOf(
         label = "Veg",
         actions = setOf(DomainAction.DERIVE, DomainAction.MOVE),
         hints = mapOf(
-            DomainAction.CREATE to "Veger kan ikke opprettes. Flytt en eksisterende veg (`move`), " +
-                "eller del den med `split` der én av delene har `role: identity`.",
-            DomainAction.RETIRE_TO to "Veger kan ikke avvikles. Bruk `split` der én av delene har `role: identity`.",
-            DomainAction.RETIRE to "Veger kan ikke avvikles, det sletter vegen. " +
-                "Bruk `split` der én av delene har `role: identity`.",
+            DomainAction.CREATE to "Veger kan ikke opprettes uten kilde. Flytt en eksisterende veg (`move`), " +
+                "eller avled en ny fra den med `create` og `derivedFrom`.",
+            DomainAction.RETIRE_TO to "Veger kan ikke avvikles. Flytt vegen (`move`), og avled eventuelle " +
+                "nye deler med `create` og `derivedFrom`.",
+            DomainAction.RETIRE to "Veger kan ikke avvikles, det sletter vegen. Flytt vegen (`move`), og avled " +
+                "eventuelle nye deler med `create` og `derivedFrom`.",
         ),
-        defaultHint = "Bruk `move`, eller `split` der én av delene har `role: identity`.",
+        defaultHint = "Bruk `move`, eller `create` med `derivedFrom`.",
         checks = listOf(deriveNotFromRetired, targetsInOneCounty),
     ),
     V1Kinds.ADDRESS_NUMBER to onlyMove("Vegadresse"),
@@ -175,7 +176,7 @@ internal val v1Capabilities: Map<String, SinkCapabilities> = mapOf(
         label = "Gårdsnummer",
         actions = setOf(DomainAction.MOVE, DomainAction.RETIRE),
         retire = SuccessorPolicy.FORBIDDEN,
-        defaultHint = "Flytt gårdsnummeret (`move`), eller la det utgå (`split` med tom `into`) " +
+        defaultHint = "Flytt gårdsnummeret (`move`), eller la det utgå (`split` uten `successor`) " +
             "når bruksnumrene under flyttes enkeltvis med `then`.",
         checks = listOf(seriesRetireNeedsTitleMoves),
     ),

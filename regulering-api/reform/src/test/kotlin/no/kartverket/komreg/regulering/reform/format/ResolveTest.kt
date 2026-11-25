@@ -74,9 +74,10 @@ class ResolveTest {
     }
 
     @Test
-    fun `origins point to the node, source or part, and identical duplicates are merged`() {
+    fun `origins point to the node or source, and identical duplicates are merged`() {
         val resolved = ok(
-            """{ "op": "merge", "kind": "county", "from": ["30", "31"], "into": { "new": ["33"], "payload": { "navn": "B" } } }""",
+            """{ "op": "merge", "kind": "county", "from": ["30", "31"], "into": ["33"] }""",
+            """{ "op": "create", "kind": "county", "key": "33", "payload": { "navn": "B" } }""",
             """{ "op": "move", "kind": "addressCode", "key": ["46", "01", 1], "to": ["46", "02", 1] }""",
             """{ "op": "move", "kind": "addressCode", "key": ["46", "01", 1], "to": ["46", "02", 1] }""",
         )
@@ -92,73 +93,50 @@ class ResolveTest {
             mapOf(
                 ReformOp.RetireTo(fylke(30), fylke(33)) to listOf("$.operasjoner[0].from[0]"),
                 ReformOp.RetireTo(fylke(31), fylke(33)) to listOf("$.operasjoner[0].from[1]"),
-                ReformOp.Create(fylke(33), Fylkesdata("B")) to listOf("$.operasjoner[0].into"),
-                move to listOf("$.operasjoner[1]", "$.operasjoner[2]"),
+                ReformOp.Create(fylke(33), Fylkesdata("B")) to listOf("$.operasjoner[1]"),
+                move to listOf("$.operasjoner[2]", "$.operasjoner[3]"),
             ),
         )
     }
 
     @Test
-    fun `split with an existing successor retires the source to it and derives the new parts`() {
+    fun `split retires the source, with or without a successor`() {
         val resolved = ok(
-            """{ "op": "split", "kind": "municipality", "key": ["50", "05"], "into": [
-                 { "existing": ["50", "01"], "role": "successor" }, { "new": ["50", "10"] } ] }""",
+            """{ "op": "split", "kind": "municipality", "key": ["50", "05"], "successor": ["50", "01"] }""",
+            """{ "op": "create", "kind": "municipality", "key": ["50", "10"], "derivedFrom": ["50", "05"] }""",
+            """{ "op": "split", "kind": "county", "key": "30" }""",
         )
 
         assertThat(resolved.ops).containsExactly(
             ReformOp.Retire(kommune(50, 5), successor = kommune(50, 1)),
             ReformOp.Derive(kommune(50, 10), from = kommune(50, 5)),
+            ReformOp.Retire(fylke(30)),
         )
-        assertThat(resolved.origins[ReformOp.Derive(kommune(50, 10), from = kommune(50, 5))]!!.map { it.value })
-            .containsExactly("$.operasjoner[0].into[1]")
     }
 
     @Test
-    fun `then under a part is KEEP for existing and TARGET for new`() {
+    fun `then under split is relative to the source`() {
         val resolved = ok(
-            """{ "op": "split", "kind": "county", "key": "30", "into": [
-                 { "existing": ["31"], "role": "successor", "then": [ { "op": "adjust", "kind": "municipality", "key": "01" } ] },
-                 { "new": ["32"], "then": [ { "op": "create", "kind": "municipality", "key": "01", "payload": {
-                     "navn": "K", "koordinatsystem": "UTM32", "senterpunkt": { "x": 1.0, "y": 2.0 }, "kommunevapen": "iVBORw0KGgo=" } } ] } ] }""",
-        )
-        assertThat(resolved.ops.filterIsInstance<ReformOp.Create>().map { it.target }).containsExactly(kommune(32, 1))
-
-        val errors = errors(
-            """{ "op": "split", "kind": "municipality", "key": ["50", "05"], "into": [
-                 { "existing": ["50", "01"], "role": "successor" },
-                 { "new": ["50", "10"], "then": [ { "op": "move", "kind": "addressCode", "key": 1, "to": ["50", "10", 1] },
-                                                   { "op": "adjust", "kind": "addressCode", "key": 2 } ] } ] }""",
-        )
-        assertThat(errors.filter { it.code == "OpNotAllowedInContext" }.map { it.path.value }).containsExactly(
-            "$.operasjoner[0].into[1].then[0]",
-            "$.operasjoner[0].into[1].then[1]",
-        )
-    }
-
-    @Test
-    fun `KeptAndConsumed when an existing part is a source elsewhere`() {
-        val errors = errors(
-            """{ "op": "split", "kind": "municipality", "key": ["50", "05"], "into": [
-                 { "existing": ["50", "01"], "role": "successor" }, { "new": ["50", "10"] } ] }""",
-            """{ "op": "merge", "kind": "municipality", "from": [["50", "01"]], "into": { "existing": ["50", "02"] } }""",
-        )
-
-        assertThat(errors).containsExactly(
-            FormatErr.KeptAndConsumed(JsonPath("$.operasjoner[0].into[0].existing"), "[county=50/municipality=01]", JsonPath("$.operasjoner[1].from[0]")),
-        )
-    }
-
-    @Test
-    fun `split with identity moves the source and derives the other parts`() {
-        val resolved = ok(
-            """{ "op": "split", "kind": "municipality", "key": ["46", "05"], "into": [
-                 { "new": ["46", "10"], "role": "identity" }, { "new": ["46", "11"] } ] }""",
+            """{ "op": "split", "kind": "municipality", "key": ["46", "05"], "successor": ["46", "10"], "then": [
+                 { "op": "move", "kind": "addressCode", "key": 1300, "to": ["46", "10", 1300] } ] }""",
         )
 
         assertThat(resolved.ops).containsExactly(
-            ReformOp.Move(kommune(46, 5), kommune(46, 10)),
-            ReformOp.Derive(kommune(46, 11), from = kommune(46, 5)),
+            ReformOp.Retire(kommune(46, 5), successor = kommune(46, 10)),
+            ReformOp.Move(veg(46, 5, 1300), veg(46, 10, 1300)),
         )
+    }
+
+    @Test
+    fun `merge into and split successor are targets, not kept keys`() {
+        val resolved = ok(
+            """{ "op": "split", "kind": "municipality", "key": ["50", "05"], "successor": ["50", "01"] }""",
+            """{ "op": "merge", "kind": "municipality", "from": [["50", "01"]], "into": ["50", "02"] }""",
+            """{ "op": "merge", "kind": "municipality", "from": [["50", "02"]], "into": ["50", "03"] }""",
+        )
+
+        assertThat(ReformClaims.validate(resolved.ops).leftOrNull()!!.map { it::class.simpleName }.distinct())
+            .containsExactly("SourceIsTarget")
     }
 
     @Test
@@ -167,8 +145,8 @@ class ResolveTest {
             """{ "op": "merge", "kind": "municipality",
                  "from": [ { "key": ["50", "01"], "then": [
                    { "op": "move", "kind": "titleNumber", "key": [12, 3], "to": ["50", "55", 40, 1] },
-                   { "op": "split", "kind": "landNumber", "key": 12, "into": [] } ] } ],
-                 "into": { "existing": ["50", "55"] } }""",
+                   { "op": "split", "kind": "landNumber", "key": 12 } ] } ],
+                 "into": ["50", "55"] }""",
         )
     }
 
@@ -176,7 +154,7 @@ class ResolveTest {
     fun `the same path pivot on the root keeps the municipality`() {
         val errors = errors(
             """{ "op": "move", "kind": "titleNumber", "key": ["50", "01", 12, 3], "to": ["50", "55", 40, 1] }""",
-            """{ "op": "merge", "kind": "municipality", "from": [["50", "01"]], "into": { "existing": ["50", "55"] } }""",
+            """{ "op": "merge", "kind": "municipality", "from": [["50", "01"]], "into": ["50", "55"] }""",
         )
 
         assertThat(errors).containsExactly(
@@ -185,20 +163,14 @@ class ResolveTest {
     }
 
     @Test
-    fun `KeptAndConsumed for adjust and merge into existing`() {
+    fun `KeptAndConsumed for adjust`() {
         val errors = errors(
             """{ "op": "adjust", "kind": "municipality", "key": ["46", "01"] }""",
-            """{ "op": "merge", "kind": "municipality", "from": [["46", "02"]], "into": { "existing": ["46", "03"] } }""",
-            """{ "op": "merge", "kind": "municipality", "from": [["46", "01"], ["46", "03"]], "into": { "existing": ["46", "04"] } }""",
+            """{ "op": "merge", "kind": "municipality", "from": [["46", "01"], ["46", "03"]], "into": ["46", "04"] }""",
         )
 
-        assertThat(errors.codes()).containsExactlyInAnyOrder(
-            "KeptAndConsumed" to "$.operasjoner[0].key[1]",
-            "KeptAndConsumed" to "$.operasjoner[1].into.existing",
-        )
-        assertThat(errors.map { (it as FormatErr.KeptAndConsumed).sourcePath.value }).containsExactlyInAnyOrder(
-            "$.operasjoner[2].from[0]",
-            "$.operasjoner[2].from[1]",
+        assertThat(errors).containsExactly(
+            FormatErr.KeptAndConsumed(JsonPath("$.operasjoner[0].key[1]"), "[county=46/municipality=01]", JsonPath("$.operasjoner[1].from[0]")),
         )
     }
 
@@ -216,15 +188,20 @@ class ResolveTest {
                  { "op": "create", "kind": "landNumber", "key": 1, "payload": {} } ] }""",
             """{ "op": "create", "kind": "county", "key": "60", "payload": { "navn": "N" }, "then": [
                  { "op": "move", "kind": "municipality", "key": "01", "to": ["60", "02"] } ] }""",
-            """{ "op": "merge", "kind": "county", "from": ["30"], "into": { "new": ["33"], "then": [
-                 { "op": "split", "kind": "municipality", "key": "01", "into": [] } ] } }""",
+            """{ "op": "create", "kind": "county", "key": "33", "payload": { "navn": "N" }, "then": [
+                 { "op": "split", "kind": "municipality", "key": "01" } ] }""",
+            """{ "op": "split", "kind": "municipality", "key": ["46", "05"], "successor": ["46", "10"], "then": [
+                 { "op": "create", "kind": "addressCode", "key": 1, "derivedFrom": ["46", "05", 2] },
+                 { "op": "adjust", "kind": "addressCode", "key": 2 } ] }""",
         )
 
         assertThat(errors.filter { it.code == "OpNotAllowedInContext" }.map { it.path.value }).containsExactly(
             "$.operasjoner[0].then[0]",
             "$.operasjoner[0].then[1]",
             "$.operasjoner[1].then[0]",
-            "$.operasjoner[2].into.then[0]",
+            "$.operasjoner[2].then[0]",
+            "$.operasjoner[3].then[0]",
+            "$.operasjoner[3].then[1]",
         )
     }
 
@@ -235,7 +212,7 @@ class ResolveTest {
             """{ "op": "adjust", "kind": "municipality", "key": ["46", "01"], "then": [
                  { "op": "move", "kind": "addressCode", "key": ["46", "01", 1], "to": ["46", "02", 1] },
                  { "op": "move", "kind": "county", "key": "47", "to": ["48"] } ] }""",
-            """{ "op": "merge", "kind": "municipality", "from": [[]], "into": { "existing": ["46", "02"] } }""",
+            """{ "op": "merge", "kind": "municipality", "from": [[]], "into": ["46", "02"] }""",
         )
 
         assertThat(errors).containsExactly(
@@ -276,49 +253,13 @@ class ResolveTest {
     }
 
     @Test
-    fun MultipleRoles() {
-        assertThat(
-            errors(
-                """{ "op": "split", "kind": "addressCode", "key": ["46", "01", 1], "into": [
-                     { "new": ["46", "02", 1], "role": "identity" }, { "new": ["46", "03", 1], "role": "successor" } ] }""",
-            ).codes(),
-        ).containsExactly("MultipleRoles" to "$.operasjoner[0].into[1].role")
-    }
-
-    @Test
-    fun `MultipleRoles counts an existing part and a new part with a role`() {
-        assertThat(
-            errors(
-                """{ "op": "split", "kind": "municipality", "key": ["46", "05"], "into": [
-                     { "existing": ["46", "01"], "role": "successor" }, { "new": ["46", "10"], "role": "identity" } ] }""",
-            ).codes(),
-        ).containsExactly("MultipleRoles" to "$.operasjoner[0].into[1].role")
-    }
-
-    @Test
-    fun PayloadOnIdentity() {
-        assertThat(
-            errors(
-                """{ "op": "split", "kind": "county", "key": "30", "into": [
-                     { "new": ["31"], "role": "identity", "payload": { "navn": "X" } }, { "new": ["32"] } ] }""",
-            ).codes(),
-        ).containsExactly("PayloadOnIdentity" to "$.operasjoner[0].into[0].payload")
-    }
-
-    @Test
     fun EmptyMerge() {
-        assertThat(errors("""{ "op": "merge", "kind": "county", "from": [], "into": { "existing": ["33"] } }""").codes())
+        assertThat(errors("""{ "op": "merge", "kind": "county", "from": [], "into": ["33"] }""").codes())
             .containsExactly("EmptyMerge" to "$.operasjoner[0].from")
     }
 
     @Test
     fun PayloadRequired() {
-        assertThat(errors("""{ "op": "merge", "kind": "county", "from": ["30", "31"], "into": { "new": ["33"] } }""").codes())
-            .containsExactly("PayloadRequired" to "$.operasjoner[0].into")
-    }
-
-    @Test
-    fun `PayloadRequired for create without payload and derivedFrom`() {
         assertThat(errors("""{ "op": "create", "kind": "municipality", "key": ["46", "10"] }""").codes())
             .containsExactly("PayloadRequired" to "$.operasjoner[0]")
     }
@@ -356,7 +297,7 @@ class ResolveTest {
     @Test
     fun `derivedFrom from a source used by split gives no KeptAndConsumed`() {
         val resolved = ok(
-            """{ "op": "split", "kind": "municipality", "key": ["46", "05"], "into": [ { "existing": ["50", "10"], "role": "successor" } ] }""",
+            """{ "op": "split", "kind": "municipality", "key": ["46", "05"], "successor": ["50", "10"] }""",
             """{ "op": "create", "kind": "municipality", "key": ["46", "10"], "derivedFrom": ["46", "05"] }""",
         )
 
@@ -364,24 +305,6 @@ class ResolveTest {
             ReformOp.Retire(kommune(46, 5), successor = kommune(50, 10)),
             ReformOp.Derive(kommune(46, 10), from = kommune(46, 5)),
         )
-    }
-
-    @Test
-    fun `short form and create with derivedFrom give the same ops`() {
-        val payload = """{ "navn": "Ny", "koordinatsystem": "UTM32", "senterpunkt": { "x": 1.0, "y": 2.0 },
-            "godkjenteGardsnumre": [ { "fra": 1, "til": 3 } ], "kommunevapen": "iVBORw0KGgo=" }"""
-        val short = ok(
-            """{ "op": "split", "kind": "municipality", "key": ["46", "05"], "into": [
-                 { "new": ["46", "06"], "role": "successor", "payload": $payload }, { "new": ["46", "10"], "payload": $payload } ] }""",
-        )
-        val canonical = ok(
-            """{ "op": "split", "kind": "municipality", "key": ["46", "05"], "into": [
-                 { "existing": ["46", "06"], "role": "successor" } ] }""",
-            """{ "op": "create", "kind": "municipality", "key": ["46", "06"], "derivedFrom": ["46", "05"], "payload": $payload }""",
-            """{ "op": "create", "kind": "municipality", "key": ["46", "10"], "derivedFrom": ["46", "05"], "payload": $payload }""",
-        )
-
-        assertThat(canonical.ops).containsExactlyInAnyOrder(*short.ops.toTypedArray())
     }
 
     @Test
@@ -416,7 +339,7 @@ class ResolveTest {
             .containsExactly("DeriveFromTarget")
 
         val conflict = ok(
-            """{ "op": "split", "kind": "municipality", "key": ["46", "05"], "into": [ { "new": ["46", "10"] } ] }""",
+            """{ "op": "create", "kind": "municipality", "key": ["46", "10"], "derivedFrom": ["46", "05"] }""",
             """{ "op": "create", "kind": "municipality", "key": ["46", "10"], "derivedFrom": ["46", "06"] }""",
         )
         assertThat(ReformClaims.validate(conflict.ops).leftOrNull()!!.map { it::class.simpleName })
@@ -433,13 +356,13 @@ class ResolveTest {
     @Test
     fun InvalidPayload() {
         val errors = errors(
-            """{ "op": "merge", "kind": "county", "from": ["30", "31"], "into": { "new": ["33"], "payload": { "name": "B" } } }""",
+            """{ "op": "create", "kind": "county", "key": "33", "payload": { "name": "B" } }""",
             """{ "op": "create", "kind": "municipality", "key": ["46", "99"],
                  "payload": { "navn": "K", "koordinatsystem": "UTM32", "senterpunkt": { "x": 1.0, "y": 2.0 }, "kommunevapen": "!" } }""",
         )
 
         assertThat(errors.codes()).containsExactly(
-            "InvalidPayload" to "$.operasjoner[0].into.payload",
+            "InvalidPayload" to "$.operasjoner[0].payload",
             "InvalidPayload" to "$.operasjoner[1].payload",
         )
     }
@@ -448,20 +371,19 @@ class ResolveTest {
     fun `all errors are collected in one response`() {
         val errors = errors(
             """{ "op": "move", "kind": "road", "key": 1, "to": [1] }""",
-            """{ "op": "merge", "kind": "county", "from": [], "into": { "new": ["3"], "payload": { "navn": 1 } } }""",
-            """{ "op": "split", "kind": "addressCode", "key": ["46", "01", 0], "into": [
-                 { "new": ["46", "02"] }, { "new": ["46", "03", 1], "role": "identity", "payload": {} } ],
+            """{ "op": "merge", "kind": "county", "from": [], "into": ["3"] }""",
+            """{ "op": "create", "kind": "county", "key": "33", "payload": { "navn": 1 } }""",
+            """{ "op": "split", "kind": "addressCode", "key": ["46", "01", 0], "successor": ["46", "02"],
                  "then": [ { "op": "create", "kind": "addressNumber", "key": 1, "payload": {} } ] }""",
         )
 
         assertThat(errors.codes()).containsExactlyInAnyOrder(
             "UnknownKind" to "$.operasjoner[0].kind",
             "EmptyMerge" to "$.operasjoner[1].from",
-            "InvalidPayload" to "$.operasjoner[1].into.payload",
-            "InvalidSegment" to "$.operasjoner[1].into.new[0]",
-            "PayloadOnIdentity" to "$.operasjoner[2].into[1].payload",
-            "InvalidSegment" to "$.operasjoner[2].key[2]",
-            "TargetLengthMismatch" to "$.operasjoner[2].into[0].new",
+            "InvalidSegment" to "$.operasjoner[1].into[0]",
+            "InvalidPayload" to "$.operasjoner[2].payload",
+            "InvalidSegment" to "$.operasjoner[3].key[2]",
+            "TargetLengthMismatch" to "$.operasjoner[3].successor",
         )
     }
 }

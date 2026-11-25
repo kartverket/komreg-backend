@@ -93,28 +93,31 @@ class ResolveRoundTripTest {
 
     @Test
     fun `fylke en til en`() = assertRoundTrip(
-        """{ "op": "merge", "kind": "county", "from": ["30"], "into": { "new": ["31"], "payload": ${fylkePayload(31)} } }""",
+        """{ "op": "merge", "kind": "county", "from": ["30"], "into": ["31"] },
+           { "op": "create", "kind": "county", "key": "31", "derivedFrom": ["30"], "payload": ${fylkePayload(31)} }""",
         Fylkeendring(FraEnTilMange(fnr(30), listOf(fnr(31)))),
     )
 
     @Test
     fun fylkessammenslaaing() = assertRoundTrip(
-        """{ "op": "merge", "kind": "county", "from": ["30", "31"], "into": { "new": ["33"], "payload": ${fylkePayload(33)} } }""",
+        """{ "op": "merge", "kind": "county", "from": ["30", "31"], "into": ["33"] },
+           { "op": "create", "kind": "county", "key": "33", "payload": ${fylkePayload(33)} }""",
         Fylkeendring(FraEnTilMange(fnr(30), listOf(fnr(33)))),
         Fylkeendring(FraEnTilMange(fnr(31), listOf(fnr(33))), sammenslaaing = true),
     )
 
     @Test
     fun fylkesdeling() = assertRoundTrip(
-        """{ "op": "split", "kind": "county", "key": "30",
-             "into": [ { "new": ["31"], "payload": ${fylkePayload(31)} }, { "new": ["32"], "payload": ${fylkePayload(32)} } ] }""",
+        """{ "op": "split", "kind": "county", "key": "30" },
+           { "op": "create", "kind": "county", "key": "31", "derivedFrom": ["30"], "payload": ${fylkePayload(31)} },
+           { "op": "create", "kind": "county", "key": "32", "derivedFrom": ["30"], "payload": ${fylkePayload(32)} }""",
         Fylkeendring(FraEnTilMange(fnr(30), listOf(fnr(31), fnr(32)))),
     )
 
     @Test
     fun `kommunesammenslaaing til ny kommune`() = assertRoundTrip(
-        """{ "op": "merge", "kind": "municipality", "from": [["12", "34"], ["12", "40"]],
-             "into": { "new": ["12", "50"], "payload": ${kommunePayload(12, 50)} } }""",
+        """{ "op": "merge", "kind": "municipality", "from": [["12", "34"], ["12", "40"]], "into": ["12", "50"] },
+           { "op": "create", "kind": "municipality", "key": ["12", "50"], "payload": ${kommunePayload(12, 50)} }""",
         Kommuneendring(FraEnTilMange(fnr(12), listOf(fnr(12))), FraEnTilMange(klnr(34), listOf(klnr(50)))),
         Kommuneendring(
             FraEnTilMange(fnr(12), listOf(fnr(12))),
@@ -125,7 +128,7 @@ class ResolveRoundTripTest {
 
     @Test
     fun `kommunesammenslaaing til eksisterende kommune`() = assertRoundTrip(
-        """{ "op": "merge", "kind": "municipality", "from": [["12", "34"], ["12", "40"]], "into": { "existing": ["12", "50"] } }""",
+        """{ "op": "merge", "kind": "municipality", "from": [["12", "34"], ["12", "40"]], "into": ["12", "50"] }""",
         Kommuneendring(
             FraEnTilMange(fnr(12), listOf(fnr(12))),
             FraEnTilMange(klnr(34), listOf(klnr(50))),
@@ -140,16 +143,16 @@ class ResolveRoundTripTest {
 
     @Test
     fun kommunedeling() = assertRoundTrip(
-        """{ "op": "split", "kind": "municipality", "key": ["12", "34"],
-             "into": [ { "new": ["12", "35"], "role": "successor", "payload": ${kommunePayload(12, 35)} },
-                       { "new": ["12", "36"], "payload": ${kommunePayload(12, 36)} } ] }""",
+        """{ "op": "split", "kind": "municipality", "key": ["12", "34"], "successor": ["12", "35"] },
+           { "op": "create", "kind": "municipality", "key": ["12", "35"], "derivedFrom": ["12", "34"], "payload": ${kommunePayload(12, 35)} },
+           { "op": "create", "kind": "municipality", "key": ["12", "36"], "derivedFrom": ["12", "34"], "payload": ${kommunePayload(12, 36)} }""",
         Kommuneendring(FraEnTilMange(fnr(12), listOf(fnr(12))), FraEnTilMange(klnr(34), listOf(klnr(35), klnr(36)))),
     )
 
     @Test
     fun `renummerering av kommune`() = assertRoundTrip(
-        """{ "op": "merge", "kind": "municipality", "from": [["12", "34"]],
-             "into": { "new": ["12", "50"], "payload": ${kommunePayload(12, 50)} } }""",
+        """{ "op": "merge", "kind": "municipality", "from": [["12", "34"]], "into": ["12", "50"] },
+           { "op": "create", "kind": "municipality", "key": ["12", "50"], "derivedFrom": ["12", "34"], "payload": ${kommunePayload(12, 50)} }""",
         Kommuneendring(FraEnTilMange(fnr(12), listOf(fnr(12))), FraEnTilMange(klnr(34), listOf(klnr(50)))),
     )
 
@@ -165,8 +168,8 @@ class ResolveRoundTripTest {
 
     @Test
     fun vegdeling() = assertRoundTrip(
-        """{ "op": "split", "kind": "addressCode", "key": ["12", "34", 100],
-             "into": [ { "new": ["12", "35", 200], "role": "identity" }, { "new": ["12", "36", 300] } ] }""",
+        """{ "op": "move", "kind": "addressCode", "key": ["12", "34", 100], "to": ["12", "35", 200] },
+           { "op": "create", "kind": "addressCode", "key": ["12", "36", 300], "derivedFrom": ["12", "34", 100] }""",
         Vegendring(
             FraEnTilMange(fnr(12), listOf(fnr(12))),
             FraEnTilMange(klnr(34), listOf(klnr(35), klnr(36))),
@@ -219,7 +222,7 @@ class ResolveRoundTripTest {
 
     @Test
     fun `serie som utgaar`() = assertRoundTrip(
-        """{ "op": "split", "kind": "landNumber", "key": ["12", "34", 40], "into": [],
+        """{ "op": "split", "kind": "landNumber", "key": ["12", "34", 40],
              "then": [ { "op": "move", "kind": "titleNumber", "key": 1, "to": ["12", "35", 60, 1] },
                        { "op": "move", "kind": "titleNumber", "key": 2, "to": ["12", "35", 70, 2] } ] }""",
         Matrikkelenhetendring(

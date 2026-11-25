@@ -4,13 +4,13 @@ import kotlinx.serialization.json.JsonPrimitive
 
 /** Konteksten en node står i. Avgjør hvilke op-er som er lov, og om mellomledd i en sti-pivot gir `Keeps`. */
 enum class Mode(val description: String, val allowedOps: Set<String>) {
-    /** Roten, `adjust.then`, `merge.into.existing.then` og `split.into[].then` med `existing`. Nøkkelen står i ro. */
+    /** Roten og `adjust.then`. Nøkkelen står i ro. */
     KEEP("der nøkkelen står i ro", setOf(OpNames.ADJUST, OpNames.MOVE, OpNames.MERGE, OpNames.SPLIT, OpNames.CREATE)),
 
     /** `move.then`, `split.then` og `merge.from[].then`. */
     SOURCE("under en kilde", setOf(OpNames.MOVE, OpNames.SPLIT, OpNames.MERGE)),
 
-    /** `create.then`, `merge.into.new.then` og `split.into[].then` med `new`. */
+    /** `create.then`. */
     TARGET("under en ny nøkkel", setOf(OpNames.CREATE)),
 }
 
@@ -95,28 +95,16 @@ sealed interface FormatErr {
         override val message get() = "Et mål for $kind skal ha $expected segmenter fra roten, men har $actual"
     }
 
-    /** Mer enn én part i en `split` har `role`. */
-    data class MultipleRoles(override val path: JsonPath) : FormatErr {
-        override val code get() = "MultipleRoles"
-        override val message get() = "Høyst én part i en split kan ha role"
-    }
-
-    /** En part med `role: identity` har payload. Den arver kilden og skal ikke ha ny data. */
-    data class PayloadOnIdentity(override val path: JsonPath) : FormatErr {
-        override val code get() = "PayloadOnIdentity"
-        override val message get() = "En part med role identity arver kilden og kan ikke ha payload"
-    }
-
     /** En `merge` uten kilder. */
     data class EmptyMerge(override val path: JsonPath) : FormatErr {
         override val code get() = "EmptyMerge"
         override val message get() = "En merge må ha minst én kilde i from"
     }
 
-    /** `merge.into.new` med to eller flere kilder, eller `create` uten `derivedFrom`, mangler payload. */
+    /** `create` uten `derivedFrom` mangler payload. */
     data class PayloadRequired(override val path: JsonPath) : FormatErr {
         override val code get() = "PayloadRequired"
-        override val message get() = "payload kreves ved sammenslåing av flere kilder til en ny nøkkel, og ved create uten derivedFrom"
+        override val message get() = "payload kreves ved create uten derivedFrom"
     }
 
     /** `kind` tar ikke payload. */
@@ -132,8 +120,8 @@ sealed interface FormatErr {
     }
 
     /**
-     * En nøkkel står i ro ([path]: `adjust.key`, mellomledd i en sti-pivot i KEEP-kontekst eller
-     * `merge.into.existing`), men er samtidig kilde i en annen node ([sourcePath]).
+     * En nøkkel står i ro ([path]: `adjust.key` eller mellomledd i en sti-pivot i KEEP-kontekst), men er samtidig
+     * kilde i en annen node ([sourcePath]).
      */
     data class KeptAndConsumed(override val path: JsonPath, val key: String, val sourcePath: JsonPath) : FormatErr {
         override val code get() = "KeptAndConsumed"

@@ -17,10 +17,12 @@ import org.junit.jupiter.api.Test
  * `ReformClaimsTransformerTestSupport.kt`. `LegacyTransformEntityTest` brukte `Reguleringsinput` og `mapInput`.
  * Her skrives de tilsvarende endringene som spec:
  *
- * - `Kommuneendring` 2/5 -> 3/6 er `merge` med én kilde og `into.new` (A5).
- * - `Kommuneendring` 5/5 -> 5/7 og 5/8 er `split`, der første del er etterfølger (A6).
- * - `Vegendring` 2/5/2500 -> 3/6/2500 og 3/7/2500 er et `split` av vegen med `role: identity` (A6). Det ligger
- *   under kilden 0205 i `merge.from`, siden vegen er en etterkommer av kommunen som slås sammen.
+ * - `Kommuneendring` 2/5 -> 3/6 er `merge` med én kilde, og `create` med `derivedFrom` for 0306 (A5).
+ * - `Kommuneendring` 5/5 -> 5/7 og 5/8 er `split` med første del som `successor`, og `create` med
+ *   `derivedFrom` for hver del (A6).
+ * - `Vegendring` 2/5/2500 -> 3/6/2500 og 3/7/2500 er en `move` av vegen til 3/6/2500, og `create` med
+ *   `derivedFrom` for 3/7/2500 (A6). `move` ligger under kilden 0205 i `merge.from`, siden vegen er en
+ *   etterkommer av kommunen som slås sammen. `create` ligger på rotnivå, med full nøkkel.
  *
  * Kommunedata for nye kommuner er [forventetKommunedata], som tilsvarer `Kommune.tilKommunedata` (A3).
  */
@@ -28,12 +30,16 @@ class ReformClaimsTransformerEntityTest {
     private val identTransformer = transformerFromSpec(
         """{ "op": "merge", "kind": "municipality",
              "from": [ { "key": ["02", "05"], "then": [
-               { "op": "split", "kind": "addressCode", "key": 2500,
-                 "into": [ { "new": ["03", "06", 2500], "role": "identity" }, { "new": ["03", "07", 2500] } ] } ] } ],
-             "into": { "new": ["03", "06"], "payload": ${kommunePayload("Dummy")} } }""",
-        """{ "op": "split", "kind": "municipality", "key": ["05", "05"],
-             "into": [ { "new": ["05", "07"], "role": "successor", "payload": ${kommunePayload("Dummy")} },
-                       { "new": ["05", "08"], "payload": ${kommunePayload("Dummy")} } ] }""",
+               { "op": "move", "kind": "addressCode", "key": 2500, "to": ["03", "06", 2500] } ] } ],
+             "into": ["03", "06"] }""",
+        """{ "op": "create", "kind": "municipality", "key": ["03", "06"], "derivedFrom": ["02", "05"],
+             "payload": ${kommunePayload("Dummy")} }""",
+        """{ "op": "create", "kind": "addressCode", "key": ["03", "07", 2500], "derivedFrom": ["02", "05", 2500] }""",
+        """{ "op": "split", "kind": "municipality", "key": ["05", "05"], "successor": ["05", "07"] }""",
+        """{ "op": "create", "kind": "municipality", "key": ["05", "07"], "derivedFrom": ["05", "05"],
+             "payload": ${kommunePayload("Dummy")} }""",
+        """{ "op": "create", "kind": "municipality", "key": ["05", "08"], "derivedFrom": ["05", "05"],
+             "payload": ${kommunePayload("Dummy")} }""",
     )
 
     @Test

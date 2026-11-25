@@ -96,7 +96,7 @@ class DomainRulesTest {
         val errors = errors(ReformOp.Move(fylke(30), fylke(31)))
         assertRule(errors, "ActionNotSupported")
         assertThat(errors.single().hint).isEqualTo(
-            "Fylke kan ikke flyttes. Bruk `merge` med `into.new` for renummerering.",
+            "Fylke kan ikke flyttes. Gi nytt nummer med `merge` og `create` med `derivedFrom`.",
         )
     }
 
@@ -201,7 +201,7 @@ class DomainRulesTest {
         val errors = errors(ReformOp.Move(kommune(12, 34), kommune(12, 50)))
         assertRule(errors, "ActionNotSupported")
         assertThat(errors.single().hint).isEqualTo(
-            "Kommune kan ikke flyttes. Bruk `merge` med `into.new` for renummerering.",
+            "Kommune kan ikke flyttes. Gi nytt nummer med `merge` og `create` med `derivedFrom`.",
         )
     }
 

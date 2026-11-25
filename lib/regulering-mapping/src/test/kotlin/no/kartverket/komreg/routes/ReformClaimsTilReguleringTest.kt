@@ -284,7 +284,7 @@ class ReformClaimsTilReguleringTest : FunSpec({
                 listOf("Utskilling, der kilden fortsetter, kan ikke uttrykkes i DTO-en")
         }
 
-        test("kortform og create med derivedFrom gir samme DTO") {
+        test("renummerering med merge og create med derivedFrom gir DTO") {
             val kilde = kommuneIdent(12, 34)
             val mål = kommuneIdent(12, 99)
             val ops = listOf(
@@ -292,7 +292,7 @@ class ReformClaimsTilReguleringTest : FunSpec({
                 ReformOp.Derive(mål, from = kilde, payload = kommunedata().copy(navn = "NY")),
             )
 
-            // split.into.new og split.into.existing sammen med create.derivedFrom lowerer til de samme op-ene
+            // merge med én kilde og create med derivedFrom fra kilden
             ReformClaims.validate(ops).getOrNull()!!.regulering().shouldBeInstanceOf<Either.Right<Regulering>>()
         }
 

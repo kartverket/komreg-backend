@@ -29,7 +29,6 @@ beskriver formatet, valideringen og endepunktene.
 
 ```json
 {
-  "format": 1,
   "navn": "Reform 2027",
   "ikrafttredelse": "2027-01-01",
   "operasjoner": [ … ]
@@ -38,7 +37,6 @@ beskriver formatet, valideringen og endepunktene.
 
 | felt | type | betydning |
 |---|---|---|
-| `format` | tall | Versjonen av formatet. Valgfri, standard `1`. |
 | `navn` | streng | Navnet på reformen. |
 | `ikrafttredelse` | dato (`ÅÅÅÅ-MM-DD`) | Datoen reformen trer i kraft. Gjelder også som ikrafttredelsesdato for alle nye kommuner. |
 | `operasjoner` | liste | Nodene på rotnivå. |
@@ -81,8 +79,7 @@ Det finnes to slags nøkler.
 - en array, som er en sti av segmenter som slutter på `kind`: `"key": [12, 3]`. Første segment må være et
   barn av konteksten. På rotnivå starter stien derfor med fylket: `"key": ["46", "01", 1234]`.
 
-**Mål** (`to`, `derivedFrom`, `into.existing`, `into.new` og `existing` og `new` i delene av `split.into`) er
-alltid fulle arrays fra roten, uansett hvor i treet de står. Et mål har samme kind som pivoten i noden.
+**Mål** (`to`, `into`, `successor` og `derivedFrom`) er alltid fulle arrays fra roten, uansett hvor i treet de står. Et mål har samme kind som pivoten i noden.
 
 ```json
 { "op": "adjust", "kind": "municipality", "key": ["46", "01"], "then": [
@@ -101,9 +98,13 @@ Alle noder har `op` og `kind`. Barn ligger i `then`, og pivotene deres er relati
 |---|---|---|
 | `adjust` | `key`, `then`? | Ingen endring. Gir kontekst til barna. |
 | `move` | `key`, `to`, `then`? | Entiteten får ny nøkkel og beholder ID-en. |
-| `merge` | `from`, `into` | Kildene i `from` utgår og peker på målet i `into`. |
-| `split` | `key`, `into`, `then`? | Kilden deles i delene i `into`. |
+| `merge` | `from`, `into` | Kildene i `from` utgår og peker på målet i `into`. Det som ligger under kildene, følger med. |
+| `split` | `key`, `successor`?, `then`? | Kilden utgår. Det som ligger under kilden, følger ikke med. |
 | `create` | `key`, `derivedFrom`?, `payload`?, `then`? | Ny entitet. |
+
+Bare `create` oppretter noe. `merge` og `split` sier bare hva som skjer med kildene, og målene deres (`into` og
+`successor`) opprettes ikke av noden. Et mål kan finnes fra før, eller opprettes med `create` et annet sted i
+reformen.
 
 ### `adjust`
 
@@ -119,107 +120,98 @@ Alle noder har `op` og `kind`. Barn ligger i `then`, og pivotene deres er relati
 Veg 4601-1234 får nøkkelen 4602-1234 og beholder ID-en. Alt under vegen som ikke har en egen regel, følger
 med. Vegadresse 5 har en egen regel og flyttes til veg 1300 i stedet.
 
-Fylker og kommuner kan ikke flyttes. Bruk `merge` med `into.new` for å gi en kommune nytt nummer.
+Fylker og kommuner kan ikke flyttes. Bruk `merge` og `create` med `derivedFrom` for å gi en kommune nytt nummer
+(se [`merge`](#merge)).
 
 ### `merge`
 
 ```json
 { "op": "merge", "kind": "municipality",
   "from": [ ["46", "01"], { "key": ["46", "03"], "then": [ … ] } ],
-  "into": { "existing": ["46", "02"], "then": [ … ] } }
+  "into": ["46", "02"] }
 ```
 
 - Et element i `from` er en pivot, eller `{"key": pivot, "then": [...]}` når kilden har unntak (se
   [Unntak fra en kilde](#unntak-fra-en-kilde)).
-- `into` er enten `{"existing": mål, "then"?: [...]}` eller `{"new": mål, "payload"?: {...}, "then"?: [...]}`.
-- `then` under en kilde er relativ til kilden. `then` under `into` er relativ til målet.
+- `into` er målet. `then` under en kilde er relativ til kilden.
 
 Kildene utgår og peker på målet. Det som ligger under kildene, og som ikke har egen regel, følger med til målet.
+Over slås 4601 og 4603 inn i 4602, som finnes fra før og fortsetter.
 
-`existing` betyr at målet **ikke opprettes av denne noden**. Målet kan finnes fra før, eller opprettes et annet
-sted i reformen (se [`create` med `derivedFrom`](#create-med-derivedfrom)). Over slås 4601 og 4603 inn i 4602,
-som finnes fra før og fortsetter.
+Skal målet være nytt, opprettes det med `create`:
 
-`new` betyr at noden oppretter målet. Hva det betyr, avhenger av antall kilder:
-
-- **Én kilde** er en renummerering. Målet er en ny entitet med ny ID, avledet fra kilden. Slik får en kommune
-  nytt nummer:
+- **Renummerering** er `merge` med én kilde og `create` med `derivedFrom` lik kilden. Målet er en ny entitet med
+  ny ID, avledet fra kilden. Slik får en kommune nytt nummer:
 
   ```json
-  { "op": "merge", "kind": "municipality", "from": [ ["46", "01"] ],
-    "into": { "new": ["50", "01"], "payload": { … } } }
+  [ { "op": "merge", "kind": "municipality", "from": [ ["46", "01"] ], "into": ["50", "01"] },
+    { "op": "create", "kind": "municipality", "key": ["50", "01"], "derivedFrom": ["46", "01"], "payload": { … } } ]
   ```
 
-- **To eller flere kilder** gir et nytt mål uten én bestemt kilde. Da er `payload` påkrevd.
+- **Sammenslåing til ny** er `merge` med to eller flere kilder og `create` med `payload`:
+
+  ```json
+  [ { "op": "merge", "kind": "county", "from": ["30", "31"], "into": ["33"] },
+    { "op": "create", "kind": "county", "key": "33", "payload": { "navn": "Buskerud" } } ]
+  ```
 
 ### `split`
 
 ```json
-{ "op": "split", "kind": "municipality", "key": ["46", "05"],
-  "into": [ { "new": ["46", "10"], "role": "successor", "payload": { … } },
-            { "new": ["46", "11"], "payload": { … } } ],
-  "then": [ … ] }
+{ "op": "split", "kind": "municipality", "key": ["46", "05"], "successor": ["46", "10"], "then": [ … ] }
 ```
 
-Kommune 4605 deles i de nye kommunene 4610 og 4611. 4605 utgår og peker på 4610 som etterfølger. `then` er
-relativ til kilden og fordeler det som ligger under 4605 (se [Unntak fra en kilde](#unntak-fra-en-kilde)).
+Kommune 4605 utgår og peker på 4610 som etterfølger. `successor` er valgfri. Uten den utgår kilden uten
+etterfølger.
 
-En del i `into` er ny eller eksisterende, med samme betydning som i `merge.into`:
+Forskjellen fra `merge` er at det som ligger under kilden, **ikke** følger med. Hver del må ha en egen regel i
+`then`, som er relativ til kilden (se [Unntak fra en kilde](#unntak-fra-en-kilde)). Delene av en deling skrives
+med andre noder:
+
+- En ny del er en `create` med `derivedFrom` lik kilden.
+- En del som beholder kildens ID, er en `move` av kilden.
+
+**Kommunedeling:** 4605 deles i de nye kommunene 4610 og 4611, og peker på 4610 som etterfølger.
 
 ```json
-{ "new": mål, "payload"?: {…}, "role"?: "identity" | "successor", "then"?: […] }
-{ "existing": mål, "role": "successor", "then"?: […] }
+[ { "op": "split", "kind": "municipality", "key": ["46", "05"], "successor": ["46", "10"], "then": [
+    { "op": "move", "kind": "addressCode", "key": 1234, "to": ["46", "11", 1234] } ] },
+  { "op": "create", "kind": "municipality", "key": ["46", "10"], "derivedFrom": ["46", "05"], "payload": { … } },
+  { "op": "create", "kind": "municipality", "key": ["46", "11"], "derivedFrom": ["46", "05"], "payload": { … } } ]
 ```
 
-`role` avgjør hva som skjer med kilden. Høyst én del har `role`.
+Hva som gir mening, avhenger av kinden (se [Domeneregler](#domeneregler)):
 
-| del | `role` | delen | kilden |
-|---|---|---|---|
-| `new` | `identity` | er kilden, som flyttes hit og beholder ID-en | flyttes hit |
-| `new` | `successor` | ny, avledet fra kilden | utgår og peker på delen |
-| `existing` | `successor` (påkrevd) | opprettes ikke av noden | utgår og peker på delen |
-| `new` | ingen | ny, avledet fra kilden | bestemmes av delen med `role` |
-
-Har ingen del `role`, utgår kilden uten etterfølger. `"into": []` betyr at kilden utgår uten etterfølger og
-uten nye deler.
-
-`then` under en `new`-del er relativ til den nye nøkkelen og tar bare `create`. `then` under en `existing`-del
-står i ro og tar alle op-er (se [Kontekster](#kontekster)).
-
-En `existing`-del har ikke `payload`. En `identity`-del har heller ikke `payload`, fordi den er kilden selv.
-
-Hvilke roller som gir mening, avhenger av kinden (se [Domeneregler](#domeneregler)):
-
-- Kommuner har én peker til etterfølgeren, så en kommune som deles, må ha en del med `successor`.
-- Fylker har ingen slik peker, så et fylke som deles, har ingen del med `role`.
-- En veg som ikke får ny nøkkel, blir slettet. En veg deles derfor med `identity`:
+- Kommuner har én peker til etterfølgeren, så en kommune som deles, må ha `successor`.
+- Fylker har ingen slik peker, så et fylke som deles, har ikke `successor`.
+- En veg som ikke får ny nøkkel, blir slettet. En veg deles derfor med `move` og `create` med `derivedFrom`, ikke
+  med `split`:
 
   ```json
-  { "op": "split", "kind": "addressCode", "key": ["46", "05", 1300],
-    "into": [ { "new": ["46", "10", 1300], "role": "identity" }, { "new": ["46", "11", 1300] } ] }
+  [ { "op": "move", "kind": "addressCode", "key": ["46", "05", 1300], "to": ["46", "10", 1300] },
+    { "op": "create", "kind": "addressCode", "key": ["46", "11", 1300], "derivedFrom": ["46", "05", 1300] } ]
   ```
 
   Veg 1300 flyttes til 4610 og beholder ID-en. 4611 får en ny veg 1300 avledet fra den.
 
-- Et gårdsnummer utgår med `"into": []`, og bruksnumrene under flyttes enkeltvis:
+- Et gårdsnummer utgår med `split`, og bruksnumrene under flyttes enkeltvis:
 
   ```json
-  { "op": "split", "kind": "landNumber", "key": ["46", "01", 12], "into": [], "then": [
+  { "op": "split", "kind": "landNumber", "key": ["46", "01", 12], "then": [
     { "op": "move", "kind": "titleNumber", "key": 3, "to": ["46", "01", 40, 1] } ] }
   ```
 
-En `existing`-del brukes når kilden skal peke på en kommune som ikke opprettes av delingen:
+`successor` kan peke på en kommune som ikke opprettes av delingen:
 
 ```json
-{ "op": "split", "kind": "municipality", "key": ["50", "05"],
-  "into": [ { "existing": ["50", "01"], "role": "successor" },
-            { "new": ["50", "10"], "payload": { … } } ] }
+[ { "op": "split", "kind": "municipality", "key": ["50", "05"], "successor": ["50", "01"] },
+  { "op": "create", "kind": "municipality", "key": ["50", "10"], "derivedFrom": ["50", "05"], "payload": { … } } ]
 ```
 
 5005 utgår og peker på 5001, som finnes fra før. 5010 er en ny kommune avledet fra 5005.
 
 **Begrensning:** DTO-en `server` kjører, oppretter alle delene ved en kommunedeling. En kommunedeling der
-etterfølgeren ikke opprettes av delingen, er gyldig i formatet, men stoppes i siste valideringssteg
+etterfølgeren ikke er avledet fra kilden, er gyldig i formatet, men stoppes i siste valideringssteg
 (`steg: "bro"`, se [Validering](#validering)). Specen over blir derfor avvist.
 
 ### `create`
@@ -246,23 +238,17 @@ eller `move`). Har kilden ingen egen node, fortsetter den uendret.
 ```
 
 **Flere kilder til én ny kommune:** 4605 og 5005 utgår begge med 5010 som etterfølger. 5010 opprettes av
-`create` og arver fra 4605. `existing` i `split` betyr her at 5010 opprettes et annet sted i reformen.
+`create` og arver fra 4605.
 
 ```json
-[ { "op": "split", "kind": "municipality", "key": ["46", "05"],
-    "into": [ { "existing": ["50", "10"], "role": "successor" } ] },
-  { "op": "split", "kind": "municipality", "key": ["50", "05"],
-    "into": [ { "existing": ["50", "10"], "role": "successor" } ] },
+[ { "op": "split", "kind": "municipality", "key": ["46", "05"], "successor": ["50", "10"] },
+  { "op": "split", "kind": "municipality", "key": ["50", "05"], "successor": ["50", "10"] },
   { "op": "create", "kind": "municipality", "key": ["50", "10"], "derivedFrom": ["46", "05"], "payload": { … } } ]
 ```
 
-**To skrivemåter for det samme:** en `new`-del i `split` gir samme resultat som en `existing`-del sammen med
-en `create` med `derivedFrom` lik kilden. Det samme gjelder `merge.into.new`. Bruk `new` når målet har én
-kilde, og `create` med `derivedFrom` når kilden fortsetter, eller når flere kilder peker på målet.
-
 **Begrensning:** DTO-en kan ikke uttrykke utskilling. En spec med utskilling er gyldig i formatet, men stoppes i
-`steg: "bro"`. Det samme gjelder `merge` med `into.existing` og to eller flere kilder, sammen med en `create`
-med `derivedFrom` fra en av kildene. Den stoppes som `UlikTransformasjon`.
+`steg: "bro"`. Det samme gjelder `merge` med to eller flere kilder, sammen med en `create` med `derivedFrom`
+fra en av kildene. Den stoppes som `UlikTransformasjon`.
 
 ## Kontekster
 
@@ -270,9 +256,9 @@ Hvilke operasjoner som er lov i en `then`-liste, avhenger av hva som skjer med n
 
 | kontekst | `then` under | lovlige op-er |
 |---|---|---|
-| står i ro | rotnivået, `adjust`, `merge.into.existing`, `split.into[]` med `existing` | alle |
+| står i ro | rotnivået, `adjust` | alle |
 | under en kilde | `move`, `split`, elementer i `merge.from` | `move`, `split`, `merge` |
-| under en ny nøkkel | `create`, `merge.into.new`, `split.into[]` med `new` | `create` |
+| under en ny nøkkel | `create` | `create` |
 
 - Under en kilde følger alt uten egen regel med kilden. `adjust` og `create` gir ingen mening der.
 - Under en ny nøkkel finnes ingenting fra før, så det eneste som kan skje, er at noe opprettes. Det som følger
@@ -286,7 +272,7 @@ Skal noe under en kilde behandles annerledes enn kilden, skrives regelen under k
 { "op": "merge", "kind": "municipality",
   "from": [ { "key": ["50", "01"], "then": [
     { "op": "move", "kind": "titleNumber", "key": [12, 3], "to": ["50", "55", 40, 1] } ] } ],
-  "into": { "existing": ["50", "55"] } }
+  "into": ["50", "55"] }
 ```
 
 Kommune 5001 slås inn i 5055. Alt under 5001 følger med til 5055, bortsett fra bruksnummer 12/3, som får
@@ -302,7 +288,7 @@ Det samme unntaket som over, skrevet ved siden av kilden i stedet for under den,
 
 ```json
 [ { "op": "move", "kind": "titleNumber", "key": ["50", "01", 12, 3], "to": ["50", "55", 40, 1] },
-  { "op": "merge", "kind": "municipality", "from": [ ["50", "01"] ], "into": { "existing": ["50", "55"] } } ]
+  { "op": "merge", "kind": "municipality", "from": [ ["50", "01"] ], "into": ["50", "55"] } ]
 ```
 
 `move` på rotnivå sier at kommune 5001 står i ro, mens `merge` sier at 5001 utgår. Det gir feilen
@@ -348,31 +334,31 @@ en feil.
 ## Eksempel
 
 ```json
-{ "format": 1, "navn": "Reform 2027", "ikrafttredelse": "2027-01-01",
+{ "navn": "Reform 2027", "ikrafttredelse": "2027-01-01",
   "operasjoner": [
     { "op": "merge", "kind": "county",
       "from": ["03", { "key": "30", "then": [
-        { "op": "merge", "kind": "municipality", "from": ["01", "02"],
-          "into": { "new": ["33", "01"], "payload": { … } } },
-        { "op": "split", "kind": "municipality", "key": "05",
-          "into": [ { "new": ["33", "10"], "role": "successor", "payload": { … } },
-                    { "new": ["33", "11"], "payload": { … } } ],
-          "then": [
-            { "op": "move", "kind": "addressCode", "key": 1234, "to": ["33", "11", 1234] },
-            { "op": "split", "kind": "addressCode", "key": 1300,
-              "into": [ { "new": ["33", "10", 1300], "role": "identity" }, { "new": ["33", "11", 1300] } ] } ] } ] }],
-      "into": { "new": ["33"], "payload": { "navn": "Buskerud" } } },
+        { "op": "merge", "kind": "municipality", "from": ["01", "02"], "into": ["33", "01"] },
+        { "op": "split", "kind": "municipality", "key": "05", "successor": ["33", "10"], "then": [
+          { "op": "move", "kind": "addressCode", "key": 1234, "to": ["33", "11", 1234] },
+          { "op": "move", "kind": "addressCode", "key": 1300, "to": ["33", "10", 1300] } ] } ] }],
+      "into": ["33"] },
+    { "op": "create", "kind": "county", "key": "33", "payload": { "navn": "Buskerud" }, "then": [
+      { "op": "create", "kind": "municipality", "key": "01", "payload": { … } },
+      { "op": "create", "kind": "municipality", "key": "10", "derivedFrom": ["30", "05"], "payload": { … } },
+      { "op": "create", "kind": "municipality", "key": "11", "derivedFrom": ["30", "05"], "payload": { … }, "then": [
+        { "op": "create", "kind": "addressCode", "key": 1300, "derivedFrom": ["30", "05", 1300] } ] } ] },
     { "op": "adjust", "kind": "municipality", "key": ["46", "01"], "then": [
       { "op": "move", "kind": "landNumber", "key": 5, "to": ["46", "02", 7], "then": [
         { "op": "move", "kind": "titleNumber", "key": 1, "to": ["46", "02", 8, 1] } ] } ] }
   ] }
 ```
 
-- Fylkene 03 og 30 slås sammen til det nye fylket 33.
-- Under fylke 30 slås kommunene 3001 og 3002 sammen til den nye kommunen 3301. Kommune 3005 deles i 3310
-  (etterfølger) og 3311.
-- Under kommune 3005 flyttes veg 1234 til 3311. Veg 1300 deles: den beholder ID-en i 3310, og 3311 får en ny
-  veg avledet fra den.
+- Fylkene 03 og 30 slås sammen til det nye fylket 33, som opprettes med `create`.
+- Under fylke 30 slås kommunene 3001 og 3002 sammen til den nye kommunen 3301. Kommune 3005 utgår med 3310 som
+  etterfølger. 3310 og 3311 er nye kommuner avledet fra 3005.
+- Under kommune 3005 flyttes veg 1234 til 3311. Veg 1300 flyttes til 3310 og beholder ID-en, og 3311 får en ny
+  veg 1300 avledet fra den.
 - Kommune 4601 står i ro. Gårdsnummer 4601-5 flyttes til 4602-7, bortsett fra bruksnummer 1, som flyttes til
   4602-8/1.
 
@@ -423,10 +409,8 @@ Har specen feil form, gir det én feil med koden `InvalidShape` og stien fra par
 | `KindNotChildOfContext` | `key` eller `from[i]` | Pivoten har feil antall segmenter for konteksten, eller `kind` ligger ikke under konteksten. |
 | `InvalidSegment` | segmentet | Verdien er ugyldig for kinden på den plassen (se [Kinds](#kinds)). |
 | `TargetLengthMismatch` | målet | Målet er ikke en full nøkkel fra roten til `kind`. |
-| `MultipleRoles` | `into[i].role` | Mer enn én del i en `split` har `role`. |
-| `PayloadOnIdentity` | `into[i].payload` | En del med `role: identity` har payload. |
 | `EmptyMerge` | `from` | `merge` uten kilder. |
-| `PayloadRequired` | `into` eller noden | `merge` med `into.new` og flere kilder, eller `create` uten `derivedFrom`, mangler payload. |
+| `PayloadRequired` | noden | `create` uten `derivedFrom` mangler payload. |
 | `PayloadNotAllowed` | `payload` | Kinden tar ikke payload. |
 | `InvalidPayload` | `payload` | Payloaden kan ikke leses: manglende eller ukjente felter, feil type, ugyldig base64 og lignende. |
 | `KeptAndConsumed` | der nøkkelen står i ro | En nøkkel står i ro et sted, men er kilde i en annen node (se [Mellomledd](#mellomledd-i-en-sti-pivot)). `flereSti` peker på kilden. |
@@ -462,19 +446,18 @@ stedet.
 | `landNumber` | nei | nei | ja | nei | ja, uten etterfølger, med flytting av bruksnumre ⁵ |
 | `parcel` | nei | nei | ja, bare uten matrikkelnummer ⁶ | nei | nei |
 
-Her betyr «opprette» `create`, «avlede» en ny del i `split`, `merge.into.new` eller `create` med
-`derivedFrom`, «slå sammen» `merge`, og «utgå» `split` der kilden ikke fortsetter.
+Her betyr «opprette» `create` uten `derivedFrom`, «avlede» `create` med `derivedFrom`, «slå sammen» `merge`, og
+«utgå» `split`.
 
 `districtType` støttes ikke av noen sink (`UnsupportedIdentType`).
 
 1. Sinkene tolker samme ID med ny nøkkel som at fylket eller kommunen utgår, uten at en ny rad opprettes. Gi nytt
-   nummer med `merge` og `into.new`.
+   nummer med `merge` og `create` med `derivedFrom`.
 2. Kommunen har én peker til etterfølgeren (`nykommuneid` i matrikkelen).
 3. Sinken for veger lager en ny veg som kopi av kildevegen. Nye entiteter skrives før endringer og slettinger, så
-   kilden finnes fortsatt når den kopieres. Kilden kan flyttes (`role: identity`), stå i ro (`create` med
-   `derivedFrom`, for eksempel når en del av vegen havner i nabokommunen ved en grensejustering) eller følge en
+   kilden finnes fortsatt når den kopieres. Kilden kan flyttes (`move`), stå i ro (uten egen node, for eksempel når en del av vegen havner i nabokommunen ved en grensejustering) eller følge en
    forelder som flyttes. Den kan ikke ligge under en forelder som utgår, for da får den bare delvis nøkkel.
-4. En veg uten ny nøkkel blir slettet. Del vegen med `role: identity`.
+4. En veg uten ny nøkkel blir slettet. Del vegen med `move` og `create` med `derivedFrom`.
 5. Sinken for matrikkelenheter krever en ny nøkkel for hvert bruksnummer.
 6. En teig med matrikkelnummer hører til matrikkelenheten, ikke bare til kommunen.
 
@@ -534,10 +517,10 @@ formatet, så en spec som har bestått alle andre steg, kan stoppes her. Specen 
 
 Kjente tilfeller som stoppes her:
 
-- En kommunedeling der etterfølgeren ikke opprettes av delingen (en `existing`-del).
+- En kommunedeling der etterfølgeren (`successor`) ikke er avledet fra kilden.
 - Utskilling, der kilden fortsetter (`create` med `derivedFrom` fra en kilde uten egen node).
 - En kommunedeling med færre enn to deler.
-- `merge` med `into.existing` og to eller flere kilder, sammen med en `create` med `derivedFrom` fra en av kildene
+- `merge` med to eller flere kilder, sammen med en `create` med `derivedFrom` fra en av kildene
   (stoppes som `UlikTransformasjon`).
 
 ## Endepunkter i `regulering-api`

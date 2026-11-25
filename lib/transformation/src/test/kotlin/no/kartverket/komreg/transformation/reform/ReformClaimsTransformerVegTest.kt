@@ -16,17 +16,20 @@ import org.junit.jupiter.api.Test
  *
  * Kommune 0205 deles i 0306 (etterfølger) og 0307. Vegene under har egne regler i `then`:
  * - veg 2500 flyttes til 0306 (legacy: én til én)
- * - veg 2600 deles i 0306 og 0307. Første del har `role: identity` (legacy: første mål beholder ID-en).
+ * - veg 2600 deles i 0306 og 0307. Den flyttes (`move`) til 0306, så den beholder ID-en (legacy: første mål
+ *   beholder ID-en). Delen i 0307 opprettes med `create` og `derivedFrom` under `create` for kommune 0307.
  */
 class ReformClaimsTransformerVegTest {
     private val identTransformer = transformerFromSpec(
-        """{ "op": "split", "kind": "municipality", "key": ["02", "05"],
-             "into": [ { "new": ["03", "06"], "role": "successor", "payload": ${kommunePayload("Ny kommune 1")} },
-                       { "new": ["03", "07"], "payload": ${kommunePayload("Ny kommune 2")} } ],
+        """{ "op": "split", "kind": "municipality", "key": ["02", "05"], "successor": ["03", "06"],
              "then": [
                { "op": "move", "kind": "addressCode", "key": 2500, "to": ["03", "06", 2500] },
-               { "op": "split", "kind": "addressCode", "key": 2600,
-                 "into": [ { "new": ["03", "06", 2600], "role": "identity" }, { "new": ["03", "07", 2600] } ] } ] }""",
+               { "op": "move", "kind": "addressCode", "key": 2600, "to": ["03", "06", 2600] } ] }""",
+        """{ "op": "create", "kind": "municipality", "key": ["03", "06"], "derivedFrom": ["02", "05"],
+             "payload": ${kommunePayload("Ny kommune 1")} }""",
+        """{ "op": "create", "kind": "municipality", "key": ["03", "07"], "derivedFrom": ["02", "05"],
+             "payload": ${kommunePayload("Ny kommune 2")},
+             "then": [ { "op": "create", "kind": "addressCode", "key": 2600, "derivedFrom": ["02", "05", 2600] } ] }""",
     )
 
     @Test

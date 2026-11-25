@@ -45,10 +45,10 @@ import java.util.Base64
  *
  * **A2. `Ident.Empty` blir `null`, og bare for fylker.** Legacy-testen `splittKommuneUtenKobling` lot kommunen
  * utgå uten etterfølger (`Ident.Empty` først i `Split`). `ReformClaimsTransformer` gir `transformedIdent = null`
- * for `Retire` uten `successor` (`split` uten `role`). Domenereglene avviser det for kommuner
+ * for `Retire` uten etterfølger (`split` uten `successor`). Domenereglene avviser det for kommuner
  * (`RetireNeedsSuccessor`: kommunen har én peker til etterfølgeren), men godtar det for fylker. Testen «kommune
  * splittes uten ny kommune-kobling» er derfor skrevet om til et fylke som deles. Bygningstestene som brukte en
- * kommunedeling uten etterfølger, deler kommunen med `role: successor`. Bygningen får samme delvise nøkkel, se A8.
+ * kommunedeling uten etterfølger, deler kommunen med `successor`. Bygningen får samme delvise nøkkel, se A8.
  *
  * **A3. Payload er `Kommunedata`.** Legacy-testene brukte en egen `MockKommuneinfo` (og i entitetstesten
  * `Kommune.tilKommunedata`). Reform dekoder `KommunePayload` fra spec-en til `Kommunedata`: navn skrives med
@@ -59,20 +59,21 @@ import java.util.Base64
  * `ReformClaimsTransformer` setter `null`. Ingen av legacy-testene sjekket flagget, og det sjekkes heller ikke her.
  *
  * **A5. `Mapping.Replace` og `Mapping.Simple` blir `merge` og `move`.**
- * - Kommune som får nytt nummer: `merge` med én kilde og `into.new` gir `RetireTo` og `Derive`. Det er de to
- *   transformasjonene legacy lagde (utgått kommune med ny nøkkel, og ny kommune med payload), i samme
- *   rekkefølge.
+ * - Kommune som får nytt nummer: `merge` med én kilde gir `RetireTo`, og `create` med `derivedFrom` fra kilden
+ *   gir `Derive`. Det er de to transformasjonene legacy lagde (utgått kommune med ny nøkkel, og ny kommune med
+ *   payload), i samme rekkefølge.
  * - Veg, vegadresse, gårdsnummer: `move`. Legacy `Replace` på en identtype uten kommunenivå ga to like
  *   assosierte identer som ble slått sammen i et sett. `move` gir bare én.
  *
- * **A6. `Mapping.Split` blir `split`, og `role` avgjør hva legacy-rekkefølgen betydde.**
+ * **A6. `Mapping.Split` blir `split` eller `move`, avhengig av hva legacy-rekkefølgen betydde.**
  * Legacy: første del i `into` fikk entitetens ID, resten fikk nye ID-er, og første mål var etterfølger.
- * - Kommune (legacy: første mål er etterfølger): første del har `role: successor`. Første transformasjon har
- *   samme ID og `transformedIdent = etterfølgeren`, uten payload. Deretter én ny entitet per del.
+ * Delene opprettes med `create` og `derivedFrom` fra kilden, som gir én `Derive` per del.
+ * - Kommune (legacy: første mål er etterfølger): `split` med første del som `successor`. Første transformasjon
+ *   har samme ID og `transformedIdent = etterfølgeren`, uten payload. Deretter én ny entitet per del.
  * - Kommune uten kobling (legacy: `Ident.Empty` først): ugyldig for kommuner, se A2.
- * - Veg og adresseparsell (legacy: første del beholder ID-en): første del har `role: identity`, som gir
- *   `Move` på første del og `Derive` for de andre. Etterkommere uten egen regel følger da med til
- *   identitetsdelen, se A8.
+ * - Veg og adresseparsell (legacy: første del beholder ID-en): `move` til første del (identitetsdelen), og
+ *   `create` med `derivedFrom` for de andre. Etterkommere uten egen regel følger da med til identitetsdelen,
+ *   se A8.
  * - Legacy `Mapping.Split` der en del er kilden selv, se A7.
  *
  * **A7. Utskilling.** Legacy modellerte «kommune 1234 fortsetter, og 1222 er ny» som `Split` til seg selv og
@@ -89,14 +90,14 @@ import java.util.Base64
  *   hoppes over, så den kan rettes etterpå uten at hele kjøringen feiler.
  * - Vegadresse og matrikkelenhet støtter ikke delvis nøkkel (`getOrThrow`). Der feiler hele sinken.
  *
- * Reform beholder oppførselen der den er gyldig: en bygning under en kommune som deles (`role: successor`), får
+ * Reform beholder oppførselen der den er gyldig: en bygning under en kommune som deles (med `successor`), får
  * samme delvise nøkkel som i legacy.
  *
  * Avviket gjelder veg som deles. Legacy lot første del beholde ID-en, men ga likevel vegadressene under delvis
- * nøkkel, og da feilet vegadresse-sinken. I reform skrives delingen med `role: identity` (`Move`), og vegadresser
- * uten egen regel følger identitetsdelen. Legacy-testen «vegadressen transformeres tvetydig» er ikke portert. I
- * reform krever den en veg som deles uten `role`, og det avviser domenereglene (`ActionNotSupported`, vegen ville
- * blitt slettet). Testen «vegadressen følger med til identitetsdelen» dokumenterer den nye oppførselen.
+ * nøkkel, og da feilet vegadresse-sinken. I reform skrives delingen som `move` til identitetsdelen, og
+ * vegadresser uten egen regel følger med dit. Legacy-testen «vegadressen transformeres tvetydig» er ikke portert.
+ * I reform krever den en `split` av vegen uten `successor`, og det avviser domenereglene (`ActionNotSupported`,
+ * vegen ville blitt slettet). Testen «vegadressen følger med til identitetsdelen» dokumenterer den nye oppførselen.
  *
  * **A9. Payload bare der domenereglene krever den.** Nye kommuner har kommunepayload med kommunevåpen
  * (`WrongPayload`, `MissingMunicipalityCoat`), også i bygning- og vegtestene, der legacy ikke sjekket payload.

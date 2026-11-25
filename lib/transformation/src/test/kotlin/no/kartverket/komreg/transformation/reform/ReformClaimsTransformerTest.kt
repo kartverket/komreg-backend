@@ -43,15 +43,15 @@ import java.util.concurrent.atomic.AtomicLong
  * Reform-ekvivalent til `LegacyIdentTransformerTest`. Se avvikene A1-A11 i `ReformClaimsTransformerTestSupport.kt`.
  * Avvikene som slår ut i enkelttester, er nevnt ved testen.
  *
- * | legacy                                              | reform                                                           |
- * |-----------------------------------------------------|------------------------------------------------------------------|
- * | `flyttKommune` (`Replace`)                          | `merge` med én kilde og `into.new` (A5)                          |
- * | `splittKommuneUtenKobling` (`Ident.Empty` først)    | fylke: `split` uten `role` (A2). Bygning: `splittKommuneMedKobling` |
- * | `splittKommuneMedKobling`                           | `split` med `role: successor` på første del (A6)                 |
- * | `flyttAdresseparsell` (`Simple`)                    | `move` av `addressCode` (A5)                                     |
- * | `splittAdresseparsell`                              | `split` av `addressCode` med `role: identity` på første del (A6) |
- * | kommune 1234 beholdes, og 1222 er ny (`Split`)      | `create` med `derivedFrom` (A7)                                  |
- * | «vegadressen transformeres tvetydig»                | ikke portert, erstattet av «vegadressen følger med» (A8)         |
+ * | legacy                                              | reform                                                                |
+ * |-----------------------------------------------------|-----------------------------------------------------------------------|
+ * | `flyttKommune` (`Replace`)                          | `merge` med én kilde og `create` med `derivedFrom` (A5)               |
+ * | `splittKommuneUtenKobling` (`Ident.Empty` først)    | fylke: `split` uten `successor` (A2). Bygning: `splittKommuneMedKobling` |
+ * | `splittKommuneMedKobling`                           | `split` med første del som `successor` (A6)                           |
+ * | `flyttAdresseparsell` (`Simple`)                    | `move` av `addressCode` (A5)                                          |
+ * | `splittAdresseparsell`                              | `move` av `addressCode` til første del, og `create` for resten (A6)   |
+ * | kommune 1234 beholdes, og 1222 er ny (`Split`)      | `create` med `derivedFrom` (A7)                                       |
+ * | «vegadressen transformeres tvetydig»                | ikke portert, erstattet av «vegadressen følger med» (A8)              |
  */
 class ReformClaimsTransformerTest : BehaviorSpec({
     val kommuneIdentType: KommuneIdentType = runBlocking { identTypeOf2() }
@@ -71,22 +71,27 @@ class ReformClaimsTransformerTest : BehaviorSpec({
     }
 
     fun flyttKommune() = transformerFromSpec(
-        """{ "op": "merge", "kind": "municipality", "from": [ ["12", "34"] ],
-             "into": { "new": ["12", "35"], "payload": ${kommunePayload("Ny kommune")} } }""",
+        """{ "op": "merge", "kind": "municipality", "from": [ ["12", "34"] ], "into": ["12", "35"] }""",
+        """{ "op": "create", "kind": "municipality", "key": ["12", "35"], "derivedFrom": ["12", "34"],
+             "payload": ${kommunePayload("Ny kommune")} }""",
     )
 
-    /** A2: uten `role` utgår fylket uten etterfølger. For kommuner avvises det (`RetireNeedsSuccessor`). */
+    /** A2: uten `successor` utgår fylket uten etterfølger. For kommuner avvises det (`RetireNeedsSuccessor`). */
     fun splittFylkeUtenKobling() = transformerFromSpec(
-        """{ "op": "split", "kind": "county", "key": "12",
-             "into": [ { "new": ["13"], "payload": { "navn": "Nytt fylke 1" } },
-                       { "new": ["14"], "payload": { "navn": "Nytt fylke 2" } } ] }""",
+        """{ "op": "split", "kind": "county", "key": "12" }""",
+        """{ "op": "create", "kind": "county", "key": "13", "derivedFrom": ["12"],
+             "payload": { "navn": "Nytt fylke 1" } }""",
+        """{ "op": "create", "kind": "county", "key": "14", "derivedFrom": ["12"],
+             "payload": { "navn": "Nytt fylke 2" } }""",
     )
 
     /** A6: første del er etterfølger. */
     fun splittKommuneMedKobling() = transformerFromSpec(
-        """{ "op": "split", "kind": "municipality", "key": ["12", "34"],
-             "into": [ { "new": ["12", "35"], "role": "successor", "payload": ${kommunePayload("Ny kommune 1")} },
-                       { "new": ["12", "36"], "payload": ${kommunePayload("Ny kommune 2")} } ] }""",
+        """{ "op": "split", "kind": "municipality", "key": ["12", "34"], "successor": ["12", "35"] }""",
+        """{ "op": "create", "kind": "municipality", "key": ["12", "35"], "derivedFrom": ["12", "34"],
+             "payload": ${kommunePayload("Ny kommune 1")} }""",
+        """{ "op": "create", "kind": "municipality", "key": ["12", "36"], "derivedFrom": ["12", "34"],
+             "payload": ${kommunePayload("Ny kommune 2")} }""",
     )
 
     Given("transformasjon med to regler") {
@@ -371,12 +376,14 @@ class ReformClaimsTransformerTest : BehaviorSpec({
         When("splitt kommune og fordel gårdsnummer") {
             // A2: kommunen må ha etterfølger. Bygningen får likevel delvis nøkkel (A8).
             val transformer = transformerFromSpec(
-                """{ "op": "split", "kind": "municipality", "key": ["12", "34"],
-                     "into": [ { "new": ["12", "35"], "role": "successor", "payload": ${kommunePayload("Ny kommune 1")} },
-                               { "new": ["12", "36"], "payload": ${kommunePayload("Ny kommune 2")} } ],
+                """{ "op": "split", "kind": "municipality", "key": ["12", "34"], "successor": ["12", "35"],
                      "then": [
                        { "op": "move", "kind": "landNumber", "key": 1, "to": ["12", "35", 1] },
                        { "op": "move", "kind": "landNumber", "key": 2, "to": ["12", "36", 1] } ] }""",
+                """{ "op": "create", "kind": "municipality", "key": ["12", "35"], "derivedFrom": ["12", "34"],
+                     "payload": ${kommunePayload("Ny kommune 1")} }""",
+                """{ "op": "create", "kind": "municipality", "key": ["12", "36"], "derivedFrom": ["12", "34"],
+                     "payload": ${kommunePayload("Ny kommune 2")} }""",
             )
 
             Then("transformasjon av hovedident vil være tvetydig, men andre vil være entydig") {
@@ -415,10 +422,14 @@ class ReformClaimsTransformerTest : BehaviorSpec({
         """{ "op": "move", "kind": "addressCode", "key": ["12", "34", 10000], "to": ["12", "35", 20000] }""",
     )
 
-    /** A6: første del har `role: identity`, så den beholder entitetens ID. Legacy: første mål beholdt ID-en. */
+    /**
+     * A6: adresseparsellen flyttes (`move`) til første del, så den beholder entitetens ID. Den andre delen opprettes
+     * med `create` og `derivedFrom`. Legacy: første mål beholdt ID-en.
+     */
     fun splittAdresseparsell() = transformerFromSpec(
-        """{ "op": "split", "kind": "addressCode", "key": ["12", "34", 10000],
-             "into": [ { "new": ["12", "35", 10000], "role": "identity" }, { "new": ["12", "36", 10000] } ] }""",
+        """{ "op": "move", "kind": "addressCode", "key": ["12", "34", 10000], "to": ["12", "35", 10000] }""",
+        """{ "op": "create", "kind": "addressCode", "key": ["12", "36", 10000],
+             "derivedFrom": ["12", "34", 10000] }""",
     )
 
     Given("en adresseparsell") {
@@ -539,9 +550,9 @@ class ReformClaimsTransformerTest : BehaviorSpec({
         }
 
         When("hvor adresseparsellen splittes med identitetsdel uten at adressen nevnes") {
-            // A8: erstatter legacy-testen «vegadressen transformeres tvetydig». Med `role: identity` er
-            // adresseparsellen flyttet (`Move`), så vegadressen følger med til identitetsdelen. Legacy ga delvis
-            // nøkkel, som vegadresse-sinken ikke støtter.
+            // A8: erstatter legacy-testen «vegadressen transformeres tvetydig». Adresseparsellen er flyttet
+            // (`move`) til identitetsdelen, så vegadressen følger med dit. Legacy ga delvis nøkkel, som
+            // vegadresse-sinken ikke støtter.
             val transformer = splittAdresseparsell()
 
             Then("vegadressen følger med til identitetsdelen") {
@@ -571,9 +582,10 @@ class ReformClaimsTransformerTest : BehaviorSpec({
 
         When("hvor adresseparsellen splittes, men adressen har egen regel") {
             val transformer = transformerFromSpec(
-                """{ "op": "split", "kind": "addressCode", "key": ["12", "34", 10000],
-                     "into": [ { "new": ["12", "35", 10000], "role": "identity" }, { "new": ["12", "36", 10000] } ],
+                """{ "op": "move", "kind": "addressCode", "key": ["12", "34", 10000], "to": ["12", "35", 10000],
                      "then": [ { "op": "move", "kind": "addressNumber", "key": 10, "to": ["12", "35", 10000, 10] } ] }""",
+                """{ "op": "create", "kind": "addressCode", "key": ["12", "36", 10000],
+                     "derivedFrom": ["12", "34", 10000] }""",
             )
 
             Then("vegadressen transformeres entydig") {

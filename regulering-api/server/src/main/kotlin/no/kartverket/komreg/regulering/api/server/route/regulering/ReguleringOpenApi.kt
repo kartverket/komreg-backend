@@ -28,7 +28,7 @@ internal object ReguleringOpenApi {
             description = "En veg og en teig flyttes til en annen kommune. Vegadressen under vegen får nytt nummer.",
             value = example(
                 """
-                { "format": 1, "navn": "Flytting av veg og teig", "ikrafttredelse": "2027-01-01",
+                { "navn": "Flytting av veg og teig", "ikrafttredelse": "2027-01-01",
                   "operasjoner": [
                     { "op": "move", "kind": "addressCode", "key": ["46", "01", 1234], "to": ["46", "02", 1234],
                       "then": [ { "op": "move", "kind": "addressNumber", "key": 5, "to": ["46", "02", 1234, 6] } ] },
@@ -38,27 +38,27 @@ internal object ReguleringOpenApi {
         ),
         "deling" to ExampleObject(
             summary = "Deling av kommune og oppløsning av gårdsnummerserie",
-            description = "Kommune 4605 deles i 4610 (etterfølger) og 4611. Veg 1234 flyttes til 4611, og veg 1300 deles. " +
+            description = "Kommune 4605 deles i 4610 (etterfølger) og 4611. Veg 1234 flyttes til 4611. Veg 1300 flyttes til 4610, " +
+                "og 4611 får en ny veg 1300 avledet fra den. " +
                 "Gårdsnummer 4601-12 utgår, og bruksnummer 1 flyttes til 4601-13/1.",
             value = example(
                 """
-                { "format": 1, "navn": "Deling av kommune og oppløsning av gårdsnummerserie", "ikrafttredelse": "2027-01-01",
+                { "navn": "Deling av kommune og oppløsning av gårdsnummerserie", "ikrafttredelse": "2027-01-01",
                   "operasjoner": [
-                    { "op": "split", "kind": "municipality", "key": ["46", "05"],
-                      "into": [
-                        { "new": ["46", "10"], "role": "successor",
-                          "payload": { "navn": "Nye Kommune", "koordinatsystem": "UTM32",
-                                       "senterpunkt": { "x": 230000.0, "y": 6630000.0 },
-                                       "godkjenteGardsnumre": [ { "fra": 1, "til": 200 } ], "kommunevapen": "iVBORw0KGgo=" } },
-                        { "new": ["46", "11"],
-                          "payload": { "navn": "Nye Kommune", "koordinatsystem": "UTM32",
-                                       "senterpunkt": { "x": 230000.0, "y": 6630000.0 },
-                                       "godkjenteGardsnumre": [ { "fra": 1, "til": 200 } ], "kommunevapen": "iVBORw0KGgo=" } } ],
+                    { "op": "split", "kind": "municipality", "key": ["46", "05"], "successor": ["46", "10"],
                       "then": [
                         { "op": "move", "kind": "addressCode", "key": 1234, "to": ["46", "11", 1234] },
-                        { "op": "split", "kind": "addressCode", "key": 1300,
-                          "into": [ { "new": ["46", "10", 1300], "role": "identity" }, { "new": ["46", "11", 1300] } ] } ] },
-                    { "op": "split", "kind": "landNumber", "key": ["46", "01", 12], "into": [],
+                        { "op": "move", "kind": "addressCode", "key": 1300, "to": ["46", "10", 1300] } ] },
+                    { "op": "create", "kind": "municipality", "key": ["46", "10"], "derivedFrom": ["46", "05"],
+                      "payload": { "navn": "Nye Kommune", "koordinatsystem": "UTM32",
+                                   "senterpunkt": { "x": 230000.0, "y": 6630000.0 },
+                                   "godkjenteGardsnumre": [ { "fra": 1, "til": 200 } ], "kommunevapen": "iVBORw0KGgo=" } },
+                    { "op": "create", "kind": "municipality", "key": ["46", "11"], "derivedFrom": ["46", "05"],
+                      "payload": { "navn": "Nye Kommune", "koordinatsystem": "UTM32",
+                                   "senterpunkt": { "x": 230000.0, "y": 6630000.0 },
+                                   "godkjenteGardsnumre": [ { "fra": 1, "til": 200 } ], "kommunevapen": "iVBORw0KGgo=" },
+                      "then": [ { "op": "create", "kind": "addressCode", "key": 1300, "derivedFrom": ["46", "05", 1300] } ] },
+                    { "op": "split", "kind": "landNumber", "key": ["46", "01", 12],
                       "then": [ { "op": "move", "kind": "titleNumber", "key": 1, "to": ["46", "01", 13, 1] } ] } ] }
                 """.trimIndent(),
             ),
@@ -69,18 +69,18 @@ internal object ReguleringOpenApi {
                 "nummer 4699.",
             value = example(
                 """
-                { "format": 1, "navn": "Sammenslåing til nytt fylke", "ikrafttredelse": "2027-01-01",
+                { "navn": "Sammenslåing til nytt fylke", "ikrafttredelse": "2027-01-01",
                   "operasjoner": [
-                    { "op": "merge", "kind": "county", "from": ["30", "31"],
-                      "into": { "new": ["33"], "payload": { "navn": "Buskerud" }, "then": [
-                        { "op": "create", "kind": "municipality", "key": "01",
-                          "payload": { "navn": "Nye Kommune", "koordinatsystem": "UTM32",
-                                       "senterpunkt": { "x": 230000.0, "y": 6630000.0 },
-                                       "godkjenteGardsnumre": [ { "fra": 1, "til": 200 } ], "kommunevapen": "iVBORw0KGgo=" } } ] } },
-                    { "op": "merge", "kind": "municipality", "from": [["46", "01"]],
-                      "into": { "new": ["46", "99"],
-                                "payload": { "navn": "Omnummerert", "koordinatsystem": "UTM32",
-                                             "senterpunkt": { "x": 230000.0, "y": 6630000.0 }, "kommunevapen": "iVBORw0KGgo=" } } } ] }
+                    { "op": "merge", "kind": "county", "from": ["30", "31"], "into": ["33"] },
+                    { "op": "create", "kind": "county", "key": "33", "payload": { "navn": "Buskerud" }, "then": [
+                      { "op": "create", "kind": "municipality", "key": "01",
+                        "payload": { "navn": "Nye Kommune", "koordinatsystem": "UTM32",
+                                     "senterpunkt": { "x": 230000.0, "y": 6630000.0 },
+                                     "godkjenteGardsnumre": [ { "fra": 1, "til": 200 } ], "kommunevapen": "iVBORw0KGgo=" } } ] },
+                    { "op": "merge", "kind": "municipality", "from": [["46", "01"]], "into": ["46", "99"] },
+                    { "op": "create", "kind": "municipality", "key": ["46", "99"], "derivedFrom": ["46", "01"],
+                      "payload": { "navn": "Omnummerert", "koordinatsystem": "UTM32",
+                                   "senterpunkt": { "x": 230000.0, "y": 6630000.0 }, "kommunevapen": "iVBORw0KGgo=" } } ] }
                 """.trimIndent(),
             ),
         ),

@@ -66,14 +66,14 @@ sealed interface DomainErr {
     data class RetireNeedsSuccessor(val op: ReformOp.Retire, val label: String) : DomainErr {
         override val ops get() = listOf(op)
         override val message get() = "$label som utgår må ha en etterfølger: $op"
-        override val hint get() = "Bruk `split` og marker én av delene med `role: successor`."
+        override val hint get() = "Bruk `split` med `successor`."
     }
 
     /** Kilden utgår med etterfølger, selv om identtypen ikke har noen. */
     data class RetireHasSuccessor(val op: ReformOp.Retire, val label: String) : DomainErr {
         override val ops get() = listOf(op)
         override val message get() = "$label som utgår kan ikke ha en etterfølger: $op"
-        override val hint get() = "Fjern `role: successor` fra delingen."
+        override val hint get() = "Fjern `successor` fra `split`."
     }
 
     /** Målene fra én kilde ligger i flere fylker. */
@@ -86,8 +86,7 @@ sealed interface DomainErr {
     data class DeriveFromRetired(val op: ReformOp.Derive, val retire: ReformOp.Retire) : DomainErr {
         override val ops get() = listOf(op)
         override val message get() = "Vegen ${op.from} avledes, men ligger under ${retire.source}, som utgår: $op"
-        override val hint get() = "Gi vegen en egen regel, for eksempel `split` med `role: identity` under " +
-            "`then` til ${retire.source}."
+        override val hint get() = "Gi vegen en egen regel, for eksempel `move` under `then` til ${retire.source}."
     }
 
     /**

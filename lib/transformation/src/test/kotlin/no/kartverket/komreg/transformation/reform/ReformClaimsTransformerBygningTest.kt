@@ -21,10 +21,12 @@ import kotlin.test.assertEquals
  */
 class ReformClaimsTransformerBygningTest {
     private val identTransformer = transformerFromSpec(
-        """{ "op": "split", "kind": "municipality", "key": ["02", "05"],
-             "into": [ { "new": ["02", "07"], "role": "successor", "payload": ${kommunePayload("Ny kommune 1")} },
-                       { "new": ["02", "08"], "payload": ${kommunePayload("Ny kommune 2")} } ],
+        """{ "op": "split", "kind": "municipality", "key": ["02", "05"], "successor": ["02", "07"],
              "then": [ { "op": "move", "kind": "landNumber", "key": 1, "to": ["02", "06", 1] } ] }""",
+        """{ "op": "create", "kind": "municipality", "key": ["02", "07"], "derivedFrom": ["02", "05"],
+             "payload": ${kommunePayload("Ny kommune 1")} }""",
+        """{ "op": "create", "kind": "municipality", "key": ["02", "08"], "derivedFrom": ["02", "05"],
+             "payload": ${kommunePayload("Ny kommune 2")} }""",
     )
 
     @Test
