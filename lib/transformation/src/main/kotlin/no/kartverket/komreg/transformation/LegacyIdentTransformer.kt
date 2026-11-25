@@ -9,7 +9,7 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
-class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
+class LegacyIdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
     private val kommuneviseRegler: Map<Kommunenummer, List<Pair<Ident, Mapping>>>
     private val andreRegler: List<Pair<Ident, Mapping>>
 
@@ -237,7 +237,7 @@ class IdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
     }
 
     companion object {
-        operator fun invoke(vararg mappings: Pair<Ident, Mapping>) = IdentTransformer(listOf(*mappings))
+        operator fun invoke(vararg mappings: Pair<Ident, Mapping>) = LegacyIdentTransformer(listOf(*mappings))
     }
 
     sealed interface Mapping {

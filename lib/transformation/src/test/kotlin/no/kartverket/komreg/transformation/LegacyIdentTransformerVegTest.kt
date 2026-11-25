@@ -15,7 +15,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class IdentTransformerVegTest {
+class LegacyIdentTransformerVegTest {
     private val ikrafttredelsesdato = LocalDate.now().toKotlinLocalDate()
 
     private val reguleringsInput =
@@ -88,7 +88,7 @@ class IdentTransformerVegTest {
             fylker = emptyList(),
         )
     private val mappings = runBlocking { mapInput(reguleringsInput) }
-    private val identTransformer = IdentTransformer(*mappings.toTypedArray())
+    private val identTransformer = LegacyIdentTransformer(*mappings.toTypedArray())
 
     private val idGenerator = mockk<IdGeneratorManager>()
 
