@@ -219,6 +219,13 @@ vegadresse, matrikkelenhet, teig og krets), ikke fra valideringen av DTO-en.
   Transformeren skal fortsatt gi A → B, fordi `KommuneSink` trenger målet ved `RetireTo` (`nykommuneid`), og fordi
   stedsnavnrapporten trolig finner sammenslåinger ut fra felles `transformedIdent`. Når sinken er rettet, kan
   `RETIRE_TO` legges til for `addressCode` i `SinkCapabilities.kt`.
+- Opprettelse av veger (`create` uten `derivedFrom`) avvises på grunn av en begrensning i sinken, ikke på grunn av
+  en domeneregel. `VegTilbakeforingService` krever `sourceEntity`, og setter inn den nye vegen som en kopi av
+  kilden: `insert into veg (id, kommuneid, adressekode, adressenavn, kortAdressenavn, uuid, …) select ?, ?, ?,
+  adressenavn, kortAdressenavn, ?, … from veg where id=?`. Referanser og kommentarer kopieres også, men det
+  trenger ikke en ny veg. Formatet og `core` har heller ingen payload for veg. Med en payload (adressenavn og kort
+  adressenavn) og en sink som setter inn vegen fra den når kilden mangler, kan `CREATE` legges til for
+  `addressCode` i `SinkCapabilities.kt`.
 - Fylker og kommuner slettes aldri. De får en `gyldigTilDato`. Derfor kan datareglene kreve at kilder og mål finnes
   og er gyldige.
 - En kommune som ikke har en egen regel når fylket utgår, følger fylket med samme ID og ny nøkkel. `KommuneSink`

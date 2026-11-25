@@ -441,11 +441,11 @@ stedet.
 |---|---|---|---|---|---|
 | `county` | ja | ja | nei ¹ | ja | ja, uten etterfølger |
 | `municipality` | ja | ja | nei ¹ | ja | ja, med etterfølger ² |
-| `addressCode` | nei | ja ³ | ja | nei ⁵ | ja, uten etterfølger ⁴ |
-| `addressNumber` | nei | nei | ja | ja ⁶ | nei |
+| `addressCode` | nei ³ | ja ⁴ | ja | nei ⁶ | ja, uten etterfølger ⁵ |
+| `addressNumber` | nei | nei | ja | ja ⁷ | nei |
 | `districtNumber`, `titleNumber` | nei | nei | ja | nei | nei |
-| `landNumber` | nei | nei | ja | ja ⁶ | ja, uten etterfølger, med flytting av bruksnumre ⁷ |
-| `parcel` | nei | nei | ja, bare uten matrikkelnummer ⁸ | nei | nei |
+| `landNumber` | nei | nei | ja | ja ⁷ | ja, uten etterfølger, med flytting av bruksnumre ⁸ |
+| `parcel` | nei | nei | ja, bare uten matrikkelnummer ⁹ | nei | nei |
 
 Her betyr «opprette» `create` uten `derivedFrom`, «avlede» `create` med `derivedFrom`, «slå sammen» `merge`, og
 «utgå» `split`.
@@ -455,19 +455,23 @@ Her betyr «opprette» `create` uten `derivedFrom`, «avlede» `create` med `der
 1. Sinkene tolker samme ID med ny nøkkel som at fylket eller kommunen utgår, uten at en ny rad opprettes. Gi nytt
    nummer med `merge` og `create` med `derivedFrom`.
 2. Kommunen har én peker til etterfølgeren (`nykommuneid` i matrikkelen).
-3. Sinken for veger lager en ny veg som kopi av kildevegen. Nye entiteter skrives før endringer og slettinger, så
+3. Dette er en begrensning i sinken, ikke en domeneregel. Sinken for veger krever en kilde, og kopierer
+   adressenavnet og det korte adressenavnet fra den. Formatet har heller ingen payload for veg. Med en payload
+   (adressenavn og kort adressenavn) og en sink som setter inn vegen fra den, kan veger opprettes. Til da avledes en
+   ny veg fra en eksisterende med `create` og `derivedFrom`.
+4. Sinken for veger lager en ny veg som kopi av kildevegen. Nye entiteter skrives før endringer og slettinger, så
    kilden finnes fortsatt når den kopieres. Kilden kan flyttes (`move`), stå i ro (uten egen node, for eksempel når en del av vegen havner i nabokommunen ved en grensejustering) eller følge en
    forelder som flyttes. Den kan ikke ligge under en forelder som utgår, for da får den bare delvis nøkkel.
-4. En veg som utgår, slettes av sinken. Det sjekkes ikke at vegen er tom. En veg som skal bestå, deles med
+5. En veg som utgår, slettes av sinken. Det sjekkes ikke at vegen er tom. En veg som skal bestå, deles med
    `move` og `create` med `derivedFrom`.
-5. Dette er en begrensning i sinken, ikke en domeneregel. Sinken flytter kildevegen til nøkkelen til målvegen i
+6. Dette er en begrensning i sinken, ikke en domeneregel. Sinken flytter kildevegen til nøkkelen til målvegen i
    stedet for å slette den, og da får to veger samme nøkkel. Regelen kan fjernes når sinken er rettet. Se
    «Bakgrunn for domenereglene» i [reform-format-design.md](reform-format-design.md#bakgrunn-for-domenereglene).
-6. Et adressenummer og et gårdsnummer er serier uten egen entitet. Ved sammenslåing får hver adresse eller
+7. Et adressenummer og et gårdsnummer er serier uten egen entitet. Ved sammenslåing får hver adresse eller
    grunneiendom under kilden målet som prefiks, som ved flytting. Det sjekkes ikke at bokstaven eller
    bruksnummeret er ledig i målet.
-7. Sinken for matrikkelenheter krever en ny nøkkel for hvert bruksnummer.
-8. En teig med matrikkelnummer hører til matrikkelenheten, ikke bare til kommunen.
+8. Sinken for matrikkelenheter krever en ny nøkkel for hvert bruksnummer.
+9. En teig med matrikkelnummer hører til matrikkelenheten, ikke bare til kommunen.
 
 Tilleggskrav:
 

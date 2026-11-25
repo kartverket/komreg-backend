@@ -130,10 +130,11 @@ internal val v1Capabilities: Map<String, SinkCapabilities> = mapOf(
         label = "Veg",
         actions = setOf(DomainAction.DERIVE, DomainAction.MOVE, DomainAction.RETIRE),
         retire = SuccessorPolicy.FORBIDDEN,
+        // CREATE og RETIRE_TO er sinkbegrensninger, ikke domeneregler. Se «Bakgrunn for domenereglene» i
+        // docs/reform-format-design.md.
         hints = mapOf(
-            DomainAction.CREATE to "Veger kan ikke opprettes uten kilde. Flytt en eksisterende veg (`move`), " +
-                "eller avled en ny fra den med `create` og `derivedFrom`.",
-            // Sinkbegrensning, ikke domeneregel. Se «Bakgrunn for domenereglene» i docs/reform-format-design.md.
+            DomainAction.CREATE to "Sinken støtter ikke opprettelse av veger ennå, fordi den kopierer adressenavnet " +
+                "fra en eksisterende veg. Avled den nye vegen fra en eksisterende med `create` og `derivedFrom`.",
             DomainAction.RETIRE_TO to "Sinken støtter ikke sammenslåing av veger ennå. Flytt vegen (`move`), eller " +
                 "slett den med `split` uten `successor`, og flytt adressene med egne regler.",
         ),
