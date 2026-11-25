@@ -220,10 +220,24 @@ class DomainRulesTest {
     }
 
     @Test
-    fun `veg kan bare avledes fra en kilde som flyttes`() {
+    fun `veg kan avledes fra en kilde som står i ro eller følger en forelder som flyttes`() {
+        assertThat(errors(ReformOp.Derive(veg(12, 36, 300), veg(12, 34, 100)))).isEmpty()
+        assertThat(
+            errors(
+                ReformOp.RetireTo(kommune(12, 34), kommune(12, 50)),
+                ReformOp.Derive(veg(12, 36, 300), veg(12, 34, 100)),
+            ),
+        ).isEmpty()
+    }
+
+    @Test
+    fun `veg kan ikke avledes fra en kilde under en forelder som utgår`() {
         assertRule(
-            errors(ReformOp.Derive(veg(12, 36, 300), veg(12, 34, 100))),
-            "DeriveWithoutMove",
+            errors(
+                ReformOp.Retire(kommune(12, 34), successor = kommune(12, 35)),
+                ReformOp.Derive(veg(12, 36, 300), veg(12, 34, 100)),
+            ),
+            "DeriveFromRetired",
         )
     }
 

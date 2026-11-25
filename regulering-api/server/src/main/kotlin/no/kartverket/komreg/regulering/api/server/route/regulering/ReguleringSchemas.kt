@@ -55,7 +55,7 @@ internal object ReguleringSchemas {
                     - `konflikt`: `Diverges`, `Conflict`, `SourceIsTarget`, `TargetUnderSource`,
                       `SourceUnderCreatedTarget`, `DeriveFromTarget`
                     - `domene`: `ActionNotSupported`, `RetireNeedsSuccessor`, `RetireHasSuccessor`, `WrongPayload`,
-                      `MissingMunicipalityCoat`, `TargetsInMultipleCounties`, `DeriveWithoutMove`,
+                      `MissingMunicipalityCoat`, `TargetsInMultipleCounties`, `DeriveFromRetired`,
                       `SeriesRetireWithoutTitleMoves`, `ParcelHasCadastralNumber`, `ParcelNotPaired`,
                       `TargetTypeMismatch`, `UnsupportedIdentType`
                     - `data`: `MunicipalityNotCovered`, `TargetNotFound`, `TargetExpired`, `TargetInUse`,

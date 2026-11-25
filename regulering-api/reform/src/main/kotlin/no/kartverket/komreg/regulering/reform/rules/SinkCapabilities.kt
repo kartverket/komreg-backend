@@ -78,10 +78,15 @@ private val targetsInOneCounty: Check = { scope ->
     }
 }
 
-private val deriveOnlyFromMove: Check = { scope ->
+/**
+ * En veg under en forelder som utgår, får delvis nøkkel, og det støtter ikke sinken. En egen `Retire` av vegen
+ * avvises allerede av [DomainErr.ActionNotSupported].
+ */
+private val deriveNotFromRetired: Check = { scope ->
     scope.ops.filterIsInstance<ReformOp.Derive>().mapNotNull { op ->
-        val rule = scope.claims.lookup(op.from)?.takeIf { it.isExact }?.operation
-        if (rule is ReformOp.Move) null else DomainErr.DeriveWithoutMove(op)
+        val match = scope.claims.lookup(op.from)
+        val retire = match?.operation as? ReformOp.Retire
+        if (retire != null && !match.isExact) DomainErr.DeriveFromRetired(op, retire) else null
     }
 }
 
@@ -161,7 +166,7 @@ internal val v1Capabilities: Map<String, SinkCapabilities> = mapOf(
                 "Bruk `split` der én av delene har `role: identity`.",
         ),
         defaultHint = "Bruk `move`, eller `split` der én av delene har `role: identity`.",
-        checks = listOf(deriveOnlyFromMove, targetsInOneCounty),
+        checks = listOf(deriveNotFromRetired, targetsInOneCounty),
     ),
     V1Kinds.ADDRESS_NUMBER to onlyMove("Vegadresse"),
     V1Kinds.DISTRICT_NUMBER to onlyMove("Krets"),

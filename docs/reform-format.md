@@ -457,7 +457,7 @@ stedet.
 |---|---|---|---|---|---|
 | `county` | ja | ja | nei ¹ | ja | ja, uten etterfølger |
 | `municipality` | ja | ja | nei ¹ | ja | ja, med etterfølger ² |
-| `addressCode` | nei | ja, når kilden flyttes ³ | ja | nei | nei ⁴ |
+| `addressCode` | nei | ja ³ | ja | nei | nei ⁴ |
 | `addressNumber`, `districtNumber`, `titleNumber` | nei | nei | ja | nei | nei |
 | `landNumber` | nei | nei | ja | nei | ja, uten etterfølger, med flytting av bruksnumre ⁵ |
 | `parcel` | nei | nei | ja, bare uten matrikkelnummer ⁶ | nei | nei |
@@ -470,8 +470,10 @@ Her betyr «opprette» `create`, «avlede» en ny del i `split`, `merge.into.new
 1. Sinkene tolker samme ID med ny nøkkel som at fylket eller kommunen utgår, uten at en ny rad opprettes. Gi nytt
    nummer med `merge` og `into.new`.
 2. Kommunen har én peker til etterfølgeren (`nykommuneid` i matrikkelen).
-3. Sinken for veger krever at en ny veg har en kildeveg, og at kildevegen selv får ny nøkkel. Del vegen med
-   `role: identity`.
+3. Sinken for veger lager en ny veg som kopi av kildevegen. Nye entiteter skrives før endringer og slettinger, så
+   kilden finnes fortsatt når den kopieres. Kilden kan flyttes (`role: identity`), stå i ro (`create` med
+   `derivedFrom`, for eksempel når en del av vegen havner i nabokommunen ved en grensejustering) eller følge en
+   forelder som flyttes. Den kan ikke ligge under en forelder som utgår, for da får den bare delvis nøkkel.
 4. En veg uten ny nøkkel blir slettet. Del vegen med `role: identity`.
 5. Sinken for matrikkelenheter krever en ny nøkkel for hvert bruksnummer.
 6. En teig med matrikkelnummer hører til matrikkelenheten, ikke bare til kommunen.
@@ -486,7 +488,7 @@ Tilleggskrav:
 | `WrongPayload` | `county`, `municipality` | Et nytt fylke har fylkespayload, og en ny kommune har kommunepayload. |
 | `MissingMunicipalityCoat` | `municipality` | En ny kommune har kommunevåpen. |
 | `TargetsInMultipleCounties` | `municipality`, `addressCode` | Alle mål fra én kilde ligger i samme fylke. |
-| `DeriveWithoutMove` | `addressCode` | En veg som det avledes fra, flyttes selv (`role: identity`). |
+| `DeriveFromRetired` | `addressCode` | En veg som det avledes fra, ligger ikke under en forelder som utgår (for eksempel en kommune som deles), med mindre vegen har en egen regel. |
 | `SeriesRetireWithoutTitleMoves` | `landNumber` | Et gårdsnummer som utgår, har minst én `move` av et bruksnummer under seg. Det sjekkes ikke at alle bruksnumrene er flyttet. |
 | `ParcelHasCadastralNumber` | `parcel` | Bare teiger uten matrikkelnummer flyttes. |
 | `ParcelNotPaired` | `parcel` | En teig flyttes fra begge plassholderne (bnr 0 og bnr 1) til samme mål. |
