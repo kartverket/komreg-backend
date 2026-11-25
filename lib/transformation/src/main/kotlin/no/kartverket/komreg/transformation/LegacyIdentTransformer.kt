@@ -9,7 +9,7 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
-class LegacyIdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
+class LegacyIdentTransformer(mappings: List<Pair<Ident, Mapping>>) : IdentTransformer {
     private val kommuneviseRegler: Map<Kommunenummer, List<Pair<Ident, Mapping>>>
     private val andreRegler: List<Pair<Ident, Mapping>>
 
@@ -36,10 +36,10 @@ class LegacyIdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
         andreRegler = aRegler
     }
 
-    suspend fun transform(
+    override suspend fun transform(
         entity: Entity,
         idProvider: suspend (IdType<*, *>, Any?) -> Id,
-    ): List<Transformation>? {
+    ): List<Transformation> {
         val transformIdentMedEvtSammenslaaingsflagg = entity.ident?.transformIdent()
         val primaryTransform = transformIdentMedEvtSammenslaaingsflagg?.first
         val sammenslaaingsflagg = transformIdentMedEvtSammenslaaingsflagg?.second
@@ -76,7 +76,7 @@ class LegacyIdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
                             ),
                         )
                     } else {
-                        null
+                        emptyList()
                     }
                 }
 
@@ -110,7 +110,7 @@ class LegacyIdentTransformer(mappings: List<Pair<Ident, Mapping>>) {
                     ),
                 )
             } else {
-                null
+                emptyList()
             }
         }
     }

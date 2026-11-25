@@ -107,7 +107,7 @@ class LegacyIdentTransformerVegTest {
         runBlocking {
             val result = identTransformer.transform(entity, idGenerator::idFor)
             val expected1 = identOfVeg(3, 6, 2500)
-            assertEquals(1, result!!.size)
+            assertEquals(1, result.size)
             assertEquals(expected1, result[0].transformedIdent)
         }
     }
@@ -123,7 +123,7 @@ class LegacyIdentTransformerVegTest {
             val result = identTransformer.transform(entity, idGenerator::idFor)
             val expected1 = identOfVeg(3, 6, 2600)
             val expected2 = identOfVeg(3, 7, 2600)
-            assertEquals(expected1, result!![0].transformedIdent)
+            assertEquals(expected1, result[0].transformedIdent)
             assertEquals(expected2, result[1].transformedIdent)
         }
     }

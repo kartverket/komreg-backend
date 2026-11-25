@@ -65,7 +65,7 @@ class LegacyIdentTransformerVegadresseTest {
         runBlocking {
             val result = identTransformer.transform(entity, idGenerator::idFor)
             val expected1 = identOfVegadresse(3, 6, 2600, 10)
-            assertEquals(1, result!!.size)
+            assertEquals(1, result.size)
             assertEquals(expected1, result[0].transformedIdent)
         }
     }

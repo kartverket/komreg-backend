@@ -74,16 +74,9 @@ suspend fun transform(
             logger.info("Skriver transformasjon for ${entitySource.id}")
             val flow = entitySource.entityFlow
 
-            val transformResult =
-                flow
-                    .mapNotNull { entity ->
-                        val result = transformer.transform(entity, idGeneratorManager::idFor)
-                        result
-                    }
-
             val transformResultFlow =
-                transformResult.transform { list ->
-                    list.forEach { emit(it) }
+                flow.transform { entity ->
+                    transformer.transform(entity, idGeneratorManager::idFor).forEach { emit(it) }
                 }
             transformResultFlow.chunked(10000)
                 .collect { chunk ->

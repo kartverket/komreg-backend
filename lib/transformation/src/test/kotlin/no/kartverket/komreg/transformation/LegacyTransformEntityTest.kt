@@ -8,6 +8,7 @@ import no.kartverket.komreg.core.domain.*
 import no.kartverket.komreg.integration.spi.Entity
 import no.kartverket.komreg.integration.spi.IdGeneratorManager
 import no.kartverket.komreg.integration.spi.Ident
+import no.kartverket.komreg.integration.spi.Transformation
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -115,7 +116,7 @@ class LegacyTransformEntityTest {
             val result = identTransformer.transform(entity, idGenerator::idFor)
             val expected = identOfKommune(3, 6)
 
-            assertEquals(null, result!![0].resultObject)
+            assertEquals(null, result[0].resultObject)
             assertEquals(dummyKommune.tilKommunedata(ikrafttredelsesdato), result[1].resultObject)
             assertEquals(expected, result[1].transformedIdent)
         }
@@ -134,7 +135,7 @@ class LegacyTransformEntityTest {
             val expected = identOfKommune(5, 7)
             val expected2 = identOfKommune(5, 8)
 
-            assertEquals(3, result!!.size)
+            assertEquals(3, result.size)
             assertEquals(null, result[0].resultObject)
             assertEquals(expected, result[1].transformedIdent)
             assertEquals(expected2, result[2].transformedIdent)
@@ -150,7 +151,7 @@ class LegacyTransformEntityTest {
             )
         runBlocking {
             val result = identTransformer.transform(entity, idGenerator::idFor)
-            assertEquals(null, result)
+            assertEquals(emptyList<Transformation>(), result)
         }
     }
 
@@ -172,7 +173,7 @@ class LegacyTransformEntityTest {
                     identOfMatrikkelenhet(3, 6, 1),
                     identOfMatrikkelenhet(3, 6, 2),
                 )
-            assertEquals(expected, result?.single()?.transformedAssociatedIdents)
+            assertEquals(expected, result.single().transformedAssociatedIdents)
         }
     }
 
@@ -194,7 +195,7 @@ class LegacyTransformEntityTest {
                     identOfMatrikkelenhet(3, 6, 1),
                     identOfMatrikkelenhet(10, 15, 1),
                 )
-            assertEquals(expected, result?.single()?.transformedAssociatedIdents)
+            assertEquals(expected, result.single().transformedAssociatedIdents)
         }
     }
 
@@ -216,7 +217,7 @@ class LegacyTransformEntityTest {
                     identOfMatrikkelenhet(10, 15, 1),
                     identOfMatrikkelenhet(3, 6, 1),
                 )
-            assertEquals(expected, result?.single()?.transformedAssociatedIdents)
+            assertEquals(expected, result.single().transformedAssociatedIdents)
         }
     }
 }

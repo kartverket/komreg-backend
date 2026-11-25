@@ -116,7 +116,7 @@ class LegacyIdentTransformerTest : BehaviorSpec({
             .transform(entity, idGeneratorManager::idFor)
 
         Then("lengste regel brukes") {
-            assertThat(transformation?.singleOrNull()?.transformedIdent, "transformedIdent")
+            assertThat(transformation.single().transformedIdent, "transformedIdent")
                 .isEqualTo(
                     matrikkelenhetIdentType(
                         Fylkesnummer(43),

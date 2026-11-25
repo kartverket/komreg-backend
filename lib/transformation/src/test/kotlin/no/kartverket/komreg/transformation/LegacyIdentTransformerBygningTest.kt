@@ -48,8 +48,8 @@ class LegacyIdentTransformerBygningTest {
             val result = identTransformer.transform(entity, idGenerator::idFor)
             val expectedIdent = identOfBygningUtenFylkeOgKommune(123456789)
             val expectedAssociatedIdents = setOf(identOfMatrikkelenhet(2, 6, 1))
-            assertEquals(expectedIdent, result?.single()?.transformedIdent)
-            assertEquals(expectedAssociatedIdents, result?.single()?.transformedAssociatedIdents)
+            assertEquals(expectedIdent, result.single().transformedIdent)
+            assertEquals(expectedAssociatedIdents, result.single().transformedAssociatedIdents)
         }
     }
 
@@ -71,8 +71,8 @@ class LegacyIdentTransformerBygningTest {
                 identOfMatrikkelenhet(2, 6, 1),
                 identOfMatrikkelenhet(2, 10, 1),
             )
-            assertEquals(expectedIdent, result?.single()?.transformedIdent)
-            assertEquals(expectedAssociatedIdents, result?.single()?.transformedAssociatedIdents)
+            assertEquals(expectedIdent, result.single().transformedIdent)
+            assertEquals(expectedAssociatedIdents, result.single().transformedAssociatedIdents)
         }
     }
 
