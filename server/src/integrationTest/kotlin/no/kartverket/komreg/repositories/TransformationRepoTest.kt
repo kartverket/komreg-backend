@@ -15,7 +15,7 @@ import no.kartverket.komreg.integration.spi.Transformation
 import no.kartverket.komreg.integration.spi.identTypeOf2
 import no.kartverket.komreg.integration.spi.invoke
 import no.kartverket.komreg.jsonSerializer
-import no.kartverket.komreg.routes.Regulering
+import no.kartverket.komreg.routes.LegacyRegulering
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.testcontainers.postgresql.PostgreSQLContainer
@@ -46,7 +46,7 @@ class TransformationRepoTest {
     private fun initKjoring(dataSource: DataSource): Int {
         val reguleringRepo = ReguleringRepo(dataSource)
         val ok = reguleringRepo.insertRegulering(
-            Regulering(
+            LegacyRegulering(
                 "abc",
                 "def",
                 Clock.System.todayIn(TimeZone.currentSystemDefault()),

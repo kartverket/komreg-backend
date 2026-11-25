@@ -16,7 +16,7 @@ enum class ErrorType {
 class ReguleringValidator {
 
     companion object {
-        fun validateFylkesdeling(regulering: Regulering): Map<String, List<ErrorType>> {
+        fun validateFylkesdeling(regulering: LegacyRegulering): Map<String, List<ErrorType>> {
             val errors = mutableMapOf<String, List<ErrorType>>()
 
             regulering.endringer.forEach { endring ->
@@ -45,7 +45,7 @@ class ReguleringValidator {
             return errors
         }
 
-        fun validateKommunedeling(regulering: Regulering): Map<String, List<ErrorType>> {
+        fun validateKommunedeling(regulering: LegacyRegulering): Map<String, List<ErrorType>> {
             val errors = mutableMapOf<String, List<ErrorType>>()
 
             regulering.endringer.forEach { endring ->
@@ -81,7 +81,7 @@ class ReguleringValidator {
             return errors
         }
 
-        fun validateVegdeling(regulering: Regulering): Map<String, List<ErrorType>> {
+        fun validateVegdeling(regulering: LegacyRegulering): Map<String, List<ErrorType>> {
             val errors = mutableMapOf<String, List<ErrorType>>()
 
             regulering.endringer.forEach { endring ->
@@ -98,7 +98,7 @@ class ReguleringValidator {
         }
 
         fun validate(
-            regulering: Regulering
+            regulering: LegacyRegulering
         ): Map<String, List<ErrorType>> {
             val errors = mutableMapOf<String, List<ErrorType>>()
 

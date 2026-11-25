@@ -6,7 +6,7 @@ import no.kartverket.komreg.exceptions.ReguleringAlreadyRunningException
 import no.kartverket.komreg.repositories.KjoringRepo
 import no.kartverket.komreg.repositories.Kjoringstatus
 import no.kartverket.komreg.repositories.ReguleringRepo
-import no.kartverket.komreg.routes.Regulering
+import no.kartverket.komreg.routes.LegacyRegulering
 import no.kartverket.komreg.validation.ReguleringValidator
 
 class ReguleringService(
@@ -16,7 +16,7 @@ class ReguleringService(
 
     fun getOrThrowRegulering(
         regId: String,
-    ): Regulering {
+    ): LegacyRegulering {
         val regulering = reguleringRepo.getReguleringById(regId)
             ?: throw NotFoundException("Fant ingen regulering for regId: $regId")
 

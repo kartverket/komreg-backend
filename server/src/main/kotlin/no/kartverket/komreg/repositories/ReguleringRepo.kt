@@ -1,27 +1,26 @@
 package no.kartverket.komreg.repositories
 
 import kotlinx.datetime.toJavaLocalDate
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.kartverket.komreg.routes.EndringDTO
 import no.kartverket.komreg.routes.KommuneDTO
-import no.kartverket.komreg.routes.Regulering
+import no.kartverket.komreg.routes.LegacyRegulering
 import java.sql.Date
 import javax.sql.DataSource
 
 class ReguleringRepo(
     private val dataSource: DataSource,
 ) {
-    fun getAllReguleringer(): List<Regulering> {
+    fun getAllReguleringer(): List<LegacyRegulering> {
         dataSource.connection.use { connection ->
             val statement = connection.prepareStatement("SELECT regulering FROM regulering")
             val resultSet = statement.executeQuery()
 
-            val reguleringerList = mutableListOf<Regulering>()
+            val reguleringerList = mutableListOf<LegacyRegulering>()
 
             while (resultSet.next()) {
                 val reguleringJson = resultSet.getString(1)
-                val regulering = Json.decodeFromString<Regulering>(reguleringJson)
+                val regulering = Json.decodeFromString<LegacyRegulering>(reguleringJson)
                 reguleringerList.add(regulering)
             }
 
@@ -31,15 +30,15 @@ class ReguleringRepo(
         }
     }
 
-    fun getReguleringById(id: String): Regulering? {
+    fun getReguleringById(id: String): LegacyRegulering? {
         dataSource.connection.use { connection ->
             val statement = connection.prepareStatement("SELECT regulering FROM regulering WHERE id = ?")
             statement.setString(1, id)
             val resultSet = statement.executeQuery()
 
-            val regulering: Regulering? = if (resultSet.next()) {
+            val regulering: LegacyRegulering? = if (resultSet.next()) {
                 val reguleringJson = resultSet.getString(1)
-                Json.decodeFromString<Regulering>(reguleringJson)
+                Json.decodeFromString<LegacyRegulering>(reguleringJson)
             } else {
                 null
             }
@@ -50,7 +49,7 @@ class ReguleringRepo(
         }
     }
 
-    fun insertRegulering(regulering: Regulering): Boolean {
+    fun insertRegulering(regulering: LegacyRegulering): Boolean {
         dataSource.connection.use { connection ->
             val currentTime = java.sql.Timestamp(System.currentTimeMillis())
             val statement = connection.prepareStatement(
@@ -72,7 +71,7 @@ class ReguleringRepo(
         }
     }
 
-    fun updateRegulering(regulering: Regulering): Boolean {
+    fun updateRegulering(regulering: LegacyRegulering): Boolean {
         dataSource.connection.use { connection ->
 
             val checkStatement = connection.prepareStatement("SELECT count(id) FROM regulering WHERE id = ?")
@@ -136,7 +135,7 @@ class ReguleringRepo(
 
             if (resultSet.next()) {
                 val reguleringJson = resultSet.getString(1)
-                val regulering = Json.decodeFromString<Regulering>(reguleringJson)
+                val regulering = Json.decodeFromString<LegacyRegulering>(reguleringJson)
 
                 statement.close()
                 connection.close()
@@ -158,7 +157,7 @@ class ReguleringRepo(
 
             if (resultSet.next()) {
                 val reguleringJson = resultSet.getString(1)
-                val regulering = Json.decodeFromString<Regulering>(reguleringJson)
+                val regulering = Json.decodeFromString<LegacyRegulering>(reguleringJson)
 
                 statement.close()
 
@@ -178,7 +177,7 @@ class ReguleringRepo(
             val resultSet = statement.executeQuery()
             if (resultSet.next()) {
                 val reguleringJson = resultSet.getString("regulering")
-                val regulering = Json.decodeFromString<Regulering>(reguleringJson)
+                val regulering = Json.decodeFromString<LegacyRegulering>(reguleringJson)
 
                 val updatedEndringer = regulering.endringer + endring
                 val updatedRegulering = regulering.copy(endringer = updatedEndringer)
@@ -207,7 +206,7 @@ class ReguleringRepo(
             val resultSet = statement.executeQuery()
             if (resultSet.next()) {
                 val reguleringJson = resultSet.getString("regulering")
-                val regulering = Json.decodeFromString<Regulering>(reguleringJson)
+                val regulering = Json.decodeFromString<LegacyRegulering>(reguleringJson)
 
                 val endringIndex = regulering.endringer.indexOfFirst { it.id == endringId }
                 if (endringIndex != -1) {
@@ -239,7 +238,7 @@ class ReguleringRepo(
             val resultSet = statement.executeQuery()
             if (resultSet.next()) {
                 val reguleringJson = resultSet.getString("regulering")
-                val regulering = Json.decodeFromString<Regulering>(reguleringJson)
+                val regulering = Json.decodeFromString<LegacyRegulering>(reguleringJson)
 
                 val endringIndex = regulering.endringer.indexOfFirst { it.id == endringId }
                 if (endringIndex != -1) {

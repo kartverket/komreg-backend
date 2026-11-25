@@ -46,7 +46,7 @@ fun Application.reguleringRoutes(reguleringService: ReguleringService, regulerin
             post {
                 try {
                     val requestBody = call.receiveText()
-                    val regulering: Regulering = Json.decodeFromString(Regulering.serializer(), requestBody)
+                    val regulering: LegacyRegulering = Json.decodeFromString(LegacyRegulering.serializer(), requestBody)
                     reguleringRepo.insertRegulering(regulering)
                     call.respond(HttpStatusCode.OK, "Regulering JSON received and saved successfully.")
                 } catch (e: Exception) {
@@ -59,7 +59,7 @@ fun Application.reguleringRoutes(reguleringService: ReguleringService, regulerin
         // Modify (replace) existing regulering
         route("/reguleringer") {
             put {
-                val regulering: Regulering = call.receive()
+                val regulering: LegacyRegulering = call.receive()
 
 
                 if (reguleringRepo.updateRegulering(regulering)) {

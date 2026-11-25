@@ -4,13 +4,21 @@ import kotlinx.datetime.LocalDate
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+sealed interface Regulering {
+    val navn: String
+    val ikrafttredelse: LocalDate
+}
+
 @Serializable
-data class Regulering(
+@SerialName("Regulering")
+data class LegacyRegulering(
     val id: String,
-    val navn: String,
+    override val navn: String,
     val dato: LocalDate,
     val endringer: List<EndringDTO>,
-) {
+) : Regulering {
+    override val ikrafttredelse: LocalDate
+        get() = dato
 }
 
 @Serializable

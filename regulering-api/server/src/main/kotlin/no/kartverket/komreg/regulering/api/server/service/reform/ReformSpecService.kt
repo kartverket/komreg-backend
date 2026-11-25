@@ -4,7 +4,6 @@ import arrow.core.Either
 import arrow.core.EitherNel
 import arrow.core.NonEmptyList
 import arrow.core.left
-import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.right
 import kotlinx.serialization.SerializationException
@@ -21,7 +20,7 @@ import no.kartverket.komreg.regulering.reform.rules.DataErr
 import no.kartverket.komreg.regulering.reform.rules.DomainErr
 import no.kartverket.komreg.regulering.reform.rules.validateData
 import no.kartverket.komreg.regulering.reform.rules.validateDomain
-import no.kartverket.komreg.routes.Regulering
+import no.kartverket.komreg.routes.LegacyRegulering
 import no.kartverket.komreg.routes.Umappbar
 import no.kartverket.komreg.routes.toReguleringDTO
 import no.kartverket.komreg.transformation.reform.ReformClaims
@@ -29,7 +28,7 @@ import no.kartverket.komreg.transformation.reform.ReformErr
 import no.kartverket.komreg.transformation.reform.ReformOp
 
 /**
- * Kjeden fra [ReformSpec] til [Regulering]: `resolve` → `ReformClaims.validate` → `validateDomain` →
+ * Kjeden fra [ReformSpec] til [LegacyRegulering]: `resolve` → `ReformClaims.validate` → `validateDomain` →
  * `validateData` → `toReguleringDTO`. Kjeden stopper etter første steg som feiler, og hvert steg rapporterer
  * alle sine feil med JSON-stier. Ingenting lagres, og alt avledes på nytt ved hvert kall, siden dataene fra
  * [kommuneService] kan endre seg.
@@ -48,11 +47,11 @@ class ReformSpecService(
     suspend fun validateNonDto(spec: ReformSpec): List<ReformFeil> =
         validateData(spec).leftOrNull() ?:  emptyList()
 
-    /** Den avledede [Regulering] med [id] som DTO-id, eller feilene fra det første steget som feiler. */
-    suspend fun regulering(id: Int, spec: ReformSpec): Either<NonEmptyList<ReformFeil>, Regulering> =
+    /** Den avledede [LegacyRegulering] med [id] som DTO-id, eller feilene fra det første steget som feiler. */
+    suspend fun regulering(id: Int, spec: ReformSpec): Either<NonEmptyList<ReformFeil>, LegacyRegulering> =
         derive(id.toString(), spec)
 
-    private suspend fun derive(id: String, spec: ReformSpec): Either<NonEmptyList<ReformFeil>, Regulering> = either {
+    private suspend fun derive(id: String, spec: ReformSpec): Either<NonEmptyList<ReformFeil>, LegacyRegulering> = either {
         val (resolved, claims) = validateData(spec).bind()
         claims.toReguleringDTO(id, spec.navn, spec.ikrafttredelse, kommuneService)
             .mapLeft { errs -> errs.map { it.toFeil(resolved) } }
