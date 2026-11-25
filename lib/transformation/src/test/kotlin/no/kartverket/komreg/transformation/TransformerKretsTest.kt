@@ -45,7 +45,7 @@ class TransformerKretsTest : FunSpec({
 
         transform(
             1,
-            Reguleringsinput(
+            ikrafttredelsesdato = Reguleringsinput(
                 "abc",
                 Clock.System.todayIn(TimeZone.currentSystemDefault()),
                 listOf(
@@ -69,6 +69,35 @@ class TransformerKretsTest : FunSpec({
                         createDummyKommunevaapenImage('K'),
                     ),
                 ),
+            ).ikrafttredelsesdato,
+            transformer = LegacyIdentTransformer(
+                mapInput(
+                    Reguleringsinput(
+                        "abc",
+                        Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                        listOf(
+                            Kommuneendring(
+                                FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(13))),
+                                FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(24))),
+                            ),
+                        ),
+                        emptyList(),
+                        listOf(
+                            Kommune(
+                                Kommunenummer(1324),
+                                Kommunenavn("Ny kommune"),
+                                null,
+                                Koordinatsystem.UTM32,
+                                Koordinat(0.0, 0.0),
+                                false,
+                                "",
+                                null,
+                                null,
+                                createDummyKommunevaapenImage('K'),
+                            ),
+                        ),
+                    )
+                )
             ),
             emptyList(),
             listOf(source),
@@ -140,7 +169,7 @@ class TransformerKretsTest : FunSpec({
 
         transform(
             1,
-            Reguleringsinput(
+            ikrafttredelsesdato = Reguleringsinput(
                 "abc",
                 Clock.System.todayIn(TimeZone.currentSystemDefault()),
                 listOf(
@@ -166,6 +195,37 @@ class TransformerKretsTest : FunSpec({
                         createDummyKommunevaapenImage('K'),
                     ),
                 ),
+            ).ikrafttredelsesdato,
+            transformer = LegacyIdentTransformer(
+                mapInput(
+                    Reguleringsinput(
+                        "abc",
+                        Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                        listOf(
+                            Kretsendring(
+                                FraTil(Fylkesnummer(12), Fylkesnummer(13)),
+                                FraTil(Kommunenummer.Lopenummer(34), Kommunenummer.Lopenummer(24)),
+                                kretstype = FraTil(Kretstype("G"), Kretstype("G")),
+                                kretsnummer = FraTil(Kretsnummer(2), Kretsnummer(10)),
+                            ),
+                        ),
+                        emptyList(),
+                        listOf(
+                            Kommune(
+                                Kommunenummer(1324),
+                                Kommunenavn("Ny kommune"),
+                                null,
+                                Koordinatsystem.UTM32,
+                                Koordinat(0.0, 0.0),
+                                false,
+                                "",
+                                null,
+                                null,
+                                createDummyKommunevaapenImage('K'),
+                            ),
+                        ),
+                    )
+                )
             ),
             emptyList(),
             listOf(source),

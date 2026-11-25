@@ -54,7 +54,7 @@ class TransformerBygningTest : FunSpec({
 
         transform(
             1,
-            Reguleringsinput(
+            ikrafttredelsesdato = Reguleringsinput(
                 "abc",
                 Clock.System.todayIn(TimeZone.currentSystemDefault()),
                 listOf(
@@ -78,6 +78,35 @@ class TransformerBygningTest : FunSpec({
                         createDummyKommunevaapenImage('K'),
                     ),
                 ),
+            ).ikrafttredelsesdato,
+            transformer = LegacyIdentTransformer(
+                mapInput(
+                    Reguleringsinput(
+                        "abc",
+                        Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                        listOf(
+                            Kommuneendring(
+                                FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(13))),
+                                FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(24))),
+                            ),
+                        ),
+                        emptyList(),
+                        listOf(
+                            Kommune(
+                                Kommunenummer(1324),
+                                Kommunenavn("Ny kommune"),
+                                null,
+                                Koordinatsystem.UTM32,
+                                Koordinat(0.0, 0.0),
+                                false,
+                                "",
+                                null,
+                                null,
+                                createDummyKommunevaapenImage('K'),
+                            ),
+                        ),
+                    )
+                )
             ),
             emptyList(),
             listOf(byggSource),
@@ -198,7 +227,8 @@ class TransformerBygningTest : FunSpec({
 
             transform(
                 1,
-                input,
+                ikrafttredelsesdato = input.ikrafttredelsesdato,
+                transformer = LegacyIdentTransformer(mapInput(input)),
                 emptyList(),
                 listOf(byggSource),
                 emptyList(),
@@ -249,7 +279,8 @@ class TransformerBygningTest : FunSpec({
 
             transform(
                 1,
-                input,
+                ikrafttredelsesdato = input.ikrafttredelsesdato,
+                transformer = LegacyIdentTransformer(mapInput(input)),
                 emptyList(),
                 listOf(byggSource),
                 emptyList(),

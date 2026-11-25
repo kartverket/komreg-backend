@@ -17,6 +17,8 @@ import no.kartverket.komreg.exceptions.ReguleringAlreadyFinishedException
 import no.kartverket.komreg.repositories.*
 import no.kartverket.komreg.services.ReguleringService
 import no.kartverket.komreg.services.transformEntities
+import no.kartverket.komreg.transformation.LegacyIdentTransformer
+import no.kartverket.komreg.transformation.mapInput
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.sql.SQLException
@@ -44,7 +46,9 @@ fun Application.kjoringroutes(
 
                     if (kjoringsomskalgjenopptas != null) {
                         transformEntities(
-                            regulering.toReguleringsinput(),
+                            regulering.toReguleringsinput().id,
+                            regulering.toReguleringsinput().ikrafttredelsesdato,
+                            LegacyIdentTransformer(mapInput(regulering.toReguleringsinput())),
                             KjoringContextImpl(kjoringsomskalgjenopptas.id, komregDataSource),
                             transformationRepo,
                             kjoringRepo,
@@ -64,7 +68,9 @@ fun Application.kjoringroutes(
                         val reguleringsinput = regulering.toReguleringsinput()
 
                         transformEntities(
-                            reguleringsinput,
+                            reguleringsinput.id,
+                            reguleringsinput.ikrafttredelsesdato,
+                            LegacyIdentTransformer(mapInput(reguleringsinput)),
                             KjoringContextImpl(kjoringId, komregDataSource),
                             transformationRepo,
                             kjoringRepo,

@@ -46,7 +46,8 @@ interface Storage {
 
 suspend fun transform(
     kjoringId: Int,
-    input: Reguleringsinput,
+    ikrafttredelsesdato: LocalDate,
+    transformer: IdentTransformer,
     lifeCycleHandlers: List<LifeCycleHandler>,
     entitySources: List<EntitySource>,
     entityProcessors: List<EntityProcessor>,
@@ -57,7 +58,6 @@ suspend fun transform(
     erForstegangskjoring: Boolean = true,
 ) {
     val logger: Logger = LoggerFactory.getLogger({}::class.java)
-    val transformer = LegacyIdentTransformer(mapInput(input))
 
     val gjenvarendeSinkerForNyeEntiteter = storage.hentSinkerSomSkalGjenopptasForNyeEntiteter(kjoringId)
     val gjenvarendeSinkerForErstattendeEntiteter =
@@ -120,7 +120,7 @@ suspend fun transform(
                             val sourceEntity = it.sourceEntity
                             sourceEntity == null || sourceEntity.id != it.id
                         },
-                        input.ikrafttredelsesdato.toJavaLocalDate(),
+                        ikrafttredelsesdato.toJavaLocalDate(),
                     )
                     logger.info("Tilbakeført nyopprettinger for ${sink.id}")
                     storage.setTilbakeforingsStatusForSink(sink, "FERDIG", kjoringId, erOppretting = true)
@@ -143,7 +143,7 @@ suspend fun transform(
                             val sourceEntity = it.sourceEntity
                             sourceEntity != null && sourceEntity.id == it.id
                         },
-                        input.ikrafttredelsesdato.toJavaLocalDate(),
+                        ikrafttredelsesdato.toJavaLocalDate(),
                     )
                     logger.info("Tilbakeført endringer for ${sink.id}")
                     storage.setTilbakeforingsStatusForSink(sink, "FERDIG", kjoringId, erOppretting = false)
