@@ -1,7 +1,6 @@
 package no.kartverket.komreg.transformation
 
 import io.mockk.coEvery
-import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.toKotlinLocalDate
@@ -17,7 +16,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class IdentTransformerVegadresseTest {
+class LegacyIdentTransformerVegadresseTest {
     private val ikrafttredelsesdato = LocalDate.now().toKotlinLocalDate()
 
     private val reguleringsInput = Reguleringsinput(
@@ -48,7 +47,7 @@ class IdentTransformerVegadresseTest {
     )
 
     private val mappings = runBlocking { mapInput(reguleringsInput) }
-    private val identTransformer = IdentTransformer(*mappings.toTypedArray())
+    private val identTransformer = LegacyIdentTransformer(*mappings.toTypedArray())
 
     private val idGenerator = mockk<IdGeneratorManager>()
 
@@ -66,7 +65,7 @@ class IdentTransformerVegadresseTest {
         runBlocking {
             val result = identTransformer.transform(entity, idGenerator::idFor)
             val expected1 = identOfVegadresse(3, 6, 2600, 10)
-            assertEquals(1, result!!.size)
+            assertEquals(1, result.size)
             assertEquals(expected1, result[0].transformedIdent)
         }
     }

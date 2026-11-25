@@ -11,7 +11,7 @@ import no.kartverket.komreg.core.domain.*
 import no.kartverket.komreg.integration.spi.*
 import java.util.concurrent.atomic.AtomicLong
 
-class IdentTransformerTest : BehaviorSpec({
+class LegacyIdentTransformerTest : BehaviorSpec({
     val kommuneIdentType: KommuneIdentType = runBlocking { identTypeOf2() }
     val bygningIdentType: BygningIdentType = runBlocking { identTypeOf3() }
     val unresolvedBygningIdentType: UnresolvedBygningIdentType = runBlocking { identTypeOf1() }
@@ -28,11 +28,11 @@ class IdentTransformerTest : BehaviorSpec({
         }
     }
 
-    fun flyttKommune() = IdentTransformer(
+    fun flyttKommune() = LegacyIdentTransformer(
         kommuneIdentType(
             Fylkesnummer(12),
             Kommunenummer.Lopenummer(34)
-        ) to IdentTransformer.Mapping.Replace(
+        ) to LegacyIdentTransformer.Mapping.Replace(
             kommuneIdentType(
                 Fylkesnummer(12),
                 Kommunenummer.Lopenummer(35)
@@ -41,11 +41,11 @@ class IdentTransformerTest : BehaviorSpec({
         )
     )
 
-    fun splittKommuneUtenKobling() = IdentTransformer(
+    fun splittKommuneUtenKobling() = LegacyIdentTransformer(
         kommuneIdentType(
             Fylkesnummer(12),
             Kommunenummer.Lopenummer(34)
-        ) to IdentTransformer.Mapping.Split(
+        ) to LegacyIdentTransformer.Mapping.Split(
             listOf(
                 Ident.Empty to null,
                 kommuneIdentType(
@@ -60,11 +60,11 @@ class IdentTransformerTest : BehaviorSpec({
         )
     )
 
-    fun splittKommuneMedKobling() = IdentTransformer(
+    fun splittKommuneMedKobling() = LegacyIdentTransformer(
         kommuneIdentType(
             Fylkesnummer(12),
             Kommunenummer.Lopenummer(34)
-        ) to IdentTransformer.Mapping.Split(
+        ) to LegacyIdentTransformer.Mapping.Split(
             listOf(
                 kommuneIdentType(
                     Fylkesnummer(12),
@@ -102,21 +102,21 @@ class IdentTransformerTest : BehaviorSpec({
         )
 
 
-        val transformation = IdentTransformer(
-            kommuneIdentType(fnr, klnr) to IdentTransformer.Mapping.Split(
+        val transformation = LegacyIdentTransformer(
+            kommuneIdentType(fnr, klnr) to LegacyIdentTransformer.Mapping.Split(
                 listOf(
                     kommuneIdentType(fnr, klnr) to null,
                     kommuneIdentType(fnr, Kommunenummer.Lopenummer(22)) to null,
                 )
             ),
-            gardsnummerIdentType(fnr, klnr, Matrikkelnummer.Gardsnummer(4)) to IdentTransformer.Mapping.Simple(
+            gardsnummerIdentType(fnr, klnr, Matrikkelnummer.Gardsnummer(4)) to LegacyIdentTransformer.Mapping.Simple(
                 gardsnummerIdentType(Fylkesnummer(43), Kommunenummer.Lopenummer(21), Matrikkelnummer.Gardsnummer(5))
             )
         )
             .transform(entity, idGeneratorManager::idFor)
 
         Then("lengste regel brukes") {
-            assertThat(transformation?.singleOrNull()?.transformedIdent, "transformedIdent")
+            assertThat(transformation.single().transformedIdent, "transformedIdent")
                 .isEqualTo(
                     matrikkelenhetIdentType(
                         Fylkesnummer(43),
@@ -409,11 +409,11 @@ class IdentTransformerTest : BehaviorSpec({
         }
 
         When("splitt kommune og fordel gårdsnummer") {
-            val transformer = IdentTransformer(
+            val transformer = LegacyIdentTransformer(
                 kommuneIdentType(
                     Fylkesnummer(12),
                     Kommunenummer.Lopenummer(34)
-                ) to IdentTransformer.Mapping.Split(
+                ) to LegacyIdentTransformer.Mapping.Split(
                     listOf(
                         Ident.Empty to null,
                         kommuneIdentType(
@@ -430,7 +430,7 @@ class IdentTransformerTest : BehaviorSpec({
                     Fylkesnummer(12),
                     Kommunenummer.Lopenummer(34),
                     Matrikkelnummer.Gardsnummer(1)
-                ) to IdentTransformer.Mapping.Simple(
+                ) to LegacyIdentTransformer.Mapping.Simple(
                     gardsnummerIdentType(
                         Fylkesnummer(12),
                         Kommunenummer.Lopenummer(35),
@@ -441,7 +441,7 @@ class IdentTransformerTest : BehaviorSpec({
                     Fylkesnummer(12),
                     Kommunenummer.Lopenummer(34),
                     Matrikkelnummer.Gardsnummer(2)
-                ) to IdentTransformer.Mapping.Simple(
+                ) to LegacyIdentTransformer.Mapping.Simple(
                     gardsnummerIdentType(
                         Fylkesnummer(12),
                         Kommunenummer.Lopenummer(36),
@@ -486,12 +486,12 @@ class IdentTransformerTest : BehaviorSpec({
         }
     }
 
-    fun flyttAdresseparsell() = IdentTransformer(
+    fun flyttAdresseparsell() = LegacyIdentTransformer(
         adresseparsellIdentType(
             Fylkesnummer(12),
             Kommunenummer.Lopenummer(34),
             Adressekode(10000)
-        ) to IdentTransformer.Mapping.Simple(
+        ) to LegacyIdentTransformer.Mapping.Simple(
             adresseparsellIdentType(
                 Fylkesnummer(12),
                 Kommunenummer.Lopenummer(35),
@@ -500,12 +500,12 @@ class IdentTransformerTest : BehaviorSpec({
         )
     )
 
-    fun splittAdresseparsell() = IdentTransformer(
+    fun splittAdresseparsell() = LegacyIdentTransformer(
         adresseparsellIdentType(
             Fylkesnummer(12),
             Kommunenummer.Lopenummer(34),
             Adressekode(10000)
-        ) to IdentTransformer.Mapping.Split(
+        ) to LegacyIdentTransformer.Mapping.Split(
             listOf(
                 adresseparsellIdentType(
                     Fylkesnummer(12),
@@ -669,12 +669,12 @@ class IdentTransformerTest : BehaviorSpec({
         }
 
         When("hvor adresseparsellen splittes, men adressen har egen regel") {
-            val transformer = IdentTransformer(
+            val transformer = LegacyIdentTransformer(
                 adresseparsellIdentType(
                     Fylkesnummer(12),
                     Kommunenummer.Lopenummer(34),
                     Adressekode(10000)
-                ) to IdentTransformer.Mapping.Split(
+                ) to LegacyIdentTransformer.Mapping.Split(
                     listOf(
                         adresseparsellIdentType(
                             Fylkesnummer(12),
@@ -693,7 +693,7 @@ class IdentTransformerTest : BehaviorSpec({
                     Kommunenummer.Lopenummer(34),
                     Adressekode(10000),
                     Adressenummernummer(10)
-                ) to IdentTransformer.Mapping.Simple(
+                ) to LegacyIdentTransformer.Mapping.Simple(
                     vegadresseIdentType(
                         Fylkesnummer(12),
                         Kommunenummer.Lopenummer(35),

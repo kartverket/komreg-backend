@@ -15,7 +15,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class IdentTransformerVegTest {
+class LegacyIdentTransformerVegTest {
     private val ikrafttredelsesdato = LocalDate.now().toKotlinLocalDate()
 
     private val reguleringsInput =
@@ -88,7 +88,7 @@ class IdentTransformerVegTest {
             fylker = emptyList(),
         )
     private val mappings = runBlocking { mapInput(reguleringsInput) }
-    private val identTransformer = IdentTransformer(*mappings.toTypedArray())
+    private val identTransformer = LegacyIdentTransformer(*mappings.toTypedArray())
 
     private val idGenerator = mockk<IdGeneratorManager>()
 
@@ -107,7 +107,7 @@ class IdentTransformerVegTest {
         runBlocking {
             val result = identTransformer.transform(entity, idGenerator::idFor)
             val expected1 = identOfVeg(3, 6, 2500)
-            assertEquals(1, result!!.size)
+            assertEquals(1, result.size)
             assertEquals(expected1, result[0].transformedIdent)
         }
     }
@@ -123,7 +123,7 @@ class IdentTransformerVegTest {
             val result = identTransformer.transform(entity, idGenerator::idFor)
             val expected1 = identOfVeg(3, 6, 2600)
             val expected2 = identOfVeg(3, 7, 2600)
-            assertEquals(expected1, result!![0].transformedIdent)
+            assertEquals(expected1, result[0].transformedIdent)
             assertEquals(expected2, result[1].transformedIdent)
         }
     }

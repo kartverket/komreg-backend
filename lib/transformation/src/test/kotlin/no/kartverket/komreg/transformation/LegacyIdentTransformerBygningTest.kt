@@ -1,7 +1,6 @@
 package no.kartverket.komreg.transformation
 
 import io.mockk.coEvery
-import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.kartverket.komreg.core.domain.Bygningsnummer
@@ -15,19 +14,19 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
-class IdentTransformerBygningTest {
+class LegacyIdentTransformerBygningTest {
     private val mapping = listOf(
-        identOfMatrikkelenhet(2, 5, 1) to IdentTransformer.Mapping.Replace(
+        identOfMatrikkelenhet(2, 5, 1) to LegacyIdentTransformer.Mapping.Replace(
             identOfMatrikkelenhet(2, 6, 1)
         ),
-        identOfKommune(2, 5) to IdentTransformer.Mapping.Split(
+        identOfKommune(2, 5) to LegacyIdentTransformer.Mapping.Split(
             listOf(
                 identOfKommune(2, 7) to null,
                 identOfKommune(2, 8) to null
             )
         ),
     )
-    private val identTransformer = IdentTransformer(*mapping.toTypedArray())
+    private val identTransformer = LegacyIdentTransformer(*mapping.toTypedArray())
     private val idGenerator = mockk<IdGeneratorManager>()
 
     @BeforeEach
@@ -49,8 +48,8 @@ class IdentTransformerBygningTest {
             val result = identTransformer.transform(entity, idGenerator::idFor)
             val expectedIdent = identOfBygningUtenFylkeOgKommune(123456789)
             val expectedAssociatedIdents = setOf(identOfMatrikkelenhet(2, 6, 1))
-            assertEquals(expectedIdent, result?.single()?.transformedIdent)
-            assertEquals(expectedAssociatedIdents, result?.single()?.transformedAssociatedIdents)
+            assertEquals(expectedIdent, result.single().transformedIdent)
+            assertEquals(expectedAssociatedIdents, result.single().transformedAssociatedIdents)
         }
     }
 
@@ -72,8 +71,8 @@ class IdentTransformerBygningTest {
                 identOfMatrikkelenhet(2, 6, 1),
                 identOfMatrikkelenhet(2, 10, 1),
             )
-            assertEquals(expectedIdent, result?.single()?.transformedIdent)
-            assertEquals(expectedAssociatedIdents, result?.single()?.transformedAssociatedIdents)
+            assertEquals(expectedIdent, result.single().transformedIdent)
+            assertEquals(expectedAssociatedIdents, result.single().transformedAssociatedIdents)
         }
     }
 
