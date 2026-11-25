@@ -186,14 +186,13 @@ class DomainRulesTest {
                 ReformOp.Derive(kommune(12, 36), kommune(12, 34), kommunedata()),
             ),
         ).isEmpty()
-        assertRule(
+        assertThat(
             errors(
                 ReformOp.Retire(kommune(12, 34), successor = kommune(12, 35)),
                 ReformOp.Derive(kommune(12, 35), kommune(12, 34), kommunedata()),
                 ReformOp.Derive(kommune(30, 36), kommune(12, 34), kommunedata()),
             ),
-            "TargetsInMultipleCounties",
-        )
+        ).isEmpty()
     }
 
     @Test
@@ -206,7 +205,7 @@ class DomainRulesTest {
     }
 
     @Test
-    fun `veg kan flyttes og deles med identity, men ikke opprettes eller avvikles`() {
+    fun `veg kan flyttes, deles og slettes, men ikke opprettes eller slås sammen`() {
         assertThat(errors(ReformOp.Move(veg(12, 34, 100), veg(12, 35, 200)))).isEmpty()
         assertThat(
             errors(
@@ -215,7 +214,8 @@ class DomainRulesTest {
             ),
         ).isEmpty()
         assertRule(errors(ReformOp.Create(veg(12, 35, 200), fylkesdata)), "ActionNotSupported")
-        assertRule(errors(ReformOp.Retire(veg(12, 34, 100))), "ActionNotSupported")
+        assertThat(errors(ReformOp.Retire(veg(12, 34, 100)))).isEmpty()
+        assertRule(errors(ReformOp.Retire(veg(12, 34, 100), successor = veg(12, 35, 200))), "RetireHasSuccessor")
         assertRule(errors(ReformOp.RetireTo(veg(12, 34, 100), veg(12, 35, 200))), "ActionNotSupported")
     }
 
@@ -247,14 +247,13 @@ class DomainRulesTest {
     }
 
     @Test
-    fun `alle mål fra en veg må ligge i samme fylke`() {
-        assertRule(
+    fun `veg kan deles med mål i flere fylker`() {
+        assertThat(
             errors(
                 ReformOp.Move(veg(12, 34, 100), veg(12, 35, 200)),
                 ReformOp.Derive(veg(30, 1, 300), veg(12, 34, 100)),
             ),
-            "TargetsInMultipleCounties",
-        )
+        ).isEmpty()
     }
 
     @Test

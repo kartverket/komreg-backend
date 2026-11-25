@@ -184,8 +184,8 @@ Hva som gir mening, avhenger av kinden (se [Domeneregler](#domeneregler)):
 
 - Kommuner har én peker til etterfølgeren, så en kommune som deles, må ha `successor`.
 - Fylker har ingen slik peker, så et fylke som deles, har ikke `successor`.
-- En veg som ikke får ny nøkkel, blir slettet. En veg deles derfor med `move` og `create` med `derivedFrom`, ikke
-  med `split`:
+- En veg som utgår (`split` uten `successor`), blir slettet. En veg som skal bestå, deles derfor med `move` og
+  `create` med `derivedFrom`, ikke med `split`:
 
   ```json
   [ { "op": "move", "kind": "addressCode", "key": ["46", "05", 1300], "to": ["46", "10", 1300] },
@@ -441,7 +441,7 @@ stedet.
 |---|---|---|---|---|---|
 | `county` | ja | ja | nei ¹ | ja | ja, uten etterfølger |
 | `municipality` | ja | ja | nei ¹ | ja | ja, med etterfølger ² |
-| `addressCode` | nei | ja ³ | ja | nei | nei ⁴ |
+| `addressCode` | nei | ja ³ | ja | nei | ja, uten etterfølger ⁴ |
 | `addressNumber`, `districtNumber`, `titleNumber` | nei | nei | ja | nei | nei |
 | `landNumber` | nei | nei | ja | nei | ja, uten etterfølger, med flytting av bruksnumre ⁵ |
 | `parcel` | nei | nei | ja, bare uten matrikkelnummer ⁶ | nei | nei |
@@ -457,7 +457,8 @@ Her betyr «opprette» `create` uten `derivedFrom`, «avlede» `create` med `der
 3. Sinken for veger lager en ny veg som kopi av kildevegen. Nye entiteter skrives før endringer og slettinger, så
    kilden finnes fortsatt når den kopieres. Kilden kan flyttes (`move`), stå i ro (uten egen node, for eksempel når en del av vegen havner i nabokommunen ved en grensejustering) eller følge en
    forelder som flyttes. Den kan ikke ligge under en forelder som utgår, for da får den bare delvis nøkkel.
-4. En veg uten ny nøkkel blir slettet. Del vegen med `move` og `create` med `derivedFrom`.
+4. En veg som utgår, slettes av sinken. Det sjekkes ikke at vegen er tom. En veg som skal bestå, deles med
+   `move` og `create` med `derivedFrom`.
 5. Sinken for matrikkelenheter krever en ny nøkkel for hvert bruksnummer.
 6. En teig med matrikkelnummer hører til matrikkelenheten, ikke bare til kommunen.
 
@@ -467,10 +468,9 @@ Tilleggskrav:
 |---|---|---|
 | `ActionNotSupported` | alle | Handlingen er lov for kinden (tabellen over). |
 | `RetireNeedsSuccessor` | `municipality` | En kommune som utgår, har etterfølger. |
-| `RetireHasSuccessor` | `county`, `landNumber` | Et fylke eller gårdsnummer som utgår, har ikke etterfølger. |
+| `RetireHasSuccessor` | `county`, `addressCode`, `landNumber` | Et fylke, en veg eller et gårdsnummer som utgår, har ikke etterfølger. |
 | `WrongPayload` | `county`, `municipality` | Et nytt fylke har fylkespayload, og en ny kommune har kommunepayload. |
 | `MissingMunicipalityCoat` | `municipality` | En ny kommune har kommunevåpen. |
-| `TargetsInMultipleCounties` | `municipality`, `addressCode` | Alle mål fra én kilde ligger i samme fylke. |
 | `DeriveFromRetired` | `addressCode` | En veg som det avledes fra, ligger ikke under en forelder som utgår (for eksempel en kommune som deles), med mindre vegen har en egen regel. |
 | `SeriesRetireWithoutTitleMoves` | `landNumber` | Et gårdsnummer som utgår, har minst én `move` av et bruksnummer under seg. Det sjekkes ikke at alle bruksnumrene er flyttet. |
 | `ParcelHasCadastralNumber` | `parcel` | Bare teiger uten matrikkelnummer flyttes. |
@@ -520,6 +520,8 @@ Kjente tilfeller som stoppes her:
 - En kommunedeling der etterfølgeren (`successor`) ikke er avledet fra kilden.
 - Utskilling, der kilden fortsetter (`create` med `derivedFrom` fra en kilde uten egen node).
 - En kommunedeling med færre enn to deler.
+- En kommunedeling eller vegdeling med mål i flere fylker.
+- Sletting av en veg (`split` av en `addressCode`).
 - `merge` med to eller flere kilder, sammen med en `create` med `derivedFrom` fra en av kildene
   (stoppes som `UlikTransformasjon`).
 

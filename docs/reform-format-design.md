@@ -187,8 +187,9 @@ vegadresse, matrikkelenhet, teig og krets), ikke fra valideringen av DTO-en.
 
 - Sinkene for vegadresse, krets, matrikkelenhet og teig forutsetter at hver transformasjon har en eksisterende
   kilde (`sourceEntity`) og en ny nøkkel (`transformedIdent`). Derfor støttes bare `move` for disse.
-- `VegTilbakeforingService` tolker en transformasjon uten ny nøkkel som at vegen skal slettes. En veg som skal
-  bestå, må derfor flyttes, også når den deles (`move` for delen som beholder ID-en).
+- `VegTilbakeforingService` tolker en transformasjon uten ny nøkkel som at vegen skal slettes. `split` av en veg
+  gir derfor sletting, og en veg som skal bestå, må flyttes, også når den deles (`move` for delen som beholder
+  ID-en). DTO-en kan ikke uttrykke sletting av veg, så det stoppes i `bro`.
 - Fylker og kommuner slettes aldri. De får en `gyldigTilDato`. Derfor kan datareglene kreve at kilder og mål finnes
   og er gyldige.
 - En kommune som ikke har en egen regel når fylket utgår, følger fylket med samme ID og ny nøkkel. `KommuneSink`

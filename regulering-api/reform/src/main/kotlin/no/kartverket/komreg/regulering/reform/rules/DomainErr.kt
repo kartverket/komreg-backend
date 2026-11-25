@@ -76,12 +76,6 @@ sealed interface DomainErr {
         override val hint get() = "Fjern `successor` fra `split`."
     }
 
-    /** Målene fra én kilde ligger i flere fylker. */
-    data class TargetsInMultipleCounties(val source: Ident.NonEmpty, override val ops: List<ReformOp>) : DomainErr {
-        override val message get() = "Målene fra $source ligger i flere fylker"
-        override val hint get() = "Alle deler av en deling må ligge i samme fylke. Del i ett fylke om gangen."
-    }
-
     /** Veg avledes fra en kilde som ligger under en forelder som utgår, og som derfor bare får delvis nøkkel. */
     data class DeriveFromRetired(val op: ReformOp.Derive, val retire: ReformOp.Retire) : DomainErr {
         override val ops get() = listOf(op)

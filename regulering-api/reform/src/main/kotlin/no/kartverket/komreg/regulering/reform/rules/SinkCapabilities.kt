@@ -7,8 +7,6 @@ import no.kartverket.komreg.integration.spi.Ident
 import no.kartverket.komreg.regulering.reform.format.V1Kinds
 import no.kartverket.komreg.transformation.reform.ReformClaims
 import no.kartverket.komreg.transformation.reform.ReformOp
-import no.kartverket.komreg.transformation.reform.exclusiveTarget
-import no.kartverket.komreg.transformation.reform.weakTarget
 
 /** Om en [ReformOp.Retire] skal ha etterfølger. */
 internal enum class SuccessorPolicy { REQUIRED, FORBIDDEN }
@@ -63,24 +61,9 @@ private val municipalityCoat: Check = { scope ->
     }
 }
 
-private val targetsInOneCounty: Check = { scope ->
-    val sourceOps = scope.ops.filterIsInstance<ReformOp.SourceOp>().associateBy { it.source }
-    val derives = scope.ops.filterIsInstance<ReformOp.Derive>().map { it.from }
-    (sourceOps.keys + derives).mapNotNull { source ->
-        val sourceOp = sourceOps[source]
-        val derived = scope.claims.derives[source].orEmpty()
-        val targets = listOfNotNull(sourceOp?.let { it.exclusiveTarget ?: it.weakTarget }) + derived.map { it.target }
-        if (targets.map { it.county() }.distinct().size > 1) {
-            DomainErr.TargetsInMultipleCounties(source, listOfNotNull(sourceOp) + derived)
-        } else {
-            null
-        }
-    }
-}
-
 /**
  * En veg under en forelder som utgår, får delvis nøkkel, og det støtter ikke sinken. En egen `Retire` av vegen
- * avvises allerede av [DomainErr.ActionNotSupported].
+ * sletter den, men nye veger skrives før slettingen, så den kan fortsatt avledes fra.
  */
 private val deriveNotFromRetired: Check = { scope ->
     scope.ops.filterIsInstance<ReformOp.Derive>().mapNotNull { op ->
@@ -109,8 +92,6 @@ private val parcelMoves: Check = { scope ->
     }
     withNumber.map { DomainErr.ParcelHasCadastralNumber(it) } + unpaired
 }
-
-private fun Ident.county(): Comparable<*> = toArray().first()
 
 private fun Ident.parcel(): List<Comparable<*>> = toArray().let { it.take(2) + it[6] }
 
@@ -152,22 +133,20 @@ internal val v1Capabilities: Map<String, SinkCapabilities> = mapOf(
         checks = listOf(
             payloadIs<Kommunedata>("Kommune", "Kommunedata"),
             municipalityCoat,
-            targetsInOneCounty,
         ),
     ),
     V1Kinds.ADDRESS_CODE to SinkCapabilities(
         label = "Veg",
-        actions = setOf(DomainAction.DERIVE, DomainAction.MOVE),
+        actions = setOf(DomainAction.DERIVE, DomainAction.MOVE, DomainAction.RETIRE),
+        retire = SuccessorPolicy.FORBIDDEN,
         hints = mapOf(
             DomainAction.CREATE to "Veger kan ikke opprettes uten kilde. Flytt en eksisterende veg (`move`), " +
                 "eller avled en ny fra den med `create` og `derivedFrom`.",
-            DomainAction.RETIRE_TO to "Veger kan ikke avvikles. Flytt vegen (`move`), og avled eventuelle " +
-                "nye deler med `create` og `derivedFrom`.",
-            DomainAction.RETIRE to "Veger kan ikke avvikles, det sletter vegen. Flytt vegen (`move`), og avled " +
-                "eventuelle nye deler med `create` og `derivedFrom`.",
+            DomainAction.RETIRE_TO to "Veger kan ikke slås sammen. Flytt vegen (`move`), eller slett den med " +
+                "`split` uten `successor`.",
         ),
-        defaultHint = "Bruk `move`, eller `create` med `derivedFrom`.",
-        checks = listOf(deriveNotFromRetired, targetsInOneCounty),
+        defaultHint = "Bruk `move`, `create` med `derivedFrom`, eller `split` uten `successor` for å slette vegen.",
+        checks = listOf(deriveNotFromRetired),
     ),
     V1Kinds.ADDRESS_NUMBER to onlyMove("Vegadresse"),
     V1Kinds.DISTRICT_NUMBER to onlyMove("Krets"),

@@ -578,6 +578,7 @@ private class EndringMapper(
                     }
 
                 is ReformOp.Create -> "Ingen fylke- eller kommuneendring har målet"
+                is ReformOp.Retire if op.source.form() == Form.VEG -> "Sletting av veg kan ikke uttrykkes i DTO-en"
                 else -> "Operasjonen på ${op.nøkkel.form() ?: "ukjent identtype"} kan ikke uttrykkes"
             }
             feil += Umappbar.IngenDtoEkvivalent(listOf(op), grunn)
