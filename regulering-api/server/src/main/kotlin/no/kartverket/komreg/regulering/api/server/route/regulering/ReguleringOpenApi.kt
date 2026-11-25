@@ -123,6 +123,15 @@ internal object ReguleringOpenApi {
         }
     }
 
+    private fun Operation.Builder.relaxValidationParameter() {
+        parameters {
+            query(RELAX_VALIDATION) {
+                description = "Tillat reguleringer som ikke kan uttrykkes med DTO"
+                schema = JsonSchema(type = JsonType.BOOLEAN, format = "boolean", minimum = 1.0, example = example("true"))
+            }
+        }
+    }
+
     private fun Operation.Builder.specBody(description: String) {
         requestBody {
             this.description = description
@@ -191,6 +200,7 @@ internal object ReguleringOpenApi {
             ugyldig, lagres ingenting, og svaret er `422` med feilene.
         """.trimIndent(),
     ) {
+        relaxValidationParameter()
         specBody("Reformen som skal lagres, i formatet fra `docs/reform-format.md`.")
         responses {
             HttpStatusCode.Created {
@@ -236,6 +246,7 @@ internal object ReguleringOpenApi {
         """.trimIndent(),
     ) {
         idParameter()
+        relaxValidationParameter()
         specBody("Den nye reformen, i formatet fra `docs/reform-format.md`.")
         responses {
             HttpStatusCode.NoContent { description = "Reformen er erstattet. Svaret har ingen body." }

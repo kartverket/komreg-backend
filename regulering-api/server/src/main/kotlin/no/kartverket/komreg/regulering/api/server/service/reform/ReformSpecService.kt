@@ -1,8 +1,10 @@
 package no.kartverket.komreg.regulering.api.server.service.reform
 
 import arrow.core.Either
+import arrow.core.EitherNel
 import arrow.core.NonEmptyList
 import arrow.core.left
+import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.right
 import kotlinx.serialization.SerializationException
@@ -43,18 +45,28 @@ class ReformSpecService(
     suspend fun validate(spec: ReformSpec): List<ReformFeil> =
         derive(VALIDATION_ID, spec).fold({ it.toList() }, { emptyList() })
 
+    suspend fun validateNonDto(spec: ReformSpec): List<ReformFeil> =
+        validateData(spec).leftOrNull() ?:  emptyList()
+
     /** Den avledede [Regulering] med [id] som DTO-id, eller feilene fra det første steget som feiler. */
     suspend fun regulering(id: Int, spec: ReformSpec): Either<NonEmptyList<ReformFeil>, Regulering> =
         derive(id.toString(), spec)
 
     private suspend fun derive(id: String, spec: ReformSpec): Either<NonEmptyList<ReformFeil>, Regulering> = either {
+        val (resolved, claims) = validateData(spec).bind()
+        claims.toReguleringDTO(id, spec.navn, spec.ikrafttredelse, kommuneService)
+            .mapLeft { errs -> errs.map { it.toFeil(resolved) } }
+            .bind()
+    }
+
+    private suspend fun validateData(
+        spec: ReformSpec
+    ): EitherNel<ReformFeil, Pair<Resolved, ReformClaims>> = either {
         val resolved = spec.resolve(registry).mapLeft { errs -> errs.map { it.toFeil() } }.bind()
         val claims = ReformClaims.validate(resolved.ops).mapLeft { errs -> errs.map { it.toFeil(resolved) } }.bind()
         claims.validateDomain(registry).mapLeft { errs -> errs.map { it.toFeil(resolved) } }.bind()
         claims.validateData(dataKommuneService).mapLeft { errs -> errs.map { it.toFeil(resolved) } }.bind()
-        claims.toReguleringDTO(id, spec.navn, spec.ikrafttredelse, kommuneService)
-            .mapLeft { errs -> errs.map { it.toFeil(resolved) } }
-            .bind()
+        return Pair(resolved, claims).right()
     }
 
     private companion object {
