@@ -24,6 +24,10 @@ data class Transformation(
     val transformedIdent: Ident?,
     val transformedAssociatedIdents: Set<Ident>? = null,
     val resultObject: Payload? = null,
+    /**
+     * Ingen sink leser feltet. Det settes bare av `LegacyIdentTransformer`, som bruker flagget fra DTO-en til å la
+     * være å opprette et mål flere ganger. Se «Bakgrunn for domenereglene» i docs/reform-format-design.md.
+     */
     val sammenslaaing: Boolean?
 ) {
     constructor(

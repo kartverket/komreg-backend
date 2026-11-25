@@ -441,10 +441,10 @@ stedet.
 |---|---|---|---|---|---|
 | `county` | ja | ja | nei ¹ | ja | ja, uten etterfølger |
 | `municipality` | ja | ja | nei ¹ | ja | ja, med etterfølger ² |
-| `addressCode` | nei | ja ³ | ja | nei | ja, uten etterfølger ⁴ |
+| `addressCode` | nei | ja ³ | ja | nei ⁵ | ja, uten etterfølger ⁴ |
 | `addressNumber`, `districtNumber`, `titleNumber` | nei | nei | ja | nei | nei |
-| `landNumber` | nei | nei | ja | nei | ja, uten etterfølger, med flytting av bruksnumre ⁵ |
-| `parcel` | nei | nei | ja, bare uten matrikkelnummer ⁶ | nei | nei |
+| `landNumber` | nei | nei | ja | nei | ja, uten etterfølger, med flytting av bruksnumre ⁶ |
+| `parcel` | nei | nei | ja, bare uten matrikkelnummer ⁷ | nei | nei |
 
 Her betyr «opprette» `create` uten `derivedFrom`, «avlede» `create` med `derivedFrom`, «slå sammen» `merge`, og
 «utgå» `split`.
@@ -459,8 +459,11 @@ Her betyr «opprette» `create` uten `derivedFrom`, «avlede» `create` med `der
    forelder som flyttes. Den kan ikke ligge under en forelder som utgår, for da får den bare delvis nøkkel.
 4. En veg som utgår, slettes av sinken. Det sjekkes ikke at vegen er tom. En veg som skal bestå, deles med
    `move` og `create` med `derivedFrom`.
-5. Sinken for matrikkelenheter krever en ny nøkkel for hvert bruksnummer.
-6. En teig med matrikkelnummer hører til matrikkelenheten, ikke bare til kommunen.
+5. Dette er en begrensning i sinken, ikke en domeneregel. Sinken flytter kildevegen til nøkkelen til målvegen i
+   stedet for å slette den, og da får to veger samme nøkkel. Regelen kan fjernes når sinken er rettet. Se
+   «Bakgrunn for domenereglene» i [reform-format-design.md](reform-format-design.md#bakgrunn-for-domenereglene).
+6. Sinken for matrikkelenheter krever en ny nøkkel for hvert bruksnummer.
+7. En teig med matrikkelnummer hører til matrikkelenheten, ikke bare til kommunen.
 
 Tilleggskrav:
 

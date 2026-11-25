@@ -142,8 +142,9 @@ internal val v1Capabilities: Map<String, SinkCapabilities> = mapOf(
         hints = mapOf(
             DomainAction.CREATE to "Veger kan ikke opprettes uten kilde. Flytt en eksisterende veg (`move`), " +
                 "eller avled en ny fra den med `create` og `derivedFrom`.",
-            DomainAction.RETIRE_TO to "Veger kan ikke slås sammen. Flytt vegen (`move`), eller slett den med " +
-                "`split` uten `successor`.",
+            // Sinkbegrensning, ikke domeneregel. Se «Bakgrunn for domenereglene» i docs/reform-format-design.md.
+            DomainAction.RETIRE_TO to "Sinken støtter ikke sammenslåing av veger ennå. Flytt vegen (`move`), eller " +
+                "slett den med `split` uten `successor`, og flytt adressene med egne regler.",
         ),
         defaultHint = "Bruk `move`, `create` med `derivedFrom`, eller `split` uten `successor` for å slette vegen.",
         checks = listOf(deriveNotFromRetired),

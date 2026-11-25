@@ -190,10 +190,26 @@ vegadresse, matrikkelenhet, teig og krets), ikke fra valideringen av DTO-en.
 - `VegTilbakeforingService` tolker en transformasjon uten ny nøkkel som at vegen skal slettes. `split` av en veg
   gir derfor sletting, og en veg som skal bestå, må flyttes, også når den deles (`move` for delen som beholder
   ID-en). DTO-en kan ikke uttrykke sletting av veg, så det stoppes i `bro`.
+- Sammenslåing av veger (`merge`) avvises på grunn av en begrensning i sinken, ikke på grunn av en domeneregel.
+  `RetireTo` gir kildevegen A målnøkkelen B som `transformedIdent`, også for barna. `VegTilbakeforingService` kjører
+  da `update veg set kommuneid=?, adressekode=? where id=A`, så det blir to veger med samme
+  `(kommune, adressekode)`. `VegadresseTilbakeforingService` finner vegen med
+  `select v.id from veg v where v.kommuneid=? and v.adressekode=?`, og får da to rader. Fremmednøkler er slått av
+  under tilbakeføring, så rekkefølgen mellom veg og vegadresse spiller ingen rolle. Løsningen er i sinken: hvis
+  `transformedIdent` er nøkkelen til en annen veg, skal A slettes (som ved `null`) i stedet for å oppdateres.
+  Transformeren skal fortsatt gi A → B, fordi `KommuneSink` trenger målet ved `RetireTo` (`nykommuneid`), og fordi
+  stedsnavnrapporten trolig finner sammenslåinger ut fra felles `transformedIdent`. Når sinken er rettet, kan
+  `RETIRE_TO` legges til for `addressCode` i `SinkCapabilities.kt`.
 - Fylker og kommuner slettes aldri. De får en `gyldigTilDato`. Derfor kan datareglene kreve at kilder og mål finnes
   og er gyldige.
 - En kommune som ikke har en egen regel når fylket utgår, følger fylket med samme ID og ny nøkkel. `KommuneSink`
   støtter ikke det, og vil enten feile eller la kommunen peke feil. Derfor finnes `MunicipalityNotCovered`.
+- Ingen sink leser `Transformation.sammenslaaing`. Det er sjekket i matrikkel-komreg-jaren, og ingen klasse kaller
+  `getSammenslaaing`. Flagget settes bare av `LegacyIdentTransformer`. `ReformClaimsTransformer` setter det til
+  `null`. I DTO-en (`Fylkeendring`/`Kommuneendring.sammenslaaing`) betyr flagget at målet ikke skal opprettes av
+  denne endringen. Det brukes bare til å velge om det lages en opprettelse (`LegacyIdentTransformer`, og `Create`
+  eller `Derive` i `ReformMapping`). Stedsnavnrapporten (`stedsnavn.SsrJsonKt`) finner sammenslåinger selv, ut fra
+  `transformedIdent`.
 
 ## Kommunecache
 
