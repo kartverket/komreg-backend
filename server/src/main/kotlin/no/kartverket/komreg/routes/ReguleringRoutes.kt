@@ -31,7 +31,7 @@ fun Application.reguleringRoutes(reguleringService: ReguleringService, regulerin
             get {
                 val regId = call.parameters["id"]
 
-                val regulering = reguleringRepo.getReguleringById(regId ?: "")
+                val regulering = reguleringRepo.getReguleringById(regId ?: "") as? LegacyRegulering
 
                 if (regulering != null) {
                     call.respond(regulering)

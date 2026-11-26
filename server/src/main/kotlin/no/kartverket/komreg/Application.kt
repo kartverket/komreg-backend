@@ -104,7 +104,7 @@ fun Application.module() {
     }
 
     install(ContentNegotiation) {
-        json()
+        json(jsonSerializer)
     }
 
     internalRoutes(metricsRegistry)
