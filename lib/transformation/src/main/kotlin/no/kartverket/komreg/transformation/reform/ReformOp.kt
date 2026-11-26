@@ -2,6 +2,7 @@ package no.kartverket.komreg.transformation.reform
 
 import kotlinx.serialization.Serializable
 import no.kartverket.komreg.integration.spi.Ident
+import no.kartverket.komreg.integration.spi.IdentSerializer
 import no.kartverket.komreg.integration.spi.Payload
 
 /**
@@ -32,6 +33,7 @@ import no.kartverket.komreg.integration.spi.Payload
 @Serializable
 sealed interface ReformOp {
     /** Ny entitet med ny ID og nøkkel [target]. Eier målet eksklusivt. */
+    @Serializable
     sealed interface NewEntity : ReformOp {
         val target: Ident.NonEmpty
     }
@@ -41,7 +43,10 @@ sealed interface ReformOp {
      * Materialiseres på forhånd, én gang per registrert `IdType` for målets identtype.
      */
     @Serializable
-    data class Create(override val target: Ident.NonEmpty, val payload: Payload) : NewEntity
+    data class Create(
+        @Serializable(with = IdentSerializer::class)
+        override val target: Ident.NonEmpty,
+        val payload: Payload) : NewEntity
 
     /**
      * **Del** (en del av delingen): ny entitet avledet fra hver entitet med nøkkel [from]: samme `IdType`,
@@ -50,7 +55,9 @@ sealed interface ReformOp {
      */
     @Serializable
     data class Derive(
+        @Serializable(with = IdentSerializer::class)
         override val target: Ident.NonEmpty,
+        @Serializable(with = IdentSerializer::class)
         val from: Ident.NonEmpty,
         val payload: Payload? = null,
     ) : NewEntity
@@ -58,6 +65,7 @@ sealed interface ReformOp {
     /** Operasjon som bestemmer skjebnen til en eksisterende nøkkel. Maks én per kilde. */
     @Serializable
     sealed interface SourceOp : ReformOp {
+        @Serializable(with = IdentSerializer::class)
         val source: Ident.NonEmpty
     }
 
@@ -66,7 +74,12 @@ sealed interface ReformOp {
      * Eier kilde og mål eksklusivt.
      */
     @Serializable
-    data class Move(override val source: Ident.NonEmpty, val target: Ident.NonEmpty) : SourceOp
+    data class Move(
+        @Serializable(with = IdentSerializer::class)
+        override val source: Ident.NonEmpty,
+        @Serializable(with = IdentSerializer::class)
+        val target: Ident.NonEmpty
+    ) : SourceOp
 
     /**
      * **Del**: kilden utgår fordi den er delt opp i flere deler. Delene opprettes med [Derive] fra [source].
@@ -79,7 +92,12 @@ sealed interface ReformOp {
      * noe entydig sted de kan følge med til. Sinkene avgjør hva det å utgå betyr. Eier kilden.
      */
     @Serializable
-    data class Retire(override val source: Ident.NonEmpty, val successor: Ident.NonEmpty? = null) : SourceOp
+    data class Retire(
+        @Serializable(with = IdentSerializer::class)
+        override val source: Ident.NonEmpty,
+        @Serializable(with = IdentSerializer::class)
+        val successor: Ident.NonEmpty? = null
+    ) : SourceOp
 
     /**
      * **Sammenslå** (og 1:1-erstatning): kilden utgår og peker på [target], uten ny ID. Etterkommere uten egen
@@ -90,7 +108,12 @@ sealed interface ReformOp {
      * målet.
      */
     @Serializable
-    data class RetireTo(override val source: Ident.NonEmpty, val target: Ident.NonEmpty) : SourceOp
+    data class RetireTo(
+        @Serializable(with = IdentSerializer::class)
+        override val source: Ident.NonEmpty,
+        @Serializable(with = IdentSerializer::class)
+        val target: Ident.NonEmpty
+    ) : SourceOp
 }
 
 class ReformBuilder {

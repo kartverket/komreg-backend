@@ -44,7 +44,7 @@ class TransformationRepoTest {
     }
 
     private fun initKjoring(dataSource: DataSource): Int {
-        val reguleringRepo = ReguleringRepo(dataSource)
+        val reguleringRepo = ReguleringRepo(dataSource, jsonSerializer())
         val ok = reguleringRepo.insertRegulering(
             LegacyRegulering(
                 "abc",
