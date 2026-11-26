@@ -4,11 +4,6 @@ import kotlinx.datetime.LocalDate
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-sealed interface Regulering {
-    val navn: String
-    val ikrafttredelse: LocalDate
-}
-
 @Serializable
 @SerialName("Regulering")
 data class LegacyRegulering(

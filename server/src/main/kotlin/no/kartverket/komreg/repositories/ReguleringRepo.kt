@@ -5,22 +5,28 @@ import kotlinx.serialization.json.Json
 import no.kartverket.komreg.routes.EndringDTO
 import no.kartverket.komreg.routes.KommuneDTO
 import no.kartverket.komreg.routes.LegacyRegulering
+import no.kartverket.komreg.routes.ReformOpRegulering
+import no.kartverket.komreg.routes.Regulering
 import java.sql.Date
 import javax.sql.DataSource
 
 class ReguleringRepo(
     private val dataSource: DataSource,
 ) {
-    fun getAllReguleringer(): List<LegacyRegulering> {
+    fun getAllReguleringer(): List<Regulering> {
         dataSource.connection.use { connection ->
-            val statement = connection.prepareStatement("SELECT regulering FROM regulering")
+            val statement = connection.prepareStatement("SELECT regulering, type FROM regulering")
             val resultSet = statement.executeQuery()
 
-            val reguleringerList = mutableListOf<LegacyRegulering>()
+            val reguleringerList = mutableListOf<Regulering>()
 
             while (resultSet.next()) {
                 val reguleringJson = resultSet.getString(1)
-                val regulering = Json.decodeFromString<LegacyRegulering>(reguleringJson)
+                val regulering: Regulering = when (resultSet.getString(2)) {
+                    "LEGACY" -> Json.decodeFromString<LegacyRegulering>(reguleringJson)
+                    "REFORM_SPEC" -> Json.decodeFromString<ReformOpRegulering>(reguleringJson)
+                    else -> throw IllegalStateException("Unknown regulering type: $reguleringJson")
+                }
                 reguleringerList.add(regulering)
             }
 
@@ -30,15 +36,19 @@ class ReguleringRepo(
         }
     }
 
-    fun getReguleringById(id: String): LegacyRegulering? {
+    fun getReguleringById(id: String): Regulering? {
         dataSource.connection.use { connection ->
-            val statement = connection.prepareStatement("SELECT regulering FROM regulering WHERE id = ?")
+            val statement = connection.prepareStatement("SELECT regulering, type FROM regulering WHERE id = ?")
             statement.setString(1, id)
             val resultSet = statement.executeQuery()
 
-            val regulering: LegacyRegulering? = if (resultSet.next()) {
+            val regulering: Regulering? = if (resultSet.next()) {
                 val reguleringJson = resultSet.getString(1)
-                Json.decodeFromString<LegacyRegulering>(reguleringJson)
+                when (resultSet.getString(2)) {
+                    "LEGACY" -> Json.decodeFromString<LegacyRegulering>(reguleringJson)
+                    "REFORM_SPEC" -> Json.decodeFromString<ReformOpRegulering>(reguleringJson)
+                    else -> throw IllegalStateException("Unknown regulering type: $reguleringJson")
+                }
             } else {
                 null
             }

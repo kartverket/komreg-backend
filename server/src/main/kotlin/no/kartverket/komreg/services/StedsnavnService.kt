@@ -12,6 +12,8 @@ import no.kartverket.komreg.logger
 import no.kartverket.komreg.repositories.KjoringRepo
 import no.kartverket.komreg.repositories.ReguleringRepo
 import no.kartverket.komreg.repositories.TransformationRepo
+import no.kartverket.komreg.routes.LegacyRegulering
+import no.kartverket.komreg.routes.ReformOpRegulering
 import no.kartverket.komreg.routes.toReguleringsinput
 import no.kartverket.komreg.transformation.Fylkeendring
 import no.kartverket.komreg.transformation.Kommuneendring
@@ -31,7 +33,11 @@ class StedsnavnService(
         val regulering = reguleringRepo.getReguleringById(kjoring.regulering) ?: return null
 
         return { writer ->
-            val input = regulering.toReguleringsinput()
+            val input = when(regulering) {
+                is LegacyRegulering -> regulering.toReguleringsinput()
+                is ReformOpRegulering -> TODO()
+                else -> throw IllegalStateException("Unknown regulering type: ${regulering::class.qualifiedName}")
+            }
 
             writer.appendLine("DT\t${input.ikrafttredelsesdato}")
 

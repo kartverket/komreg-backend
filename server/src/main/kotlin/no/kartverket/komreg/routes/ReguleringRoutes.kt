@@ -17,7 +17,7 @@ fun Application.reguleringRoutes(reguleringService: ReguleringService, regulerin
         // Get all reguleringer
         route("/reguleringer") {
             get {
-                val reguleringerList = reguleringRepo.getAllReguleringer()
+                val reguleringerList = reguleringRepo.getAllReguleringer().filterIsInstance<LegacyRegulering>()
 
                 if (reguleringerList.isEmpty()) {
                     call.application.log.info("No reguleringer found.")
@@ -224,7 +224,7 @@ fun Application.reguleringRoutes(reguleringService: ReguleringService, regulerin
                         ?: nyKommuneSomSkalOppdaters.standardRekvirent,
                     kommunevapen = oppdatertKommuneDTO.kommunevapen ?: nyKommuneSomSkalOppdaters.kommunevapen,
 
-                    )
+                )
                 reguleringRepo.updateEndringOfRegulering(
                     regId,
                     endringId,

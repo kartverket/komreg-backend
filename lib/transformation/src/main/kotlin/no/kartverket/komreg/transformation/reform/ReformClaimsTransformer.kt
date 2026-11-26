@@ -9,6 +9,7 @@ import no.kartverket.komreg.integration.spi.IdentType
 import no.kartverket.komreg.integration.spi.Transformation
 import no.kartverket.komreg.integration.spi.identTypeFromKotlinTypes
 import no.kartverket.komreg.integration.spi.identWithTypeOrThrow
+import no.kartverket.komreg.transformation.IdentTransformer
 import no.kartverket.komreg.transformation.reform.ReformOp.Move
 import no.kartverket.komreg.transformation.reform.ReformOp.Retire
 import no.kartverket.komreg.transformation.reform.ReformOp.RetireTo
@@ -24,14 +25,14 @@ import kotlin.reflect.KType
  */
 class ReformClaimsTransformer(
     private val claims: ReformClaims
-) {
+) : IdentTransformer {
     init {
         require(claims.creates.isEmpty()) {
             "Kun Derives er støttet foreløpig, Creates er ikke støttet (enda)${claims.creates.joinToString("\n\t-", ":\n\t-")}"
         }
     }
     /** Transformasjonene for én eksisterende entitet. Tom liste hvis ingenting endres. */
-    suspend fun transform(entity: Entity, idFor: suspend (IdType<*, *>, Any?) -> Id): List<Transformation> {
+    override suspend fun transform(entity: Entity, idProvider: suspend (IdType<*, *>, Any?) -> Id): List<Transformation> {
         val ident = entity.ident
         val transformedIdent = ident?.let { transformKey(it) }
         val transformedAssociatedIdents = entity.associatedIdents
@@ -56,7 +57,7 @@ class ReformClaimsTransformer(
             derives.forEach { d ->
                 add(
                     Transformation(
-                        id = idFor(entity.id.type, d.target),
+                        id = idProvider(entity.id.type, d.target),
                         sourceEntity = entity,
                         transformedIdent = d.target,
                         transformedAssociatedIdents = transformedAssociatedIdents,

@@ -1,5 +1,6 @@
 package no.kartverket.komreg.transformation.reform
 
+import kotlinx.serialization.Serializable
 import no.kartverket.komreg.integration.spi.Ident
 import no.kartverket.komreg.integration.spi.Payload
 
@@ -28,6 +29,7 @@ import no.kartverket.komreg.integration.spi.Payload
  * endrer bare forretningsnøkkelen. Regler for kilder ([SourceOp]) slås opp langs forelderkjeden, så en regel
  * for en nøkkel gjelder også etterkommerne som ikke har en mer spesifikk regel.
  */
+@Serializable
 sealed interface ReformOp {
     /** Ny entitet med ny ID og nøkkel [target]. Eier målet eksklusivt. */
     sealed interface NewEntity : ReformOp {
@@ -38,6 +40,7 @@ sealed interface ReformOp {
      * **Opprett**: ny entitet uten kildeentitet. All data til den nye entiteten må ligge i [payload].
      * Materialiseres på forhånd, én gang per registrert `IdType` for målets identtype.
      */
+    @Serializable
     data class Create(override val target: Ident.NonEmpty, val payload: Payload) : NewEntity
 
     /**
@@ -45,6 +48,7 @@ sealed interface ReformOp {
      * kildeentiteten som kilde og kildens transformerte assosierte identer. Bestemmer ikke skjebnen til [from]
      * og flytter ingen etterkommere; det gjør en [SourceOp] for [from] ([Retire] eller [RetireTo]).
      */
+    @Serializable
     data class Derive(
         override val target: Ident.NonEmpty,
         val from: Ident.NonEmpty,
@@ -52,6 +56,7 @@ sealed interface ReformOp {
     ) : NewEntity
 
     /** Operasjon som bestemmer skjebnen til en eksisterende nøkkel. Maks én per kilde. */
+    @Serializable
     sealed interface SourceOp : ReformOp {
         val source: Ident.NonEmpty
     }
@@ -60,6 +65,7 @@ sealed interface ReformOp {
      * **Flytt**: nøkkelen [source] blir [target]. Entiteten beholder ID-en, og etterkommerne følger med.
      * Eier kilde og mål eksklusivt.
      */
+    @Serializable
     data class Move(override val source: Ident.NonEmpty, val target: Ident.NonEmpty) : SourceOp
 
     /**
@@ -72,6 +78,7 @@ sealed interface ReformOp {
      * Etterkommere uten egen regel får delvis nøkkel (kun umatchede barnekomponenter), siden det ikke finnes
      * noe entydig sted de kan følge med til. Sinkene avgjør hva det å utgå betyr. Eier kilden.
      */
+    @Serializable
     data class Retire(override val source: Ident.NonEmpty, val successor: Ident.NonEmpty? = null) : SourceOp
 
     /**
@@ -82,6 +89,7 @@ sealed interface ReformOp {
      * må målet finnes fra før eller opprettes med [Create]. Eier kilden, og har en svak (delbar) referanse til
      * målet.
      */
+    @Serializable
     data class RetireTo(override val source: Ident.NonEmpty, val target: Ident.NonEmpty) : SourceOp
 }
 

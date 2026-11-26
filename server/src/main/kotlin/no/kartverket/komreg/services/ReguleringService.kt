@@ -7,6 +7,8 @@ import no.kartverket.komreg.repositories.KjoringRepo
 import no.kartverket.komreg.repositories.Kjoringstatus
 import no.kartverket.komreg.repositories.ReguleringRepo
 import no.kartverket.komreg.routes.LegacyRegulering
+import no.kartverket.komreg.routes.ReformOpRegulering
+import no.kartverket.komreg.routes.Regulering
 import no.kartverket.komreg.validation.ReguleringValidator
 
 class ReguleringService(
@@ -16,7 +18,7 @@ class ReguleringService(
 
     fun getOrThrowRegulering(
         regId: String,
-    ): LegacyRegulering {
+    ): Regulering {
         val regulering = reguleringRepo.getReguleringById(regId)
             ?: throw NotFoundException("Fant ingen regulering for regId: $regId")
 
@@ -26,7 +28,12 @@ class ReguleringService(
         kjoringRepo.getStatusForKjoringMedReguleringsId(regId).any { it.status === Kjoringstatus.FERDIG }
             .let { if (it) throw ReguleringAlreadyFinishedException(regId) }
 
-        val errors = ReguleringValidator.validate(regulering)
+        val errors = when (regulering) {
+            is LegacyRegulering -> ReguleringValidator.validate(regulering)
+            is ReformOpRegulering -> emptyMap()
+            else -> throw IllegalStateException("Unexpected regulering type: ${regulering::class.simpleName}")
+        }
+
 
         if (errors.flatMap { it.value }.isNotEmpty()) {
             throw IllegalArgumentException(
