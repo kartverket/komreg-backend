@@ -9,6 +9,7 @@ import no.kartverket.komreg.repositories.ReguleringRepo
 import no.kartverket.komreg.routes.LegacyRegulering
 import no.kartverket.komreg.routes.ReformOpRegulering
 import no.kartverket.komreg.routes.Regulering
+import no.kartverket.komreg.transformation.reform.ReformClaims
 import no.kartverket.komreg.validation.ReguleringValidator
 
 class ReguleringService(
@@ -28,19 +29,30 @@ class ReguleringService(
         kjoringRepo.getStatusForKjoringMedReguleringsId(regId).any { it.status === Kjoringstatus.FERDIG }
             .let { if (it) throw ReguleringAlreadyFinishedException(regId) }
 
-        val errors = when (regulering) {
-            is LegacyRegulering -> ReguleringValidator.validate(regulering)
-            is ReformOpRegulering -> emptyMap()
+        when (regulering) {
+            is LegacyRegulering -> {
+                val errors = ReguleringValidator.validate(regulering)
+                if (errors.flatMap { it.value }.isNotEmpty()) {
+                    throw IllegalArgumentException(
+                        "Reguleringsinput er ugyldig, se errors for detaljer",
+                        IllegalArgumentException(errors.toString()),
+                    )
+                }
+            }
+            is ReformOpRegulering -> {
+                ReformClaims.validate(regulering.ops).onLeft { errs ->
+                    throw IllegalArgumentException(
+                        "Reguleringen er ugyldig" + errs.joinToString(
+                            "\n\t- ",
+                            ":\n\t- ",
+                            transform = { it.message }
+                        ),
+                    )
+                }
+            }
             else -> throw IllegalStateException("Unexpected regulering type: ${regulering::class.simpleName}")
         }
 
-
-        if (errors.flatMap { it.value }.isNotEmpty()) {
-            throw IllegalArgumentException(
-                "Reguleringsinput er ugyldig, se errors for detaljer",
-                IllegalArgumentException(errors.toString()),
-            )
-        }
         return regulering
     }
 
