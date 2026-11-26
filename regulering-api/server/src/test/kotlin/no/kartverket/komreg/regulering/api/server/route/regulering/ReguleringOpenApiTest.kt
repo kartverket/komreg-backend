@@ -85,8 +85,13 @@ class ReguleringOpenApiTest {
                 assertThat(operation.obj("responses").keys).containsAtLeast(*statuses.toTypedArray())
                 assertThat(operation.getValue("tags")).isEqualTo(JsonArray(listOf(JsonPrimitive("Reguleringer"))))
                 if (path.contains("{id}")) {
-                    assertThat(operation.getValue("parameters").jsonArray.map { it.jsonObject["name"] })
-                        .containsExactly(JsonPrimitive("id"))
+                    if (method == "post" || method == "put") {
+                        assertThat(operation.getValue("parameters").jsonArray.map { it.jsonObject["name"] })
+                            .containsExactly(JsonPrimitive("id"), JsonPrimitive("relaxValidation"))
+                    } else {
+                        assertThat(operation.getValue("parameters").jsonArray.map { it.jsonObject["name"] })
+                            .containsExactly(JsonPrimitive("id"))
+                    }
                 }
                 if (method != "get" && method != "delete") {
                     assertThat(operation["requestBody"]).isNotNull()
