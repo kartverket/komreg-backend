@@ -177,10 +177,22 @@ suspend fun ReformClaims.toEndringDTO(
     return EndringMapper(this, fylker, kommuner).endring(id, navn)
 }
 
-/** Sjekker at [regulering] kan gjenskape nøyaktig reglene i [forventet], uavhengig av rekkefølge. */
+/**
+ * Sjekker at [regulering] kan gjenskape nøyaktig reglene i [forventet], uavhengig av rekkefølge.
+ *
+ * Et gårdsnummer og et adressenummer er serier uten egen entitet. Sammenslåing av dem gir hver entitet under kilden
+ * målet som prefiks, akkurat som flytting, og DTO-en gir dem tilbake som [ReformOp.Move].
+ */
 private suspend fun sjekkEkvivalens(regulering: Regulering, forventet: Set<ReformOp>): Either<NonEmptyList<Umappbar>, Unit> {
     val tilbake = Either.catch { regulering.toReguleringsinput().toReformOps().toSet() }
         .getOrElse { return nonEmptyListOf<Umappbar>(Umappbar.UlikTransformasjon(årsak = it)).left() }
+    val forventet = forventet.mapTo(mutableSetOf()) { op ->
+        if (op is ReformOp.RetireTo && op.source.form() in setOf(Form.SERIE, Form.VEGADRESSE)) {
+            ReformOp.Move(op.source, op.target)
+        } else {
+            op
+        }
+    }
     return if (tilbake == forventet) {
         Unit.right()
     } else {
@@ -471,17 +483,25 @@ private class EndringMapper(
             )
         }
 
-    /** Flytting av vegadresser og kretser. */
+    /**
+     * Flytting og sammenslåing av vegadresser og kretser. DTO-en skiller ikke mellom dem, fordi begge gir hver entitet
+     * under kilden målet som prefiks.
+     */
     private fun enkleFlyttinger(form: Form): List<TransformasjonDTO> =
-        ops.filterIsInstance<ReformOp.Move>().filter { it.source.form() == form }.mapNotNull { flytting ->
-            if (flytting.target.form() != form) {
-                return@mapNotNull avvis(flytting, "Målet har ikke samme identtype som kilden")
+        ops.filterIsInstance<ReformOp.SourceOp>().filter { it.source.form() == form }.mapNotNull { regel ->
+            val target = when (regel) {
+                is ReformOp.Move -> regel.target
+                is ReformOp.RetireTo -> regel.target
+                is ReformOp.Retire -> return@mapNotNull null
             }
-            behandlet += flytting
-            val fylke = FraTilDTO(flytting.source.fylke().verdi(), flytting.target.fylke().verdi())
-            val kommune = FraTilDTO(flytting.source.lopenummer().verdi(), flytting.target.lopenummer().verdi())
+            if (target.form() != form) {
+                return@mapNotNull avvis(regel, "Målet har ikke samme identtype som kilden")
+            }
+            behandlet += regel
+            val fylke = FraTilDTO(regel.source.fylke().verdi(), target.fylke().verdi())
+            val kommune = FraTilDTO(regel.source.lopenummer().verdi(), target.lopenummer().verdi())
             fun fraTil(indeks: Int, tekst: (Comparable<*>) -> String) =
-                FraTilDTO(tekst(flytting.source.toArray()[indeks]), tekst(flytting.target.toArray()[indeks]))
+                FraTilDTO(tekst(regel.source.toArray()[indeks]), tekst(target.toArray()[indeks]))
             when (form) {
                 Form.VEGADRESSE -> VegadresseTransformasjonDTO(
                     fylke, kommune,
@@ -512,10 +532,11 @@ private class EndringMapper(
             val til: Ident.NonEmpty? = when {
                 regel == null -> serie
                 regel is ReformOp.Move && regel.target.form() == Form.SERIE -> regel.target
+                regel is ReformOp.RetireTo && regel.target.form() == Form.SERIE -> regel.target
                 regel is ReformOp.Retire && regel.successor == null && barn.isNotEmpty() -> null
                 else -> return@mapNotNull avvis(
                     regel,
-                    "Bare Move av en serie, og Retire av en serie med flytting av bruksnumre, kan uttrykkes",
+                    "Bare Move og RetireTo av en serie, og Retire av en serie med flytting av bruksnumre, kan uttrykkes",
                 )
             }
             behandlet += listOfNotNull(regel)
@@ -578,6 +599,7 @@ private class EndringMapper(
                     }
 
                 is ReformOp.Create -> "Ingen fylke- eller kommuneendring har målet"
+                is ReformOp.Retire if op.source.form() == Form.VEG -> "Sletting av veg kan ikke uttrykkes i DTO-en"
                 else -> "Operasjonen på ${op.nøkkel.form() ?: "ukjent identtype"} kan ikke uttrykkes"
             }
             feil += Umappbar.IngenDtoEkvivalent(listOf(op), grunn)

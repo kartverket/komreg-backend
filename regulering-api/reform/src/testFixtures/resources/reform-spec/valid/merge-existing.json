@@ -1,5 +1,4 @@
 {
-  "format": 1,
   "navn": "Sammenslåing til eksisterende kommune",
   "ikrafttredelse": "2027-01-01",
   "operasjoner": [
@@ -12,10 +11,11 @@
           "then": [ { "op": "move", "kind": "landNumber", "key": 12, "to": ["46", "02", 40] } ]
         }
       ],
-      "into": {
-        "existing": ["46", "02"],
-        "then": [ { "op": "move", "kind": "addressCode", "key": 1234, "to": ["46", "02", 1235] } ]
-      }
+      "into": ["46", "02"]
+    },
+    {
+      "op": "adjust", "kind": "municipality", "key": ["46", "02"],
+      "then": [ { "op": "move", "kind": "addressCode", "key": 1234, "to": ["46", "02", 1235] } ]
     }
   ]
 }

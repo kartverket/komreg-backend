@@ -3,7 +3,7 @@ package no.kartverket.komreg.regulering.reform.format
 /**
  * JSON-eksempler på reform-spec-er, under `reform-spec/` i testFixtures-ressursene.
  *
- * - [valid]: gyldige spec-er, i kanonisk form (`format` med, ingen tomme `then`), så de kan kodes tilbake til
+ * - [valid]: gyldige spec-er, i kanonisk form (ingen tomme `then`), så de kan kodes tilbake til
  *   samme JSON. Payloadene er komplette.
  * - [invalidShape]: kan ikke dekodes til [ReformSpec].
  * - [invalidValues]: kan dekodes til [ReformSpec], men har ett ugyldig segment (med `NumberingScheme.Production`).
@@ -11,26 +11,22 @@ package no.kartverket.komreg.regulering.reform.format
 object ReformSpecFixtures {
     val valid = listOf(
         "design-example", "adjust", "move", "merge-existing", "merge-new", "split",
-        "split-existing-successor", "split-shared-successor", "create",
+        "split-existing-successor", "split-shared-successor", "split-shared-successor-derived", "create",
+        "create-derived-from",
     )
 
     val invalidShape = listOf(
         "unknown-op",
         "missing-kind",
         "missing-ikrafttredelse",
-        "into-both-existing-and-new",
-        "into-neither-existing-nor-new",
+        "format-field",
+        "merge-into-object",
         "null-segment",
         "nested-array-segment",
         "target-not-array",
-        "unknown-role",
+        "successor-not-array",
+        "split-with-into",
         "payload-not-object",
-        "part-both-new-and-existing",
-        "part-neither-new-nor-existing",
-        "existing-role-identity",
-        "existing-without-role",
-        "existing-with-payload",
-        "part-with-to",
     )
 
     /** Det ugyldige segmentet: JSON-stien og kinden det skal dekodes som. */

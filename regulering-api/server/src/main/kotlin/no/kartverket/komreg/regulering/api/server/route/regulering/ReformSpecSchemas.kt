@@ -11,7 +11,7 @@ import kotlinx.serialization.json.Json
 /**
  * Håndskrevne JSON-skjemaer for reform-formatet (`docs/reform-format.md`).
  *
- * ReformSpec bruker egne serializers for felter med flere former (nøkler, kilder, `into` og delene i `split`), så
+ * ReformSpec bruker egne serializers for felter med flere former (nøkler og kilder), så
  * skjemaene kan ikke utledes fra `@Serializable`-typene. Skjemaene følger det parseren
  * (`regulering-api/reform/.../format/ReformSpec.kt` og `SpecSerializers.kt`) godtar, og i tillegg konteksten
  * hver operasjon står i (se [ReformSpecSchemas.sourceOp]).
@@ -145,8 +145,8 @@ internal object ReformSpecSchemas {
         type = JsonType.ARRAY,
         title = "KeySpec",
         description = """
-            Mål: en nøkkel noe flyttes til, slås sammen inn i, deles til eller avledes fra (`to`, `derivedFrom`,
-            `into.existing`, `into.new`, og `existing` og `new` i delene av `split.into`). Skrives alltid som en full
+            Mål: en nøkkel noe flyttes til, slås sammen inn i, peker på som etterfølger eller avledes fra (`to`,
+            `into`, `successor` og `derivedFrom`). Skrives alltid som en full
             array av segmenter fra roten, uansett hvor i treet noden står, fordi et mål kan ligge hvor som helst, også i
             et annet fylke. Et mål har samme kind som pivoten i noden. Er målet ikke en full nøkkel fra roten til `kind`,
             gir det `TargetLengthMismatch`.
@@ -257,11 +257,6 @@ internal object ReformSpecSchemas {
 
     private fun target(description: String) = described(description, inline(keySpec))
 
-    private val optionalPayload = described(
-        "Data til den nye entiteten. Bare for `county` og `municipality`.",
-        inline(payload),
-    )
-
     private fun thenOf(items: ReferenceOr<JsonSchema>, description: String) = list(items, description)
 
     private const val ANY_CONTEXT =
@@ -308,7 +303,7 @@ internal object ReformSpecSchemas {
     val moveOp = obj(
         "MoveOp",
         "Entiteten får ny nøkkel og beholder ID-en. Alt under den som ikke har en egen regel, følger med. Fylker og " +
-            "kommuner kan ikke flyttes. Bruk `merge` med `into.new` for å gi en kommune nytt nummer.",
+            "kommuner kan ikke flyttes. Gi en kommune nytt nummer med `merge` og `create` med `derivedFrom`.",
         mapOf(
             "op" to op("move"),
             "kind" to kindProperty,
@@ -343,45 +338,17 @@ internal object ReformSpecSchemas {
         oneOf = listOf(inline(pathSpec), inline(mergeSource)),
     )
 
-    private val mergeIntoExisting = obj(
-        "MergeIntoExisting",
-        "Slår kildene inn i et mål som ikke opprettes av denne noden. Målet kan finnes fra før, eller opprettes et " +
-            "annet sted i reformen (`create` med `derivedFrom`).",
-        mapOf(
-            "existing" to target("Målet. Full nøkkel fra roten, av samme kind som kildene."),
-            "then" to thenOf(ref("OpSpec"), "Barn av målet, relative til målet. Målet står i ro, så alle op-er er lov."),
-        ),
-        listOf("existing"),
-        """{ "existing": ["46", "02"] }""",
-    )
-
-    private val mergeIntoNew = obj(
-        "MergeIntoNew",
-        "Noden oppretter målet. Med én kilde er det en renummerering: målet er en ny entitet med ny ID, avledet fra " +
-            "kilden. Med to eller flere kilder er det et nytt mål uten én bestemt kilde, og `payload` er da påkrevd " +
-            "(`PayloadRequired`).",
-        mapOf(
-            "new" to target("Det nye målet. Full nøkkel fra roten, av samme kind som kildene."),
-            "payload" to optionalPayload,
-            "then" to thenOf(ref("CreateOp"), NEW_CONTEXT),
-        ),
-        listOf("new"),
-        """
-            { "new": ["50", "01"], "payload": { "navn": "Nytt Navn", "koordinatsystem": "UTM32",
-              "senterpunkt": { "x": 230000.0, "y": 6630000.0 }, "kommunevapen": "iVBORw0KGgo=" } }
-        """.trimIndent(),
-    )
-
-    private val mergeInto = JsonSchema(
-        title = "MergeInto",
-        description = "Målet i `merge`: enten `existing` eller `new`, aldri begge.",
-        oneOf = listOf(inline(mergeIntoExisting), inline(mergeIntoNew)),
-    )
-
     val mergeOp = obj(
         "MergeOp",
-        "Kildene i `from` utgår og peker på målet i `into`. Det som ligger under kildene, og som ikke har egen regel, " +
-            "følger med til målet.",
+        """
+            Kildene i `from` utgår og peker på målet i `into`. Det som ligger under kildene, og som ikke har egen regel,
+            følger med til målet.
+
+            `merge` oppretter ikke målet. Målet finnes fra før, eller opprettes med `create` et annet sted i reformen:
+
+            - Nytt nummer (én kilde): `create` med `derivedFrom` lik kilden.
+            - Sammenslåing til et nytt mål (flere kilder): `create` med `payload`.
+        """.trimIndent(),
         mapOf(
             "op" to op("merge"),
             "kind" to kindProperty,
@@ -390,102 +357,44 @@ internal object ReformSpecSchemas {
                 "Kildene. Hver er en pivot relativt til konteksten, eller en kilde med unntak. Minst én (`EmptyMerge`).",
                 minItems = 1,
             ),
-            "into" to described("Målet kildene slås inn i.", inline(mergeInto)),
+            "into" to target("Målet kildene slås inn i. Full nøkkel fra roten, av samme kind som kildene."),
         ),
         listOf("op", "kind", "from", "into"),
         """
             { "op": "merge", "kind": "municipality",
               "from": [ ["46", "01"], { "key": ["46", "03"], "then": [
                 { "op": "move", "kind": "titleNumber", "key": [12, 3], "to": ["46", "02", 40, 1] } ] } ],
-              "into": { "existing": ["46", "02"] } }
+              "into": ["46", "02"] }
         """.trimIndent(),
-    )
-
-    private val splitPartNew = obj(
-        "SplitPartNew",
-        "En ny del, avledet fra kilden. Høyst én del i et `split` har `role`. En `identity`-del er kilden selv og har " +
-            "ikke payload (`PayloadOnIdentity`).",
-        mapOf(
-            "new" to target("Den nye nøkkelen. Full nøkkel fra roten, av samme kind som kilden."),
-            "payload" to optionalPayload,
-            "role" to inline(
-                JsonSchema(
-                    type = STRING,
-                    description = """
-                        Avgjør hva som skjer med kilden. Valgfri.
-
-                        - `identity`: delen er kilden, som flyttes hit og beholder ID-en.
-                        - `successor`: delen er ny, avledet fra kilden. Kilden utgår og peker på delen.
-                        - Uten `role`: delen er ny, avledet fra kilden. Hva som skjer med kilden, bestemmes av delen med `role`.
-                    """.trimIndent(),
-                    enum = listOf(GenericElement("identity"), GenericElement("successor")),
-                ),
-            ),
-            "then" to thenOf(ref("CreateOp"), NEW_CONTEXT),
-        ),
-        listOf("new"),
-        """{ "new": ["46", "10"], "role": "successor", "payload": { "navn": "Ny Kommune", "koordinatsystem": "UTM32", "senterpunkt": { "x": 230000.0, "y": 6630000.0 }, "kommunevapen": "iVBORw0KGgo=" } }""",
-    )
-
-    private val splitPartExisting = obj(
-        "SplitPartExisting",
-        "En eksisterende etterfølger som ikke opprettes av delingen. Kilden utgår og peker på delen. Har ikke payload.",
-        mapOf(
-            "existing" to target("Etterfølgeren. Full nøkkel fra roten, av samme kind som kilden."),
-            "role" to const("successor", "Påkrevd. Kilden utgår og peker på delen."),
-            "then" to thenOf(ref("OpSpec"), "Barn av delen, relative til delen. Delen står i ro, så alle op-er er lov."),
-        ),
-        listOf("existing", "role"),
-        """{ "existing": ["50", "01"], "role": "successor" }""",
-    )
-
-    private val splitPart = JsonSchema(
-        title = "SplitPart",
-        description = """
-            En del i `split.into`: ny (`new`) eller eksisterende (`existing`), aldri begge.
-
-            | del | `role` | delen | kilden |
-            |---|---|---|---|
-            | `new` | `identity` | er kilden, som flyttes hit og beholder ID-en | flyttes hit |
-            | `new` | `successor` | ny, avledet fra kilden | utgår og peker på delen |
-            | `existing` | `successor` (påkrevd) | opprettes ikke av noden | utgår og peker på delen |
-            | `new` | ingen | ny, avledet fra kilden | bestemmes av delen med `role` |
-
-            Har ingen del `role`, utgår kilden uten etterfølger.
-        """.trimIndent(),
-        oneOf = listOf(inline(splitPartNew), inline(splitPartExisting)),
     )
 
     val splitOp = obj(
         "SplitOp",
         """
-            Kilden deles i delene i `into`. `role` på delene avgjør hva som skjer med kilden. `"into": []` betyr at
-            kilden utgår uten etterfølger og uten nye deler.
+            Kilden utgår, og peker eventuelt på `successor`. Det som ligger under kilden, følger ikke med, og må ha egne
+            regler i `then`. Delene kilden deles i, opprettes med `create` og `derivedFrom` lik kilden. `split`
+            oppretter ikke `successor`.
 
-            Hvilke roller som gir mening, avhenger av kinden:
+            - Kommuner har én peker til etterfølgeren, så en kommune som deles, må ha `successor`.
+            - Fylker har ingen slik peker, så et fylke som deles, har ikke `successor`.
+            - En veg som ikke får ny nøkkel, blir slettet. En veg deles derfor med `move` og `create` med `derivedFrom`.
+            - Et gårdsnummer utgår uten `successor`, og bruksnumrene under flyttes enkeltvis i `then`.
 
-            - Kommuner har én peker til etterfølgeren, så en kommune som deles, må ha en del med `successor`.
-            - Fylker har ingen slik peker, så et fylke som deles, har ingen del med `role`.
-            - En veg som ikke får ny nøkkel, blir slettet. En veg deles derfor med `identity`.
-            - Et gårdsnummer utgår med `"into": []`, og bruksnumrene under flyttes enkeltvis i `then`.
-
-            En kommunedeling der etterfølgeren ikke opprettes av delingen (`existing`), er gyldig i formatet, men
-            stoppes i steget `bro`.
+            En kommunedeling der etterfølgeren ikke avledes fra kilden, er gyldig i formatet, men stoppes i steget `bro`.
         """.trimIndent(),
         mapOf(
             "op" to op("split"),
             "kind" to kindProperty,
             "key" to pathKey,
-            "into" to list(
-                inline(splitPart),
-                "Delene kilden deles i. Høyst én del har `role` (`MultipleRoles`). Kan være tom.",
+            "successor" to target(
+                "Etterfølgeren kilden peker på. Valgfri. Full nøkkel fra roten, av samme kind som `key`.",
             ),
             "then" to thenOf(sourceOpItems(), SOURCE_CONTEXT),
         ),
-        listOf("op", "kind", "key", "into"),
+        listOf("op", "kind", "key"),
         """
-            { "op": "split", "kind": "addressCode", "key": ["46", "05", 1300],
-              "into": [ { "new": ["46", "10", 1300], "role": "identity" }, { "new": ["46", "11", 1300] } ] }
+            { "op": "split", "kind": "landNumber", "key": ["46", "01", 12], "then": [
+              { "op": "move", "kind": "titleNumber", "key": 3, "to": ["46", "01", 40, 1] } ] }
         """.trimIndent(),
     )
 
@@ -531,17 +440,19 @@ internal object ReformSpecSchemas {
             |---|---|---|
             | `adjust` | `key`, `then`? | Ingen endring. Gir kontekst til barna. |
             | `move` | `key`, `to`, `then`? | Entiteten får ny nøkkel og beholder ID-en. |
-            | `merge` | `from`, `into` | Kildene i `from` utgår og peker på målet i `into`. |
-            | `split` | `key`, `into`, `then`? | Kilden deles i delene i `into`. |
+            | `merge` | `from`, `into` | Kildene i `from` utgår og peker på `into`. Det som ligger under, følger med. |
+            | `split` | `key`, `successor`?, `then`? | Kilden utgår. Det som ligger under, følger ikke med. |
             | `create` | `key`, `derivedFrom`?, `payload`?, `then`? | Ny entitet. |
 
             Hvilke op-er som er lov i en `then`-liste, avhenger av hva som skjer med nøkkelen til noden over:
 
             | kontekst | `then` under | lovlige op-er |
             |---|---|---|
-            | står i ro | rotnivået, `adjust`, `merge.into.existing`, `split.into[]` med `existing` | alle |
+            | står i ro | rotnivået, `adjust` | alle |
             | under en kilde | `move`, `split`, elementer i `merge.from` | `move`, `split`, `merge` |
-            | under en ny nøkkel | `create`, `merge.into.new`, `split.into[]` med `new` | `create` |
+            | under en ny nøkkel | `create` | `create` |
+
+            Bare `create` oppretter. `into`, `successor` og `to` er mål som noden peker på eller flytter til.
 
             Skjemaene følger konteksten, så `then` under en kilde bruker `SourceOpSpec` og `then` under en ny nøkkel
             bruker `CreateOp`. En op i feil kontekst gir `OpNotAllowedInContext` i steget `format`.
@@ -560,13 +471,6 @@ internal object ReformSpecSchemas {
             ID-en tildeles når specen lagres. Ukjente felter er en feil (`InvalidShape`). Se `docs/reform-format.md`.
         """.trimIndent(),
         mapOf(
-            "format" to inline(
-                JsonSchema(
-                    type = INTEGER,
-                    description = "Versjonen av formatet. Valgfri, standard `1`. Svar fra API-et har alltid med feltet.",
-                    default = GenericElement(1),
-                ),
-            ),
             "navn" to string("Navnet på reformen."),
             "ikrafttredelse" to string(
                 "Datoen reformen trer i kraft (`ÅÅÅÅ-MM-DD`). Gjelder også som ikrafttredelsesdato for alle nye kommuner.",

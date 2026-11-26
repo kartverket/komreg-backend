@@ -2,7 +2,6 @@
 
 package no.kartverket.komreg.regulering.reform.format
 
-import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
@@ -11,7 +10,6 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonContentPolymorphicSerializer
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonEncoder
@@ -75,33 +73,5 @@ internal object SourceSpecSerializer : JsonShapeSerializer<SourceSpec>("SourceSp
     override fun toJson(json: Json, value: SourceSpec): JsonElement = when (value) {
         is SourceSpec.Bare -> json.encodeToJsonElement(PathSpecSerializer, value.key)
         is SourceSpec.Full -> json.encodeToJsonElement(SourceSpec.Full.serializer(), value)
-    }
-}
-
-internal object IntoSpecSerializer : JsonContentPolymorphicSerializer<IntoSpec>(IntoSpec::class) {
-    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<IntoSpec> {
-        val fields = (element as? JsonObject)?.keys
-            ?: throw SerializationException("into må være et objekt, fikk $element")
-        return when {
-            "existing" in fields && "new" in fields ->
-                throw SerializationException("into kan ikke ha både existing og new")
-            "existing" in fields -> IntoSpec.Existing.serializer()
-            "new" in fields -> IntoSpec.New.serializer()
-            else -> throw SerializationException("into må ha enten existing eller new")
-        }
-    }
-}
-
-internal object PartSpecSerializer : JsonContentPolymorphicSerializer<PartSpec>(PartSpec::class) {
-    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<PartSpec> {
-        val fields = (element as? JsonObject)?.keys
-            ?: throw SerializationException("En del i into må være et objekt, fikk $element")
-        return when {
-            "existing" in fields && "new" in fields ->
-                throw SerializationException("En del i into kan ikke ha både existing og new")
-            "existing" in fields -> PartSpec.Existing.serializer()
-            "new" in fields -> PartSpec.New.serializer()
-            else -> throw SerializationException("En del i into må ha enten existing eller new")
-        }
     }
 }

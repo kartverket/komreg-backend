@@ -50,13 +50,13 @@ internal object ReguleringSchemas {
 
                     - `form`: `InvalidShape`
                     - `format`: `UnknownKind`, `OpNotAllowedInContext`, `KindNotChildOfContext`, `InvalidSegment`,
-                      `TargetLengthMismatch`, `MultipleRoles`, `PayloadOnIdentity`, `EmptyMerge`, `PayloadRequired`,
-                      `PayloadNotAllowed`, `InvalidPayload`, `KeptAndConsumed`
+                      `TargetLengthMismatch`, `EmptyMerge`, `PayloadRequired`, `PayloadNotAllowed`, `InvalidPayload`,
+                      `KeptAndConsumed`
                     - `konflikt`: `Diverges`, `Conflict`, `SourceIsTarget`, `TargetUnderSource`,
                       `SourceUnderCreatedTarget`, `DeriveFromTarget`
                     - `domene`: `ActionNotSupported`, `RetireNeedsSuccessor`, `RetireHasSuccessor`, `WrongPayload`,
-                      `MissingMunicipalityCoat`, `TargetsInMultipleCounties`, `DeriveWithoutMove`,
-                      `SeriesRetireWithoutTitleMoves`, `ParcelHasCadastralNumber`, `ParcelNotPaired`,
+                      `MissingMunicipalityCoat`, `DeriveFromRetired`,
+                      `SeriesRetireWithoutTitleMoves`, `ParcelHasCadastralNumber`,
                       `TargetTypeMismatch`, `UnsupportedIdentType`
                     - `data`: `MunicipalityNotCovered`, `TargetNotFound`, `TargetExpired`, `TargetInUse`,
                       `SourceNotFound`, `SourceExpired`

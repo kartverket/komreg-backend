@@ -66,27 +66,21 @@ sealed interface DomainErr {
     data class RetireNeedsSuccessor(val op: ReformOp.Retire, val label: String) : DomainErr {
         override val ops get() = listOf(op)
         override val message get() = "$label som utgår må ha en etterfølger: $op"
-        override val hint get() = "Bruk `split` og marker én av delene med `role: successor`."
+        override val hint get() = "Bruk `split` med `successor`."
     }
 
     /** Kilden utgår med etterfølger, selv om identtypen ikke har noen. */
     data class RetireHasSuccessor(val op: ReformOp.Retire, val label: String) : DomainErr {
         override val ops get() = listOf(op)
         override val message get() = "$label som utgår kan ikke ha en etterfølger: $op"
-        override val hint get() = "Fjern `role: successor` fra delingen."
+        override val hint get() = "Fjern `successor` fra `split`."
     }
 
-    /** Målene fra én kilde ligger i flere fylker. */
-    data class TargetsInMultipleCounties(val source: Ident.NonEmpty, override val ops: List<ReformOp>) : DomainErr {
-        override val message get() = "Målene fra $source ligger i flere fylker"
-        override val hint get() = "Alle deler av en deling må ligge i samme fylke. Del i ett fylke om gangen."
-    }
-
-    /** Veg avledes fra en kilde som ikke flyttes. */
-    data class DeriveWithoutMove(val op: ReformOp.Derive) : DomainErr {
+    /** Veg avledes fra en kilde som ligger under en forelder som utgår, og som derfor bare får delvis nøkkel. */
+    data class DeriveFromRetired(val op: ReformOp.Derive, val retire: ReformOp.Retire) : DomainErr {
         override val ops get() = listOf(op)
-        override val message get() = "Vegen ${op.from} avledes uten å flyttes: $op"
-        override val hint get() = "Bruk `split` der én av delene har `role: identity`, slik at vegen beholder ID-en."
+        override val message get() = "Vegen ${op.from} avledes, men ligger under ${retire.source}, som utgår: $op"
+        override val hint get() = "Gi vegen en egen regel, for eksempel `move` under `then` til ${retire.source}."
     }
 
     /**
@@ -104,12 +98,6 @@ sealed interface DomainErr {
         override val ops get() = listOf(op)
         override val message get() = "Teigen i $op har matrikkelnummer"
         override val hint get() = "Bare teiger uten matrikkelnummer (gnr 0, fnr 0, snr 0) kan flyttes."
-    }
-
-    /** Teigen flyttes ikke for både bnr 0 og bnr 1 til samme mål. */
-    data class ParcelNotPaired(val source: Ident.NonEmpty, override val ops: List<ReformOp.Move>) : DomainErr {
-        override val message get() = "Teigen $source må flyttes for både bnr 0 og bnr 1 til samme mål"
-        override val hint get() = "Flytt teigen med `move` på kind `parcel`, som gjelder begge."
     }
 }
 

@@ -4,6 +4,7 @@ import arrow.core.Either
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -30,6 +31,8 @@ import no.kartverket.komreg.core.domain.TeigId
 import no.kartverket.komreg.integration.spi.KommuneService
 import no.kartverket.komreg.integration.spi.identTypeOf1
 import no.kartverket.komreg.integration.spi.identTypeOf2
+import no.kartverket.komreg.integration.spi.identTypeOf3
+import no.kartverket.komreg.integration.spi.identTypeOf4
 import no.kartverket.komreg.integration.spi.invoke
 import no.kartverket.komreg.transformation.Endring
 import no.kartverket.komreg.transformation.FraEnTilMange
@@ -64,6 +67,8 @@ class ReformClaimsTilReguleringTest : FunSpec({
     fun klnr(n: Int) = Kommunenummer.Lopenummer(n.toByte())
     suspend fun fylkeIdent(n: Long) = identTypeOf1<Fylkesnummer>()(fnr(n))
     suspend fun kommuneIdent(f: Long, k: Int) = identTypeOf2<Fylkesnummer, Kommunenummer.Lopenummer>()(fnr(f), klnr(k))
+    suspend fun vegIdent(f: Long, k: Int, kode: Int) =
+        identTypeOf3<Fylkesnummer, Kommunenummer.Lopenummer, Adressekode>()(fnr(f), klnr(k), Adressekode(kode))
     fun serie(f: Long, k: Int, gnr: Int) = Matrikkelenhet.GardsnummerserieIdent(fnr(f), klnr(k), Gardsnummer(gnr))
     fun grunneiendom(f: Long, k: Int, gnr: Int, bnr: Short) = serie(f, k, gnr) / Bruksnummer(bnr)
 
@@ -251,6 +256,25 @@ class ReformClaimsTilReguleringTest : FunSpec({
             claims.umappbare().single().shouldBeInstanceOf<Umappbar.IngenDtoEkvivalent>()
         }
 
+        test("sammenslåing av gårdsnummer og vegadresse blir flytting i DTO-en") {
+            val vegadresse = identTypeOf4<Fylkesnummer, Kommunenummer.Lopenummer, Adressekode, Adressenummernummer>()
+            val claims = ReformClaims.validate(
+                listOf(
+                    ReformOp.RetireTo(serie(12, 34, 40), serie(12, 34, 60)),
+                    ReformOp.RetireTo(
+                        vegadresse(fnr(12), klnr(34), Adressekode(100), Adressenummernummer(1)),
+                        vegadresse(fnr(12), klnr(34), Adressekode(100), Adressenummernummer(2)),
+                    ),
+                ),
+            ).getOrNull()!!
+
+            val transformasjoner = claims.regulering().getOrNull()!!.endringer.flatMap { it.transformasjoner }
+            transformasjoner.filterIsInstance<MatrikkelenhetTransformasjonDTO>().single().gårdsnummer shouldBe
+                FraTilDTO("40", "60")
+            transformasjoner.filterIsInstance<VegadresseTransformasjonDTO>().single().adressenummer shouldBe
+                FraTilDTO("1", "2")
+        }
+
         test("Retire av teig og grunneiendom") {
             val claims = ReformClaims.validate(listOf(ReformOp.Retire(grunneiendom(12, 34, 40, 1)))).getOrNull()!!
 
@@ -284,7 +308,26 @@ class ReformClaimsTilReguleringTest : FunSpec({
                 listOf("Utskilling, der kilden fortsetter, kan ikke uttrykkes i DTO-en")
         }
 
-        test("kortform og create med derivedFrom gir samme DTO") {
+        test("sletting av veg har egen grunn") {
+            val claims = ReformClaims.validate(listOf(ReformOp.Retire(vegIdent(12, 34, 100)))).getOrNull()!!
+
+            claims.umappbare().filterIsInstance<Umappbar.IngenDtoEkvivalent>().map { it.grunn } shouldBe
+                listOf("Sletting av veg kan ikke uttrykkes i DTO-en")
+        }
+
+        test("vegdeling med mål i flere fylker") {
+            val claims = ReformClaims.validate(
+                listOf(
+                    ReformOp.Move(vegIdent(12, 34, 100), vegIdent(12, 35, 200)),
+                    ReformOp.Derive(vegIdent(30, 1, 300), from = vegIdent(12, 34, 100)),
+                ),
+            ).getOrNull()!!
+
+            claims.umappbare().filterIsInstance<Umappbar.IngenDtoEkvivalent>().map { it.grunn } shouldContain
+                "Vegdeling med mål i flere fylker kan ikke uttrykkes"
+        }
+
+        test("renummerering med merge og create med derivedFrom gir DTO") {
             val kilde = kommuneIdent(12, 34)
             val mål = kommuneIdent(12, 99)
             val ops = listOf(
@@ -292,7 +335,7 @@ class ReformClaimsTilReguleringTest : FunSpec({
                 ReformOp.Derive(mål, from = kilde, payload = kommunedata().copy(navn = "NY")),
             )
 
-            // split.into.new og split.into.existing sammen med create.derivedFrom lowerer til de samme op-ene
+            // merge med én kilde og create med derivedFrom fra kilden
             ReformClaims.validate(ops).getOrNull()!!.regulering().shouldBeInstanceOf<Either.Right<Regulering>>()
         }
 

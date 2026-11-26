@@ -71,7 +71,7 @@ skrives kort, som en skalar under en kontekst, og kindene til segmentene i en st
 
 - **Pivoter** (`key`, `merge.from`) er relative til konteksten, så en reform med mange endringer under én kommune
   slipper å gjenta fylke og kommune.
-- **Mål** (`to`, `derivedFrom`, `existing`, `new`) er absolutte, fordi et mål kan ligge hvor som helst, også i et
+- **Mål** (`to`, `into`, `successor`, `derivedFrom`) er absolutte, fordi et mål kan ligge hvor som helst, også i et
   annet fylke enn konteksten.
 - Segmentverdier er JSON-strenger eller -tall, og kinden avgjør hvilken. Fylke og kommune er strenger for å
   bevare ledende nuller. At feil type gir `InvalidSegment` med sti, gjør feilen lett å finne.
@@ -83,22 +83,21 @@ fra en kilde må derfor skrives under kilden (`merge.from[].then`, `split.then`,
 kilden ville samme nøkkel både stå i ro og være kilde, og det gir `KeptAndConsumed`. Uten denne regelen kunne den
 samme reformen skrives på flere måter, og specer ville vært vanskeligere å lese og sammenligne.
 
-`format` sjekker bare det `ReformOp` ikke kan uttrykke: at en nøkkel som står i ro (`adjust`, mellomledd i en
-kontekst som står i ro, `existing`), ikke samtidig er kilde. Alle andre konflikter sjekkes av `ReformClaims`.
+`format` sjekker bare det `ReformOp` ikke kan uttrykke: at en nøkkel som står i ro (`adjust` og mellomledd i en
+kontekst som står i ro), ikke samtidig er kilde. Alle andre konflikter sjekkes av `ReformClaims`.
 
-### `existing`, `new` og `role`
+### Bare `create` oppretter
 
-`merge.into` og delene i `split.into` har samme form: en nøkkel som er `new` eller `existing`.
+`merge` og `split` sier bare hva som skjer med kildene. Ny entitet opprettes alltid med `create`.
 
-- `existing` betyr «opprettes ikke av denne noden», ikke «finnes fra før». Målet kan opprettes et annet sted i
-  reformen. Det tilsvarer `ReformClaims.requiredExistingTargets`, som er de svake målene minus det som opprettes.
-  Slik kan flere kilder ha samme etterfølger.
-- En `existing`-del har ikke `payload`, fordi noden ikke oppretter den.
-- `role` på en `existing`-del kan bare være `successor`. `identity` betyr at kilden flyttes til en ledig nøkkel, og
-  passer ikke for et mål som allerede er tatt.
-- `role` er påkrevd på en `existing`-del. Uten rolle ville delen ikke gitt noen `ReformOp`, og ikke hatt noen
-  virkning. Kravet kan fjernes senere uten å gjøre eksisterende specer ugyldige.
-- Disse reglene håndheves av JSON-typene (`PartSpec`, `ExistingRole`), så brudd gir feil i steget `form`.
+- `merge.into` og `split.successor` er svake mål: de opprettes ikke av noden. Målet kan finnes fra før eller
+  opprettes med `create` et annet sted i reformen. Det tilsvarer `ReformClaims.requiredExistingTargets`, som er de
+  svake målene minus det som opprettes. Slik kan flere kilder ha samme etterfølger.
+- Forskjellen på `merge` og `split` er barna. Under `merge` følger barna kilden til målet (`RetireTo`). Under
+  `split` følger de ikke med (`Retire`), og må ha egne regler.
+- En del av en deling som er ny, er en `create` med `derivedFrom` lik kilden. En del som beholder kildens ID, er
+  en `move`.
+- Et mål står ikke i ro. Et mål som også er kilde, avvises av `ReformClaims` (`SourceIsTarget`), ikke av `format`.
 
 ### `create` med `derivedFrom`
 
@@ -109,31 +108,32 @@ fortsetter kilden.
 `Derive.from` er én nøkkel. En ny entitet med bidrag fra flere kilder uttrykkes derfor ved at hver kilde peker på
 den (som etterfølger eller med `merge`), mens `create` med `derivedFrom` avgjør hvilken kilde den arver fra.
 
-En `new`-del i `split` gir de samme `ReformOp`-ene som en `existing`-del sammen med `create` med `derivedFrom` lik
-kilden. Ingen regel håndhever hvilken skrivemåte som brukes.
-
 ## Fra spec til `ReformOp`
 
 Tabellen viser hvilke `ReformOp`-er `resolve` lager for hver node. `k` er pivoten, `s₁ … sₙ` kildene i
-`merge.from`, `t` målet i `merge.into`, `p` delen med `role`, `q` hver `new`-del uten `role` og `d` er
-`derivedFrom`.
+`merge.from`, `t` målet i `merge.into`, `p` er `split.successor` og `d` er `derivedFrom`.
 
 | node | `ReformOp` |
 |---|---|
 | `adjust` | ingen |
 | `move` | `Move(k, to)` |
-| `merge` med `into.existing` | `RetireTo(sᵢ, t)` for hver kilde |
-| `merge` med `into.new`, én kilde | `RetireTo(s, t)` og `Derive(t, from = s, payload)` |
-| `merge` med `into.new`, flere kilder | `RetireTo(sᵢ, t)` for hver kilde og `Create(t, payload)` |
-| `split` der `p` har `role: identity` | `Move(k, p)` og `Derive(q, from = k, payload)` |
-| `split` der `p` er en `new`-del med `role: successor` | `Retire(k, successor = p)`, `Derive(p, from = k, payload)` og `Derive(q, from = k, payload)` |
-| `split` der `p` er en `existing`-del | `Retire(k, successor = p)` og `Derive(q, from = k, payload)` |
-| `split` uten `role` | `Retire(k)` og `Derive(q, from = k, payload)` |
+| `merge` | `RetireTo(sᵢ, t)` for hver kilde |
+| `split` | `Retire(k)` |
+| `split` med `successor` | `Retire(k, successor = p)` |
 | `create` | `Create(k, payload)` |
 | `create` med `derivedFrom` | `Derive(k, from = d, payload)`, der `payload` kan mangle |
 
-`merge` med én kilde og `into.new` er en renummerering: `RetireTo` sier at kilden utgår og peker på målet, og
-`Derive` at målet er en ny entitet med ny ID og data fra kilden.
+Noen vanlige endringer bruker flere noder:
+
+| endring | noder | `ReformOp` |
+|---|---|---|
+| renummerering | `merge` med én kilde og `create` med `derivedFrom` lik kilden | `RetireTo(s, t)` og `Derive(t, from = s, payload)` |
+| sammenslåing til ny | `merge` og `create` med `payload` | `RetireTo(sᵢ, t)` og `Create(t, payload)` |
+| deling til nye | `split` og én `create` med `derivedFrom` lik kilden per del | `Retire(k)` og `Derive(qᵢ, from = k, payload)` |
+| deling der en del beholder ID-en | `move` og `create` med `derivedFrom` for de andre delene | `Move(k, p)` og `Derive(qᵢ, from = k, payload)` |
+
+`RetireTo` sier at kilden utgår og peker på målet, og `Derive` at målet er en ny entitet med ny ID og data fra
+kilden.
 
 Oversettelsen gir de samme `ReformOp`-ene som `Reguleringsinput.toReformOps()` gir for den tilsvarende DTO-en.
 Det er det som gjør at rundturssjekken i `toReguleringDTO` kan sammenligne dem. Testene i
@@ -186,13 +186,56 @@ Tabellen i [reform-format.md](reform-format.md#domeneregler) er utledet fra sink
 vegadresse, matrikkelenhet, teig og krets), ikke fra valideringen av DTO-en.
 
 - Sinkene for vegadresse, krets, matrikkelenhet og teig forutsetter at hver transformasjon har en eksisterende
-  kilde (`sourceEntity`) og en ny nøkkel (`transformedIdent`). Derfor støttes bare `move` for disse.
-- `VegTilbakeforingService` tolker en transformasjon uten ny nøkkel som at vegen skal slettes. En veg som skal
-  bestå, må derfor flyttes, også når den deles (`role: identity`).
+  kilde (`sourceEntity`) og en ny nøkkel (`transformedIdent`). `create` og `split` støttes derfor ikke for disse.
+  En opprettelse har ingen kilde, og sinken feiler. En sletting har ingen ny nøkkel, og sinken feiler eller lar
+  entiteten bli liggende. En avledning (`create` med `derivedFrom`) oppdaterer ingenting, og for krets og
+  matrikkelenhet legges det inn rader som ikke hører til noen entitet.
+- `merge` støttes for `landNumber` og `addressNumber`, fordi de er serier uten egen entitet. Hver grunneiendom eller
+  vegadresse under kilden får målet som prefiks, og sinken oppdaterer den som ved `move`. Det sjekkes ikke at
+  bruksnummeret eller bokstaven er ledig i målet. Det er samme risiko som ved `move` til en serie som finnes.
+  DTO-en uttrykker sammenslåingen som flytting, og rundturssjekken i broen regner `RetireTo` og `Move` som like
+  for disse. `merge` av `titleNumber` og `districtNumber` gir to entiteter med samme nøkkel, og avvises.
+- En teig flyttes i formatet alltid for både bnr 0 og bnr 1. Domenereglene krever ikke paret, fordi det ikke kan
+  brytes fra formatet. Broen krever det, fordi DTO-en uttrykker en teig uten bruksnummer.
+- Tre krav fra sinkene sjekkes ikke, fordi det trengs data som valideringen ikke har (datareglene har bare fylker og
+  kommuner):
+  - `KretsTilbakeforingService` tar `single()` på kretstype og kretsnummer over alle kommunene til kretsen. En
+    krets i flere kommuner må få samme type og nummer i alle.
+  - `MatrikkelenhetTilbakeforingService` krever en ny nøkkel for hver grunneiendom. Når et gårdsnummer utgår
+    (`split`), må alle bruksnumrene under det flyttes. `SeriesRetireWithoutTitleMoves` sjekker bare at minst ett
+    er flyttet.
+  - En vegadresse uten egen regel på en veg som utgår (`split`), får bare delvis nøkkel, og
+    `VegadresseTilbakeforingService` feiler. Vegen må være tom, eller alle adressene må flyttes.
+- `VegTilbakeforingService` tolker en transformasjon uten ny nøkkel som at vegen skal slettes. `split` av en veg
+  gir derfor sletting, og en veg som skal bestå, må flyttes, også når den deles (`move` for delen som beholder
+  ID-en). DTO-en kan ikke uttrykke sletting av veg, så det stoppes i `bro`.
+- Sammenslåing av veger (`merge`) avvises på grunn av en begrensning i sinken, ikke på grunn av en domeneregel.
+  `RetireTo` gir kildevegen A målnøkkelen B som `transformedIdent`, også for barna. `VegTilbakeforingService` kjører
+  da `update veg set kommuneid=?, adressekode=? where id=A`, så det blir to veger med samme
+  `(kommune, adressekode)`. `VegadresseTilbakeforingService` finner vegen med
+  `select v.id from veg v where v.kommuneid=? and v.adressekode=?`, og får da to rader. Fremmednøkler er slått av
+  under tilbakeføring, så rekkefølgen mellom veg og vegadresse spiller ingen rolle. Løsningen er i sinken: hvis
+  `transformedIdent` er nøkkelen til en annen veg, skal A slettes (som ved `null`) i stedet for å oppdateres.
+  Transformeren skal fortsatt gi A → B, fordi `KommuneSink` trenger målet ved `RetireTo` (`nykommuneid`), og fordi
+  stedsnavnrapporten trolig finner sammenslåinger ut fra felles `transformedIdent`. Når sinken er rettet, kan
+  `RETIRE_TO` legges til for `addressCode` i `SinkCapabilities.kt`.
+- Opprettelse av veger (`create` uten `derivedFrom`) avvises på grunn av en begrensning i sinken, ikke på grunn av
+  en domeneregel. `VegTilbakeforingService` krever `sourceEntity`, og setter inn den nye vegen som en kopi av
+  kilden: `insert into veg (id, kommuneid, adressekode, adressenavn, kortAdressenavn, uuid, …) select ?, ?, ?,
+  adressenavn, kortAdressenavn, ?, … from veg where id=?`. Referanser og kommentarer kopieres også, men det
+  trenger ikke en ny veg. Formatet og `core` har heller ingen payload for veg. Med en payload (adressenavn og kort
+  adressenavn) og en sink som setter inn vegen fra den når kilden mangler, kan `CREATE` legges til for
+  `addressCode` i `SinkCapabilities.kt`.
 - Fylker og kommuner slettes aldri. De får en `gyldigTilDato`. Derfor kan datareglene kreve at kilder og mål finnes
   og er gyldige.
 - En kommune som ikke har en egen regel når fylket utgår, følger fylket med samme ID og ny nøkkel. `KommuneSink`
   støtter ikke det, og vil enten feile eller la kommunen peke feil. Derfor finnes `MunicipalityNotCovered`.
+- Ingen sink leser `Transformation.sammenslaaing`. Det er sjekket i matrikkel-komreg-jaren, og ingen klasse kaller
+  `getSammenslaaing`. Flagget settes bare av `LegacyIdentTransformer`. `ReformClaimsTransformer` setter det til
+  `null`. I DTO-en (`Fylkeendring`/`Kommuneendring.sammenslaaing`) betyr flagget at målet ikke skal opprettes av
+  denne endringen. Det brukes bare til å velge om det lages en opprettelse (`LegacyIdentTransformer`, og `Create`
+  eller `Derive` i `ReformMapping`). Stedsnavnrapporten (`stedsnavn.SsrJsonKt`) finner sammenslåinger selv, ut fra
+  `transformedIdent`.
 
 ## Kommunecache
 
@@ -228,7 +271,5 @@ data fra Matrikkel API. Feltene tolkes som i `KommuneServiceImpl` i matrikkel-ko
 
 - Skal ugyldige utkast kunne lagres, for eksempel med `gyldig: false` i databasen, slik at brukeren kan fortsette
   senere? Nå lagres bare gyldige specer.
-- Navnet `existing` kan misforstås, fordi det betyr «opprettes ikke av denne noden», ikke «finnes fra før». Et
-  nytt navn må innføres i `merge` og `split` samtidig.
 - Skal kommunecachen fornyes med jevne mellomrom, slik at kommuner som utgår, oppdages uten omstart?
 - Skal teig-identene fortsatt lages direkte av komponentene i core-api, eller skal domenetypene tillate 0?

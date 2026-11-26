@@ -105,7 +105,7 @@ class ReguleringRouteTest {
 
     // Passerer formatet, men er ikke gyldig i domenet (kommuner kan ikke flyttes) og peker på en ukjent kommune
     private val invalidInTwoSteps = """
-        { "format": 1, "navn": "Feil", "ikrafttredelse": "2027-01-01", "operasjoner": [
+        { "navn": "Feil", "ikrafttredelse": "2027-01-01", "operasjoner": [
             { "op": "adjust", "kind": "county", "key": "46", "then": [
                 { "op": "move", "kind": "municipality", "key": "99", "to": ["46", "98"] }
             ] }
@@ -182,8 +182,8 @@ class ReguleringRouteTest {
     @Test
     fun `dataregler oversettes til stier`() = test {
         val spec = """
-            { "format": 1, "navn": "Ukjent", "ikrafttredelse": "2027-01-01", "operasjoner": [
-                { "op": "merge", "kind": "municipality", "from": [["46", "99"]], "into": { "existing": ["46", "02"] } }
+            { "navn": "Ukjent", "ikrafttredelse": "2027-01-01", "operasjoner": [
+                { "op": "merge", "kind": "municipality", "from": [["46", "99"]], "into": ["46", "02"] }
             ] }
         """.trimIndent()
 
@@ -197,13 +197,11 @@ class ReguleringRouteTest {
     @Test
     fun `kommunedeling med eksisterende etterfølger stoppes i broen`() = test {
         val spec = """
-            { "format": 1, "navn": "Deling", "ikrafttredelse": "2027-01-01", "operasjoner": [
-                { "op": "split", "kind": "municipality", "key": ["46", "03"], "into": [
-                    { "existing": ["46", "01"], "role": "successor" },
-                    { "new": ["46", "10"], "payload": { "navn": "Ny", "koordinatsystem": "UTM32",
-                        "senterpunkt": { "x": 1.0, "y": 2.0 }, "godkjenteGardsnumre": [ { "fra": 1, "til": 200 } ],
-                        "kommunevapen": "iVBORw0KGgo=" } }
-                ] }
+            { "navn": "Deling", "ikrafttredelse": "2027-01-01", "operasjoner": [
+                { "op": "split", "kind": "municipality", "key": ["46", "03"], "successor": ["46", "01"] },
+                { "op": "create", "kind": "municipality", "key": ["46", "10"], "derivedFrom": ["46", "03"], "payload": { "navn": "Ny", "koordinatsystem": "UTM32",
+                    "senterpunkt": { "x": 1.0, "y": 2.0 }, "godkjenteGardsnumre": [ { "fra": 1, "til": 200 } ],
+                    "kommunevapen": "iVBORw0KGgo=" } }
             ] }
         """.trimIndent()
 
@@ -218,7 +216,7 @@ class ReguleringRouteTest {
     @Test
     fun `utskilling stoppes i broen med sti til create-noden`() = test {
         val spec = """
-            { "format": 1, "navn": "Utskilling", "ikrafttredelse": "2027-01-01", "operasjoner": [
+            { "navn": "Utskilling", "ikrafttredelse": "2027-01-01", "operasjoner": [
                 { "op": "create", "kind": "municipality", "key": ["46", "10"], "derivedFrom": ["46", "03"],
                   "payload": { "navn": "Ny", "koordinatsystem": "UTM32",
                     "senterpunkt": { "x": 1.0, "y": 2.0 }, "godkjenteGardsnumre": [ { "fra": 1, "til": 200 } ],

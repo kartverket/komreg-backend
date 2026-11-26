@@ -3,7 +3,6 @@
 package no.kartverket.komreg.regulering.reform.format
 
 import kotlinx.datetime.LocalDate
-import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -20,7 +19,6 @@ import kotlinx.serialization.json.JsonPrimitive
  */
 @Serializable
 data class ReformSpec(
-    @EncodeDefault val format: Int = 1,
     val navn: String,
     val ikrafttredelse: LocalDate,
     val operasjoner: List<OpSpec>,
@@ -51,22 +49,25 @@ sealed interface OpSpec {
         val then: List<OpSpec> = emptyList(),
     ) : OpSpec
 
-    /** Kildene i [from] utgår og peker på målet i [into]. */
+    /** Kildene i [from] utgår og peker på [into]. Etterkommere uten egen regel følger med til [into]. Oppretter ikke [into]. */
     @Serializable
     @SerialName("merge")
     data class Merge(
         override val kind: String,
         val from: List<SourceSpec>,
-        val into: IntoSpec,
+        val into: KeySpec,
     ) : OpSpec
 
-    /** [key] deles i [into]. `role` på delene avgjør hva som skjer med kilden. `into: []` betyr at kilden utgår uten etterfølger. */
+    /**
+     * [key] utgår, og peker eventuelt på [successor]. Etterkommere følger ikke med, og må ha egne regler i [then].
+     * Delene opprettes med `create` og `derivedFrom`. Oppretter ikke [successor].
+     */
     @Serializable
     @SerialName("split")
     data class Split(
         override val kind: String,
         val key: PathSpec,
-        val into: List<PartSpec>,
+        val successor: KeySpec? = null,
         val then: List<OpSpec> = emptyList(),
     ) : OpSpec
 
@@ -97,7 +98,7 @@ sealed interface PathSpec {
     data class Path(override val segments: List<JsonPrimitive>) : PathSpec
 }
 
-/** Mål (`to`, `existing`, `new`): absolutt array av segmenter fra roten. */
+/** Mål (`to`, `into`, `successor`, `derivedFrom`): absolutt array av segmenter fra roten. */
 @Serializable(KeySpecSerializer::class)
 data class KeySpec(val segments: List<JsonPrimitive>)
 
@@ -113,60 +114,4 @@ sealed interface SourceSpec {
 
     @Serializable
     data class Full(override val key: PathSpec, override val then: List<OpSpec> = emptyList()) : SourceSpec
-}
-
-/** Målet i `merge`: en eksisterende nøkkel, eller en ny nøkkel med payload. */
-@Serializable(IntoSpecSerializer::class)
-sealed interface IntoSpec {
-    val then: List<OpSpec>
-
-    @Serializable
-    data class Existing(val existing: KeySpec, override val then: List<OpSpec> = emptyList()) : IntoSpec
-
-    @Serializable
-    data class New(
-        val new: KeySpec,
-        val payload: JsonObject? = null,
-        override val then: List<OpSpec> = emptyList(),
-    ) : IntoSpec
-}
-
-/** En del i `split`: en ny del (med nøkkel og eventuell payload), eller en eksisterende etterfølger. */
-@Serializable(PartSpecSerializer::class)
-sealed interface PartSpec {
-    val then: List<OpSpec>
-
-    /** Høyst én del i et `split` har rolle. */
-    @Serializable
-    data class New(
-        val new: KeySpec,
-        val payload: JsonObject? = null,
-        val role: NewRole? = null,
-        override val then: List<OpSpec> = emptyList(),
-    ) : PartSpec
-
-    @Serializable
-    data class Existing(
-        val existing: KeySpec,
-        val role: ExistingRole,
-        override val then: List<OpSpec> = emptyList(),
-    ) : PartSpec
-}
-
-@Serializable
-enum class NewRole {
-    /** Delen arver kildens ID (kilden flyttes hit). */
-    @SerialName("identity")
-    IDENTITY,
-
-    /** Kilden utgår og peker på denne delen. */
-    @SerialName("successor")
-    SUCCESSOR,
-}
-
-@Serializable
-enum class ExistingRole {
-    /** Kilden utgår og peker på denne delen. */
-    @SerialName("successor")
-    SUCCESSOR,
 }

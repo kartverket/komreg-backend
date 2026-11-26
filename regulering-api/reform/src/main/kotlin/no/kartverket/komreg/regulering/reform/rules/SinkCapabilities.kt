@@ -7,8 +7,6 @@ import no.kartverket.komreg.integration.spi.Ident
 import no.kartverket.komreg.regulering.reform.format.V1Kinds
 import no.kartverket.komreg.transformation.reform.ReformClaims
 import no.kartverket.komreg.transformation.reform.ReformOp
-import no.kartverket.komreg.transformation.reform.exclusiveTarget
-import no.kartverket.komreg.transformation.reform.weakTarget
 
 /** Om en [ReformOp.Retire] skal ha etterfølger. */
 internal enum class SuccessorPolicy { REQUIRED, FORBIDDEN }
@@ -63,25 +61,15 @@ private val municipalityCoat: Check = { scope ->
     }
 }
 
-private val targetsInOneCounty: Check = { scope ->
-    val sourceOps = scope.ops.filterIsInstance<ReformOp.SourceOp>().associateBy { it.source }
-    val derives = scope.ops.filterIsInstance<ReformOp.Derive>().map { it.from }
-    (sourceOps.keys + derives).mapNotNull { source ->
-        val sourceOp = sourceOps[source]
-        val derived = scope.claims.derives[source].orEmpty()
-        val targets = listOfNotNull(sourceOp?.let { it.exclusiveTarget ?: it.weakTarget }) + derived.map { it.target }
-        if (targets.map { it.county() }.distinct().size > 1) {
-            DomainErr.TargetsInMultipleCounties(source, listOfNotNull(sourceOp) + derived)
-        } else {
-            null
-        }
-    }
-}
-
-private val deriveOnlyFromMove: Check = { scope ->
+/**
+ * En veg under en forelder som utgår, får delvis nøkkel, og det støtter ikke sinken. En egen `Retire` av vegen
+ * sletter den, men nye veger skrives før slettingen, så den kan fortsatt avledes fra.
+ */
+private val deriveNotFromRetired: Check = { scope ->
     scope.ops.filterIsInstance<ReformOp.Derive>().mapNotNull { op ->
-        val rule = scope.claims.lookup(op.from)?.takeIf { it.isExact }?.operation
-        if (rule is ReformOp.Move) null else DomainErr.DeriveWithoutMove(op)
+        val match = scope.claims.lookup(op.from)
+        val retire = match?.operation as? ReformOp.Retire
+        if (retire != null && !match.isExact) DomainErr.DeriveFromRetired(op, retire) else null
     }
 }
 
@@ -95,21 +83,10 @@ private val seriesRetireNeedsTitleMoves: Check = { scope ->
 }
 
 private val parcelMoves: Check = { scope ->
-    val moves = scope.ops.filterIsInstance<ReformOp.Move>()
-    val (withNumber, plain) = moves.partition { it.source.hasCadastralNumber() || it.target.hasCadastralNumber() }
-
-    val unpaired = plain.groupBy { it.source.parcel() to it.target.parcel() }.values.mapNotNull { group ->
-        val pairs = group.map { it.source.leaseRole() to it.target.leaseRole() }.toSet()
-        if (pairs == setOf(0 to 0, 1 to 1)) null else DomainErr.ParcelNotPaired(group.first().source, group)
-    }
-    withNumber.map { DomainErr.ParcelHasCadastralNumber(it) } + unpaired
+    scope.ops.filterIsInstance<ReformOp.Move>()
+        .filter { it.source.hasCadastralNumber() || it.target.hasCadastralNumber() }
+        .map { DomainErr.ParcelHasCadastralNumber(it) }
 }
-
-private fun Ident.county(): Comparable<*> = toArray().first()
-
-private fun Ident.parcel(): List<Comparable<*>> = toArray().let { it.take(2) + it[6] }
-
-private fun Ident.leaseRole(): Int = (toArray()[3] as Matrikkelnummer.Bruksnummer).value.toInt()
 
 /** Teiger uten matrikkelnummer har gnr 0, bnr 0 eller 1, fnr 0 og snr 0. */
 private fun Ident.hasCadastralNumber(): Boolean {
@@ -131,7 +108,7 @@ internal val v1Capabilities: Map<String, SinkCapabilities> = mapOf(
         actions = setOf(DomainAction.CREATE, DomainAction.DERIVE, DomainAction.RETIRE_TO, DomainAction.RETIRE),
         retire = SuccessorPolicy.FORBIDDEN,
         hints = mapOf(
-            DomainAction.MOVE to "Fylke kan ikke flyttes. Bruk `merge` med `into.new` for renummerering.",
+            DomainAction.MOVE to "Fylke kan ikke flyttes. Gi nytt nummer med `merge` og `create` med `derivedFrom`.",
         ),
         defaultHint = "Bruk `merge` eller `split`.",
         checks = listOf(payloadIs<Fylkesdata>("Fylke", "Fylkesdata")),
@@ -141,37 +118,46 @@ internal val v1Capabilities: Map<String, SinkCapabilities> = mapOf(
         actions = setOf(DomainAction.CREATE, DomainAction.DERIVE, DomainAction.RETIRE_TO, DomainAction.RETIRE),
         retire = SuccessorPolicy.REQUIRED,
         hints = mapOf(
-            DomainAction.MOVE to "Kommune kan ikke flyttes. Bruk `merge` med `into.new` for renummerering.",
+            DomainAction.MOVE to "Kommune kan ikke flyttes. Gi nytt nummer med `merge` og `create` med `derivedFrom`.",
         ),
         defaultHint = "Bruk `merge` eller `split`.",
         checks = listOf(
             payloadIs<Kommunedata>("Kommune", "Kommunedata"),
             municipalityCoat,
-            targetsInOneCounty,
         ),
     ),
     V1Kinds.ADDRESS_CODE to SinkCapabilities(
         label = "Veg",
-        actions = setOf(DomainAction.DERIVE, DomainAction.MOVE),
+        actions = setOf(DomainAction.DERIVE, DomainAction.MOVE, DomainAction.RETIRE),
+        retire = SuccessorPolicy.FORBIDDEN,
+        // CREATE og RETIRE_TO er sinkbegrensninger, ikke domeneregler. Se «Bakgrunn for domenereglene» i
+        // docs/reform-format-design.md.
         hints = mapOf(
-            DomainAction.CREATE to "Veger kan ikke opprettes. Flytt en eksisterende veg (`move`), " +
-                "eller del den med `split` der én av delene har `role: identity`.",
-            DomainAction.RETIRE_TO to "Veger kan ikke avvikles. Bruk `split` der én av delene har `role: identity`.",
-            DomainAction.RETIRE to "Veger kan ikke avvikles, det sletter vegen. " +
-                "Bruk `split` der én av delene har `role: identity`.",
+            DomainAction.CREATE to "Sinken støtter ikke opprettelse av veger ennå, fordi den kopierer adressenavnet " +
+                "fra en eksisterende veg. Avled den nye vegen fra en eksisterende med `create` og `derivedFrom`.",
+            DomainAction.RETIRE_TO to "Sinken støtter ikke sammenslåing av veger ennå. Flytt vegen (`move`), eller " +
+                "slett den med `split` uten `successor`, og flytt adressene med egne regler.",
         ),
-        defaultHint = "Bruk `move`, eller `split` der én av delene har `role: identity`.",
-        checks = listOf(deriveOnlyFromMove, targetsInOneCounty),
+        defaultHint = "Bruk `move`, `create` med `derivedFrom`, eller `split` uten `successor` for å slette vegen.",
+        checks = listOf(deriveNotFromRetired),
     ),
-    V1Kinds.ADDRESS_NUMBER to onlyMove("Vegadresse"),
+    // Et adressenummer er en serie (nummer med og uten bokstav), som et gårdsnummer. Ved sammenslåing får hver
+    // adresse i serien nytt nummer, og sinken oppdaterer den som ved flytting. Like adresser i målet sjekkes ikke.
+    V1Kinds.ADDRESS_NUMBER to SinkCapabilities(
+        label = "Vegadresse",
+        actions = setOf(DomainAction.MOVE, DomainAction.RETIRE_TO),
+        defaultHint = "Bare flytting (`move`) og sammenslåing (`merge`) støttes.",
+    ),
     V1Kinds.DISTRICT_NUMBER to onlyMove("Krets"),
     V1Kinds.TITLE_NUMBER to onlyMove("Grunneiendom"),
     V1Kinds.LAND_NUMBER to SinkCapabilities(
         label = "Gårdsnummer",
-        actions = setOf(DomainAction.MOVE, DomainAction.RETIRE),
+        // Et gårdsnummer er ingen entitet. Ved sammenslåing får hver grunneiendom i serien nytt gårdsnummer, og sinken
+        // oppdaterer den som ved flytting. Like bruksnumre i målet sjekkes ikke.
+        actions = setOf(DomainAction.MOVE, DomainAction.RETIRE_TO, DomainAction.RETIRE),
         retire = SuccessorPolicy.FORBIDDEN,
-        defaultHint = "Flytt gårdsnummeret (`move`), eller la det utgå (`split` med tom `into`) " +
-            "når bruksnumrene under flyttes enkeltvis med `then`.",
+        defaultHint = "Flytt gårdsnummeret (`move`), slå det sammen med et annet (`merge`), eller la det utgå " +
+            "(`split` uten `successor`) når bruksnumrene under flyttes enkeltvis med `then`.",
         checks = listOf(seriesRetireNeedsTitleMoves),
     ),
     V1Kinds.PARCEL to SinkCapabilities(

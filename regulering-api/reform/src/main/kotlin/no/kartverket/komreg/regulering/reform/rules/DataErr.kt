@@ -27,19 +27,19 @@ sealed interface DataErr {
     /** Et mål som må finnes fra før, finnes ikke. */
     data class TargetNotFound(val key: Ident.NonEmpty, override val ops: List<ReformOp>) : DataErr {
         override val message get() = "Målet $key finnes ikke"
-        override val hint get() = "Bruk `into.new` for å opprette målet, eller rett nummeret."
+        override val hint get() = "Opprett målet med `create`, eller rett nummeret."
     }
 
     /** Et mål som må finnes fra før, er utgått. */
     data class TargetExpired(val key: Ident.NonEmpty, override val ops: List<ReformOp>) : DataErr {
         override val message get() = "Målet $key er utgått"
-        override val hint get() = "Velg et mål som er gyldig, eller opprett et nytt med `into.new`."
+        override val hint get() = "Velg et mål som er gyldig, eller opprett et nytt med `create`."
     }
 
     /** Et mål som opprettes, er allerede i bruk av et gyldig fylke eller en gyldig kommune. */
     data class TargetInUse(val key: Ident.NonEmpty, override val ops: List<ReformOp>) : DataErr {
         override val message get() = "Målet $key er allerede i bruk"
-        override val hint get() = "Velg et ledig nummer, eller bruk `into.existing` hvis målet skal være det som finnes."
+        override val hint get() = "Velg et ledig nummer, eller fjern `create` hvis målet skal være det som finnes."
     }
 
     /** Kilden finnes ikke. */
