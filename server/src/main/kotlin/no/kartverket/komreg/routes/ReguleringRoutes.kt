@@ -17,7 +17,7 @@ fun Application.reguleringRoutes(reguleringService: ReguleringService, regulerin
         // Get all reguleringer
         route("/reguleringer") {
             get {
-                val reguleringerList = reguleringRepo.getAllReguleringer()
+                val reguleringerList = reguleringRepo.getAllReguleringer().filterIsInstance<LegacyRegulering>()
 
                 if (reguleringerList.isEmpty()) {
                     call.application.log.info("No reguleringer found.")
@@ -31,7 +31,7 @@ fun Application.reguleringRoutes(reguleringService: ReguleringService, regulerin
             get {
                 val regId = call.parameters["id"]
 
-                val regulering = reguleringRepo.getReguleringById(regId ?: "")
+                val regulering = reguleringRepo.getReguleringById(regId ?: "") as? LegacyRegulering
 
                 if (regulering != null) {
                     call.respond(regulering)
@@ -46,7 +46,7 @@ fun Application.reguleringRoutes(reguleringService: ReguleringService, regulerin
             post {
                 try {
                     val requestBody = call.receiveText()
-                    val regulering: Regulering = Json.decodeFromString(Regulering.serializer(), requestBody)
+                    val regulering: LegacyRegulering = Json.decodeFromString(LegacyRegulering.serializer(), requestBody)
                     reguleringRepo.insertRegulering(regulering)
                     call.respond(HttpStatusCode.OK, "Regulering JSON received and saved successfully.")
                 } catch (e: Exception) {
@@ -59,7 +59,7 @@ fun Application.reguleringRoutes(reguleringService: ReguleringService, regulerin
         // Modify (replace) existing regulering
         route("/reguleringer") {
             put {
-                val regulering: Regulering = call.receive()
+                val regulering: LegacyRegulering = call.receive()
 
 
                 if (reguleringRepo.updateRegulering(regulering)) {
@@ -224,7 +224,7 @@ fun Application.reguleringRoutes(reguleringService: ReguleringService, regulerin
                         ?: nyKommuneSomSkalOppdaters.standardRekvirent,
                     kommunevapen = oppdatertKommuneDTO.kommunevapen ?: nyKommuneSomSkalOppdaters.kommunevapen,
 
-                    )
+                )
                 reguleringRepo.updateEndringOfRegulering(
                     regId,
                     endringId,

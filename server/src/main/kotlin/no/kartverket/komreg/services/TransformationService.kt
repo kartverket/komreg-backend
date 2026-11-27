@@ -4,6 +4,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 import no.kartverket.komreg.core.KjoringContext
 import no.kartverket.komreg.core.logging.CoroutineMDC
 import no.kartverket.komreg.core.logging.FAG
@@ -16,7 +17,7 @@ import no.kartverket.komreg.logger
 import no.kartverket.komreg.repositories.KjoringRepo
 import no.kartverket.komreg.repositories.TilbakeføringsstatusRepo
 import no.kartverket.komreg.repositories.TransformationRepo
-import no.kartverket.komreg.transformation.Reguleringsinput
+import no.kartverket.komreg.transformation.IdentTransformer
 import no.kartverket.komreg.transformation.Storage
 import no.kartverket.komreg.transformation.transform
 import org.slf4j.MDC
@@ -24,7 +25,9 @@ import java.lang.management.ManagementFactory
 
 @Suppress("LocalVariableName", "NonAsciiCharacters")
 fun transformEntities(
-    input: Reguleringsinput,
+    reguleringName: String,
+    ikrafttredelsesdato: LocalDate,
+    transformer: IdentTransformer,
     kjoringContext: KjoringContext,
     transformationRepo: TransformationRepo,
     kjoringRepo: KjoringRepo,
@@ -37,7 +40,9 @@ fun transformEntities(
 
     runAndWriteTransformations(
         kjoringContext,
-        input,
+        reguleringName,
+        ikrafttredelsesdato,
+        transformer,
         entitySinks,
         StorageService(transformationRepo, tilbakeføringsstatusRepo, kjoringRepo),
         kjoringRepo,
@@ -49,7 +54,9 @@ fun transformEntities(
 @Suppress("LocalVariableName", "NonAsciiCharacters")
 private fun runAndWriteTransformations(
     kjoringContext: KjoringContext,
-    input: Reguleringsinput,
+    reguleringName: String,
+    ikraftredelsesdato: LocalDate,
+    transformer: IdentTransformer,
     entitySinks: EntitySinkManager,
     storage: Storage,
     kjoringRepo: KjoringRepo,
@@ -71,14 +78,15 @@ private fun runAndWriteTransformations(
         logger.info(FAG, "Startet å kjøre transformasjoner")
 
         if (tilbakeføringsstatusRepo.getTilbakeføringsstatusForKjøringId(kjoringId) == null) {
-            logger.info("Førstegangskjøring av Regulering ${input.id}. Oppretter tilbakeføringsstatus for sinker.")
+            logger.info("Førstegangskjøring av Regulering $reguleringName. Oppretter tilbakeføringsstatus for sinker.")
             tilbakeføringsstatusRepo.createTilbakeføringsstatusForKjoring(kjoringId, entitySinks.entitySinks)
         }
 
         val transformJob = launch(Dispatchers.IO) {
             transform(
                 kjoringId,
-                input,
+                ikraftredelsesdato,
+                transformer,
                 lifeCycleHandlers,
                 sources,
                 processors,

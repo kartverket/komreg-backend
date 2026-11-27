@@ -13,7 +13,6 @@ import io.mockk.mockk
 import kotlinx.datetime.LocalDate
 import no.kartverket.komreg.core.domain.Adressekode
 import no.kartverket.komreg.core.domain.Fylke
-import no.kartverket.komreg.core.domain.Fylkesdata
 import no.kartverket.komreg.core.domain.Fylkesnavn
 import no.kartverket.komreg.core.domain.Fylkesnummer
 import no.kartverket.komreg.core.domain.Koordinat
@@ -81,7 +80,7 @@ class ReformClaimsTilReguleringTest : FunSpec({
 
         val regulering = claims.regulering()
 
-        val dto = regulering.shouldBeInstanceOf<Either.Right<Regulering>>().value
+        val dto = regulering.shouldBeInstanceOf<Either.Right<LegacyRegulering>>().value
         dto.toReguleringsinput().toReformOps().toSet() shouldBe ops.toSet()
     }
 
@@ -336,7 +335,7 @@ class ReformClaimsTilReguleringTest : FunSpec({
             )
 
             // merge med én kilde og create med derivedFrom fra kilden
-            ReformClaims.validate(ops).getOrNull()!!.regulering().shouldBeInstanceOf<Either.Right<Regulering>>()
+            ReformClaims.validate(ops).getOrNull()!!.regulering().shouldBeInstanceOf<Either.Right<LegacyRegulering>>()
         }
 
         test("merge til eksisterende mål sammen med create med derivedFrom fra en av kildene") {

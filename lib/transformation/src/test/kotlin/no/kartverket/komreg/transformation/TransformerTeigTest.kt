@@ -51,7 +51,7 @@ class TransformerTeigTest : FunSpec({
 
         transform(
             1,
-            Reguleringsinput(
+            ikrafttredelsesdato = Reguleringsinput(
                 "abc",
                 Clock.System.todayIn(TimeZone.currentSystemDefault()),
                 listOf(
@@ -75,6 +75,35 @@ class TransformerTeigTest : FunSpec({
                         createDummyKommunevaapenImage('K'),
                     ),
                 ),
+            ).ikrafttredelsesdato,
+            transformer = LegacyIdentTransformer(
+                mapInput(
+                    Reguleringsinput(
+                        "abc",
+                        Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                        listOf(
+                            Kommuneendring(
+                                FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(13))),
+                                FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(24))),
+                            ),
+                        ),
+                        emptyList(),
+                        listOf(
+                            Kommune(
+                                Kommunenummer(1324),
+                                Kommunenavn("Ny kommune"),
+                                null,
+                                Koordinatsystem.UTM32,
+                                Koordinat(0.0, 0.0),
+                                false,
+                                "",
+                                null,
+                                null,
+                                createDummyKommunevaapenImage('K'),
+                            ),
+                        ),
+                    )
+                )
             ),
             emptyList(),
             listOf(source),
@@ -158,7 +187,7 @@ class TransformerTeigTest : FunSpec({
 
         transform(
             1,
-            Reguleringsinput(
+            ikrafttredelsesdato = Reguleringsinput(
                 "abc",
                 Clock.System.todayIn(TimeZone.currentSystemDefault()),
                 listOf(
@@ -207,6 +236,60 @@ class TransformerTeigTest : FunSpec({
                         createDummyKommunevaapenImage('K'),
                     ),
                 ),
+            ).ikrafttredelsesdato,
+            transformer = LegacyIdentTransformer(
+                mapInput(
+                    Reguleringsinput(
+                        "abc",
+                        Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                        listOf(
+                            Kommuneendring(
+                                FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(13))),
+                                FraEnTilMange(
+                                    Kommunenummer.Lopenummer(34),
+                                    listOf(Kommunenummer.Lopenummer(24), Kommunenummer.Lopenummer(25)),
+                                ),
+                            ),
+                            Teigendring(
+                                FraTil(Fylkesnummer(12), Fylkesnummer(13)),
+                                FraTil(Kommunenummer.Lopenummer(34), Kommunenummer.Lopenummer(24)),
+                                FraTil(TeigId(2), TeigId(2)),
+                            ),
+                            Teigendring(
+                                FraTil(Fylkesnummer(12), Fylkesnummer(13)),
+                                FraTil(Kommunenummer.Lopenummer(34), Kommunenummer.Lopenummer(25)),
+                                FraTil(TeigId(4), TeigId(4)),
+                            ),
+                        ),
+                        emptyList(),
+                        listOf(
+                            Kommune(
+                                Kommunenummer(1324),
+                                Kommunenavn("Ny kommune 1"),
+                                null,
+                                Koordinatsystem.UTM32,
+                                Koordinat(0.0, 0.0),
+                                false,
+                                "",
+                                null,
+                                null,
+                                createDummyKommunevaapenImage('K'),
+                            ),
+                            Kommune(
+                                Kommunenummer(1325),
+                                Kommunenavn("Ny kommune 2"),
+                                null,
+                                Koordinatsystem.UTM32,
+                                Koordinat(0.0, 0.0),
+                                false,
+                                "",
+                                null,
+                                null,
+                                createDummyKommunevaapenImage('K'),
+                            ),
+                        ),
+                    )
+                )
             ),
             emptyList(),
             listOf(source),

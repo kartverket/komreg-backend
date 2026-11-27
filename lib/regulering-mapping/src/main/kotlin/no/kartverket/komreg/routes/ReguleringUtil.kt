@@ -31,7 +31,7 @@ import no.kartverket.komreg.transformation.Vegadresseendring
 import no.kartverket.komreg.transformation.Vegendring
 import java.util.Base64
 
-fun Regulering.toReguleringsinput(): Reguleringsinput {
+fun LegacyRegulering.toReguleringsinput(): Reguleringsinput {
         return Reguleringsinput(
             id,
             dato,

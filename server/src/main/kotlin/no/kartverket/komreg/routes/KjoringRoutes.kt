@@ -1,5 +1,6 @@
 package no.kartverket.komreg.routes
 
+import arrow.core.getOrElse
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.plugins.NotFoundException
@@ -17,6 +18,11 @@ import no.kartverket.komreg.exceptions.ReguleringAlreadyFinishedException
 import no.kartverket.komreg.repositories.*
 import no.kartverket.komreg.services.ReguleringService
 import no.kartverket.komreg.services.transformEntities
+import no.kartverket.komreg.transformation.IdentTransformer
+import no.kartverket.komreg.transformation.LegacyIdentTransformer
+import no.kartverket.komreg.transformation.mapInput
+import no.kartverket.komreg.transformation.reform.ReformClaims
+import no.kartverket.komreg.transformation.reform.ReformClaimsTransformer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.sql.SQLException
@@ -37,14 +43,35 @@ fun Application.kjoringroutes(
                     val regId = call.parameters["regId"] ?: throw MissingPathVariableException("Missing regId")
 
                     val regulering = reguleringsService.getOrThrowRegulering(regId)
+                    val (reguleringName: String, ikrafttredelsesdato, transformer: IdentTransformer) =  when(regulering) {
+                        is LegacyRegulering -> {
+                            val reguleringsinput = regulering.toReguleringsinput()
+                            Triple(
+                                reguleringsinput.id,
+                                reguleringsinput.ikrafttredelsesdato,
+                                LegacyIdentTransformer(mapInput(reguleringsinput))
+                            )
+}
+                        is ReformOpRegulering -> {
+                            val claims = ReformClaims.validate(regulering.ops).getOrElse {errs ->
+                                throw IllegalStateException("Ugylidig regulering" + errs.joinToString("\n\t- ", ":\n\t- "))
+                            }
+                            Triple(regulering.navn, regulering.ikrafttredelse, ReformClaimsTransformer(claims))
+                        }
 
+                        else -> {
+                            throw IllegalStateException("Ukjent reguleringstype: $regulering")
+                        }
+                    }
                     logger.info("Starter transformasjon for regulering: $regId")
 
                     val kjoringsomskalgjenopptas = kjoringRepo.finnStoppetKjøringForRegulering(regId)
 
                     if (kjoringsomskalgjenopptas != null) {
                         transformEntities(
-                            regulering.toReguleringsinput(),
+                            reguleringName,
+                            ikrafttredelsesdato,
+                            transformer,
                             KjoringContextImpl(kjoringsomskalgjenopptas.id, komregDataSource),
                             transformationRepo,
                             kjoringRepo,
@@ -61,10 +88,11 @@ fun Application.kjoringroutes(
                     } else {
                         val kjoringId = kjoringRepo.insertAndRetrieveKjoringId(regId)
                             ?: throw SQLException("Kunne ikke opprette kjøring for regId: $regId")
-                        val reguleringsinput = regulering.toReguleringsinput()
 
                         transformEntities(
-                            reguleringsinput,
+                            reguleringName,
+                            ikrafttredelsesdato,
+                            transformer,
                             KjoringContextImpl(kjoringId, komregDataSource),
                             transformationRepo,
                             kjoringRepo,

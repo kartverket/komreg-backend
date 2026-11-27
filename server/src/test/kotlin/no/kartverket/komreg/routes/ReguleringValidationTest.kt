@@ -33,7 +33,7 @@ class ReguleringValidationTest : AnnotationSpec() {
             )
 
         val regulering =
-            Regulering(
+            LegacyRegulering(
                 "regId",
                 "regulering med feil",
                 LocalDate(2024, 1, 1),
@@ -83,7 +83,7 @@ class ReguleringValidationTest : AnnotationSpec() {
             )
 
         val regulering =
-            Regulering(
+            LegacyRegulering(
                 "regId",
                 "regulering med feil",
                 LocalDate(2024, 1, 1),
@@ -125,7 +125,7 @@ class ReguleringValidationTest : AnnotationSpec() {
             )
 
         val regulering =
-            Regulering(
+            LegacyRegulering(
                 "regId",
                 "regulering med feil",
                 LocalDate(2024, 1, 1),
@@ -227,7 +227,7 @@ class ReguleringValidationTest : AnnotationSpec() {
             )
 
         val regulering =
-            Regulering(
+            LegacyRegulering(
                 "regId",
                 "regulering med feil",
                 LocalDate(2024, 1, 1),
@@ -343,7 +343,7 @@ class ReguleringValidationTest : AnnotationSpec() {
             )
 
         val regulering =
-            Regulering(
+            LegacyRegulering(
                 "regId",
                 "regulering med feil",
                 LocalDate(2024, 1, 1),
@@ -390,7 +390,7 @@ class ReguleringValidationTest : AnnotationSpec() {
             )
 
         val regulering =
-            Regulering(
+            LegacyRegulering(
                 "regId",
                 "regulering med feil",
                 LocalDate(2024, 1, 1),

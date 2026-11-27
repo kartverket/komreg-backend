@@ -1,0 +1,1 @@
+ALTER TABLE regulering ADD COLUMN type varchar(32) NOT NULL DEFAULT 'LEGACY';

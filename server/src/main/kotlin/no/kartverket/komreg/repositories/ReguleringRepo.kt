@@ -1,27 +1,32 @@
 package no.kartverket.komreg.repositories
 
 import kotlinx.datetime.toJavaLocalDate
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import no.kartverket.komreg.routes.EndringDTO
 import no.kartverket.komreg.routes.KommuneDTO
+import no.kartverket.komreg.routes.LegacyRegulering
+import no.kartverket.komreg.routes.ReformOpRegulering
 import no.kartverket.komreg.routes.Regulering
 import java.sql.Date
 import javax.sql.DataSource
 
 class ReguleringRepo(
     private val dataSource: DataSource,
+    private val jsonSerializer: kotlinx.serialization.json.Json,
 ) {
     fun getAllReguleringer(): List<Regulering> {
         dataSource.connection.use { connection ->
-            val statement = connection.prepareStatement("SELECT regulering FROM regulering")
+            val statement = connection.prepareStatement("SELECT regulering, type FROM regulering")
             val resultSet = statement.executeQuery()
 
             val reguleringerList = mutableListOf<Regulering>()
 
             while (resultSet.next()) {
                 val reguleringJson = resultSet.getString(1)
-                val regulering = Json.decodeFromString<Regulering>(reguleringJson)
+                val regulering: Regulering = when (resultSet.getString(2)) {
+                    "LEGACY" -> jsonSerializer.decodeFromString<LegacyRegulering>(reguleringJson)
+                    "REFORM_SPEC" -> jsonSerializer.decodeFromString<ReformOpRegulering>(reguleringJson)
+                    else -> throw IllegalStateException("Unknown regulering type: $reguleringJson")
+                }
                 reguleringerList.add(regulering)
             }
 
@@ -33,13 +38,17 @@ class ReguleringRepo(
 
     fun getReguleringById(id: String): Regulering? {
         dataSource.connection.use { connection ->
-            val statement = connection.prepareStatement("SELECT regulering FROM regulering WHERE id = ?")
+            val statement = connection.prepareStatement("SELECT regulering, type FROM regulering WHERE id = ?")
             statement.setString(1, id)
             val resultSet = statement.executeQuery()
 
             val regulering: Regulering? = if (resultSet.next()) {
                 val reguleringJson = resultSet.getString(1)
-                Json.decodeFromString<Regulering>(reguleringJson)
+                when (resultSet.getString(2)) {
+                    "LEGACY" -> jsonSerializer.decodeFromString<LegacyRegulering>(reguleringJson)
+                    "REFORM_SPEC" -> jsonSerializer.decodeFromString<ReformOpRegulering>(reguleringJson)
+                    else -> throw IllegalStateException("Unknown regulering type: $reguleringJson")
+                }
             } else {
                 null
             }
@@ -50,7 +59,7 @@ class ReguleringRepo(
         }
     }
 
-    fun insertRegulering(regulering: Regulering): Boolean {
+    fun insertRegulering(regulering: LegacyRegulering): Boolean {
         dataSource.connection.use { connection ->
             val currentTime = java.sql.Timestamp(System.currentTimeMillis())
             val statement = connection.prepareStatement(
@@ -58,7 +67,7 @@ class ReguleringRepo(
             )
 
             statement.setString(1, regulering.id)
-            statement.setString(2, Json.encodeToString(regulering))
+            statement.setString(2, jsonSerializer.encodeToString(regulering))
             statement.setDate(3, Date.valueOf(regulering.dato.toJavaLocalDate()))
             statement.setTimestamp(4, currentTime)
             statement.setTimestamp(5, currentTime)
@@ -72,7 +81,7 @@ class ReguleringRepo(
         }
     }
 
-    fun updateRegulering(regulering: Regulering): Boolean {
+    fun updateRegulering(regulering: LegacyRegulering): Boolean {
         dataSource.connection.use { connection ->
 
             val checkStatement = connection.prepareStatement("SELECT count(id) FROM regulering WHERE id = ?")
@@ -87,9 +96,9 @@ class ReguleringRepo(
             }
 
             val updateStatement = connection.prepareStatement(
-                "UPDATE regulering SET regulering = ?::jsonb, ikrafttredelsesdato = ?, endret = now(), opprettetav = ? WHERE ID = ?",
+                "UPDATE regulering SET regulering = ?::jsonb, ikrafttredelsesdato = ?, endret = now(), opprettetav = ?, type = 'LEGACY' WHERE ID = ?",
             )
-            updateStatement.setString(1, Json.encodeToString(regulering))
+            updateStatement.setString(1, jsonSerializer.encodeToString(regulering))
             updateStatement.setDate(2, Date.valueOf(regulering.dato.toJavaLocalDate()))
             updateStatement.setString(3, "system")
             updateStatement.setString(4, regulering.id)
@@ -136,7 +145,7 @@ class ReguleringRepo(
 
             if (resultSet.next()) {
                 val reguleringJson = resultSet.getString(1)
-                val regulering = Json.decodeFromString<Regulering>(reguleringJson)
+                val regulering = jsonSerializer.decodeFromString<LegacyRegulering>(reguleringJson)
 
                 statement.close()
                 connection.close()
@@ -158,7 +167,7 @@ class ReguleringRepo(
 
             if (resultSet.next()) {
                 val reguleringJson = resultSet.getString(1)
-                val regulering = Json.decodeFromString<Regulering>(reguleringJson)
+                val regulering = jsonSerializer.decodeFromString<LegacyRegulering>(reguleringJson)
 
                 statement.close()
 
@@ -178,14 +187,14 @@ class ReguleringRepo(
             val resultSet = statement.executeQuery()
             if (resultSet.next()) {
                 val reguleringJson = resultSet.getString("regulering")
-                val regulering = Json.decodeFromString<Regulering>(reguleringJson)
+                val regulering = jsonSerializer.decodeFromString<LegacyRegulering>(reguleringJson)
 
                 val updatedEndringer = regulering.endringer + endring
                 val updatedRegulering = regulering.copy(endringer = updatedEndringer)
 
                 val updateStatement =
                     connection.prepareStatement("UPDATE regulering SET regulering = ?::jsonb WHERE ID = ?")
-                updateStatement.setString(1, Json.encodeToString(updatedRegulering))
+                updateStatement.setString(1, jsonSerializer.encodeToString(updatedRegulering))
                 updateStatement.setString(2, regId)
                 updateStatement.executeUpdate()
 
@@ -207,7 +216,7 @@ class ReguleringRepo(
             val resultSet = statement.executeQuery()
             if (resultSet.next()) {
                 val reguleringJson = resultSet.getString("regulering")
-                val regulering = Json.decodeFromString<Regulering>(reguleringJson)
+                val regulering = jsonSerializer.decodeFromString<LegacyRegulering>(reguleringJson)
 
                 val endringIndex = regulering.endringer.indexOfFirst { it.id == endringId }
                 if (endringIndex != -1) {
@@ -217,7 +226,7 @@ class ReguleringRepo(
 
                     val updateStatement =
                         connection.prepareStatement("UPDATE regulering SET regulering = ?::jsonb WHERE ID = ?")
-                    updateStatement.setString(1, Json.encodeToString(updatedRegulering))
+                    updateStatement.setString(1, jsonSerializer.encodeToString(updatedRegulering))
                     updateStatement.setString(2, regId)
                     updateStatement.executeUpdate()
 
@@ -239,7 +248,7 @@ class ReguleringRepo(
             val resultSet = statement.executeQuery()
             if (resultSet.next()) {
                 val reguleringJson = resultSet.getString("regulering")
-                val regulering = Json.decodeFromString<Regulering>(reguleringJson)
+                val regulering = jsonSerializer.decodeFromString<LegacyRegulering>(reguleringJson)
 
                 val endringIndex = regulering.endringer.indexOfFirst { it.id == endringId }
                 if (endringIndex != -1) {
@@ -249,7 +258,7 @@ class ReguleringRepo(
 
                     val updateStatement =
                         connection.prepareStatement("UPDATE regulering SET regulering = ?::jsonb WHERE ID = ?")
-                    updateStatement.setString(1, Json.encodeToString(updatedRegulering))
+                    updateStatement.setString(1, jsonSerializer.encodeToString(updatedRegulering))
                     updateStatement.setString(2, regId)
                     updateStatement.executeUpdate()
 
@@ -290,7 +299,7 @@ class ReguleringRepo(
 
             if (resultSet.next()) {
                 val nyKommuneJson = resultSet.getString("nyekommuner")
-                val nyKommune = Json.decodeFromString<KommuneDTO>(nyKommuneJson)
+                val nyKommune = jsonSerializer.decodeFromString<KommuneDTO>(nyKommuneJson)
                 return nyKommune
             }
 

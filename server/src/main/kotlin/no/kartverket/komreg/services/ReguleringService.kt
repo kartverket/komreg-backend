@@ -6,7 +6,10 @@ import no.kartverket.komreg.exceptions.ReguleringAlreadyRunningException
 import no.kartverket.komreg.repositories.KjoringRepo
 import no.kartverket.komreg.repositories.Kjoringstatus
 import no.kartverket.komreg.repositories.ReguleringRepo
+import no.kartverket.komreg.routes.LegacyRegulering
+import no.kartverket.komreg.routes.ReformOpRegulering
 import no.kartverket.komreg.routes.Regulering
+import no.kartverket.komreg.transformation.reform.ReformClaims
 import no.kartverket.komreg.validation.ReguleringValidator
 
 class ReguleringService(
@@ -26,14 +29,30 @@ class ReguleringService(
         kjoringRepo.getStatusForKjoringMedReguleringsId(regId).any { it.status === Kjoringstatus.FERDIG }
             .let { if (it) throw ReguleringAlreadyFinishedException(regId) }
 
-        val errors = ReguleringValidator.validate(regulering)
-
-        if (errors.flatMap { it.value }.isNotEmpty()) {
-            throw IllegalArgumentException(
-                "Reguleringsinput er ugyldig, se errors for detaljer",
-                IllegalArgumentException(errors.toString()),
-            )
+        when (regulering) {
+            is LegacyRegulering -> {
+                val errors = ReguleringValidator.validate(regulering)
+                if (errors.flatMap { it.value }.isNotEmpty()) {
+                    throw IllegalArgumentException(
+                        "Reguleringsinput er ugyldig, se errors for detaljer",
+                        IllegalArgumentException(errors.toString()),
+                    )
+                }
+            }
+            is ReformOpRegulering -> {
+                ReformClaims.validate(regulering.ops).onLeft { errs ->
+                    throw IllegalArgumentException(
+                        "Reguleringen er ugyldig" + errs.joinToString(
+                            "\n\t- ",
+                            ":\n\t- ",
+                            transform = { it.message }
+                        ),
+                    )
+                }
+            }
+            else -> throw IllegalStateException("Unexpected regulering type: ${regulering::class.simpleName}")
         }
+
         return regulering
     }
 

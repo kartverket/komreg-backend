@@ -13,7 +13,7 @@ sealed interface NumberingScheme {
 
     // Testfylker har 5 siffer (fra 10000)
     data object Test : NumberingScheme {
-        override val countyDigits = setOf(2, 5)
+        override val countyDigits = setOf(2, 7)
     }
 
     companion object {

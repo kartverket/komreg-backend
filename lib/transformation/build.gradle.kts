@@ -1,10 +1,12 @@
 plugins {
     id("komreg.kotlin-common")
+    alias(libs.plugins.kotlin.serialization)
     `java-library`
 }
 
 dependencies {
     api(project(":lib:core-api"))
+    api(project(":lib:regulering-dto"))
 
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.datetime)

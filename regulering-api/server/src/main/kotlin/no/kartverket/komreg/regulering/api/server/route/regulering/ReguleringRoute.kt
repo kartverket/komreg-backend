@@ -16,13 +16,17 @@ import io.ktor.utils.io.ExperimentalKtorApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.kartverket.komreg.regulering.api.server.persistence.ReformSpecRepository
+import no.kartverket.komreg.regulering.api.server.service.reform.ReformFeil
 import no.kartverket.komreg.regulering.api.server.service.reform.ReformSpecService
 import no.kartverket.komreg.regulering.api.server.service.reform.ValideringResultat
 import no.kartverket.komreg.regulering.api.server.service.reform.parseReformSpec
 import no.kartverket.komreg.regulering.reform.format.ReformSpec
+import no.kartverket.komreg.routes.ReformOpRegulering
 
 @Serializable
 data class OpprettetRegulering(val id: Int)
+
+internal const val RELAX_VALIDATION = "relaxValidation"
 
 /**
  * Endepunktene for specer under `/api/reguleringer`. Se `docs/reform-format.md`. OpenAPI-beskrivelsene ligger i
@@ -32,7 +36,7 @@ data class OpprettetRegulering(val id: Int)
 @OptIn(ExperimentalKtorApi::class)
 fun Route.reguleringer(appJson: Json, repository: ReformSpecRepository, service: ReformSpecService) {
     /** Leser og validerer specen i body. Svarer selv og gir `null` hvis den er ugyldig. */
-    suspend fun RoutingCall.validSpec(): ReformSpec? {
+    suspend fun RoutingCall.validSpec(relaxValidation: Boolean): ReformSpec? {
         val spec = when (val parsed = appJson.parseReformSpec(receiveText())) {
             is Either.Left -> {
                 respond(HttpStatusCode.UnprocessableEntity, ValideringResultat.ugyldig(listOf(parsed.value)))
@@ -41,7 +45,11 @@ fun Route.reguleringer(appJson: Json, repository: ReformSpecRepository, service:
 
             is Either.Right -> parsed.value
         }
-        val feil = service.validate(spec)
+        val feil: List<ReformFeil> = if (relaxValidation) {
+            service.validateNonDto(spec)
+        } else {
+            service.validate(spec)
+        }
         if (feil.isNotEmpty()) {
             respond(HttpStatusCode.UnprocessableEntity, ValideringResultat.ugyldig(feil))
             return null
@@ -65,7 +73,7 @@ fun Route.reguleringer(appJson: Json, repository: ReformSpecRepository, service:
 
         // ignore!
         post {
-            val spec = call.validSpec() ?: return@post
+            val spec = call.validSpec(call.queryParameters[RELAX_VALIDATION]?.toBoolean() ?: false) ?: return@post
             call.respond(HttpStatusCode.Created, OpprettetRegulering(repository.insert(spec)))
         }.describe(ReguleringOpenApi.opprett)
 
@@ -87,7 +95,7 @@ fun Route.reguleringer(appJson: Json, repository: ReformSpecRepository, service:
             // ignore!
             put {
                 val id = call.id() ?: return@put
-                val spec = call.validSpec() ?: return@put
+                val spec = call.validSpec(call.queryParameters[RELAX_VALIDATION]?.toBoolean() ?: false) ?: return@put
                 if (repository.update(id, spec)) {
                     call.respond(HttpStatusCode.NoContent)
                 } else {
@@ -113,6 +121,18 @@ fun Route.reguleringer(appJson: Json, repository: ReformSpecRepository, service:
                     )
                 }
             }.describe(ReguleringOpenApi.regulering)
+
+            get("/ops") {
+                val id = call.id() ?: return@get
+                val spec = repository.find(id) ?: return@get call.respond(HttpStatusCode.NotFound)
+                when (val ops = service.resolveOps(spec)) {
+                    is Either.Right -> call.respond(ReformOpRegulering(spec.navn, spec.ikrafttredelse, ops.value.ops))
+                    is Either.Left -> call.respond(
+                        HttpStatusCode.UnprocessableEntity,
+                        ValideringResultat.ugyldig(ops.value),
+                    )
+                }
+            }
         }
     }
 }

@@ -37,7 +37,7 @@ import kotlin.reflect.KClass
 
 private val log = LoggerFactory.getLogger("no.kartverket.komreg.routes.ReformClaimsTilRegulering")
 
-/** Grunnen til at [ReformClaims] ikke lot seg uttrykke som en [Regulering] eller [EndringDTO]. */
+/** Grunnen til at [ReformClaims] ikke lot seg uttrykke som en [LegacyRegulering] eller [EndringDTO]. */
 sealed interface Umappbar {
     val melding: String
 
@@ -72,7 +72,7 @@ class UmappbarReformException(val feil: NonEmptyList<Umappbar>) :
     IllegalArgumentException(feil.joinToString("\n") { it.melding })
 
 /**
- * Lager en [Regulering] som kan gjenskape disse [ReformOp]-reglene.
+ * Lager en [LegacyRegulering] som kan gjenskape disse [ReformOp]-reglene.
  *
  * `toReguleringsinput().toReformOps()` på resultatet må gi samme mengde regler som
  * [ReformClaims.declarations], med like payloads. Rekkefølgen er ikke garantert. Dette er en strukturell
@@ -105,7 +105,7 @@ suspend fun ReformClaims.toReguleringDTO(
     navn: String,
     dato: LocalDate,
     kommuneService: KommuneService,
-): Either<NonEmptyList<Umappbar>, Regulering> {
+): Either<NonEmptyList<Umappbar>, LegacyRegulering> {
     val avvikendeDato = declarations.mapNotNull { op ->
         op.kommunedata()?.takeIf { it.ikrafttredelsesdato != dato }?.let { op.nøkkel to it.ikrafttredelsesdato }
     }
@@ -118,7 +118,7 @@ suspend fun ReformClaims.toReguleringDTO(
     val forventet = declarations.map { it.medIkrafttredelsesdato(dato) }.toSet()
 
     return toEndringDTO(id, navn, kommuneService).flatMap { endring ->
-        val regulering = Regulering(id, navn, dato, listOf(endring))
+        val regulering = LegacyRegulering(id, navn, dato, listOf(endring))
         sjekkEkvivalens(regulering, forventet).map { regulering }
     }
 }
@@ -129,7 +129,7 @@ suspend fun ReformClaims.toReguleringDTOOrThrow(
     navn: String,
     dato: LocalDate,
     kommuneService: KommuneService,
-): Regulering = toReguleringDTO(id, navn, dato, kommuneService).getOrElse { throw UmappbarReformException(it) }
+): LegacyRegulering = toReguleringDTO(id, navn, dato, kommuneService).getOrElse { throw UmappbarReformException(it) }
 
 /**
  * Lager en [EndringDTO] som kan representere reglene alene i en regulering. Resultatet sjekkes ikke ved
@@ -183,7 +183,7 @@ suspend fun ReformClaims.toEndringDTO(
  * Et gårdsnummer og et adressenummer er serier uten egen entitet. Sammenslåing av dem gir hver entitet under kilden
  * målet som prefiks, akkurat som flytting, og DTO-en gir dem tilbake som [ReformOp.Move].
  */
-private suspend fun sjekkEkvivalens(regulering: Regulering, forventet: Set<ReformOp>): Either<NonEmptyList<Umappbar>, Unit> {
+private suspend fun sjekkEkvivalens(regulering: LegacyRegulering, forventet: Set<ReformOp>): Either<NonEmptyList<Umappbar>, Unit> {
     val tilbake = Either.catch { regulering.toReguleringsinput().toReformOps().toSet() }
         .getOrElse { return nonEmptyListOf<Umappbar>(Umappbar.UlikTransformasjon(årsak = it)).left() }
     val forventet = forventet.mapTo(mutableSetOf()) { op ->

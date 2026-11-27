@@ -49,7 +49,7 @@ class TransformerVegadresserTest : FunSpec({
 
         transform(
             1,
-            Reguleringsinput(
+            ikrafttredelsesdato = Reguleringsinput(
                 "abc",
                 Clock.System.todayIn(TimeZone.currentSystemDefault()),
                 listOf(
@@ -61,6 +61,23 @@ class TransformerVegadresserTest : FunSpec({
                 ),
                 emptyList(),
                 emptyList(),
+            ).ikrafttredelsesdato,
+            transformer = LegacyIdentTransformer(
+                mapInput(
+                    Reguleringsinput(
+                        "abc",
+                        Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                        listOf(
+                            Vegendring(
+                                FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(12))),
+                                FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(35))),
+                                FraEnTilMange(Adressekode(10100), listOf(Adressekode(20100))),
+                            ),
+                        ),
+                        emptyList(),
+                        emptyList(),
+                    )
+                )
             ),
             emptyList(),
             listOf(vegSource),
@@ -120,7 +137,7 @@ class TransformerVegadresserTest : FunSpec({
 
         transform(
             1,
-            Reguleringsinput(
+            ikrafttredelsesdato = Reguleringsinput(
                 "abc",
                 Clock.System.todayIn(TimeZone.currentSystemDefault()),
                 listOf(
@@ -132,6 +149,23 @@ class TransformerVegadresserTest : FunSpec({
                 ),
                 emptyList(),
                 emptyList(),
+            ).ikrafttredelsesdato,
+            transformer = LegacyIdentTransformer(
+                mapInput(
+                    Reguleringsinput(
+                        "abc",
+                        Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                        listOf(
+                            Vegendring(
+                                FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(12))),
+                                FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(35))),
+                                FraEnTilMange(Adressekode(10100), listOf(Adressekode(20100))),
+                            ),
+                        ),
+                        emptyList(),
+                        emptyList(),
+                    )
+                )
             ),
             emptyList(),
             listOf(vegSource, vegadresseSource),
@@ -241,7 +275,7 @@ class TransformerVegadresserTest : FunSpec({
 
             transform(
                 1,
-                Reguleringsinput(
+                ikrafttredelsesdato = Reguleringsinput(
                     "abc",
                     Clock.System.todayIn(TimeZone.currentSystemDefault()),
                     listOf(
@@ -249,6 +283,19 @@ class TransformerVegadresserTest : FunSpec({
                     ),
                     emptyList(),
                     emptyList(),
+                ).ikrafttredelsesdato,
+                transformer = LegacyIdentTransformer(
+                    mapInput(
+                        Reguleringsinput(
+                            "abc",
+                            Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                            listOf(
+                                vegendring,
+                            ),
+                            emptyList(),
+                            emptyList(),
+                        )
+                    )
                 ),
                 emptyList(),
                 listOf(vegSource, vegadresseSource),
@@ -316,7 +363,7 @@ class TransformerVegadresserTest : FunSpec({
 
             transform(
                 1,
-                Reguleringsinput(
+                ikrafttredelsesdato = Reguleringsinput(
                     "abc",
                     Clock.System.todayIn(TimeZone.currentSystemDefault()),
                     listOf(
@@ -336,6 +383,31 @@ class TransformerVegadresserTest : FunSpec({
                     ),
                     emptyList(),
                     emptyList(),
+                ).ikrafttredelsesdato,
+                transformer = LegacyIdentTransformer(
+                    mapInput(
+                        Reguleringsinput(
+                            "abc",
+                            Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                            listOf(
+                                vegendring,
+                                Vegadresseendring(
+                                    FraTil(Fylkesnummer(12), Fylkesnummer(12)),
+                                    FraTil(Kommunenummer.Lopenummer(34), Kommunenummer.Lopenummer(35)),
+                                    FraTil(Adressekode(10100), Adressekode(10100)),
+                                    FraTil(Adressenummernummer(1), Adressenummernummer(1)),
+                                ),
+                                Vegadresseendring(
+                                    FraTil(Fylkesnummer(12), Fylkesnummer(12)),
+                                    FraTil(Kommunenummer.Lopenummer(34), Kommunenummer.Lopenummer(36)),
+                                    FraTil(Adressekode(10100), Adressekode(10100)),
+                                    FraTil(Adressenummernummer(2), Adressenummernummer(1)),
+                                ),
+                            ),
+                            emptyList(),
+                            emptyList(),
+                        )
+                    )
                 ),
                 emptyList(),
                 listOf(vegSource, vegadresseSource),

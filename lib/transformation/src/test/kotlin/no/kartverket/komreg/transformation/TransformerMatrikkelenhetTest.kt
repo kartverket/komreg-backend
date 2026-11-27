@@ -52,7 +52,7 @@ class TransformerMatrikkelenhetTest : FunSpec({
 
         transform(
             1,
-            Reguleringsinput(
+            ikrafttredelsesdato = Reguleringsinput(
                 "abc",
                 Clock.System.todayIn(TimeZone.currentSystemDefault()),
                 listOf(
@@ -76,6 +76,35 @@ class TransformerMatrikkelenhetTest : FunSpec({
                         createDummyKommunevaapenImage('K'),
                     ),
                 ),
+            ).ikrafttredelsesdato,
+            transformer = LegacyIdentTransformer(
+                mapInput(
+                    Reguleringsinput(
+                        "abc",
+                        Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                        listOf(
+                            Kommuneendring(
+                                FraEnTilMange(Fylkesnummer(12), listOf(Fylkesnummer(13))),
+                                FraEnTilMange(Kommunenummer.Lopenummer(34), listOf(Kommunenummer.Lopenummer(24))),
+                            ),
+                        ),
+                        emptyList(),
+                        listOf(
+                            Kommune(
+                                Kommunenummer(1324),
+                                Kommunenavn("Ny kommune"),
+                                null,
+                                Koordinatsystem.UTM32,
+                                Koordinat(0.0, 0.0),
+                                false,
+                                "",
+                                null,
+                                null,
+                                createDummyKommunevaapenImage('K'),
+                            ),
+                        ),
+                    )
+                )
             ),
             emptyList(),
             listOf(source),
@@ -193,7 +222,7 @@ class TransformerMatrikkelenhetTest : FunSpec({
 
             transform(
                 1,
-                Reguleringsinput(
+                ikrafttredelsesdato = Reguleringsinput(
                     "abc",
                     Clock.System.todayIn(TimeZone.currentSystemDefault()),
                     listOf(
@@ -207,6 +236,25 @@ class TransformerMatrikkelenhetTest : FunSpec({
                     ),
                     emptyList(),
                     nyeKommuner,
+                ).ikrafttredelsesdato,
+                transformer = LegacyIdentTransformer(
+                    mapInput(
+                        Reguleringsinput(
+                            "abc",
+                            Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                            listOf(
+                                kommuneendring,
+                                Matrikkelenhetendring(
+                                    FraTil(Fylkesnummer(12), Fylkesnummer(12)),
+                                    FraTil(Kommunenummer.Lopenummer(34), Kommunenummer.Lopenummer(35)),
+                                    Gardsnummer(1),
+                                    Gardsnummer(1)
+                                ),
+                            ),
+                            emptyList(),
+                            nyeKommuner,
+                        )
+                    )
                 ),
                 emptyList(),
                 listOf(source),
@@ -255,7 +303,7 @@ class TransformerMatrikkelenhetTest : FunSpec({
 
             transform(
                 1,
-                Reguleringsinput(
+                ikrafttredelsesdato = Reguleringsinput(
                     "abc",
                     Clock.System.todayIn(TimeZone.currentSystemDefault()),
                     listOf(
@@ -275,6 +323,31 @@ class TransformerMatrikkelenhetTest : FunSpec({
                     ),
                     emptyList(),
                     nyeKommuner,
+                ).ikrafttredelsesdato,
+                transformer = LegacyIdentTransformer(
+                    mapInput(
+                        Reguleringsinput(
+                            "abc",
+                            Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                            listOf(
+                                kommuneendring,
+                                Matrikkelenhetendring(
+                                    FraTil(Fylkesnummer(12), Fylkesnummer(12)),
+                                    FraTil(Kommunenummer.Lopenummer(34), Kommunenummer.Lopenummer(35)),
+                                    Gardsnummer(1),
+                                    Gardsnummer(1),
+                                ),
+                                Matrikkelenhetendring(
+                                    FraTil(Fylkesnummer(12), Fylkesnummer(12)),
+                                    FraTil(Kommunenummer.Lopenummer(34), Kommunenummer.Lopenummer(36)),
+                                    Gardsnummer(2),
+                                    Gardsnummer(2),
+                                ),
+                            ),
+                            emptyList(),
+                            nyeKommuner,
+                        )
+                    )
                 ),
                 emptyList(),
                 listOf(source),
@@ -391,7 +464,8 @@ class TransformerMatrikkelenhetTest : FunSpec({
 
             transform(
                 1,
-                reguleringsInput,
+                ikrafttredelsesdato = reguleringsInput.ikrafttredelsesdato,
+                transformer = LegacyIdentTransformer(mapInput(reguleringsInput)),
                 emptyList(),
                 listOf(
                     mockSource(

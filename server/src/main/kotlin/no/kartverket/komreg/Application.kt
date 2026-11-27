@@ -14,7 +14,6 @@ import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.path
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
-import kotlinx.datetime.LocalDate
 import no.kartverket.komreg.integration.SchemaManager
 import no.kartverket.komreg.repositories.KjoringRepo
 import no.kartverket.komreg.repositories.ReguleringRepo
@@ -73,10 +72,11 @@ fun Application.module() {
         flyway.migrate()
     }
 
+    val jsonSerializer = jsonSerializer()
     val kjoringRepo = KjoringRepo(komregDbPool)
-    val reguleringsRepo = ReguleringRepo(komregDbPool)
+    val reguleringsRepo = ReguleringRepo(komregDbPool, jsonSerializer)
     val tilbakeføringsstatusRepo = TilbakeføringsstatusRepo(komregDbPool)
-    val transformationRepo = TransformationRepo(komregDbPool, jsonSerializer())
+    val transformationRepo = TransformationRepo(komregDbPool, jsonSerializer)
     val reguleringService = ReguleringService(reguleringsRepo, kjoringRepo)
     val kjoringService = KjoringService(kjoringRepo)
     val schemaManager = SchemaManager(kjoringRepo)
@@ -104,7 +104,7 @@ fun Application.module() {
     }
 
     install(ContentNegotiation) {
-        json()
+        json(jsonSerializer)
     }
 
     internalRoutes(metricsRegistry)
