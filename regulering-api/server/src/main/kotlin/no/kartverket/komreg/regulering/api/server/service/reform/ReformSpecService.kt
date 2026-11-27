@@ -47,6 +47,11 @@ class ReformSpecService(
     suspend fun validateNonDto(spec: ReformSpec): List<ReformFeil> =
         validateData(spec).leftOrNull() ?:  emptyList()
 
+    suspend fun resolveOps(spec: ReformSpec): EitherNel<ReformFeil, Resolved> = either {
+        val (resolved, _) = validateData(spec).bind()
+        resolved
+    }
+
     /** Den avledede [LegacyRegulering] med [id] som DTO-id, eller feilene fra det første steget som feiler. */
     suspend fun regulering(id: Int, spec: ReformSpec): Either<NonEmptyList<ReformFeil>, LegacyRegulering> =
         derive(id.toString(), spec)

@@ -27,6 +27,17 @@ import io.r2dbc.spi.ConnectionFactoryOptions
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
+import no.kartverket.komreg.core.domain.Adressekode
+import no.kartverket.komreg.core.domain.Adressenummerbokstav
+import no.kartverket.komreg.core.domain.Adressenummernummer
+import no.kartverket.komreg.core.domain.Bygningsnummer
+import no.kartverket.komreg.core.domain.Fylkesnummer
+import no.kartverket.komreg.core.domain.Kommunenummer
+import no.kartverket.komreg.core.domain.Kretsnummer
+import no.kartverket.komreg.core.domain.Kretstype
+import no.kartverket.komreg.core.domain.Matrikkelnummer
+import no.kartverket.komreg.core.domain.TeigId
 import no.kartverket.komreg.regulering.reform.domain.type.MunicipalityNumber
 import no.kartverket.komreg.regulering.reform.domain.type.NumberingScheme
 import no.kartverket.komreg.regulering.api.server.persistence.JooqReformSpecRepository
@@ -163,6 +174,23 @@ internal fun rootModuleFactory(
         val appJson = Json {
             serializersModule = SerializersModule {
                 contextual(MunicipalityNumber::class, MunicipalityNumber.Serializer(numberingScheme))
+                // FIXME: Vi må finne på en bedre måte å få satt opp serialsieringen her, dette
+                //        er bare duplisert kode/workaround.
+                polymorphic(Comparable::class) {
+                    subclass(Fylkesnummer::class, Fylkesnummer.serializer())
+                    subclass(Kommunenummer.Lopenummer::class, Kommunenummer.Lopenummer.serializer())
+                    subclass(Matrikkelnummer.Gardsnummer::class, Matrikkelnummer.Gardsnummer.serializer())
+                    subclass(Matrikkelnummer.Bruksnummer::class, Matrikkelnummer.Bruksnummer.serializer())
+                    subclass(Matrikkelnummer.Festenummer::class, Matrikkelnummer.Festenummer.serializer())
+                    subclass(Matrikkelnummer.Seksjonsnummer::class, Matrikkelnummer.Seksjonsnummer.serializer())
+                    subclass(TeigId::class, TeigId.serializer())
+                    subclass(Bygningsnummer::class, Bygningsnummer.serializer())
+                    subclass(Kretstype::class, Kretstype.serializer())
+                    subclass(Kretsnummer::class, Kretsnummer.serializer())
+                    subclass(Adressekode::class, Adressekode.serializer())
+                    subclass(Adressenummernummer::class, Adressenummernummer.serializer())
+                    subclass(Adressenummerbokstav::class, Adressenummerbokstav.serializer())
+                }
             }
         }
         install(ContentNegotiation) {

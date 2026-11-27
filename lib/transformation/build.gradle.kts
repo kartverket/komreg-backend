@@ -6,6 +6,7 @@ plugins {
 
 dependencies {
     api(project(":lib:core-api"))
+    api(project(":lib:regulering-dto"))
 
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.datetime)

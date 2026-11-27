@@ -21,6 +21,7 @@ import no.kartverket.komreg.regulering.api.server.service.reform.ReformSpecServi
 import no.kartverket.komreg.regulering.api.server.service.reform.ValideringResultat
 import no.kartverket.komreg.regulering.api.server.service.reform.parseReformSpec
 import no.kartverket.komreg.regulering.reform.format.ReformSpec
+import no.kartverket.komreg.routes.ReformOpRegulering
 
 @Serializable
 data class OpprettetRegulering(val id: Int)
@@ -120,6 +121,18 @@ fun Route.reguleringer(appJson: Json, repository: ReformSpecRepository, service:
                     )
                 }
             }.describe(ReguleringOpenApi.regulering)
+
+            get("/ops") {
+                val id = call.id() ?: return@get
+                val spec = repository.find(id) ?: return@get call.respond(HttpStatusCode.NotFound)
+                when (val ops = service.resolveOps(spec)) {
+                    is Either.Right -> call.respond(ReformOpRegulering(spec.navn, spec.ikrafttredelse, ops.value.ops))
+                    is Either.Left -> call.respond(
+                        HttpStatusCode.UnprocessableEntity,
+                        ValideringResultat.ugyldig(ops.value),
+                    )
+                }
+            }
         }
     }
 }
